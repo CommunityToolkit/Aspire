@@ -77,7 +77,7 @@
   </ItemGroup>
   <ItemGroup Label="Integration Packages">
     <!-- External packages -->
-    <PackageVersion Include="AWSSDK.S3" Version="4.0.101.7" />
+    <PackageVersion Include="AWSSDK.S3" Version="4.0.102.1" />
     <PackageVersion Include="Azure.Provisioning.AppContainers" Version="1.2.0" />
     <PackageVersion Include="Azure.Storage.Blobs" Version="12.29.1" />
     <PackageVersion Include="Google.Cloud.Storage.V1" Version="4.15.0" />
