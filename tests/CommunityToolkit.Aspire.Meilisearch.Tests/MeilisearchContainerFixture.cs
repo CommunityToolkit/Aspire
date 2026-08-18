@@ -45,8 +45,7 @@ public sealed class MeilisearchContainerFixture : IAsyncLifetime
             //The master key must be at least 16-bytes-long and composed of valid UTF-8 characters.
             _masterKey = param.GetDefaultValue();
 
-            Container = new ContainerBuilder()
-              .WithImage($"{MeilisearchContainerImageTags.Registry}/{MeilisearchContainerImageTags.Image}:{MeilisearchContainerImageTags.Tag}")
+            Container = new ContainerBuilder($"{MeilisearchContainerImageTags.Registry}/{MeilisearchContainerImageTags.Image}:{MeilisearchContainerImageTags.Tag}")
               .WithPortBinding(7700, true)
               .WithWaitStrategy(Wait.ForUnixContainer().UntilHttpRequestIsSucceeded(r => r.ForPort(7700)))
               .WithEnvironment("MEILI_MASTER_KEY", _masterKey)

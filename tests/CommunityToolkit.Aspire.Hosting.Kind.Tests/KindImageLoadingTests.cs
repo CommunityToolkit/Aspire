@@ -9,6 +9,7 @@ using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Utils;
 using CommunityToolkit.Aspire.Hosting.Kind;
+using CommunityToolkit.Aspire.Testing;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CommunityToolkit.Aspire.Hosting.Kind.Tests;
@@ -204,6 +205,7 @@ public class KindImageLoadingTests
     }
 
     [Fact]
+    [RequiresLinux(Reason = "The current Windows runner for GitHub Actions only has Helm 4.1.4, which is below the Aspire requirement of Helm 4.2.0. This test is skipped on Windows to avoid failures in CI.")]
     public async Task UsesPodmanProviderWhenLoadingImagesWithPodmanRuntime()
     {
         var (fakeRunner, builder) = CreateBuilderWithFakeRunner("ASPIRE_CONTAINER_RUNTIME=podman");

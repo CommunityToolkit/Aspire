@@ -28,8 +28,7 @@ public sealed class GoFeatureFlagContainerFixture : IAsyncLifetime
         if (RequiresDockerAttribute.IsSupported)
         {
             var source = Path.GetFullPath("./goff", Directory.GetCurrentDirectory());
-            Container = new ContainerBuilder()
-              .WithImage($"{GoFeatureFlagContainerImageTags.Registry}/{GoFeatureFlagContainerImageTags.Image}:{GoFeatureFlagContainerImageTags.Tag}")
+            Container = new ContainerBuilder($"{GoFeatureFlagContainerImageTags.Registry}/{GoFeatureFlagContainerImageTags.Image}:{GoFeatureFlagContainerImageTags.Tag}")
               .WithPortBinding(1031, true)
               .WithWaitStrategy(Wait.ForUnixContainer().UntilHttpRequestIsSucceeded(r => r.ForPath("/health").ForPort(1031)))
               .WithBindMount(source, "/goff")
