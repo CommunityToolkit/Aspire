@@ -310,7 +310,7 @@ public static class SqlProjectBuilderExtensions
 
         builder.WithCommand("deploy", "Deploy", async (context) =>
         {
-            await ExecuteResource(builder.Resource, target.Resource, targetDatabaseName, context.ServiceProvider, context.CancellationToken);
+            await ExecuteResource(builder.Resource, target.Resource, targetDatabaseName, context.Service, context.CancellationToken);
             return new ExecuteCommandResult { Success = true };
         }, commandOptions);
 

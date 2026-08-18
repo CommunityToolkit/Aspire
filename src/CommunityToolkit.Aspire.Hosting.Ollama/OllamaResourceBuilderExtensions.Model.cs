@@ -166,8 +166,8 @@ public static partial class OllamaResourceBuilderExtensions
                     }
 
                     var ollamaClient = new OllamaApiClient(endpoint);
-                    var logger = context.ServiceProvider.GetRequiredService<ResourceLoggerService>().GetLogger(modelResource);
-                    var notificationService = context.ServiceProvider.GetRequiredService<ResourceNotificationService>();
+                    var logger = context.Service.GetRequiredService<ResourceLoggerService>().GetLogger(modelResource);
+                    var notificationService = context.Service.GetRequiredService<ResourceNotificationService>();
 
                     return await executeCommand(modelResource, ollamaClient, logger, notificationService, context.CancellationToken);
                 },
