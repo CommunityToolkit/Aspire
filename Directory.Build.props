@@ -15,7 +15,7 @@
     <AspireVersion>$(AspireMajorVersion).5.0-preview.1.26407.1</AspireVersion>
     <AspirePreviewSuffix></AspirePreviewSuffix> <!-- Used for Aspire packages that still only ship as prerelease packages on nuget.org. -->
     <AspNetCoreVersion>9.0.0</AspNetCoreVersion>
-    <DotNetExtensionsVersion>10.0.8</DotNetExtensionsVersion>
+    <DotNetExtensionsVersion>10.0.10</DotNetExtensionsVersion>
     <TestContainersVersion>4.14.0</TestContainersVersion>
     <MEAIVersion>10.6.0</MEAIVersion>
     <ServiceDiscoveryVersion>10.0.0</ServiceDiscoveryVersion>

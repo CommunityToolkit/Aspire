@@ -106,7 +106,7 @@
     <PackageVersion Include="Microsoft.SqlServer.DacFx" Version="170.2.70" />
     <PackageVersion Include="Microsoft.Build" Version="17.11.48" />
     <PackageVersion Include="Microsoft.Build.Framework" Version="17.11.48" />
-    <PackageVersion Include="Microsoft.NET.StringTools" Version="17.11.48" />
+    <PackageVersion Include="Microsoft.NET.StringTools" Version="18.4.0" />
     <PackageVersion Include="Microsoft.Build.Locator" Version="1.10.12" />
     <PackageVersion Include="ErikEJ.Dacpac.Chinook" Version="1.0.0" />
     <PackageVersion Include="RavenDB.Client" Version="6.2.1" />
@@ -160,9 +160,9 @@
     <PackageVersion Include="OpenTelemetry.Api" Version="1.15.3" />
     <PackageVersion Include="System.Security.Cryptography.Xml" Version="8.0.4" />
     <!-- Override to address https://github.com/advisories/GHSA-hv8m-jj95-wg3x -->
-    <PackageVersion Include="MessagePack" Version="2.5.301" />
+    <PackageVersion Include="MessagePack" Version="2.5.302" />
     <!-- Override to address https://github.com/advisories/GHSA-pggp-6c3x-2xmx -->
-    <PackageVersion Include="MongoDB.Driver" Version="3.8.1" />
+    <PackageVersion Include="MongoDB.Driver" Version="3.9.0" />
     <!-- Override to address  https://github.com/advisories/GHSA-6c8g-7p36-r338 -->
     <PackageVersion Include="SharpCompress" Version="1.0.0" />
   </ItemGroup>
