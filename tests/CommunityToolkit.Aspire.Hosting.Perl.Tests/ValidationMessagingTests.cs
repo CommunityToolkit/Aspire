@@ -235,6 +235,13 @@ public class ValidationMessagingTests
 
             return Task.FromResult<InteractionResult<bool>>(null!);
         }
+
+        public Task<InteractionResult<bool>> PromptProgressAsync(
+            string message,
+            string? title = null,
+            ProgressInteractionOptions? options = null,
+            CancellationToken cancellationToken = default)
+            => Task.FromException<InteractionResult<bool>>(new NotSupportedException());
     }
 #pragma warning restore ASPIREINTERACTION001
 }

@@ -800,10 +800,10 @@ public static class BitwardenSecretManagerExtensions
                 "Reprovision",
                 async context =>
                 {
-                    ResourceNotificationService notifications = context.Service.GetRequiredService<ResourceNotificationService>();
+                    ResourceNotificationService notifications = context.Services.GetRequiredService<ResourceNotificationService>();
                     try
                     {
-                        await SyncAsync(resource, notifications, context.Service, context.Logger, context.CancellationToken).ConfigureAwait(false);
+                        await SyncAsync(resource, notifications, context.Services, context.Logger, context.CancellationToken).ConfigureAwait(false);
                         return new ExecuteCommandResult { Success = true };
                     }
                     catch (Exception ex)

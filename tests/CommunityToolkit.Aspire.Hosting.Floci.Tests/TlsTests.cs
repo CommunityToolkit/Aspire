@@ -189,6 +189,7 @@ public class TlsTests
             ExecutionContext = builder.ExecutionContext,
             Password = null,
             Resource = resource,
+            CertificateWithKeyPath = ReferenceExpression.Create($"/aspire/cert-key.pem")
         });
 
         return envVars;

@@ -745,6 +745,13 @@ internal sealed class FakeInteractionService : IInteractionService
 
     public Task<InteractionResult<bool>> PromptNotificationAsync(string title, string message, NotificationInteractionOptions? options = null, CancellationToken cancellationToken = default)
         => Task.FromException<InteractionResult<bool>>(new NotSupportedException());
+
+    public Task<InteractionResult<bool>> PromptProgressAsync(
+        string message,
+        string? title = null,
+        ProgressInteractionOptions? options = null,
+        CancellationToken cancellationToken = default)
+        => Task.FromException<InteractionResult<bool>>(new NotSupportedException());
 }
 #pragma warning restore ASPIREINTERACTION001
 
