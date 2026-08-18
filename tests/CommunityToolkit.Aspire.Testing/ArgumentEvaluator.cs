@@ -13,7 +13,7 @@ public static class ArgumentEvaluator
         var executionContext = new DistributedApplicationExecutionContext(
             new DistributedApplicationExecutionContextOptions(DistributedApplicationOperation.Run)
             {
-                Service = serviceProvider,
+                Services = serviceProvider,
             });
 
         var executionConfiguration = await ExecutionConfigurationBuilder.Create(resource)

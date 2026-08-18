@@ -15,7 +15,7 @@ public static class EnvironmentVariableEvaluator
     {
         var executionContext = new DistributedApplicationExecutionContext(new DistributedApplicationExecutionContextOptions(applicationOperation)
         {
-            Service = serviceProvider
+            Services = serviceProvider
         });
 
         var executionConfiguration = await ExecutionConfigurationBuilder.Create(resource)
