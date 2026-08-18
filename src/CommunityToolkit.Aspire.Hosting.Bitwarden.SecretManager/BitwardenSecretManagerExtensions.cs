@@ -831,7 +831,7 @@ public static class BitwardenSecretManagerExtensions
                 "Reset auth cache",
                 async context =>
                 {
-                    await BitwardenSecretManagerProvisioner.ResetAuthCacheAsync(resource, context.Service, context.CancellationToken).ConfigureAwait(false);
+                    await BitwardenSecretManagerProvisioner.ResetAuthCacheAsync(resource, context.Services, context.CancellationToken).ConfigureAwait(false);
                     return new ExecuteCommandResult { Success = true };
                 },
                 new CommandOptions

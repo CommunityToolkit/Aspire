@@ -369,7 +369,7 @@ public class AddOllamaLocalTests
                 ResourceType = modelResource.GetType().Name,
                 Properties = [],
             },
-            ServiceProvider = app.Services
+            Services = app.Services
         };
 
         var state = command.UpdateState(context);
@@ -383,7 +383,7 @@ public class AddOllamaLocalTests
                 ResourceType = modelResource.GetType().Name,
                 Properties = [],
             },
-            ServiceProvider = app.Services
+            Services = app.Services
         };
 
         state = command.UpdateState(context);
@@ -414,7 +414,7 @@ public class AddOllamaLocalTests
                 ResourceType = resource.GetType().Name,
                 Properties = [],
             },
-            ServiceProvider = app.Services
+            Services = app.Services
         };
 
         var state = command.UpdateState(context);
@@ -428,7 +428,7 @@ public class AddOllamaLocalTests
                 ResourceType = resource.GetType().Name,
                 Properties = [],
             },
-            ServiceProvider = app.Services
+            Services = app.Services
         };
 
         state = command.UpdateState(context);
