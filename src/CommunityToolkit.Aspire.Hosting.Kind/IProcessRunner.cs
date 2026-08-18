@@ -25,5 +25,6 @@ internal interface IProcessRunner
         IReadOnlyList<string> arguments,
         string? workingDirectory = null,
         IReadOnlyDictionary<string, string>? environmentVariables = null,
+        string? standardInput = null,
         CancellationToken cancellationToken = default);
 }

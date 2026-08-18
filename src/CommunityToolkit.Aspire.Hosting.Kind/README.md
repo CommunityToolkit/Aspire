@@ -6,6 +6,7 @@ An [Aspire](https://learn.microsoft.com/dotnet/aspire) hosting integration that 
 
 - **Docker or Podman** - Kind runs Kubernetes nodes as containers. Install [Docker](https://docs.docker.com/get-docker/) or [Podman](https://podman.io/docs/installation).
 - **Kind CLI** - The `kind` command must be available on your `PATH`. Install from [kind.sigs.k8s.io](https://kind.sigs.k8s.io/docs/user/quick-start/#installation).
+- **kubectl CLI** - Required for `AddManifest` / `AddManifestFromContent`. Install from [kubernetes.io](https://kubernetes.io/docs/tasks/tools/).
 - **Helm CLI** - Required for deploy scenarios and Helm chart resources. Install from [helm.sh](https://helm.sh/docs/intro/install/).
 
 ## Getting started
@@ -26,7 +27,7 @@ var cluster = builder.AddKindCluster("mycluster");
 builder.Build().Run();
 ```
 
-This creates a Kind cluster named **mycluster** that is provisioned when the AppHost starts and deleted when it shuts down.
+This creates a Kind cluster named **mycluster** that is provisioned when the AppHost starts and is cleaned up during graceful host shutdown (via `ApplicationStopping`) or when the lifecycle hook is disposed, on a best-effort basis.
 
 ## Scenario 1: Kind cluster as a managed dependency (F5 mode)
 
@@ -52,9 +53,27 @@ var cluster = builder.AddKindCluster("mycluster")
     .WithKubernetesVersion("v1.32.2");
 ```
 
+#### WithNodeImage
+
+Use `WithNodeImage` when you need to pin the full Kind node image name instead of composing one from a Kubernetes version. This is useful with private mirrors or pre-approved node images.
+
+```csharp
+var cluster = builder.AddKindCluster("mycluster")
+    .WithNodeImage("registry.example.com/kindest/node:v1.32.2");
+```
+
+#### WithNodeMount
+
+Use `WithNodeMount` to project host content into every Kind node. This is useful for local charts, registries, or other host-side assets that must be visible from inside the cluster nodes. Relative host paths are resolved against the AppHost project directory. The sample AppHost shows this as a cluster-configuration example; it does not include a workload that reads the mounted path from inside the cluster.
+
+```csharp
+var cluster = builder.AddKindCluster("mycluster")
+    .WithNodeMount(@"C:\dev\charts", "/var/local/charts", readOnly: true);
+```
+
 #### Cluster lifetime
 
-By default the cluster is deleted when the AppHost shuts down (`ClusterLifetime.Session`). To keep the cluster across AppHost restarts, use `ClusterLifetime.Persistent`:
+By default the cluster is deleted during graceful host shutdown (`ClusterLifetime.Session`) or when the lifecycle hook is disposed, on a best-effort basis. To keep the cluster across AppHost restarts, use `ClusterLifetime.Persistent`:
 
 ```csharp
 var cluster = builder.AddKindCluster("mycluster")
@@ -63,7 +82,7 @@ var cluster = builder.AddKindCluster("mycluster")
 
 | Value | Behavior |
 |---|---|
-| `ClusterLifetime.Session` | Cluster is deleted on AppHost shutdown (default). |
+| `ClusterLifetime.Session` | Cluster is deleted during graceful host shutdown or lifecycle-hook disposal on a best-effort basis (default). |
 | `ClusterLifetime.Persistent` | Cluster survives AppHost restarts and is reused on next startup. |
 
 ## Networking model
@@ -150,8 +169,108 @@ var cluster = builder.AddKindCluster("mycluster")
 var redis = cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicharts/redis")
     .WithChartVersion("20.0.0")
     .WithHelmValue("replica.replicaCount", "0")
+    .WithHelmStringValue("auth.password", "000123")
+    .WithCrdWaitRetry()
     .WithNamespace("cache");
 ```
+
+#### WithHelmStringValue
+
+Use `WithHelmStringValue` when a value looks numeric or boolean but must remain a string in the rendered chart. Kind emits `--set-string` for these values instead of `--set`.
+
+```csharp
+var redis = cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicharts/redis")
+    .WithHelmStringValue("auth.password", "000123");
+```
+
+#### WithCrdWaitRetry
+
+Use `WithCrdWaitRetry` as an explicit opt-in retry policy for Helm installs. Without it, Kind makes a single Helm attempt and surfaces the original failure immediately. With it, Kind retries failed installs up to the configured attempt count, waits for any newly observed CRDs to reach `Established` between attempts, and then re-runs Helm after the configured backoff.
+
+Prefer `.WaitFor(...)` ordering or packaging tightly coupled CRDs and dependents into a single chart when you can; `WithCrdWaitRetry` is a fallback for charts that still need bounded retry behavior.
+
+```csharp
+var certManager = cluster.AddHelmChart("cert-manager", "jetstack/cert-manager")
+    .WithCrdWaitRetry(
+        maxAttempts: 3,
+        backoff: TimeSpan.FromSeconds(5),
+        crdWaitTimeout: TimeSpan.FromMinutes(2));
+```
+
+### Applying raw manifests to the cluster
+
+Use `AddManifest` to apply a Kubernetes manifest (file, directory, or Kustomize overlay) to the cluster after it becomes healthy. This runs `kubectl apply -f <path> --kubeconfig <path>` against the cluster kubeconfig and is the natural equivalent of `AddHelmChart` for scenarios where a chart would be overkill. Manifest paths must be absolute so published AppHosts do not depend on the original AppHost project directory.
+
+`AddManifest` supports a single file, a directory, or a Kustomize overlay. URL fetch is not supported today — use a local file. For URL support, `curl` the file down as a build step and reference the local path.
+
+If the path is a directory containing a Kustomize marker file such as `kustomization.yaml`, `kustomization.yml`, `Kustomization`, or `Kustomization.yml`, Kind automatically switches to `kubectl apply -k <path>` at apply time. `WithRecursive()` is ignored for Kustomize overlays because `kubectl apply -k` does not support `--recursive`.
+
+```csharp
+var cluster = builder.AddKindCluster("mycluster");
+var manifestsRoot = Path.Combine(builder.AppHostDirectory, "manifests");
+
+// Single file
+cluster.AddManifest("crds", Path.Combine(manifestsRoot, "crds.yaml"));
+
+// Directory, recursive, into a namespace
+cluster.AddManifest("platform", Path.Combine(manifestsRoot, "platform"))
+    .WithRecursive()
+    .WithNamespace("platform");
+
+// Server-side apply with a stable field manager (useful for CRDs and controllers
+// that reconcile large objects)
+cluster.AddManifest("operator", Path.Combine(manifestsRoot, "argocd", "install.yaml"))
+    .WithServerSideApply(forceConflicts: true)
+    .WithFieldManager("aspire-apphost");
+
+// Inline content, applied via kubectl apply -f -
+cluster.AddManifestFromContent("demo-ns", """
+    apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: aspire-demo
+    """);
+```
+
+Downstream resources can wait on the manifest resource before starting so they only see the cluster after the manifests have been applied:
+
+```csharp
+var crds = cluster.AddManifest("crds", Path.Combine(manifestsRoot, "crds.yaml"));
+
+var operatorContainer = builder.AddContainer("my-operator", "my-org/operator")
+    .WithReference(cluster)
+    .WaitFor(crds);
+```
+
+Manifests persist with the cluster - deleted with session clusters, retained with persistent clusters.
+
+When `kubectl apply` reports custom resource definitions, Kind waits up to 5 minutes for those CRDs to reach the `Established` condition before marking the manifest resource running. The default behavior is fail-fast: a CRD wait timeout fails the manifest resource. Use `.WithCrdWaitTimeout(...)` to adjust the timeout, or `.WithCrdWaitBehavior(CrdWaitBehavior.BestEffort)` to log a warning and continue.
+
+#### WithClusterReadyTimeout
+
+If the Kubernetes API needs longer to become reachable before `kubectl apply`, use `WithClusterReadyTimeout` to extend the `kubectl cluster-info` readiness budget for that manifest resource.
+
+```csharp
+cluster.AddManifest("platform", Path.Combine(builder.AppHostDirectory, "manifests", "platform"))
+    .WithClusterReadyTimeout(TimeSpan.FromMinutes(2));
+```
+
+#### Namespace behavior
+
+`.WithNamespace(ns)` passes `--namespace <ns>` to `kubectl apply`, but it does **not** create the namespace. This differs from `AddHelmChart`, which passes `--create-namespace`.
+
+If a manifest declares its own `metadata.namespace` that conflicts with `--namespace`, `kubectl` rejects the apply. Prefer one of these patterns:
+
+- Create the namespace with a separate `AddManifest("ns", Path.Combine(builder.AppHostDirectory, "manifests", "namespace.yaml"))` and `.WaitFor()` it before applying namespaced manifests.
+- Omit `.WithNamespace()` and let each manifest declare its own namespace.
+
+#### WithServerSideApply
+
+> **Warning:** `forceConflicts: true` overrides field ownership held by other controllers. Use sparingly — you're telling `kubectl` to overwrite whatever another controller (for example, Helm) had set for those fields.
+
+#### Security scope
+
+Manifests apply with the cluster kubeconfig, which for a local Kind cluster is typically cluster-admin. `AddManifest` can create cluster-scoped resources such as `ClusterRole`, `ClusterRoleBinding`, and CRDs. Only apply manifests you trust.
 
 ### Full F5 example
 
@@ -235,9 +354,28 @@ builder.AddContainer("my-container", "my-image")
 | `WithReference(kind)` | Injects `KUBECONFIG` and `K8S_CLUSTER_NAME` into another resource |
 | `WithKindNetwork()` | Connects a container to the Kind container network |
 | `AddHelmChart(name, chartRef)` | Deploys a Helm chart to the Kind cluster during F5 |
+| `AddManifest(name, manifestPath)` | Applies a Kubernetes manifest (file or directory) via `kubectl apply` after the cluster is healthy |
+| `AddManifestFromContent(name, content)` | Applies inline Kubernetes manifest content via `kubectl apply -f -` after the cluster is healthy |
+| `WithRecursive()` | For `AddManifest`: recurse into subdirectories when applying |
+| `WithServerSideApply(bool forceConflicts = false)` | For `AddManifest`: use server-side apply, optionally with `--force-conflicts` |
+| `WithFieldManager(string)` | For `AddManifest`: set the `kubectl apply --field-manager` identifier |
+| `WithApplyTimeout(TimeSpan)` | For `AddManifest`: set the maximum time for `kubectl apply` |
+| `WithCrdWaitTimeout(TimeSpan)` | For `AddManifest`: set the CRD `Established` wait timeout |
+| `WithCrdWaitBehavior(CrdWaitBehavior)` | For `AddManifest`: choose fail-fast or best-effort CRD wait behavior |
 | `WithKind()` | Configures a `KubernetesEnvironmentResource` to deploy to a local Kind cluster (scenario 2) |
+
+## Security & scope notes
+
+- Absolute manifest paths are not sandboxed; do not apply untrusted manifests.
+- `AddManifestFromContent(string)` holds stdin content in memory. For very large manifests, use `AddManifest(file)` instead.
+- `AddManifest` runs with whatever authority the cluster kubeconfig has — cluster-admin on a default Kind cluster.
+
 ## Additional information
 
 - [Kind documentation](https://kind.sigs.k8s.io/)
 - [.NET Aspire documentation](https://learn.microsoft.com/dotnet/aspire)
 - [Aspire Community Toolkit](https://github.com/CommunityToolkit/Aspire)
+- [`kubectl apply` documentation](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_apply/)
+- [Kubernetes server-side apply](https://kubernetes.io/docs/reference/using-api/server-side-apply/)
+- [Kustomize documentation](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/)
+- [CRD Established condition](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/)

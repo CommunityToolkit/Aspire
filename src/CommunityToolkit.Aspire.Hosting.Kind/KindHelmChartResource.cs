@@ -1,6 +1,8 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using CommunityToolkit.Aspire.Hosting.Kind;
+
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
@@ -41,4 +43,15 @@ public class KindHelmChartResource(string name, string chartRef, KindClusterReso
     /// Gets the paths to values files (each maps to <c>-f path</c>).
     /// </summary>
     public List<string> ValuesFiles { get; } = [];
+
+    /// <summary>
+    /// Gets the inline Helm values that must be applied with <c>--set-string key=value</c>.
+    /// </summary>
+    public Dictionary<string, string> StringValues { get; } = [];
+
+    internal int CrdWaitRetryMaxAttempts { get; set; } = 1;
+
+    internal TimeSpan CrdWaitRetryTimeout { get; set; } = KubectlTimeouts.DefaultCrdWaitTimeout;
+
+    internal TimeSpan CrdWaitRetryBackoff { get; set; } = KubectlTimeouts.DefaultCrdWaitRetryBackoff;
 }
