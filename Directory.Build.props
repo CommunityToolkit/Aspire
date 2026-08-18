@@ -16,7 +16,7 @@
     <AspirePreviewSuffix>-preview.1.26305.13</AspirePreviewSuffix> <!-- Used for Aspire packages that still only ship as prerelease packages on nuget.org. -->
     <AspNetCoreVersion>9.0.0</AspNetCoreVersion>
     <DotNetExtensionsVersion>10.0.8</DotNetExtensionsVersion>
-    <TestContainersVersion>4.8.1</TestContainersVersion>
+    <TestContainersVersion>4.14.0</TestContainersVersion>
     <MEAIVersion>10.6.0</MEAIVersion>
     <ServiceDiscoveryVersion>10.0.0</ServiceDiscoveryVersion>
     <IsPackable>false</IsPackable>
