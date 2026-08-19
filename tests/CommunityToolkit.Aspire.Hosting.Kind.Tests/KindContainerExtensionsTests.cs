@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Aspire.Hosting;
+using Aspire.Hosting.Utils;
 using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Kind.Tests;
@@ -18,7 +19,7 @@ public class KindContainerExtensionsTests
         processRunner.Results.Enqueue(new(0, "", ""));
         processRunner.Results.Enqueue(new(0, "", ""));
 
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         builder.Services.AddSingleton<IProcessRunner>(processRunner);
         builder.Services.AddSingleton<IKindContainerRuntimeResolver>(
             new KindContainerRuntimeResolver(new FakeContainerRuntimeResolver("Docker")));
@@ -70,7 +71,7 @@ public class KindContainerExtensionsTests
     [Fact]
     public void WithReference_Container_InjectsBindMountAnnotation()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var kind = builder.AddKindCluster("test-cluster");
         var container = builder.AddContainer("test-container", "test-image")
@@ -90,7 +91,7 @@ public class KindContainerExtensionsTests
     [Fact]
     public void WithReference_Container_InjectsEnvironmentAnnotation()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var kind = builder.AddKindCluster("test-cluster");
         builder.AddContainer("test-container", "test-image")
@@ -106,7 +107,7 @@ public class KindContainerExtensionsTests
     [Fact]
     public async Task WithReference_Container_SetsContainerKubeconfigEnvironmentValue()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var kind = builder.AddKindCluster("test-cluster");
         var container = builder.AddContainer("test-container", "test-image")

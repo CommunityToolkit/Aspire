@@ -1,13 +1,10 @@
 name: Add Dogfooding Comment
 
 on:
-  # Use pull_request_target to run in the context of the base branch
-  # This allows commenting on PRs from forks
-  pull_request_target:
+  pull_request:
     types: [opened, reopened, synchronize]
     branches:
       - 'main'
-  # Allow manual triggering
   workflow_dispatch:
     inputs:
       pr_number:
@@ -16,19 +13,46 @@ on:
         type: number
 
 jobs:
-  add-dogfood-comment:
-    # Only run on the CommunityToolkit org to avoid running on forks
-    if: ${{ github.repository_owner == 'CommunityToolkit' }}
+  prepare-dogfood-comment:
+    if: ${{ github.repository_owner == 'CommunityToolkit' && github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     permissions:
-      pull-requests: write
+      pull-requests: read
+    steps:
+      - name: Write comment result artifact
+        env:
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/dogfood-comment"
+          jq -n \
+            --arg schema_version "dogfood-comment/v1" \
+            --arg event "pull_request" \
+            --arg head_sha "$PR_HEAD_SHA" \
+            --argjson pr_number "$PR_NUMBER" \
+            --arg run_id "$GITHUB_RUN_ID" \
+            '{schema_version:$schema_version,event:$event,head_sha:$head_sha,pr_number:$pr_number,run_id:$run_id}' \
+            > "$RUNNER_TEMP/dogfood-comment/result.json"
+
+      - name: Upload comment result artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: dogfood-comment
+          path: ${{ runner.temp }}/dogfood-comment/result.json
+          if-no-files-found: error
+          retention-days: 3
+
+  add-dogfood-comment-manually:
+    if: ${{ github.repository_owner == 'CommunityToolkit' && github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
     steps:
       - name: Add dogfooding comment
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9.0.0
         with:
           script: |
-            // Get PR number from either the PR event or manual input
-            const prNumber = context.payload.number || context.payload.inputs.pr_number;
+            const prNumber = context.payload.inputs.pr_number;
             const bashScript = 'https://raw.githubusercontent.com/CommunityToolkit/Aspire/main/eng/scripts/dogfood-pr.sh';
             const psScript = 'https://raw.githubusercontent.com/CommunityToolkit/Aspire/main/eng/scripts/dogfood-pr.ps1';
 

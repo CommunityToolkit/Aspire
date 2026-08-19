@@ -30,7 +30,6 @@ runs:
       run: |
         ASPIRE_VERSION="$(dotnet msbuild Directory.Build.props -nologo -v:q -getProperty:AspireVersion)"
         echo "version=${ASPIRE_VERSION}" >> "$GITHUB_OUTPUT"
-        echo "cli-version=${ASPIRE_VERSION%%-*}" >> "$GITHUB_OUTPUT"
 
     - name: Install Aspire CLI
       uses: timheuer/setup-aspire@v0.1.0
@@ -40,7 +39,7 @@ runs:
     - name: Verify Aspire CLI version
       shell: bash
       env:
-        EXPECTED_ASPIRE_CLI_VERSION: ${{ steps.aspire-version.outputs.cli-version }}
+        EXPECTED_ASPIRE_CLI_VERSION: ${{ steps.aspire-version.outputs.version }}
       run: |
         INSTALLED_ASPIRE_CLI_VERSION="$(aspire --version)"
         case "${INSTALLED_ASPIRE_CLI_VERSION}" in

@@ -48,8 +48,7 @@ public sealed class SurrealDbContainerFixture : IAsyncLifetime
 
             _password = paramGenerator.GetDefaultValue();
 
-            Container = new ContainerBuilder()
-                .WithImage($"{SurrealDbContainerImageTags.Registry}/{SurrealDbContainerImageTags.Image}:{SurrealDbContainerImageTags.Tag}")
+            Container = new ContainerBuilder($"{SurrealDbContainerImageTags.Registry}/{SurrealDbContainerImageTags.Image}:{SurrealDbContainerImageTags.Tag}")
                 .WithPortBinding(_port, true)
                 .WithWaitStrategy(Wait.ForUnixContainer().UntilHttpRequestIsSucceeded(r => r.ForPort(_port).ForPath("/health")))
                 .WithEnvironment("SURREAL_USER", _username)

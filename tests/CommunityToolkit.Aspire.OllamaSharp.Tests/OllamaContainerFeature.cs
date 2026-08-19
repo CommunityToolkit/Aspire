@@ -23,8 +23,7 @@ public class OllamaContainerFeature : IAsyncLifetime
     {
         if (RequiresDockerAttribute.IsSupported)
         {
-            Container = new ContainerBuilder()
-              .WithImage($"{OllamaContainerImageTags.Registry}/{OllamaContainerImageTags.Image}:{OllamaContainerImageTags.Tag}")
+            Container = new ContainerBuilder($"{OllamaContainerImageTags.Registry}/{OllamaContainerImageTags.Image}:{OllamaContainerImageTags.Tag}")
               .WithPortBinding(11434, true)
               .WithWaitStrategy(Wait.ForUnixContainer().UntilHttpRequestIsSucceeded(r => r.ForPort(11434)))
               .Build();
