@@ -3,8 +3,6 @@ using CommunityToolkit.Aspire.Hosting.Mosquitto;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
-
 namespace Aspire.Hosting;
 
 /// <summary>
@@ -114,5 +112,3 @@ public static class MosquittoBuilderExtensions
         return builder.WithBindMount(source, DataTarget, isReadOnly);
     }
 }
-
-#pragma warning restore ASPIREATS001

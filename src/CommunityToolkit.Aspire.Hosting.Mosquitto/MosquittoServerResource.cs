@@ -1,5 +1,3 @@
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
-
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
@@ -57,5 +55,3 @@ public class MosquittoServerResource(string name) : ContainerResource(name), IRe
         yield return new("Uri", UriExpression);
     }
 }
-
-#pragma warning restore ASPIREATS001
