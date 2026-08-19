@@ -5,4 +5,8 @@
     <TargetFramework>$(DefaultTargetFramework)</TargetFramework>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <AspireUseCliBundle Condition="'$(IsAspireHost)' == 'true'">true</AspireUseCliBundle>
+  </PropertyGroup>
+
 </Project>
