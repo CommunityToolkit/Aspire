@@ -1,13 +1,13 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System.ComponentModel;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Lifecycle;
 using CommunityToolkit.Aspire.Hosting.Kind;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
+using System.ComponentModel;
 
 #pragma warning disable ASPIREATS001 // AspireExport APIs are experimental
 
@@ -133,7 +133,79 @@ public static class KindClusterResourceBuilderExtensions
         ArgumentException.ThrowIfNullOrEmpty(version);
 
         var annotation = GetOrCreateNodeImageAnnotation(builder.Resource);
+        ThrowIfNodeImageConfigurationConflicts(annotation, configuredValueName: nameof(annotation.Version), conflictingValueName: nameof(annotation.Image));
         annotation.Version = version;
+        return builder;
+    }
+
+    /// <summary>
+    /// Sets the Kind node image for every node in the cluster.
+    /// </summary>
+    /// <typeparam name="T">A resource type implementing <see cref="IKindResource"/>.</typeparam>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="image">
+    /// The fully qualified Kind node image, such as <c>kindest/node:v1.33.1</c>.
+    /// This overrides the image that would otherwise be derived from <see cref="WithKubernetesVersion{T}(IResourceBuilder{T}, string)"/>.
+    /// </param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport]
+    public static IResourceBuilder<T> WithNodeImage<T>(
+        this IResourceBuilder<T> builder,
+        string image)
+        where T : IKindResource
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrEmpty(image);
+
+        var annotation = GetOrCreateNodeImageAnnotation(builder.Resource);
+        ThrowIfNodeImageConfigurationConflicts(annotation, configuredValueName: nameof(annotation.Image), conflictingValueName: nameof(annotation.Version));
+        annotation.Image = image;
+        return builder;
+    }
+
+    /// <summary>
+    /// Adds an extra host mount to every Kind node container.
+    /// </summary>
+    /// <typeparam name="T">A resource type implementing <see cref="IKindResource"/>.</typeparam>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="hostPath">
+    /// The path on the host. Relative paths are resolved against the AppHost directory before being written to the Kind config.
+    /// </param>
+    /// <param name="containerPath">The absolute path inside the Kind node container.</param>
+    /// <param name="readOnly"><see langword="true"/> to mount the path read-only.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <remarks>
+    /// This configures Kind node-container mounts, which are useful for surfacing host-side assets
+    /// such as local manifest directories, certificates, or other development-time inputs to workloads
+    /// that later mount paths from the node filesystem.
+    /// </remarks>
+    [AspireExport]
+    public static IResourceBuilder<T> WithNodeMount<T>(
+        this IResourceBuilder<T> builder,
+        string hostPath,
+        string containerPath,
+        bool readOnly = false)
+        where T : IKindResource
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(hostPath);
+        ArgumentException.ThrowIfNullOrWhiteSpace(containerPath);
+        if (!containerPath.StartsWith("/", StringComparison.Ordinal))
+        {
+            throw new ArgumentException("Container path must be an absolute Linux path (for example '/var/local/data').", nameof(containerPath));
+        }
+
+        var normalizedHostPath = Path.IsPathRooted(hostPath)
+            ? Path.GetFullPath(hostPath)
+            : Path.GetFullPath(Path.Combine(builder.ApplicationBuilder.AppHostDirectory, hostPath));
+
+        var annotation = GetOrCreateNodeMountsAnnotation(builder.Resource);
+        annotation.Mounts.Add(new KindMountModel
+        {
+            HostPath = normalizedHostPath,
+            ContainerPath = containerPath,
+            ReadOnly = readOnly,
+        });
         return builder;
     }
 
@@ -158,8 +230,8 @@ public static class KindClusterResourceBuilderExtensions
 
     /// <summary>
     /// Sets the cluster lifetime. When <see cref="ClusterLifetime.Session"/> (the default),
-    /// the cluster is deleted when the AppHost shuts down. When <see cref="ClusterLifetime.Persistent"/>,
-    /// the cluster survives AppHost restarts and is reused on next startup.
+    /// the cluster is deleted on graceful shutdown or other process-exit signals on a best-effort basis.
+    /// When <see cref="ClusterLifetime.Persistent"/>, the cluster survives AppHost restarts and is reused on next startup.
     /// </summary>
     /// <typeparam name="T">A resource type implementing <see cref="IKindResource"/>.</typeparam>
     /// <param name="builder">The resource builder.</param>
@@ -209,6 +281,36 @@ public static class KindClusterResourceBuilderExtensions
         var annotation = new KindNodeImageAnnotation();
         resource.Annotations.Add(annotation);
         return annotation;
+    }
+
+    private static KindNodeMountsAnnotation GetOrCreateNodeMountsAnnotation(IResource resource)
+    {
+        if (resource.TryGetLastAnnotation<KindNodeMountsAnnotation>(out var existing))
+        {
+            return existing;
+        }
+
+        var annotation = new KindNodeMountsAnnotation();
+        resource.Annotations.Add(annotation);
+        return annotation;
+    }
+
+    private static void ThrowIfNodeImageConfigurationConflicts(
+        KindNodeImageAnnotation annotation,
+        string configuredValueName,
+        string conflictingValueName)
+    {
+        ArgumentNullException.ThrowIfNull(annotation);
+
+        var hasConflictingValue = configuredValueName == nameof(annotation.Version)
+            ? !string.IsNullOrEmpty(annotation.Image)
+            : !string.IsNullOrEmpty(annotation.Version);
+
+        if (hasConflictingValue)
+        {
+            throw new InvalidOperationException(
+                $"Kind node image configuration cannot set both {configuredValueName} and {conflictingValueName} on the same cluster. Use either {nameof(WithKubernetesVersion)} or {nameof(WithNodeImage)}.");
+        }
     }
 
     /// <summary>

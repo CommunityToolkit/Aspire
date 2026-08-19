@@ -38,7 +38,7 @@
     <PackageVersion Include="AspNetCore.HealthChecks.SqlServer" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.SurrealDb" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.Uris" Version="9.0.0" />
-    <PackageVersion Include="Dapr.AspNetCore" Version="1.15.3" />
+    <PackageVersion Include="Dapr.AspNetCore" Version="1.18.5" />
     <PackageVersion Include="Dapr.Client" Version="1.18.5" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.16" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="8.0.16" />
@@ -56,6 +56,7 @@
     <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="$(DotNetExtensionsVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.10" />
     <!-- .NET packages -->
+    <PackageVersion Include="Microsoft.Extensions.Resilience" Version="9.9.0" />
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.9.0" />
     <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="$(ServiceDiscoveryVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="$(DotNetExtensionsVersion)" />
@@ -77,17 +78,19 @@
   </ItemGroup>
   <ItemGroup Label="Integration Packages">
     <!-- External packages -->
-    <PackageVersion Include="AWSSDK.S3" Version="4.0.101.5" />
+    <PackageVersion Include="AWSSDK.S3" Version="4.0.102.1" />
     <PackageVersion Include="Azure.Provisioning.AppContainers" Version="1.2.0" />
+    <PackageVersion Include="Azure.Storage.Blobs" Version="12.29.1" />
+    <PackageVersion Include="Google.Cloud.Storage.V1" Version="4.15.0" />
     <PackageVersion Include="Bitwarden.Secrets.Sdk" Version="1.0.0" />
-    <!-- Direct ref to GitHub.Copilot.SDK is a temporary workaround until a
-         Microsoft.Agents.AI.GitHub.Copilot preview ships with the buildTransitive
-         bridge from https://github.com/microsoft/agent-framework/pull/6457 (merged
-         2026-06-10). Without it, copilot.exe never lands in bin/.../runtimes/
-         {rid}/native/ and the SDK throws on first RunAsync. Drop this entry once
-         MAF cuts the next preview. -->
+    <!-- Keep an explicit GitHub.Copilot.SDK pin for the Squad sample so the split
+         CopilotClient assembly and native CLI payload always resolve from the
+         same SDK version we validate locally/CI. This remains a temporary
+         workaround until Microsoft.Agents.AI.GitHub.Copilot ships the
+         buildTransitive bridge from microsoft/agent-framework#6457, so keep the
+         direct ref pinned until that preview lands. -->
     <PackageVersion Include="GitHub.Copilot.SDK" Version="1.0.8" />
-    <PackageVersion Include="JsonSchema.Net" Version="7.4.0" />
+    <PackageVersion Include="JsonSchema.Net" Version="9.4.0" />
     <PackageVersion Include="KubernetesClient" Version="19.0.2" />
     <PackageVersion Include="OllamaSharp" Version="5.4.12" />
     <PackageVersion Include="OpenFeature.Providers.GOFeatureFlag" Version="1.0.0" />
@@ -96,20 +99,21 @@
     <PackageVersion Include="MassTransit.ActiveMQ" Version="8.5.5" />
     <PackageVersion Include="MassTransit.RabbitMQ" Version="8.5.5" />
     <PackageVersion Include="MeiliSearch" Version="0.20.0" />
-    <PackageVersion Include="DuckDB.NET.Data.Full" Version="1.5.3" />
+    <PackageVersion Include="DuckDB.NET.Data.Full" Version="1.5.5" />
     <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.2" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.2" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="$(DotNetExtensionsVersion)" />
     <PackageVersion Include="Microsoft.SqlServer.DacFx" Version="170.2.70" />
     <PackageVersion Include="Microsoft.Build" Version="17.11.48" />
     <PackageVersion Include="Microsoft.Build.Framework" Version="17.11.48" />
-    <PackageVersion Include="Microsoft.NET.StringTools" Version="17.11.48" />
+    <PackageVersion Include="Microsoft.NET.StringTools" Version="18.4.0" />
     <PackageVersion Include="Microsoft.Build.Locator" Version="1.10.12" />
     <PackageVersion Include="ErikEJ.Dacpac.Chinook" Version="1.0.0" />
     <PackageVersion Include="RavenDB.Client" Version="6.2.1" />
     <PackageVersion Include="RavenDB.TestDriver" Version="6.2.1" />
     <PackageVersion Include="YamlDotNet" Version="16.3.0" />
-    <PackageVersion Include="Squad.Agents.AI" Version="0.5.1-preview.16" />
+    <PackageVersion Include="Microsoft.Agents.AI.GitHub.Copilot" Version="1.15.0-rc1" />
+    <PackageVersion Include="Squad.Agents.AI" Version="0.5.6-preview.23" />
     <PackageVersion Include="SurrealDb.MinimalApis.Extensions" Version="1.0.0" />
     <PackageVersion Include="SurrealDb.Net" Version="1.0.0" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="7.3.1" />
@@ -117,7 +121,7 @@
     <PackageVersion Include="ModelContextProtocol" Version="0.4.0-preview.3" />
     <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="0.4.0-preview.3" />
     <PackageVersion Include="KurrentDB.Client" Version="1.2.0" />
-    <PackageVersion Include="SSH.NET" Version="2025.1.0" />
+    <PackageVersion Include="SSH.NET" Version="2026.0.0" />
   </ItemGroup>
   <ItemGroup Label="Testing">
     <!-- Testing packages -->
@@ -137,7 +141,7 @@
     <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="2.0.2" />
     <PackageVersion Include="Microsoft.Testing.Extensions.CrashDump" Version="2.0.2" />
     <PackageVersion Include="Microsoft.Testing.Extensions.HangDump" Version="2.0.2" />
-    <PackageVersion Include="GitHubActionsTestLogger" Version="3.0.4" />
+    <PackageVersion Include="GitHubActionsTestLogger" Version="3.0.5" />
     <PackageVersion Include="Moq" Version="$(MoqVersion)" />
     <!-- Build dependencies -->
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4" />
@@ -156,9 +160,9 @@
     <PackageVersion Include="OpenTelemetry.Api" Version="1.15.3" />
     <PackageVersion Include="System.Security.Cryptography.Xml" Version="8.0.4" />
     <!-- Override to address https://github.com/advisories/GHSA-hv8m-jj95-wg3x -->
-    <PackageVersion Include="MessagePack" Version="2.5.301" />
+    <PackageVersion Include="MessagePack" Version="2.5.302" />
     <!-- Override to address https://github.com/advisories/GHSA-pggp-6c3x-2xmx -->
-    <PackageVersion Include="MongoDB.Driver" Version="3.8.1" />
+    <PackageVersion Include="MongoDB.Driver" Version="3.9.0" />
     <!-- Override to address  https://github.com/advisories/GHSA-6c8g-7p36-r338 -->
     <PackageVersion Include="SharpCompress" Version="1.0.0" />
   </ItemGroup>

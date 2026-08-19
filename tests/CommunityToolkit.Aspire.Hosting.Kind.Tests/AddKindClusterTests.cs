@@ -1,12 +1,16 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System.Runtime.InteropServices;
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.Utils;
+using Aspire.Hosting.Eventing;
 using Aspire.Hosting.Lifecycle;
 using CommunityToolkit.Aspire.Testing;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using System.Runtime.InteropServices;
 
 namespace CommunityToolkit.Aspire.Hosting.Kind.Tests;
 
@@ -15,7 +19,7 @@ public class AddKindClusterTests
     [Fact]
     public void AddKindClusterCreatesResource()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         builder.AddKindCluster("test-cluster");
 
@@ -29,7 +33,7 @@ public class AddKindClusterTests
     [Fact]
     public async Task WithKubernetesVersionSetsVersion()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         builder.AddKindCluster("test-cluster")
             .WithKubernetesVersion("v1.32.2");
@@ -50,10 +54,108 @@ public class AddKindClusterTests
         }
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void WithKubernetesVersionAndNodeImageConflict_Throws(bool setVersionFirst)
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var cluster = builder.AddKindCluster("test-cluster");
+
+        if (setVersionFirst)
+        {
+            cluster.WithKubernetesVersion("v1.32.2");
+            Assert.Throws<InvalidOperationException>(() => cluster.WithNodeImage("kindest/node:v1.32.2"));
+            return;
+        }
+
+        cluster.WithNodeImage("kindest/node:v1.32.2");
+        Assert.Throws<InvalidOperationException>(() => cluster.WithKubernetesVersion("v1.32.2"));
+    }
+
+    [Fact]
+    public async Task WithNodeImageSetsImageOnAllNodes()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+
+        builder.AddKindCluster("test-cluster")
+            .WithWorkerNodes(2)
+            .WithNodeImage("myacr.azurecr.io/kindest/node:v1.32.2");
+
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<KindClusterResource>());
+        var configPath = await KindConfigGenerator.GenerateConfigAsync(resource, CancellationToken.None);
+        try
+        {
+            var yaml = await File.ReadAllTextAsync(configPath);
+            Assert.Equal(3, yaml.Split("image: myacr.azurecr.io/kindest/node:v1.32.2").Length - 1);
+        }
+        finally
+        {
+            File.Delete(configPath);
+        }
+    }
+
+    [Fact]
+    public async Task WithNodeMountAddsMountOnAllNodes()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var hostPath = Path.GetFullPath(Path.Combine(builder.AppHostDirectory, "host-data"));
+
+        builder.AddKindCluster("test-cluster")
+            .WithWorkerNodes(1)
+            .WithNodeMount(hostPath, "/container-data", readOnly: true);
+
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<KindClusterResource>());
+        var configPath = await KindConfigGenerator.GenerateConfigAsync(resource, CancellationToken.None);
+        try
+        {
+            var yaml = await File.ReadAllTextAsync(configPath);
+            Assert.Equal(2, yaml.Split($"hostPath: {hostPath}").Length - 1);
+            Assert.Equal(2, yaml.Split("containerPath: /container-data").Length - 1);
+            Assert.Equal(2, yaml.Split("readOnly: true").Length - 1);
+        }
+        finally
+        {
+            File.Delete(configPath);
+        }
+    }
+
+    [Fact]
+    public async Task WithNodeMountResolvesRelativeHostPathFromAppHostDirectory()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var relativeHostPath = Path.Combine("mounts", "charts");
+        var expectedHostPath = Path.GetFullPath(Path.Combine(builder.AppHostDirectory, relativeHostPath));
+
+        builder.AddKindCluster("test-cluster")
+            .WithNodeMount(relativeHostPath, "/container-data");
+
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<KindClusterResource>());
+        var configPath = await KindConfigGenerator.GenerateConfigAsync(resource, CancellationToken.None);
+        try
+        {
+            var yaml = await File.ReadAllTextAsync(configPath);
+            Assert.Contains($"hostPath: {expectedHostPath}", yaml);
+        }
+        finally
+        {
+            File.Delete(configPath);
+        }
+    }
+
     [Fact]
     public async Task WithWorkerNodesSetsCount()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         builder.AddKindCluster("test-cluster")
             .WithWorkerNodes(3);
@@ -78,7 +180,7 @@ public class AddKindClusterTests
     [Fact]
     public async Task DefaultsAreCorrect()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         builder.AddKindCluster("test-cluster");
 
@@ -103,7 +205,7 @@ public class AddKindClusterTests
     [Fact]
     public void WithWorkerNodesRejectsNegative()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         var resourceBuilder = builder.AddKindCluster("test-cluster");
 
         Assert.Throws<ArgumentOutOfRangeException>(() => resourceBuilder.WithWorkerNodes(-1));
@@ -120,9 +222,54 @@ public class AddKindClusterTests
     [Fact]
     public void AddKindClusterThrowsOnNullName()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         Assert.Throws<ArgumentNullException>(() => builder.AddKindCluster(null!));
+    }
+
+    [Fact]
+    public void WithNodeImageRejectsNull()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var cluster = builder.AddKindCluster("test-cluster");
+
+        Assert.Throws<ArgumentNullException>(() => cluster.WithNodeImage(null!));
+    }
+
+    [Fact]
+    public void WithNodeMountRejectsNullHostPath()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var cluster = builder.AddKindCluster("test-cluster");
+
+        Assert.Throws<ArgumentNullException>(() => cluster.WithNodeMount(null!, "/container-data"));
+    }
+
+    [Fact]
+    public void WithNodeMountRejectsNullContainerPath()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var cluster = builder.AddKindCluster("test-cluster");
+
+        Assert.Throws<ArgumentNullException>(() => cluster.WithNodeMount(@"C:\host-data", null!));
+    }
+
+    [Fact]
+    public void WithNodeMountRejectsEmptyHostPath()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var cluster = builder.AddKindCluster("test-cluster");
+
+        Assert.Throws<ArgumentException>(() => cluster.WithNodeMount("", "/container-data"));
+    }
+
+    [Fact]
+    public void WithNodeMountRejectsRelativeContainerPath()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var cluster = builder.AddKindCluster("test-cluster");
+
+        Assert.Throws<ArgumentException>(() => cluster.WithNodeMount(@"C:\host-data", "container-data"));
     }
 
     [Fact]
@@ -154,7 +301,7 @@ public class AddKindClusterTests
     [Fact]
     public void WithReferenceInjectsEnvironmentAnnotation()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var kind = builder.AddKindCluster("test-cluster");
         builder.AddResource(new TestResource("svc"))
@@ -170,7 +317,7 @@ public class AddKindClusterTests
     [Fact]
     public async Task WithReference_NonContainer_SetsHostKubeconfigEnvironmentValue()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var kind = builder.AddKindCluster("test-cluster");
         var service = builder.AddResource(new TestResource("svc"))
@@ -186,7 +333,7 @@ public class AddKindClusterTests
     [Fact]
     public void DefaultClusterLifetimeIsSession()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         builder.AddKindCluster("test-cluster");
 
@@ -201,7 +348,7 @@ public class AddKindClusterTests
     [Fact]
     public void WithClusterLifetimeSetsAnnotation()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         builder.AddKindCluster("test-cluster")
             .WithClusterLifetime(ClusterLifetime.Persistent);
@@ -217,7 +364,7 @@ public class AddKindClusterTests
     [Fact]
     public void AddKindClusterRegistersLifecycleHook()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         builder.AddKindCluster("test-cluster");
 
@@ -227,6 +374,119 @@ public class AddKindClusterTests
                  d.ImplementationType == typeof(KindClusterLifecycleHook));
 
         Assert.NotNull(descriptor);
+    }
+
+    [Fact]
+    public async Task KindClusterLifecycleHook_CleansUpOnApplicationStopping()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        builder.AddKindCluster("test-cluster");
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var loggerService = app.Services.GetRequiredService<ResourceLoggerService>();
+        var processRunner = new FakeProcessRunner();
+        var hostLifetime = new TestHostApplicationLifetime();
+        var hook = new KindClusterLifecycleHook(
+            model,
+            loggerService,
+            processRunner,
+            new TestKindContainerRuntimeResolver(),
+            hostLifetime);
+
+        await hook.SubscribeAsync(new NoOpEventing(), null!);
+        hostLifetime.StopApplication();
+
+        await WaitForConditionAsync(() =>
+            processRunner.Commands.Any(command => command.FileName == "kind" && command.Arguments.Contains("delete cluster --name=test-cluster", StringComparison.Ordinal)));
+
+        Assert.Single(
+            processRunner.Commands,
+            command => command.FileName == "kind" && command.Arguments.Contains("delete cluster --name=test-cluster", StringComparison.Ordinal));
+
+        await hook.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task KindClusterLifecycleHook_CleansUpOnDisposeAsyncWithoutApplicationStopping()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        builder.AddKindCluster("test-cluster");
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var loggerService = app.Services.GetRequiredService<ResourceLoggerService>();
+        var processRunner = new FakeProcessRunner();
+        var hostLifetime = new TestHostApplicationLifetime();
+        var hook = new KindClusterLifecycleHook(
+            model,
+            loggerService,
+            processRunner,
+            new TestKindContainerRuntimeResolver(),
+            hostLifetime);
+
+        await hook.SubscribeAsync(new NoOpEventing(), null!);
+        await hook.DisposeAsync();
+
+        Assert.Single(
+            processRunner.Commands,
+            command => command.FileName == "kind" && command.Arguments.Contains("delete cluster --name=test-cluster", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task KindClusterLifecycleHook_DoesNotDoubleDeleteWhenStoppingThenDisposed()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        builder.AddKindCluster("test-cluster");
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var loggerService = app.Services.GetRequiredService<ResourceLoggerService>();
+        var processRunner = new FakeProcessRunner();
+        var hostLifetime = new TestHostApplicationLifetime();
+        var hook = new KindClusterLifecycleHook(
+            model,
+            loggerService,
+            processRunner,
+            new TestKindContainerRuntimeResolver(),
+            hostLifetime);
+
+        await hook.SubscribeAsync(new NoOpEventing(), null!);
+        hostLifetime.StopApplication();
+        await WaitForConditionAsync(() =>
+            processRunner.Commands.Any(command => command.FileName == "kind" && command.Arguments.Contains("delete cluster --name=test-cluster", StringComparison.Ordinal)));
+
+        await hook.DisposeAsync();
+
+        Assert.Single(
+            processRunner.Commands,
+            command => command.FileName == "kind" && command.Arguments.Contains("delete cluster --name=test-cluster", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task KindClusterLifecycleHook_DoesNotDeletePersistentClustersOnApplicationStopping()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        builder.AddKindCluster("persistent-cluster")
+            .WithClusterLifetime(ClusterLifetime.Persistent);
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var loggerService = app.Services.GetRequiredService<ResourceLoggerService>();
+        var processRunner = new FakeProcessRunner();
+        var hostLifetime = new TestHostApplicationLifetime();
+        var hook = new KindClusterLifecycleHook(
+            model,
+            loggerService,
+            processRunner,
+            new TestKindContainerRuntimeResolver(),
+            hostLifetime);
+
+        await hook.SubscribeAsync(new NoOpEventing(), null!);
+        hostLifetime.StopApplication();
+        await hook.DisposeAsync();
+
+        Assert.DoesNotContain(processRunner.Commands, command => command.FileName == "kind" && command.Arguments.Contains("delete cluster", StringComparison.Ordinal));
     }
 
     // ── KindConfigGenerator tests ────────────────────────────────────────
@@ -470,7 +730,7 @@ public class AddKindClusterTests
         var expectedImage = $"{"kindest/node"}:v1.31.0";
 
         // Order 1: workers first, then version
-        var builder1 = DistributedApplication.CreateBuilder();
+        using var builder1 = TestDistributedApplicationBuilder.Create();
         builder1.AddKindCluster("order1")
             .WithWorkerNodes(2)
             .WithKubernetesVersion("v1.31.0");
@@ -488,7 +748,7 @@ public class AddKindClusterTests
         finally { File.Delete(path1); }
 
         // Order 2: version first, then workers
-        var builder2 = DistributedApplication.CreateBuilder();
+        using var builder2 = TestDistributedApplicationBuilder.Create();
         builder2.AddKindCluster("order2")
             .WithKubernetesVersion("v1.31.0")
             .WithWorkerNodes(2);
@@ -533,12 +793,44 @@ public class AddKindClusterTests
         Assert.NotEqual(0, result.ExitCode);
     }
 
+    [Fact]
+    public async Task DefaultProcessRunner_LogsInlineKubeconfigPathInDebugLog()
+    {
+        var runner = new DefaultProcessRunner();
+        var logger = new CapturingLogger();
+        const string kubeconfigPath = "C:\\Users\\tamirdresher\\.kube\\kind-config.yaml";
+
+        _ = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? await runner.RunAsync(logger, "cmd", ["/c", "echo", "hello", $"--kubeconfig={kubeconfigPath}"])
+            : await runner.RunAsync(logger, "sh", ["-c", "echo hello", $"--kubeconfig={kubeconfigPath}"]);
+
+        var executingMessage = Assert.Single(logger.Messages, message => message.StartsWith("Executing:", StringComparison.Ordinal));
+        Assert.Contains(kubeconfigPath, executingMessage, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains($"--kubeconfig={kubeconfigPath}", executingMessage, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task DefaultProcessRunner_LogsSpaceSeparatedKubeconfigPathInDebugLog()
+    {
+        var runner = new DefaultProcessRunner();
+        var logger = new CapturingLogger();
+        const string kubeconfigPath = "C:\\Users\\tamirdresher\\.kube\\kind-config.yaml";
+
+        _ = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? await runner.RunAsync(logger, "cmd", ["/c", "echo", "hello", "--kubeconfig", kubeconfigPath])
+            : await runner.RunAsync(logger, "sh", ["-c", "echo hello", "--kubeconfig", kubeconfigPath]);
+
+        var executingMessage = Assert.Single(logger.Messages, message => message.StartsWith("Executing:", StringComparison.Ordinal));
+        Assert.Contains(kubeconfigPath, executingMessage, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains($"--kubeconfig {kubeconfigPath}", executingMessage, StringComparison.Ordinal);
+    }
+
     // ── Edge-case tests ──────────────────────────────────────────────────
 
     [Fact]
     public async Task WithWorkerNodes_Zero_IsValid()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         builder.AddKindCluster("edge-zero")
             .WithWorkerNodes(0);
 
@@ -553,6 +845,7 @@ public class AddKindClusterTests
             Assert.Contains("- role: control-plane", yaml);
             Assert.DoesNotContain("- role: worker", yaml);
         }
+
         finally
         {
             File.Delete(configPath);
@@ -570,4 +863,85 @@ public class AddKindClusterTests
     }
 
     private sealed class TestResource(string name) : Resource(name), IResourceWithEnvironment;
+
+    private sealed class TestKindContainerRuntimeResolver : IKindContainerRuntimeResolver
+    {
+        public Task<KindContainerRuntime> ResolveAsync(CancellationToken cancellationToken) =>
+            Task.FromResult(new KindContainerRuntime("docker"));
+    }
+
+    private sealed class TestHostApplicationLifetime : IHostApplicationLifetime
+    {
+        private readonly CancellationTokenSource _applicationStarted = new();
+        private readonly CancellationTokenSource _applicationStopping = new();
+        private readonly CancellationTokenSource _applicationStopped = new();
+
+        public CancellationToken ApplicationStarted => _applicationStarted.Token;
+
+        public CancellationToken ApplicationStopping => _applicationStopping.Token;
+
+        public CancellationToken ApplicationStopped => _applicationStopped.Token;
+
+        public void StopApplication()
+        {
+            if (!_applicationStopping.IsCancellationRequested)
+            {
+                _applicationStopping.Cancel();
+            }
+        }
+    }
+
+    private sealed class NoOpEventing : IDistributedApplicationEventing
+    {
+        public DistributedApplicationEventSubscription Subscribe<T>(Func<T, CancellationToken, Task> callback)
+            where T : IDistributedApplicationEvent => null!;
+
+        public DistributedApplicationEventSubscription Subscribe<T>(IResource resource, Func<T, CancellationToken, Task> callback)
+            where T : IDistributedApplicationResourceEvent => null!;
+
+        public void Unsubscribe(DistributedApplicationEventSubscription subscription)
+        {
+        }
+
+        public Task PublishAsync<T>(T @event, CancellationToken cancellationToken = default)
+            where T : IDistributedApplicationEvent => Task.CompletedTask;
+
+        public Task PublishAsync<T>(T @event, EventDispatchBehavior dispatchBehavior, CancellationToken cancellationToken = default)
+            where T : IDistributedApplicationEvent => Task.CompletedTask;
+    }
+
+    private static async Task WaitForConditionAsync(Func<bool> condition)
+    {
+        for (var attempt = 0; attempt < 50; attempt++)
+        {
+            if (condition())
+            {
+                return;
+            }
+
+            await Task.Delay(20);
+        }
+
+        throw new Xunit.Sdk.XunitException("Timed out waiting for asynchronous condition.");
+    }
+
+    private sealed class CapturingLogger : ILogger
+    {
+        public List<string> Messages { get; } = [];
+
+        public IDisposable? BeginScope<TState>(TState state)
+            where TState : notnull => null;
+
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(
+            LogLevel logLevel,
+            EventId eventId,
+            TState state,
+            Exception? exception,
+            Func<TState, Exception?, string> formatter)
+        {
+            Messages.Add(formatter(state, exception));
+        }
+    }
 }

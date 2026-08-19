@@ -3,6 +3,7 @@
 
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.Utils;
 using CommunityToolkit.Aspire.Hosting.Kind;
 
 namespace CommunityToolkit.Aspire.Hosting.Kind.Tests;
@@ -23,7 +24,7 @@ public class KindPublicApiTests
     [Fact]
     public void AddKindClusterShouldThrowWhenNameIsNull()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         string name = null!;
 
         var action = () => builder.AddKindCluster(name);
@@ -49,6 +50,28 @@ public class KindPublicApiTests
         IResourceBuilder<KindClusterResource> builder = null!;
 
         var action = () => builder.WithWorkerNodes(2);
+
+        var exception = Assert.Throws<ArgumentNullException>(action);
+        Assert.Equal(nameof(builder), exception.ParamName);
+    }
+
+    [Fact]
+    public void WithNodeImageShouldThrowWhenBuilderIsNull()
+    {
+        IResourceBuilder<KindClusterResource> builder = null!;
+
+        var action = () => builder.WithNodeImage("kindest/node:v1.32.2");
+
+        var exception = Assert.Throws<ArgumentNullException>(action);
+        Assert.Equal(nameof(builder), exception.ParamName);
+    }
+
+    [Fact]
+    public void WithNodeMountShouldThrowWhenBuilderIsNull()
+    {
+        IResourceBuilder<KindClusterResource> builder = null!;
+
+        var action = () => builder.WithNodeMount(@"C:\host", "/container");
 
         var exception = Assert.Throws<ArgumentNullException>(action);
         Assert.Equal(nameof(builder), exception.ParamName);
@@ -102,7 +125,7 @@ public class KindPublicApiTests
     [Fact]
     public void WithKindConfigShouldThrowWhenConfigureIsNull()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         var cluster = builder.AddKindCluster("test");
         Action<KindConfigModel> configure = null!;
 

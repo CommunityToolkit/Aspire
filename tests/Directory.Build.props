@@ -42,6 +42,8 @@
          https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-exit-codes -->
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --ignore-exit-code 8 --filter-not-trait &quot;category=failing&quot;</TestingPlatformCommandLineArguments>
 
+    <!-- Allow plain `dotnet test` to invoke Microsoft.Testing.Platform test projects. -->
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
     <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
   </PropertyGroup>
 

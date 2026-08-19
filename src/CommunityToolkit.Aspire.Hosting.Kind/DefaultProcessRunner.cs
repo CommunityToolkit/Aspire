@@ -20,6 +20,7 @@ internal sealed class DefaultProcessRunner : IProcessRunner
         IReadOnlyList<string> arguments,
         string? workingDirectory = null,
         IReadOnlyDictionary<string, string>? environmentVariables = null,
+        string? standardInput = null,
         CancellationToken cancellationToken = default)
     {
         logger.LogDebug("Executing: {FileName} {Arguments}", fileName, string.Join(' ', arguments));
@@ -29,6 +30,7 @@ internal sealed class DefaultProcessRunner : IProcessRunner
             FileName = fileName,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
+            RedirectStandardInput = standardInput is not null,
             UseShellExecute = false,
             CreateNoWindow = true
         };
@@ -79,6 +81,12 @@ internal sealed class DefaultProcessRunner : IProcessRunner
 
         try
         {
+            if (standardInput is not null)
+            {
+                await process.StandardInput.WriteAsync(standardInput.AsMemory(), cancellationToken).ConfigureAwait(false);
+                process.StandardInput.Close();
+            }
+
             // WaitForExitAsync observes process termination; WaitForExit() then lets async stdout/stderr event handlers finish draining redirected output.
             await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
             process.WaitForExit();

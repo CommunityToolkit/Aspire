@@ -1,3 +1,7 @@
 <Project>
   <Import Project="..\Directory.Build.props" />
+
+  <PropertyGroup>
+    <AspireUseCliBundle Condition="'$(IsAspireHost)' == 'true'">true</AspireUseCliBundle>
+  </PropertyGroup>
 </Project>

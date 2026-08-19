@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>An Aspire hosting integration for the Floci local cloud emulators: AddFlociAws (AWS), AddFlociAzure (Azure) and AddFlociGcp (GCP). Includes a WithFlociUI() extension for running the Floci UI web console alongside one or more emulators.</Description>
+    <AdditionalPackageTags>floci aws azure gcp localstack azurite emulator hosting ui tls</AdditionalPackageTags>
+    <!-- Aspire's certificate configuration surface (WithHttpsCertificateConfiguration,
+         HttpsCertificateAnnotation, IDeveloperCertificateService) is still experimental in 13.4. -->
+    <NoWarn>$(NoWarn);ASPIRECERTIFICATES001</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
+    <PackageReference Include="MessagePack" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.Floci.Tests" />
+  </ItemGroup>
+
+</Project>
