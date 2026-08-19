@@ -800,10 +800,10 @@ public static class BitwardenSecretManagerExtensions
                 "Reprovision",
                 async context =>
                 {
-                    ResourceNotificationService notifications = context.ServiceProvider.GetRequiredService<ResourceNotificationService>();
+                    ResourceNotificationService notifications = context.Services.GetRequiredService<ResourceNotificationService>();
                     try
                     {
-                        await SyncAsync(resource, notifications, context.ServiceProvider, context.Logger, context.CancellationToken).ConfigureAwait(false);
+                        await SyncAsync(resource, notifications, context.Services, context.Logger, context.CancellationToken).ConfigureAwait(false);
                         return new ExecuteCommandResult { Success = true };
                     }
                     catch (Exception ex)
@@ -831,7 +831,7 @@ public static class BitwardenSecretManagerExtensions
                 "Reset auth cache",
                 async context =>
                 {
-                    await BitwardenSecretManagerProvisioner.ResetAuthCacheAsync(resource, context.ServiceProvider, context.CancellationToken).ConfigureAwait(false);
+                    await BitwardenSecretManagerProvisioner.ResetAuthCacheAsync(resource, context.Services, context.CancellationToken).ConfigureAwait(false);
                     return new ExecuteCommandResult { Success = true };
                 },
                 new CommandOptions

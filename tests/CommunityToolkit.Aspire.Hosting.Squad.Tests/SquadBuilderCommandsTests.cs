@@ -268,7 +268,7 @@ public class SquadBuilderCommandsTests : IDisposable
         // (Aspire 13.x). We pass a minimal context — the Squad commands ignore Logger / Arguments.
         var ctx = new ExecuteCommandContext
         {
-            ServiceProvider = null!,
+            Services = null!,
             ResourceName = resource.Name,
             CancellationToken = default,
             Logger = NullLogger.Instance,

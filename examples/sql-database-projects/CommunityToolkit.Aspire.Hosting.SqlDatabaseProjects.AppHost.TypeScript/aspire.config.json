@@ -4,7 +4,7 @@
     "language": "typescript/nodejs"
   },
   "sdk": {
-    "version": "13.4.3"
+    "version": "13.5.0"
   },
   "profiles": {
     "https": {
@@ -20,4 +20,3 @@
     "CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects": "../../../src/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.csproj"
   }
 }
-
