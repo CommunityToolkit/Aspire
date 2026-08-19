@@ -238,7 +238,6 @@ public class ValidationMessagingTests
 
         public Task<InteractionResult<bool>> PromptProgressAsync(
             string message,
-            string? title = null,
             ProgressInteractionOptions? options = null,
             CancellationToken cancellationToken = default)
             => Task.FromException<InteractionResult<bool>>(new NotSupportedException());

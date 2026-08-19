@@ -4,7 +4,7 @@
     "language": "typescript/nodejs"
   },
   "sdk": {
-    "version": "13.5.0-preview.1.26407.1"
+    "version": "13.5.0"
   },
   "profiles": {
     "https": {
@@ -19,4 +19,3 @@
     "CommunityToolkit.Aspire.Hosting.Flagd": "../../../src/CommunityToolkit.Aspire.Hosting.Flagd/CommunityToolkit.Aspire.Hosting.Flagd.csproj"
   }
 }
-
