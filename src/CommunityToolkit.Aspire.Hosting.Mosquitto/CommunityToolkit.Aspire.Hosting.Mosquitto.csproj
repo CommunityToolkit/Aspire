@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>An Aspire hosting package for hosting the Mosquitto MQTT broker.</Description>
+    <AdditionalPackageTags>hosting mosquitto mqtt messaging</AdditionalPackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
+    <!-- Provides the MQTT client used by the broker readiness health check. -->
+    <PackageReference Include="MQTTnet" />
+    <!-- Pins the transitive MessagePack dependency (used by MQTTnet) to the patched version. -->
+    <PackageReference Include="MessagePack" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.Mosquitto.Tests" />
+  </ItemGroup>
+
+</Project>

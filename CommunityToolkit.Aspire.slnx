@@ -134,6 +134,9 @@
     <Project Path="examples/minio/CommunityToolkit.Aspire.Hosting.Minio.AppHost/CommunityToolkit.Aspire.Hosting.Minio.AppHost.csproj" />
     <Project Path="examples/minio/CommunityToolkit.Aspire.Hosting.Minio.ServiceDefaults/CommunityToolkit.Aspire.Hosting.Minio.ServiceDefaults.csproj" />
   </Folder>
+  <Folder Name="/examples/mosquitto/">
+    <Project Path="examples/mosquitto/CommunityToolkit.Aspire.Hosting.Mosquitto.AppHost/CommunityToolkit.Aspire.Hosting.Mosquitto.AppHost.csproj" />
+  </Folder>
   <Folder Name="/examples/mongodb-ext/">
     <Project Path="examples/mongodb-ext/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.AppHost/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.AppHost.csproj" />
   </Folder>
@@ -285,6 +288,7 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Meilisearch/CommunityToolkit.Aspire.Hosting.Meilisearch.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Minio/CommunityToolkit.Aspire.Hosting.Minio.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Mosquitto/CommunityToolkit.Aspire.Hosting.Mosquitto.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.MySql.Extensions/CommunityToolkit.Aspire.Hosting.MySql.Extensions.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Ngrok/CommunityToolkit.Aspire.Hosting.Ngrok.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Ollama/CommunityToolkit.Aspire.Hosting.Ollama.csproj" />
@@ -366,6 +370,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Meilisearch.Tests/CommunityToolkit.Aspire.Hosting.Meilisearch.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Minio.Tests/CommunityToolkit.Aspire.Hosting.Minio.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.Tests/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Mosquitto.Tests/CommunityToolkit.Aspire.Hosting.Mosquitto.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.MySql.Extensions.Tests/CommunityToolkit.Aspire.Hosting.MySql.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Ngrok.Tests/CommunityToolkit.Aspire.Hosting.Ngrok.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Ollama.Tests/CommunityToolkit.Aspire.Hosting.Ollama.Tests.csproj" />
