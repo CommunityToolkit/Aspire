@@ -33,7 +33,7 @@ public class ResourceCreationTests
         Assert.Equal("mqtt", resource.Name);
 
         Assert.True(resource.TryGetLastAnnotation(out ContainerImageAnnotation? image));
-        Assert.Equal("eclipse-mosquitto", image.Image);
+        Assert.Equal("library/eclipse-mosquitto", image.Image);
         Assert.Equal("2.0.22", image.Tag);
         Assert.Equal("docker.io", image.Registry);
     }
