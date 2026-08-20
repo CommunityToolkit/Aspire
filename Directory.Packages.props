@@ -89,7 +89,7 @@
          workaround until Microsoft.Agents.AI.GitHub.Copilot ships the
          buildTransitive bridge from microsoft/agent-framework#6457, so keep the
          direct ref pinned until that preview lands. -->
-    <PackageVersion Include="GitHub.Copilot.SDK" Version="1.0.8" />
+    <PackageVersion Include="GitHub.Copilot.SDK" Version="1.0.11" />
     <PackageVersion Include="JsonSchema.Net" Version="9.4.0" />
     <PackageVersion Include="KubernetesClient" Version="19.0.2" />
     <PackageVersion Include="OllamaSharp" Version="5.4.12" />
