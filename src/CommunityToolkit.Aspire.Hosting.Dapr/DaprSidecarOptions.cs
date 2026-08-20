@@ -241,4 +241,12 @@ public sealed record DaprSidecarOptions
     /// If specified, the Dapr sidecar will use Unix Domain Sockets for API calls.
     /// </remarks>
     public string? UnixDomainSocket { get; init; }
+
+    /// <summary>
+    /// Gets or sets the name of the Dapr sidecar resource as it appears in the Aspire dashboard.
+    /// </summary>
+    /// <remarks>
+    /// When null or whitespace, the default name <c>{resourceName}-dapr</c> is used.
+    /// </remarks>
+    public string? SidecarName { get; init; }
 }
