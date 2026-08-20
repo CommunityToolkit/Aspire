@@ -55,6 +55,7 @@ public static class AzureStorageExplorerBuilderExtensions
                 targetPort: AzureStorageExplorerPort,
                 name: AzureStorageExplorerResource.PrimaryEndpointName
             )
+            .WithHttpHealthCheck("/", endpointName: AzureStorageExplorerResource.PrimaryEndpointName)
             .WithImage(AzureStorageExplorerContainerImageTags.Image, AzureStorageExplorerContainerImageTags.Tag)
             .WithImageRegistry(AzureStorageExplorerContainerImageTags.Registry)
             .ExcludeFromManifest();
