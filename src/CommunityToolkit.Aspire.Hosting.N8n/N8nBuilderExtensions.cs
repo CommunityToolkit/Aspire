@@ -57,8 +57,8 @@ public static partial class N8nBuilderExtensions
             .WithEnvironment("OFFLOAD_MANUAL_EXECUTIONS_TO_WORKERS", "true")
             .WithEnvironment("N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS", "false")
             .WithEnvironment("N8N_ENCRYPTION_KEY", encryptionKeyParameter)
-            .WithEnvironment("WEBHOOK_URL", n8n.GetEndpoint(N8nResource.PrimaryEndpointName, builder.ExecutionContext.IsPublishMode ? KnownNetworkIdentifiers.PublicInternet : KnownNetworkIdentifiers.LocalhostNetwork));
-
+            .WithEnvironment("N8N_WEBHOOK_URL", n8n.GetEndpoint(N8nResource.PrimaryEndpointName, builder.ExecutionContext.IsPublishMode ? KnownNetworkIdentifiers.PublicInternet : KnownNetworkIdentifiers.LocalhostNetwork))
+            .WithEnvironment("N8N_PROXY_HOPS", "1");
 
 #pragma warning disable ASPIRECERTIFICATES001
         n8nBuilder.WithHttpsCertificateConfiguration(ctx =>
@@ -426,5 +426,23 @@ public static partial class N8nBuilderExtensions
             .WithEnvironment("N8N_METRICS_INCLUDE_API_ENDPOINTS", options.IncludeApiEndpoints.ToString().ToLower())
             .WithEnvironment("N8N_METRICS_INCLUDE_API_PATH_LABEL", options.IncludeApiPathLabel.ToString().ToLower())
             .WithEnvironment("N8N_METRICS_INCLUDE_QUEUE_METRICS", options.IncludeQueueMetrics.ToString().ToLower());
+    }
+
+    /// <summary>
+    /// Configures the external webhook url for the n8n resource. This overrides the default url in <see cref="AddN8n"/>.
+    /// </summary>
+    /// <ats-summary>Configures the external url for the n8n resource used by webhooks.</ats-summary>
+    /// <param name="builder">The n8n resource builder.</param>
+    /// <param name="webhookUrl">The external url to use (e.g., "https://n8n.example.com"). Cannot be null or empty.</param>
+    /// <returns>The resource builder for chaining.</returns>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="webhookUrl"/> is null or whitespace.</exception>
+    [AspireExport]
+    public static IResourceBuilder<N8nResource> WithWebhookUrl(
+        this IResourceBuilder<N8nResource> builder,
+        string webhookUrl)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(webhookUrl);
+
+        return builder.WithEnvironment("N8N_WEBHOOK_URL", webhookUrl);
     }
 }

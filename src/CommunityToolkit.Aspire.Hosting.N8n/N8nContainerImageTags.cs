@@ -17,6 +17,6 @@ internal static class N8nContainerImageTags
     /// <summary>
     /// The tag for the n8n container image.
     /// </summary>
-    public const string Tag = "2.36.2";
+    public const string Tag = "2.36.7";
 }
 
