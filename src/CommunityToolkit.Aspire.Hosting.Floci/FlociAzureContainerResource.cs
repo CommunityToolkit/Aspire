@@ -14,6 +14,10 @@ public class FlociAzureContainerResource(string name) : FlociContainerResource(n
     internal const string DefaultAccountName = "devstoreaccount1";
     internal const string DefaultAccountKey = "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMh0==";
 
+    // Well-known Cosmos DB emulator account key that floci-az accepts by default (no auth enforced).
+    internal const string DefaultCosmosAccountKey = "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==";
+    internal const string DefaultCosmosConnectionName = "cosmos";
+
     internal override void ApplyUIEnvironment(EnvironmentCallbackContext context)
     {
         context.EnvironmentVariables[FlociUIContainerResource.AzureEndpointEnvVar] = UIEndpointExpression;

@@ -74,6 +74,55 @@ public static partial class FlociHostingExtension
         });
 
     /// <summary>
+    /// Adds a Cosmos DB connection string for the Floci Azure emulator to a dependent resource,
+    /// injecting <c>ConnectionStrings__{connectionName}</c> so a Cosmos client — e.g.
+    /// <c>AddAzureCosmosClient(connectionName)</c> — resolves to the emulator. floci-az serves the
+    /// Cosmos SQL/NoSQL API from the same endpoint under the <c>{account}-cosmos</c> path.
+    /// </summary>
+    /// <remarks>
+    /// This is additive and composes with <see cref="WithReference{TDestination}(IResourceBuilder{TDestination}, IResourceBuilder{FlociAzureContainerResource})"/>:
+    /// it injects only the Cosmos connection string, not the base <c>ConnectionStrings__{name}</c>
+    /// reference, so call both if you also want the base endpoint / storage variables. The endpoint
+    /// is left as an unresolved expression, so Aspire resolves it per dependent (a project gets
+    /// <c>localhost:{hostPort}</c>, a sibling container the container-network address) and a
+    /// certificate configured later still flips the scheme to <c>https</c>.
+    /// </remarks>
+    /// <ats-summary>Adds a Cosmos DB connection string for the Floci Azure emulator</ats-summary>
+    /// <typeparam name="TDestination">The type of the resource receiving the reference.</typeparam>
+    /// <param name="builder">The resource builder for the resource receiving the reference.</param>
+    /// <param name="floci">The Floci Azure resource to reference.</param>
+    /// <param name="connectionName">The connection string name to inject (default: <c>cosmos</c>).</param>
+    /// <param name="accountName">The Cosmos account name segment (default: <c>devstoreaccount1</c>).</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{TDestination}"/> for further configuration.</returns>
+    [AspireExport("withFlociAzureCosmosReference")]
+    public static IResourceBuilder<TDestination> WithCosmosReference<TDestination>(
+        this IResourceBuilder<TDestination> builder,
+        IResourceBuilder<FlociAzureContainerResource> floci,
+        string connectionName = FlociAzureContainerResource.DefaultCosmosConnectionName,
+        string? accountName = null)
+        where TDestination : IResourceWithEnvironment
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(floci);
+        ArgumentException.ThrowIfNullOrEmpty(connectionName);
+
+        FlociAzureContainerResource resource = floci.Resource;
+        string account = accountName ?? FlociAzureContainerResource.DefaultAccountName;
+
+        // Built inside the callback so the scheme is read after the whole AppHost is configured.
+        // The account key is the well-known Cosmos emulator key, distinct from the Azurite storage
+        // key used for AZURE_STORAGE_CONNECTION_STRING.
+        return builder.WithEnvironment(context =>
+        {
+            ReferenceExpression accountEndpoint = ReferenceExpression.Create(
+                $"{resource.ConnectionStringExpression}/{account}-cosmos/");
+
+            context.EnvironmentVariables[$"ConnectionStrings__{connectionName}"] = ReferenceExpression.Create(
+                $"AccountEndpoint={accountEndpoint};AccountKey={FlociAzureContainerResource.DefaultCosmosAccountKey};");
+        });
+    }
+
+    /// <summary>
     /// Mounts the Docker socket into the Floci Azure container so that Azure Functions and other
     /// container-backed services can launch sibling containers.
     /// Also sets <c>FLOCI_AZ_DOCKER_DOCKER_HOST</c> to <c>unix:///var/run/docker.sock</c> (the

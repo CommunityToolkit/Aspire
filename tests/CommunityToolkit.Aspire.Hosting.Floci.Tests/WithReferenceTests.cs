@@ -103,6 +103,78 @@ public class WithReferenceTests
         Assert.StartsWith("{floci-gcp.bindings.gcp.scheme}://", storageHost);
     }
 
+    [Fact]
+    public async Task WithCosmosReferenceAzureSetsCosmosConnectionString()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+
+        var floci = builder.AddFlociAzure("floci-az");
+        var worker = builder.AddExecutable("worker", "dotnet", ".").WithCosmosReference(floci);
+
+        var envVars = await ResolveEnvironmentAsync(builder, worker);
+
+        Assert.Contains("ConnectionStrings__cosmos", envVars.Keys);
+
+        var connectionString = Assert.IsType<ReferenceExpression>(envVars["ConnectionStrings__cosmos"]).ValueExpression;
+        Assert.Contains("AccountEndpoint=", connectionString);
+        Assert.Contains($"/{FlociAzureContainerResource.DefaultAccountName}-cosmos/;", connectionString);
+        Assert.Contains("AccountKey=", connectionString);
+        // The endpoint is an unresolved expression so it tracks Aspire's (possibly randomized) port
+        // assignment, and the scheme flips to https if a certificate is configured.
+        Assert.Contains("{floci-az.bindings.azure.scheme}://", connectionString);
+    }
+
+    [Fact]
+    public async Task WithCosmosReferenceIsAdditiveAndComposesWithWithReference()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+
+        var floci = builder.AddFlociAzure("floci-az");
+        var worker = builder.AddExecutable("worker", "dotnet", ".")
+            .WithReference(floci)
+            .WithCosmosReference(floci);
+
+        var envVars = await ResolveEnvironmentAsync(builder, worker);
+
+        // The base storage reference and the Cosmos connection string coexist.
+        Assert.Contains("ConnectionStrings__floci-az", envVars.Keys);
+        Assert.Contains("AZURE_STORAGE_CONNECTION_STRING", envVars.Keys);
+        Assert.Contains("ConnectionStrings__cosmos", envVars.Keys);
+    }
+
+    [Fact]
+    public async Task WithCosmosReferenceHonorsCustomConnectionAndAccountName()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+
+        var floci = builder.AddFlociAzure("floci-az");
+        var worker = builder.AddExecutable("worker", "dotnet", ".")
+            .WithCosmosReference(floci, connectionName: "notifications", accountName: "acct2");
+
+        var envVars = await ResolveEnvironmentAsync(builder, worker);
+
+        Assert.Contains("ConnectionStrings__notifications", envVars.Keys);
+        var connectionString = Assert.IsType<ReferenceExpression>(envVars["ConnectionStrings__notifications"]).ValueExpression;
+        Assert.Contains("/acct2-cosmos/;", connectionString);
+    }
+
+    [Fact]
+    public void WithCosmosReferenceBuilderShouldNotBeNull()
+    {
+        IResourceBuilder<ContainerResource> builder = null!;
+        IResourceBuilder<FlociAzureContainerResource> floci = null!;
+        Assert.Throws<ArgumentNullException>(() => builder.WithCosmosReference(floci));
+    }
+
+    [Fact]
+    public void WithCosmosReferenceFlociResourceShouldNotBeNull()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+        var worker = builder.AddContainer("worker", "myorg/worker");
+
+        Assert.Throws<ArgumentNullException>(() => worker.WithCosmosReference(null!));
+    }
+
     private static async Task<Dictionary<string, object>> ResolveEnvironmentAsync<T>(
         IDistributedApplicationBuilder builder,
         IResourceBuilder<T> dependent)
