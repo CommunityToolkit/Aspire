@@ -1,5 +1,4 @@
 using Aspire.Hosting.ApplicationModel;
-using System.Text;
 
 #pragma warning disable ASPIREATS001 // AspireExport is experimental
 
@@ -45,6 +44,12 @@ public static class RedisBuilderExtensions
 
         dbGateBuilder
             .WithEnvironment(context => ConfigureDbGateContainer(context, builder))
+            .WithCertificateTrustConfiguration(context =>
+            {
+                context.EnvironmentVariables["NODE_EXTRA_CA_CERTS"] = context.CertificateBundlePath;
+
+                return Task.CompletedTask;
+            })
             .WaitFor(builder);
 
         configureContainer?.Invoke(dbGateBuilder);
@@ -120,13 +125,8 @@ public static class RedisBuilderExtensions
         var connectionId = DbGateBuilderExtensions.SanitizeConnectionId(name);
         var label = $"LABEL_{connectionId}";
 
-        // DbGate assumes Redis is being accessed over a default Aspire container network and hardcodes the resource address
-        var redisUrl = redisResource.PasswordParameter is not null ?
-            ReferenceExpression.Create($"rediss://:{redisResource.PasswordParameter}@{name}:{redisResource.PrimaryEndpoint.TargetPort?.ToString()}") :
-            ReferenceExpression.Create($"rediss://{name}:{redisResource.PrimaryEndpoint.TargetPort?.ToString()}");
-
         context.EnvironmentVariables.Add(label, name);
-        context.EnvironmentVariables.Add($"URL_{connectionId}", redisUrl);
+        context.EnvironmentVariables.Add($"URL_{connectionId}", redisResource.UriExpression);
         context.EnvironmentVariables.Add($"ENGINE_{connectionId}", "redis@dbgate-plugin-redis");
 
         if (context.EnvironmentVariables.GetValueOrDefault("CONNECTIONS") is string { Length: > 0 } connections)

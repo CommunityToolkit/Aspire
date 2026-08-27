@@ -26,7 +26,7 @@ public class ResourceCreationTests
 
         Assert.Equal("dbgate", dbGateResource.Name);
 
-        var envs = await dbGateResource.GetEnvironmentVariablesAsync();
+        var envs = await GetEnvironmentVariablesAsync(builder, dbGateResource);
 
         Assert.NotEmpty(envs);
 
@@ -41,18 +41,43 @@ public class ResourceCreationTests
                 Assert.Equal("LABEL_redis", item.Key);
                 Assert.Equal(redisResource.Name, item.Value);
             },
-            async item =>
+            item =>
             {
-                var redisUrl = redisResource.PasswordParameter is not null ?
-                $"rediss://:{await redisResource.PasswordParameter.GetValueAsync(default)}@{redisResource.Name}:{redisResource.PrimaryEndpoint.TargetPort}" : $"rediss://{redisResource.Name}:{redisResource.PrimaryEndpoint.TargetPort}";
                 Assert.Equal("URL_redis", item.Key);
-                Assert.Equal(redisUrl, item.Value);
+                var redisUrl = Assert.IsType<ReferenceExpression>(item.Value);
+                Assert.Equal(redisResource.UriExpression.ValueExpression, redisUrl.ValueExpression);
             },
             item =>
             {
                 Assert.Equal("ENGINE_redis", item.Key);
                 Assert.Equal("redis@dbgate-plugin-redis", item.Value);
             });
+
+        Assert.Single(dbGateResource.Annotations.OfType<CertificateTrustConfigurationCallbackAnnotation>());
+    }
+
+    [Fact]
+    public async Task WithDbGateUsesRedisUriExpressionWhenTlsIsDisabled()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var redisResource = builder.AddRedis("redis")
+            .WithEndpoint("tcp", endpoint =>
+            {
+                endpoint.AllocatedEndpoint = new AllocatedEndpoint(endpoint, "localhost", 27017);
+                endpoint.TlsEnabled = false;
+            })
+            .WithDbGate()
+            .Resource;
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var dbGateResource = Assert.Single(appModel.Resources.OfType<DbGateContainerResource>());
+        var envs = await GetEnvironmentVariablesAsync(builder, dbGateResource);
+        var redisUrl = Assert.IsType<ReferenceExpression>(envs["URL_redis"]);
+
+        Assert.Equal(redisResource.UriExpression.ValueExpression, redisUrl.ValueExpression);
     }
 
     [Fact]
@@ -134,7 +159,7 @@ public class ResourceCreationTests
 
         Assert.Equal("dbgate", dbGateResource.Name);
 
-        var envs = await dbGateResource.GetEnvironmentVariablesAsync();
+        var envs = await GetEnvironmentVariablesAsync(builder, dbGateResource);
 
         Assert.NotEmpty(envs);
 
@@ -149,13 +174,11 @@ public class ResourceCreationTests
                 Assert.Equal("LABEL_redis1", item.Key);
                 Assert.Equal(redisResource1.Name, item.Value);
             },
-            async item =>
+            item =>
             {
-                var redisUrl = redisResource1.PasswordParameter is not null ?
-                $"rediss://:{await redisResource1.PasswordParameter.GetValueAsync(default)}@{redisResource1.Name}:{redisResource1.PrimaryEndpoint.TargetPort}" : $"rediss://{redisResource1.Name}:{redisResource1.PrimaryEndpoint.TargetPort}";
-
                 Assert.Equal("URL_redis1", item.Key);
-                Assert.Equal(redisUrl, item.Value);
+                var redisUrl = Assert.IsType<ReferenceExpression>(item.Value);
+                Assert.Equal(redisResource1.UriExpression.ValueExpression, redisUrl.ValueExpression);
             },
             item =>
             {
@@ -167,18 +190,33 @@ public class ResourceCreationTests
                 Assert.Equal("LABEL_redis2", item.Key);
                 Assert.Equal(redisResource2.Name, item.Value);
             },
-            async item =>
+            item =>
             {
-                var redisUrl = redisResource2.PasswordParameter is not null ?
-                $"rediss://:{await redisResource2.PasswordParameter.GetValueAsync(default)}@{redisResource2.Name}:{redisResource2.PrimaryEndpoint.TargetPort}" : $"rediss://{redisResource2.Name}:{redisResource2.PrimaryEndpoint.TargetPort}";
-
                 Assert.Equal("URL_redis2", item.Key);
-                Assert.Equal(redisUrl, item.Value);
+                var redisUrl = Assert.IsType<ReferenceExpression>(item.Value);
+                Assert.Equal(redisResource2.UriExpression.ValueExpression, redisUrl.ValueExpression);
             },
             item =>
             {
                 Assert.Equal("ENGINE_redis2", item.Key);
                 Assert.Equal("redis@dbgate-plugin-redis", item.Value);
             });
+    }
+
+    private static async Task<Dictionary<string, object>> GetEnvironmentVariablesAsync(
+        IDistributedApplicationBuilder builder,
+        IResource resource)
+    {
+        Assert.True(resource.TryGetAnnotationsOfType<EnvironmentCallbackAnnotation>(out var annotations));
+
+        var environmentVariables = new Dictionary<string, object>();
+        var context = new EnvironmentCallbackContext(builder.ExecutionContext, environmentVariables);
+
+        foreach (var annotation in annotations)
+        {
+            await annotation.Callback(context);
+        }
+
+        return environmentVariables;
     }
 }
