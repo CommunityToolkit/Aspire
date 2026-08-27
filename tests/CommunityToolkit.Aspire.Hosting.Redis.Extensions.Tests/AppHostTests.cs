@@ -35,12 +35,12 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         using var loginResponse = await httpClient.PostAsJsonAsync(
             "/auth/login",
             new { amoid = "none" },
-            cancellationToken: TestContext.Current.CancellationToken);
+            cancellationToken: cts.Token);
 
         Assert.Equal(HttpStatusCode.OK, loginResponse.StatusCode);
 
         var login = await loginResponse.Content.ReadFromJsonAsync<JsonElement>(
-            TestContext.Current.CancellationToken);
+            cts.Token);
 
         var accessToken = login.GetProperty("accessToken").GetString();
 
@@ -56,7 +56,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
                 conid = "redis1",
                 keepOpen = true
             },
-            cancellationToken: TestContext.Current.CancellationToken);
+            cancellationToken: cts.Token);
 
         Assert.Equal(HttpStatusCode.OK, refreshResponse.StatusCode);
 
@@ -69,12 +69,12 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
                 method = "ping",
                 args = Array.Empty<object>()
             },
-            cancellationToken: TestContext.Current.CancellationToken);
+            cancellationToken: cts.Token);
 
         Assert.Equal(HttpStatusCode.OK, pingResponse.StatusCode);
 
         var pong = await pingResponse.Content.ReadFromJsonAsync<string>(
-            TestContext.Current.CancellationToken);
+            cts.Token);
 
         Assert.Equal("PONG", pong);
     }

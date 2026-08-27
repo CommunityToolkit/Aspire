@@ -46,7 +46,23 @@ public static class RedisBuilderExtensions
             .WithEnvironment(context => ConfigureDbGateContainer(context, builder))
             .WithCertificateTrustConfiguration(context =>
             {
-                context.EnvironmentVariables["NODE_EXTRA_CA_CERTS"] = context.CertificateBundlePath;
+                if (context.Scope == CertificateTrustScope.Append)
+                {
+                    context.EnvironmentVariables["NODE_EXTRA_CA_CERTS"] = context.CertificateBundlePath;
+                }
+                else if (context.EnvironmentVariables.TryGetValue("NODE_OPTIONS", out var existingOptions))
+                {
+                    context.EnvironmentVariables["NODE_OPTIONS"] = existingOptions switch
+                    {
+                        string options when !string.IsNullOrEmpty(options) => $"{options} --use-openssl-ca",
+                        ReferenceExpression expression => ReferenceExpression.Create($"{expression} --use-openssl-ca"),
+                        _ => "--use-openssl-ca",
+                    };
+                }
+                else
+                {
+                    context.EnvironmentVariables["NODE_OPTIONS"] = "--use-openssl-ca";
+                }
 
                 return Task.CompletedTask;
             })
