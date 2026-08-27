@@ -3,6 +3,7 @@
   <PropertyGroup>
     <Description>An Aspire hosting integration for Kind that manages local Kind clusters for development with Docker or Podman.</Description>
     <AdditionalPackageTags>hosting kind kubernetes k8s docker podman</AdditionalPackageTags>
+    <IsPreview>true</IsPreview>
   </PropertyGroup>
 
   <ItemGroup>
