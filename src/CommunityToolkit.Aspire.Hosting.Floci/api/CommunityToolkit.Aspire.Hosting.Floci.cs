@@ -81,6 +81,9 @@ namespace Aspire.Hosting
         [AspireExport("withFlociGcpReference")]
         public static ApplicationModel.IResourceBuilder<TDestination> WithReference<TDestination>(this ApplicationModel.IResourceBuilder<TDestination> builder, ApplicationModel.IResourceBuilder<ApplicationModel.FlociGcpContainerResource> floci)
             where TDestination : ApplicationModel.IResourceWithEnvironment { throw null; }
+
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.FlociAzureServiceBusResource> WithServiceBus(this ApplicationModel.IResourceBuilder<ApplicationModel.FlociAzureContainerResource> builder, string name = "servicebus", int? amqpPort = null, int? amqpTlsPort = null) { throw null; }
     }
 }
 
@@ -96,6 +99,24 @@ namespace Aspire.Hosting.ApplicationModel
     public partial class FlociAzureContainerResource : FlociContainerResource
     {
         public FlociAzureContainerResource(string name) : base(default!, default!) { }
+    }
+
+    [AspireExport(ExposeProperties = true)]
+    public partial class FlociAzureServiceBusResource : Resource, IResourceWithParent<FlociAzureContainerResource>, IResourceWithParent, IResource, IResourceWithConnectionString, IExpressionValue, IValueProvider, IManifestExpressionProvider, IValueWithReferences
+    {
+        public FlociAzureServiceBusResource(string name, int amqpPort, int amqpTlsPort, FlociAzureContainerResource parent) : base(default!) { }
+
+        public int AmqpPort { get { throw null; } }
+
+        public int AmqpTlsPort { get { throw null; } }
+
+        public ReferenceExpression ConnectionStringExpression { get { throw null; } }
+
+        public ReferenceExpression Endpoint { get { throw null; } }
+
+        public FlociAzureContainerResource Parent { get { throw null; } }
+
+        System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties() { throw null; }
     }
 
     public abstract partial class FlociContainerResource : ContainerResource, IResourceWithConnectionString, IResource, IExpressionValue, IValueProvider, IManifestExpressionProvider, IValueWithReferences

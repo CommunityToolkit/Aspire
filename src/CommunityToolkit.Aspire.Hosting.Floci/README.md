@@ -73,6 +73,39 @@ await builder.addProject('api', '../MyApi/MyApi.csproj')
 | `ConnectionStrings__floci-az` | `http://localhost:{port}` (standard Aspire connection string) |
 | `AZURE_STORAGE_CONNECTION_STRING` | Development storage connection string pointed at the Floci Azure endpoint, carrying `BlobEndpoint`, `QueueEndpoint` and `TableEndpoint` and the well-known `devstoreaccount1` dev credentials |
 
+For **Service Bus**, use `WithServiceBus()` / `withServiceBus()` to model the AMQP data plane as a child resource, then reference it through Aspire's standard connection-string flow:
+
+```csharp
+var azure = builder.AddFlociAzure("floci-az")
+    .WithDockerSocket();                    // the Artemis sidecar is a sibling container
+var serviceBus = azure.WithServiceBus();    // enables the data plane, pins free host ports
+
+builder.AddProject<MyApi>("api")
+    .WithReference(serviceBus)              // ConnectionStrings__servicebus
+    .WaitFor(azure);
+```
+
+```typescript
+const azure = (await builder.addFlociAzure('floci-az')).withDockerSocket();
+const serviceBus = await azure.withServiceBus();
+
+await builder.addProject('api', '../MyApi/MyApi.csproj')
+    .withReference(serviceBus)
+    .waitFor(azure);
+```
+
+App side, this is the standard Aspire flow:
+
+```csharp
+builder.AddAzureServiceBusClient("servicebus");
+```
+
+| Variable | Value |
+|---|---|
+| `ConnectionStrings__{resourceName}` (default `servicebus`) | `Endpoint=sb://localhost:{amqpPort};SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;` — the official Service Bus emulator's connection-string shape |
+
+`WithServiceBus` sets `FLOCI_AZ_SERVICES_SERVICE_BUS_MOCKED=false`, `FLOCI_AZ_SERVICES_SERVICE_BUS_START_ON_BOOT=true`, and pins the sidecar's published host ports (`FLOCI_AZ_SERVICES_SERVICE_BUS_AMQP_PORT`/`_AMQP_TLS_PORT`) — free ports by default so concurrent AppHosts don't collide, or pass `amqpPort`/`amqpTlsPort` explicitly. The sidecar publishes on the Docker host outside Aspire's endpoint model, so the connection string is host-relative (`localhost`); the emulator's management plane (e.g. `ServiceBusAdministrationClient`) stays on the base endpoint from `WithReference(azure)`. Requires `WithDockerSocket()` and a floci-az release with `start-on-boot` support.
+
 **GCP**
 
 ```csharp
