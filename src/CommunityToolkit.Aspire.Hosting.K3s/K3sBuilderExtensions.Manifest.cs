@@ -166,27 +166,27 @@ public static class K3sManifestBuilderExtensions
         // DCP sets up container network aliases asynchronously, so the kubeconfig file
         // can appear in the bind-mount before the k8s hostname resolves in the kubectl
         // container. Using `kubectl cluster-info` verifies both the file and the network.
-        sb.AppendLine("_k3s_wait=0");
-        sb.AppendLine($"until [ -f {K3sFileHelpers.ContainerKubeconfigPath} ] && kubectl cluster-info --kubeconfig {K3sFileHelpers.ContainerKubeconfigPath} > /dev/null 2>&1; do");
-        sb.AppendLine("  _k3s_wait=$((_k3s_wait + 5))");
-        sb.AppendLine("  if [ \"$_k3s_wait\" -ge 600 ]; then");
-        sb.AppendLine("    echo 'Timed out waiting for k3s cluster to be ready after 10 minutes' >&2");
-        sb.AppendLine("    exit 1");
-        sb.AppendLine("  fi");
-        sb.AppendLine("  echo 'Waiting for k3s cluster to be ready and reachable...'");
-        sb.AppendLine("  sleep 5");
-        sb.AppendLine("done");
+        sb.AppendShellLine("_k3s_wait=0");
+        sb.AppendShellLine($"until [ -f {K3sFileHelpers.ContainerKubeconfigPath} ] && kubectl cluster-info --kubeconfig {K3sFileHelpers.ContainerKubeconfigPath} > /dev/null 2>&1; do");
+        sb.AppendShellLine("  _k3s_wait=$((_k3s_wait + 5))");
+        sb.AppendShellLine("  if [ \"$_k3s_wait\" -ge 600 ]; then");
+        sb.AppendShellLine("    echo 'Timed out waiting for k3s cluster to be ready after 10 minutes' >&2");
+        sb.AppendShellLine("    exit 1");
+        sb.AppendShellLine("  fi");
+        sb.AppendShellLine("  echo 'Waiting for k3s cluster to be ready and reachable...'");
+        sb.AppendShellLine("  sleep 5");
+        sb.AppendShellLine("done");
 
         // Auto-detect kustomize: if a kustomization file is present, use -k.
         // Otherwise use -f with server-side apply.
         // Capture output so we can extract any CRD names that were applied.
-        sb.AppendLine("if [ -f /k8s-manifests/kustomization.yaml ] || [ -f /k8s-manifests/kustomization.yml ]; then");
-        sb.AppendLine("  echo 'Detected kustomization — using kubectl apply -k'");
-        sb.AppendLine("  APPLIED=$(kubectl apply -k /k8s-manifests --server-side --field-manager=aspire-k3s --force-conflicts)");
-        sb.AppendLine("else");
-        sb.AppendLine("  APPLIED=$(kubectl apply -f /k8s-manifests --server-side --field-manager=aspire-k3s --force-conflicts)");
-        sb.AppendLine("fi");
-        sb.AppendLine("echo \"$APPLIED\"");
+        sb.AppendShellLine("if [ -f /k8s-manifests/kustomization.yaml ] || [ -f /k8s-manifests/kustomization.yml ]; then");
+        sb.AppendShellLine("  echo 'Detected kustomization — using kubectl apply -k'");
+        sb.AppendShellLine("  APPLIED=$(kubectl apply -k /k8s-manifests --server-side --field-manager=aspire-k3s --force-conflicts)");
+        sb.AppendShellLine("else");
+        sb.AppendShellLine("  APPLIED=$(kubectl apply -f /k8s-manifests --server-side --field-manager=aspire-k3s --force-conflicts)");
+        sb.AppendShellLine("fi");
+        sb.AppendShellLine("echo \"$APPLIED\"");
 
         // Parse the apply output for CRD names — kubectl apply prints one line per resource
         // in the form "<kind>/<name> <verb>", e.g.:
@@ -194,11 +194,11 @@ public static class K3sManifestBuilderExtensions
         // Only lines starting with "customresourcedefinition." belong to this apply.
         // This avoids touching pre-existing or concurrently installed cluster CRDs and
         // prevents busybox xargs from returning exit code 123 when grep finds no match.
-        sb.AppendLine("CRD_NAMES=$(echo \"$APPLIED\" | grep '^customresourcedefinition\\.' | awk '{print $1}')");
-        sb.AppendLine("if [ -n \"$CRD_NAMES\" ]; then");
-        sb.AppendLine("  # shellcheck disable=SC2086");
-        sb.AppendLine("  kubectl wait --for=condition=Established $CRD_NAMES --timeout=300s");
-        sb.AppendLine("fi");
+        sb.AppendShellLine("CRD_NAMES=$(echo \"$APPLIED\" | grep '^customresourcedefinition\\.' | awk '{print $1}')");
+        sb.AppendShellLine("if [ -n \"$CRD_NAMES\" ]; then");
+        sb.AppendShellLine("  # shellcheck disable=SC2086");
+        sb.AppendShellLine("  kubectl wait --for=condition=Established $CRD_NAMES --timeout=300s");
+        sb.AppendShellLine("fi");
 
         return sb.ToString();
     }
