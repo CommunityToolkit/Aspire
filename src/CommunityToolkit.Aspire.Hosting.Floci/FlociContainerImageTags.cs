@@ -8,7 +8,7 @@ internal static class FlociContainerImageTags
 
     public const string AzureRegistry = "docker.io";
     public const string AzureImage = "floci/floci-az";
-    public const string AzureTag = "0.10.0";
+    public const string AzureTag = "0.11.0";
 
     public const string GcpRegistry = "docker.io";
     public const string GcpImage = "floci/floci-gcp";
