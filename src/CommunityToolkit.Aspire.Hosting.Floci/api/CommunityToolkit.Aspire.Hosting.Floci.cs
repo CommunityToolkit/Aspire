@@ -22,10 +22,6 @@ namespace Aspire.Hosting
         [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.FlociAwsContainerResource> WithConfigFile(this ApplicationModel.IResourceBuilder<ApplicationModel.FlociAwsContainerResource> builder, string hostPath) { throw null; }
 
-        [AspireExport("withFlociAzureCosmosReference")]
-        public static ApplicationModel.IResourceBuilder<TDestination> WithCosmosReference<TDestination>(this ApplicationModel.IResourceBuilder<TDestination> builder, ApplicationModel.IResourceBuilder<ApplicationModel.FlociAzureContainerResource> floci, string connectionName = "cosmos", string? accountName = null)
-            where TDestination : ApplicationModel.IResourceWithEnvironment { throw null; }
-
         [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.FlociAwsContainerResource> WithDataBindMount(this ApplicationModel.IResourceBuilder<ApplicationModel.FlociAwsContainerResource> builder, string source, bool isReadOnly = false) { throw null; }
 

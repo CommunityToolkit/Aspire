@@ -74,52 +74,35 @@ public static partial class FlociHostingExtension
         });
 
     /// <summary>
-    /// Adds a Cosmos DB connection string for the Floci Azure emulator to a dependent resource,
-    /// injecting <c>ConnectionStrings__{connectionName}</c> so a Cosmos client — e.g.
-    /// <c>AddAzureCosmosClient(connectionName)</c> — resolves to the emulator. floci-az serves the
-    /// Cosmos SQL/NoSQL API from the same endpoint under the <c>{account}-cosmos</c> path.
+    /// Adds a child resource representing the Cosmos DB API exposed by the Floci Azure emulator.
     /// </summary>
     /// <remarks>
-    /// This is additive and composes with <see cref="WithReference{TDestination}(IResourceBuilder{TDestination}, IResourceBuilder{FlociAzureContainerResource})"/>:
-    /// it injects only the Cosmos connection string, not the base <c>ConnectionStrings__{name}</c>
-    /// reference, so call both if you also want the base endpoint / storage variables. The endpoint
-    /// is left as an unresolved expression, so Aspire resolves it per dependent (a project gets
-    /// <c>localhost:{hostPort}</c>, a sibling container the container-network address) and a
-    /// certificate configured later still flips the scheme to <c>https</c>.
+    /// Reference the returned resource with Aspire's standard <c>WithReference</c> API to inject its
+    /// Cosmos DB connection string. floci-az serves the Cosmos SQL/NoSQL API from the parent
+    /// resource's endpoint under the <c>{account}-cosmos</c> path.
     /// </remarks>
-    /// <ats-summary>Adds a Cosmos DB connection string for the Floci Azure emulator</ats-summary>
-    /// <typeparam name="TDestination">The type of the resource receiving the reference.</typeparam>
-    /// <param name="builder">The resource builder for the resource receiving the reference.</param>
-    /// <param name="floci">The Floci Azure resource to reference.</param>
-    /// <param name="connectionName">The connection string name to inject (default: <c>cosmos</c>).</param>
+    /// <ats-summary>Adds a Cosmos DB child resource to the Floci Azure emulator</ats-summary>
+    /// <param name="builder">The Floci Azure resource builder.</param>
+    /// <param name="name">The name of the Cosmos DB resource (default: <c>cosmos</c>).</param>
     /// <param name="accountName">The Cosmos account name segment (default: <c>devstoreaccount1</c>).</param>
-    /// <returns>A reference to the <see cref="IResourceBuilder{TDestination}"/> for further configuration.</returns>
-    [AspireExport("withFlociAzureCosmosReference")]
-    public static IResourceBuilder<TDestination> WithCosmosReference<TDestination>(
-        this IResourceBuilder<TDestination> builder,
-        IResourceBuilder<FlociAzureContainerResource> floci,
-        string connectionName = FlociAzureContainerResource.DefaultCosmosConnectionName,
+    /// <returns>A reference to the <see cref="IResourceBuilder{FlociAzureCosmosResource}"/> for further configuration.</returns>
+    [AspireExport]
+    public static IResourceBuilder<FlociAzureCosmosResource> WithCosmos(
+        this IResourceBuilder<FlociAzureContainerResource> builder,
+        [ResourceName] string name = FlociAzureCosmosResource.DefaultName,
         string? accountName = null)
-        where TDestination : IResourceWithEnvironment
     {
         ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(floci);
-        ArgumentException.ThrowIfNullOrEmpty(connectionName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
-        FlociAzureContainerResource resource = floci.Resource;
-        string account = accountName ?? FlociAzureContainerResource.DefaultAccountName;
+        var cosmosResource = new FlociAzureCosmosResource(
+            name,
+            accountName ?? FlociAzureContainerResource.DefaultAccountName,
+            builder.Resource);
 
-        // Built inside the callback so the scheme is read after the whole AppHost is configured.
-        // The account key is the well-known Cosmos emulator key, distinct from the Azurite storage
-        // key used for AZURE_STORAGE_CONNECTION_STRING.
-        return builder.WithEnvironment(context =>
-        {
-            ReferenceExpression accountEndpoint = ReferenceExpression.Create(
-                $"{resource.ConnectionStringExpression}/{account}-cosmos/");
-
-            context.EnvironmentVariables[$"ConnectionStrings__{connectionName}"] = ReferenceExpression.Create(
-                $"AccountEndpoint={accountEndpoint};AccountKey={FlociAzureContainerResource.DefaultCosmosAccountKey};");
-        });
+        return builder.ApplicationBuilder
+            .AddResource(cosmosResource)
+            .WithParentRelationship(builder);
     }
 
     /// <summary>

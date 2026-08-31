@@ -104,18 +104,26 @@ public class WithReferenceTests
     }
 
     [Fact]
-    public async Task WithCosmosReferenceAzureSetsCosmosConnectionString()
+    public async Task WithCosmosCreatesChildResourceUsedByStandardWithReference()
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
         var floci = builder.AddFlociAzure("floci-az");
-        var worker = builder.AddExecutable("worker", "dotnet", ".").WithCosmosReference(floci);
+        var cosmos = floci.WithCosmos();
+        var worker = builder.AddExecutable("worker", "dotnet", ".").WithReference(cosmos);
 
         var envVars = await ResolveEnvironmentAsync(builder, worker);
 
+        Assert.Equal("cosmos", cosmos.Resource.Name);
+        Assert.Same(floci.Resource, cosmos.Resource.Parent);
+        Assert.Contains(
+            cosmos.Resource.Annotations.OfType<ResourceRelationshipAnnotation>(),
+            annotation => annotation.Type == "Parent" && ReferenceEquals(annotation.Resource, floci.Resource));
         Assert.Contains("ConnectionStrings__cosmos", envVars.Keys);
 
-        var connectionString = Assert.IsType<ReferenceExpression>(envVars["ConnectionStrings__cosmos"]).ValueExpression;
+        var connectionStringReference = Assert.IsType<ConnectionStringReference>(envVars["ConnectionStrings__cosmos"]);
+        Assert.Same(cosmos.Resource, connectionStringReference.Resource);
+        var connectionString = cosmos.Resource.ConnectionStringExpression.ValueExpression;
         Assert.Contains("AccountEndpoint=", connectionString);
         Assert.Contains($"/{FlociAzureContainerResource.DefaultAccountName}-cosmos/;", connectionString);
         Assert.Contains("AccountKey=", connectionString);
@@ -125,14 +133,15 @@ public class WithReferenceTests
     }
 
     [Fact]
-    public async Task WithCosmosReferenceIsAdditiveAndComposesWithWithReference()
+    public async Task WithCosmosComposesWithFlociAzureReference()
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
         var floci = builder.AddFlociAzure("floci-az");
+        var cosmos = floci.WithCosmos();
         var worker = builder.AddExecutable("worker", "dotnet", ".")
             .WithReference(floci)
-            .WithCosmosReference(floci);
+            .WithReference(cosmos);
 
         var envVars = await ResolveEnvironmentAsync(builder, worker);
 
@@ -143,37 +152,41 @@ public class WithReferenceTests
     }
 
     [Fact]
-    public async Task WithCosmosReferenceHonorsCustomConnectionAndAccountName()
+    public async Task WithCosmosHonorsCustomResourceAndAccountName()
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
         var floci = builder.AddFlociAzure("floci-az");
-        var worker = builder.AddExecutable("worker", "dotnet", ".")
-            .WithCosmosReference(floci, connectionName: "notifications", accountName: "acct2");
+        var cosmos = floci.WithCosmos(name: "notifications", accountName: "acct2");
+        var worker = builder.AddExecutable("worker", "dotnet", ".").WithReference(cosmos);
 
         var envVars = await ResolveEnvironmentAsync(builder, worker);
 
         Assert.Contains("ConnectionStrings__notifications", envVars.Keys);
-        var connectionString = Assert.IsType<ReferenceExpression>(envVars["ConnectionStrings__notifications"]).ValueExpression;
+        var connectionStringReference = Assert.IsType<ConnectionStringReference>(envVars["ConnectionStrings__notifications"]);
+        Assert.Same(cosmos.Resource, connectionStringReference.Resource);
+        var connectionString = cosmos.Resource.ConnectionStringExpression.ValueExpression;
         Assert.Contains("/acct2-cosmos/;", connectionString);
     }
 
     [Fact]
-    public void WithCosmosReferenceBuilderShouldNotBeNull()
+    public void WithCosmosBuilderShouldNotBeNull()
     {
-        IResourceBuilder<ContainerResource> builder = null!;
-        IResourceBuilder<FlociAzureContainerResource> floci = null!;
-        Assert.Throws<ArgumentNullException>(() => builder.WithCosmosReference(floci));
+        IResourceBuilder<FlociAzureContainerResource> builder = null!;
+
+        Assert.Throws<ArgumentNullException>(() => builder.WithCosmos());
     }
 
     [Fact]
-    public void WithCosmosReferenceFlociResourceShouldNotBeNull()
+    public void WithCosmosResourceNameShouldNotBeEmpty()
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
-        var worker = builder.AddContainer("worker", "myorg/worker");
+        var floci = builder.AddFlociAzure("floci-az");
 
-        Assert.Throws<ArgumentNullException>(() => worker.WithCosmosReference(null!));
+        Assert.Throws<ArgumentException>(() => floci.WithCosmos(GetInvalidResourceName()));
     }
+
+    private static string GetInvalidResourceName() => string.Empty;
 
     private static async Task<Dictionary<string, object>> ResolveEnvironmentAsync<T>(
         IDistributedApplicationBuilder builder,
