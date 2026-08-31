@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.OpenApi" />
     <PackageReference Include="Swashbuckle.AspNetCore" />
     <!-- Keep the Squad sample's agent packages explicit so the sample stays on the
          same tested MAF adapter + Copilot SDK combination end-to-end. The direct
