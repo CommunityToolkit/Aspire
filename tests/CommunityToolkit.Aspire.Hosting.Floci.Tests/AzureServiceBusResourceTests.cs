@@ -5,7 +5,7 @@ namespace CommunityToolkit.Aspire.Hosting.Floci.Tests;
 public class AzureServiceBusResourceTests
 {
     [Fact]
-    public void WithServiceBusCreatesChildResourceWithDefaults()
+    public void WithServiceBusCreatesChildResourceWithAspireAllocatedEndpoints()
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
@@ -15,14 +15,14 @@ public class AzureServiceBusResourceTests
         using var app = builder.Build();
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var serviceBus = appModel.Resources.OfType<FlociAzureServiceBusResource>().SingleOrDefault();
-
-        Assert.NotNull(serviceBus);
+        var serviceBus = Assert.Single(appModel.Resources.OfType<FlociAzureServiceBusResource>());
         Assert.Equal("servicebus", serviceBus.Name);
         Assert.Same(azure.Resource, serviceBus.Parent);
-        Assert.InRange(serviceBus.AmqpPort, 1, 65535);
-        Assert.InRange(serviceBus.AmqpTlsPort, 1, 65535);
-        Assert.NotEqual(serviceBus.AmqpPort, serviceBus.AmqpTlsPort);
+
+        Assert.Collection(
+            serviceBus.Annotations.OfType<EndpointAnnotation>().OrderBy(endpoint => endpoint.Name),
+            amqp => AssertEndpoint(amqp, "amqp", "sb", null),
+            amqps => AssertEndpoint(amqps, "amqps", "amqps", null));
     }
 
     [Fact]
@@ -33,22 +33,23 @@ public class AzureServiceBusResourceTests
         var serviceBus = builder.AddFlociAzure("floci-az")
             .WithServiceBus(amqpPort: 5673, amqpTlsPort: 5674);
 
-        Assert.Equal(5673, serviceBus.Resource.AmqpPort);
-        Assert.Equal(5674, serviceBus.Resource.AmqpTlsPort);
+        Assert.Equal(5673, serviceBus.Resource.AmqpEndpoint.EndpointAnnotation.Port);
+        Assert.Equal(5674, serviceBus.Resource.AmqpTlsEndpoint.EndpointAnnotation.Port);
     }
 
     [Fact]
-    public async Task WithServiceBusEnablesTheDataPlaneOnTheEmulator()
+    public async Task WithServiceBusUsesAllocatedEndpointPortsForTheDataPlane()
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
         var azure = builder.AddFlociAzure("floci-az");
-        var serviceBus = azure.WithServiceBus(amqpPort: 5673, amqpTlsPort: 5674);
+        var serviceBus = azure.WithServiceBus();
+        AllocateEndpoints(serviceBus.Resource, 5673, 5674);
 
         using var app = builder.Build();
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var resource = appModel.Resources.OfType<FlociAzureContainerResource>().Single();
+        var resource = Assert.Single(appModel.Resources.OfType<FlociAzureContainerResource>());
         Assert.True(resource.TryGetAnnotationsOfType(out IEnumerable<EnvironmentCallbackAnnotation>? envAnnotations));
 
         var envVars = new Dictionary<string, object>();
@@ -58,11 +59,34 @@ public class AzureServiceBusResourceTests
             await annotation.Callback(context);
         }
 
-        Assert.Equal("false", envVars["FLOCI_AZ_SERVICES_SERVICE_BUS_MOCKED"].ToString());
-        Assert.Equal("true", envVars["FLOCI_AZ_SERVICES_SERVICE_BUS_START_ON_BOOT"].ToString());
-        Assert.Equal("5673", envVars["FLOCI_AZ_SERVICES_SERVICE_BUS_AMQP_PORT"].ToString());
-        Assert.Equal("5674", envVars["FLOCI_AZ_SERVICES_SERVICE_BUS_AMQP_TLS_PORT"].ToString());
-        Assert.Equal(5673, serviceBus.Resource.AmqpPort);
+        Assert.Equal("false", envVars["FLOCI_AZ_SERVICES_SERVICE_BUS_MOCKED"]);
+        Assert.Equal("true", envVars["FLOCI_AZ_SERVICES_SERVICE_BUS_START_ON_BOOT"]);
+        Assert.Equal("5673", envVars["FLOCI_AZ_SERVICES_SERVICE_BUS_AMQP_PORT"]);
+        Assert.Equal("5674", envVars["FLOCI_AZ_SERVICES_SERVICE_BUS_AMQP_TLS_PORT"]);
+    }
+
+    [Fact]
+    public async Task WithServiceBusDoesNotConfigureTheDataPlaneInPublishMode()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+
+        var azure = builder.AddFlociAzure("floci-az");
+        azure.WithServiceBus();
+
+        var envVars = new Dictionary<string, object>();
+        var executionContext = new DistributedApplicationExecutionContext(
+            new DistributedApplicationExecutionContextOptions(DistributedApplicationOperation.Publish));
+        var context = new EnvironmentCallbackContext(executionContext, envVars);
+
+        foreach (var annotation in azure.Resource.Annotations.OfType<EnvironmentCallbackAnnotation>())
+        {
+            await annotation.Callback(context);
+        }
+
+        Assert.DoesNotContain("FLOCI_AZ_SERVICES_SERVICE_BUS_MOCKED", envVars);
+        Assert.DoesNotContain("FLOCI_AZ_SERVICES_SERVICE_BUS_START_ON_BOOT", envVars);
+        Assert.DoesNotContain("FLOCI_AZ_SERVICES_SERVICE_BUS_AMQP_PORT", envVars);
+        Assert.DoesNotContain("FLOCI_AZ_SERVICES_SERVICE_BUS_AMQP_TLS_PORT", envVars);
     }
 
     [Fact]
@@ -70,8 +94,8 @@ public class AzureServiceBusResourceTests
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
-        var serviceBus = builder.AddFlociAzure("floci-az")
-            .WithServiceBus(amqpPort: 5673, amqpTlsPort: 5674);
+        var serviceBus = builder.AddFlociAzure("floci-az").WithServiceBus();
+        AllocateEndpoints(serviceBus.Resource, 5673, 5674);
 
         string? connectionString = await serviceBus.Resource.ConnectionStringExpression
             .GetValueAsync(CancellationToken.None);
@@ -89,7 +113,7 @@ public class AzureServiceBusResourceTests
 
         var azure = builder.AddFlociAzure("floci-az");
         var first = azure.WithServiceBus(amqpPort: 5673);
-        var second = azure.WithServiceBus();
+        var second = azure.WithServiceBus(amqpPort: 5673);
 
         Assert.Same(first.Resource, second.Resource);
 
@@ -114,8 +138,8 @@ public class AzureServiceBusResourceTests
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
-        var serviceBus = builder.AddFlociAzure("floci-az")
-            .WithServiceBus(amqpPort: 5673, amqpTlsPort: 5674);
+        var serviceBus = builder.AddFlociAzure("floci-az").WithServiceBus();
+        AllocateEndpoints(serviceBus.Resource, 5673, 5674);
 
         var consumer = builder.AddContainer("api", "my-api-image")
             .WithReference(serviceBus);
@@ -141,5 +165,28 @@ public class AzureServiceBusResourceTests
             "Endpoint=sb://localhost:5673;SharedAccessKeyName=RootManageSharedAccessKey;" +
             "SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;",
             value);
+    }
+
+    private static void AssertEndpoint(
+        EndpointAnnotation endpoint,
+        string name,
+        string scheme,
+        int? port)
+    {
+        Assert.Equal(name, endpoint.Name);
+        Assert.Equal(scheme, endpoint.UriScheme);
+        Assert.Equal(port, endpoint.Port);
+        Assert.False(endpoint.IsExplicitlyProxied);
+    }
+
+    private static void AllocateEndpoints(
+        FlociAzureServiceBusResource serviceBus,
+        int amqpPort,
+        int amqpTlsPort)
+    {
+        serviceBus.AmqpEndpoint.EndpointAnnotation.AllocatedEndpoint =
+            new AllocatedEndpoint(serviceBus.AmqpEndpoint.EndpointAnnotation, "localhost", amqpPort);
+        serviceBus.AmqpTlsEndpoint.EndpointAnnotation.AllocatedEndpoint =
+            new AllocatedEndpoint(serviceBus.AmqpTlsEndpoint.EndpointAnnotation, "localhost", amqpTlsPort);
     }
 }

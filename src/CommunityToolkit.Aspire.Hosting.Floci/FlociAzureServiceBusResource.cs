@@ -1,5 +1,3 @@
-using System.Globalization;
-
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
@@ -7,24 +5,26 @@ namespace Aspire.Hosting.ApplicationModel;
 /// </summary>
 /// <remarks>
 /// floci-az serves Service Bus AMQP from an Artemis sidecar container that publishes the
-/// configured ports directly on the Docker host — outside Aspire's endpoint model — so the
-/// endpoint is host-relative (<c>localhost</c>). Sibling containers that need to consume
-/// Service Bus must reach the sidecar over the Docker network instead.
+/// configured ports directly on the Docker host. The resource models those host ports as
+/// proxyless Aspire endpoints so DCP can allocate them without trying to proxy traffic to the
+/// parent container.
 /// </remarks>
 /// <param name="name">The name of the resource.</param>
-/// <param name="amqpPort">Host port the Artemis sidecar publishes for plain AMQP.</param>
-/// <param name="amqpTlsPort">Host port the Artemis sidecar publishes for AMQPS (TLS).</param>
 /// <param name="parent">The parent Floci Azure emulator resource.</param>
 [AspireExport(ExposeProperties = true)]
 public class FlociAzureServiceBusResource(
     string name,
-    int amqpPort,
-    int amqpTlsPort,
     FlociAzureContainerResource parent) : Resource(name),
     IResourceWithParent<FlociAzureContainerResource>,
-    IResourceWithConnectionString
+    IResourceWithConnectionString,
+    IResourceWithEndpoints
 {
     internal const string DefaultName = "servicebus";
+    internal const string AmqpEndpointName = "amqp";
+    internal const string AmqpTlsEndpointName = "amqps";
+
+    private EndpointReference? _amqpEndpoint;
+    private EndpointReference? _amqpTlsEndpoint;
 
     // Placeholder from the official Service Bus emulator's connection-string shape; floci-az
     // does not enforce authentication, the SDK only requires the component to be present.
@@ -36,26 +36,16 @@ public class FlociAzureServiceBusResource(
     public FlociAzureContainerResource Parent { get; } = parent ?? throw new ArgumentNullException(nameof(parent));
 
     /// <summary>
-    /// Gets the host port the Artemis sidecar publishes for plain AMQP.
+    /// Gets the Service Bus plain AMQP endpoint.
     /// </summary>
-    public int AmqpPort { get; } = amqpPort;
+    public EndpointReference AmqpEndpoint =>
+        _amqpEndpoint ??= new EndpointReference(this, AmqpEndpointName);
 
     /// <summary>
-    /// Gets the host port the Artemis sidecar publishes for AMQPS (TLS).
+    /// Gets the Service Bus AMQPS/TLS endpoint.
     /// </summary>
-    public int AmqpTlsPort { get; } = amqpTlsPort;
-
-    /// <summary>
-    /// Gets the Service Bus AMQP endpoint.
-    /// </summary>
-    public ReferenceExpression Endpoint
-    {
-        get
-        {
-            string port = AmqpPort.ToString(CultureInfo.InvariantCulture);
-            return ReferenceExpression.Create($"sb://localhost:{port}");
-        }
-    }
+    public EndpointReference AmqpTlsEndpoint =>
+        _amqpTlsEndpoint ??= new EndpointReference(this, AmqpTlsEndpointName);
 
     /// <summary>
     /// Gets the Service Bus connection string expression.
@@ -64,10 +54,13 @@ public class FlociAzureServiceBusResource(
     /// </summary>
     public ReferenceExpression ConnectionStringExpression =>
         ReferenceExpression.Create(
-            $"Endpoint={Endpoint};SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey={DefaultSasKey};UseDevelopmentEmulator=true;");
+            $"Endpoint={AmqpEndpoint};SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey={DefaultSasKey};UseDevelopmentEmulator=true;");
 
     IEnumerable<KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties() =>
         Parent.CombineProperties([
-            new("Endpoint", Endpoint)
+            new("Host", ReferenceExpression.Create($"{AmqpEndpoint.Property(EndpointProperty.Host)}")),
+            new("Port", ReferenceExpression.Create($"{AmqpEndpoint.Property(EndpointProperty.Port)}")),
+            new("Uri", ReferenceExpression.Create($"{AmqpEndpoint}")),
+            new("Endpoint", ReferenceExpression.Create($"{AmqpEndpoint}"))
         ]);
 }

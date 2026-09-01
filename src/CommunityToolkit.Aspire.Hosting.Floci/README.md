@@ -73,15 +73,49 @@ await builder.addProject('api', '../MyApi/MyApi.csproj')
 | `ConnectionStrings__floci-az` | `http://localhost:{port}` (standard Aspire connection string) |
 | `AZURE_STORAGE_CONNECTION_STRING` | Development storage connection string pointed at the Floci Azure endpoint, carrying `BlobEndpoint`, `QueueEndpoint` and `TableEndpoint` and the well-known `devstoreaccount1` dev credentials |
 
+For **Cosmos DB**, use `WithCosmos()` / `withCosmos()` to model the Cosmos API as a child resource, then reference it through Aspire's standard connection-string flow:
+
+```csharp
+var azure = builder.AddFlociAzure("floci-az");
+var cosmos = azure.WithCosmos();
+
+builder.AddProject<MyApi>("api")
+    .WithReference(azure)    // storage variables (optional)
+    .WithReference(cosmos)   // ConnectionStrings__cosmos
+    .WaitFor(azure);
+```
+
+```typescript
+const azure = await builder.addFlociAzure('floci-az');
+const cosmos = await azure.withCosmos();
+
+await builder.addProject('api', '../MyApi/MyApi.csproj')
+    .withFlociAzureReference(azure)
+    .withReference(cosmos)
+    .waitFor(azure);
+```
+
+App side, this is the standard Aspire flow:
+
+```csharp
+builder.AddAzureCosmosClient("cosmos");
+```
+
+| Variable | Value |
+|---|---|
+| `ConnectionStrings__{resourceName}` (default `cosmos`) | `AccountEndpoint={scheme}://{host}:{port}/{account}-cosmos/;AccountKey=…` — the well-known Cosmos DB emulator key. Resource name and account name (default `devstoreaccount1`) are configurable. |
+
+The Cosmos child resource is additive, so combine `WithReference(cosmos)` with `WithReference(azure)` when you also want the base endpoint / storage variables. (Talking to the floci Cosmos emulator over HTTP from the .NET SDK still needs the usual client-side settings — Gateway mode, and HTTP/1.1 — which are the app's concern, as with any local Cosmos emulator.)
+
 For **Service Bus**, use `WithServiceBus()` / `withServiceBus()` to model the AMQP data plane as a child resource, then reference it through Aspire's standard connection-string flow:
 
 ```csharp
 var azure = builder.AddFlociAzure("floci-az")
-    .WithDockerSocket();                    // the Artemis sidecar is a sibling container
-var serviceBus = azure.WithServiceBus();    // enables the data plane, pins free host ports
+    .WithDockerSocket();
+var serviceBus = azure.WithServiceBus();
 
 builder.AddProject<MyApi>("api")
-    .WithReference(serviceBus)              // ConnectionStrings__servicebus
+    .WithReference(serviceBus) // ConnectionStrings__servicebus
     .WaitFor(azure);
 ```
 
@@ -104,7 +138,7 @@ builder.AddAzureServiceBusClient("servicebus");
 |---|---|
 | `ConnectionStrings__{resourceName}` (default `servicebus`) | `Endpoint=sb://localhost:{amqpPort};SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;` — the official Service Bus emulator's connection-string shape |
 
-`WithServiceBus` sets `FLOCI_AZ_SERVICES_SERVICE_BUS_MOCKED=false`, `FLOCI_AZ_SERVICES_SERVICE_BUS_START_ON_BOOT=true`, and pins the sidecar's published host ports (`FLOCI_AZ_SERVICES_SERVICE_BUS_AMQP_PORT`/`_AMQP_TLS_PORT`) — free ports by default so concurrent AppHosts don't collide, or pass `amqpPort`/`amqpTlsPort` explicitly. The sidecar publishes on the Docker host outside Aspire's endpoint model, so the connection string is host-relative (`localhost`); the emulator's management plane (e.g. `ServiceBusAdministrationClient`) stays on the base endpoint from `WithReference(azure)`. Requires `WithDockerSocket()` and a floci-az release with `start-on-boot` support.
+`WithServiceBus` sets `FLOCI_AZ_SERVICES_SERVICE_BUS_MOCKED=false` and `FLOCI_AZ_SERVICES_SERVICE_BUS_START_ON_BOOT=true`. Aspire models the sidecar's AMQP and AMQPS host ports as proxyless endpoints and allocates them by default; pass `amqpPort` / `amqpTlsPort` to use fixed ports. The management plane (for example, `ServiceBusAdministrationClient`) remains on the base endpoint from `WithReference(azure)`. Requires `WithDockerSocket()` and floci-az 0.12.0 or later.
 
 **GCP**
 

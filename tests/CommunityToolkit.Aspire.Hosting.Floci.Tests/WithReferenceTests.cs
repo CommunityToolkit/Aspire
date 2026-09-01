@@ -103,6 +103,91 @@ public class WithReferenceTests
         Assert.StartsWith("{floci-gcp.bindings.gcp.scheme}://", storageHost);
     }
 
+    [Fact]
+    public async Task WithCosmosCreatesChildResourceUsedByStandardWithReference()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+
+        var floci = builder.AddFlociAzure("floci-az");
+        var cosmos = floci.WithCosmos();
+        var worker = builder.AddExecutable("worker", "dotnet", ".").WithReference(cosmos);
+
+        var envVars = await ResolveEnvironmentAsync(builder, worker);
+
+        Assert.Equal("cosmos", cosmos.Resource.Name);
+        Assert.Same(floci.Resource, cosmos.Resource.Parent);
+        Assert.Contains(
+            cosmos.Resource.Annotations.OfType<ResourceRelationshipAnnotation>(),
+            annotation => annotation.Type == "Parent" && ReferenceEquals(annotation.Resource, floci.Resource));
+        Assert.Contains("ConnectionStrings__cosmos", envVars.Keys);
+
+        var connectionStringReference = Assert.IsType<ConnectionStringReference>(envVars["ConnectionStrings__cosmos"]);
+        Assert.Same(cosmos.Resource, connectionStringReference.Resource);
+        var connectionString = cosmos.Resource.ConnectionStringExpression.ValueExpression;
+        Assert.Contains("AccountEndpoint=", connectionString);
+        Assert.Contains($"/{FlociAzureContainerResource.DefaultAccountName}-cosmos/;", connectionString);
+        Assert.Contains("AccountKey=", connectionString);
+        // The endpoint is an unresolved expression so it tracks Aspire's (possibly randomized) port
+        // assignment, and the scheme flips to https if a certificate is configured.
+        Assert.Contains("{floci-az.bindings.azure.scheme}://", connectionString);
+    }
+
+    [Fact]
+    public async Task WithCosmosComposesWithFlociAzureReference()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+
+        var floci = builder.AddFlociAzure("floci-az");
+        var cosmos = floci.WithCosmos();
+        var worker = builder.AddExecutable("worker", "dotnet", ".")
+            .WithReference(floci)
+            .WithReference(cosmos);
+
+        var envVars = await ResolveEnvironmentAsync(builder, worker);
+
+        // The base storage reference and the Cosmos connection string coexist.
+        Assert.Contains("ConnectionStrings__floci-az", envVars.Keys);
+        Assert.Contains("AZURE_STORAGE_CONNECTION_STRING", envVars.Keys);
+        Assert.Contains("ConnectionStrings__cosmos", envVars.Keys);
+    }
+
+    [Fact]
+    public async Task WithCosmosHonorsCustomResourceAndAccountName()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+
+        var floci = builder.AddFlociAzure("floci-az");
+        var cosmos = floci.WithCosmos(name: "notifications", accountName: "acct2");
+        var worker = builder.AddExecutable("worker", "dotnet", ".").WithReference(cosmos);
+
+        var envVars = await ResolveEnvironmentAsync(builder, worker);
+
+        Assert.Contains("ConnectionStrings__notifications", envVars.Keys);
+        var connectionStringReference = Assert.IsType<ConnectionStringReference>(envVars["ConnectionStrings__notifications"]);
+        Assert.Same(cosmos.Resource, connectionStringReference.Resource);
+        var connectionString = cosmos.Resource.ConnectionStringExpression.ValueExpression;
+        Assert.Contains("/acct2-cosmos/;", connectionString);
+    }
+
+    [Fact]
+    public void WithCosmosBuilderShouldNotBeNull()
+    {
+        IResourceBuilder<FlociAzureContainerResource> builder = null!;
+
+        Assert.Throws<ArgumentNullException>(() => builder.WithCosmos());
+    }
+
+    [Fact]
+    public void WithCosmosResourceNameShouldNotBeEmpty()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+        var floci = builder.AddFlociAzure("floci-az");
+
+        Assert.Throws<ArgumentException>(() => floci.WithCosmos(GetInvalidResourceName()));
+    }
+
+    private static string GetInvalidResourceName() => string.Empty;
+
     private static async Task<Dictionary<string, object>> ResolveEnvironmentAsync<T>(
         IDistributedApplicationBuilder builder,
         IResourceBuilder<T> dependent)

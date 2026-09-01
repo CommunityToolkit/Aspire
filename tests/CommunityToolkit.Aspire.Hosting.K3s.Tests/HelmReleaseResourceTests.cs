@@ -225,6 +225,20 @@ public class HelmReleaseResourceTests
     }
 
     [Fact]
+    public void BuildHelmScriptUsesLfLineEndingsOnly()
+    {
+        // Regression: StringBuilder.AppendLine emits Environment.NewLine (CRLF on Windows).
+        // busybox ash in alpine/helm does not strip the CR, so `then\r` is not the `then`
+        // keyword and the script dies with
+        // "syntax error: unexpected end of file (expecting \"then\")".
+        var script = K3sHelmBuilderExtensions.BuildHelmScript(
+            MakeRelease("argocd", "argo-cd", "https://argoproj.github.io/argo-helm", "7.8.0", "argocd",
+                new Dictionary<string, string> { ["server.service.type"] = "NodePort" }));
+
+        Assert.DoesNotContain('\r', script);
+    }
+
+    [Fact]
     public void BuildHelmScriptIncludesWaitAndNamespace()
     {
         var script = K3sHelmBuilderExtensions.BuildHelmScript(
