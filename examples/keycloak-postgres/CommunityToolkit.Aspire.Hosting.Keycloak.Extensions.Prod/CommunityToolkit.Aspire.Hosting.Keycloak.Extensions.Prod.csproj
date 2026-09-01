@@ -3,6 +3,7 @@
   <ItemGroup>
     <PackageReference Include="Aspire.Keycloak.Authentication"/>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi"/>
+    <PackageReference Include="Microsoft.OpenApi" />
   </ItemGroup>
 
   <ItemGroup>
