@@ -107,6 +107,38 @@ builder.AddAzureCosmosClient("cosmos");
 
 The Cosmos child resource is additive, so combine `WithReference(cosmos)` with `WithReference(azure)` when you also want the base endpoint / storage variables. (Talking to the floci Cosmos emulator over HTTP from the .NET SDK still needs the usual client-side settings — Gateway mode, and HTTP/1.1 — which are the app's concern, as with any local Cosmos emulator.)
 
+For **Service Bus**, use `WithServiceBus()` / `withServiceBus()` to model the AMQP data plane as a child resource, then reference it through Aspire's standard connection-string flow:
+
+```csharp
+var azure = builder.AddFlociAzure("floci-az")
+    .WithDockerSocket();
+var serviceBus = azure.WithServiceBus();
+
+builder.AddProject<MyApi>("api")
+    .WithReference(serviceBus) // ConnectionStrings__servicebus
+    .WaitFor(azure);
+```
+
+```typescript
+const azure = (await builder.addFlociAzure('floci-az')).withDockerSocket();
+const serviceBus = await azure.withServiceBus();
+
+await builder.addProject('api', '../MyApi/MyApi.csproj')
+    .withReference(serviceBus)
+    .waitFor(azure);
+```
+
+App side, this is the standard Aspire flow:
+
+```csharp
+builder.AddAzureServiceBusClient("servicebus");
+```
+
+| Variable | Value |
+|---|---|
+| `ConnectionStrings__{resourceName}` (default `servicebus`) | `Endpoint=sb://localhost:{amqpPort};SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;` — the official Service Bus emulator's connection-string shape |
+
+`WithServiceBus` sets `FLOCI_AZ_SERVICES_SERVICE_BUS_MOCKED=false` and `FLOCI_AZ_SERVICES_SERVICE_BUS_START_ON_BOOT=true`. Aspire models the sidecar's AMQP and AMQPS host ports as proxyless endpoints and allocates them by default; pass `amqpPort` / `amqpTlsPort` to use fixed ports. The management plane (for example, `ServiceBusAdministrationClient`) remains on the base endpoint from `WithReference(azure)`. Requires `WithDockerSocket()` and floci-az 0.12.0 or later.
 
 **GCP**
 
