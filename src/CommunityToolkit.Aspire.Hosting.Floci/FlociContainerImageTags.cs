@@ -16,5 +16,5 @@ internal static class FlociContainerImageTags
 
     public const string UIRegistry = "docker.io";
     public const string UIImage = "floci/floci-ui";
-    public const string UITag = "0.3.0";
+    public const string UITag = "0.4.0";
 }
