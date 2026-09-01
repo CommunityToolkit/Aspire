@@ -74,6 +74,38 @@ public static partial class FlociHostingExtension
         });
 
     /// <summary>
+    /// Adds a child resource representing the Cosmos DB API exposed by the Floci Azure emulator.
+    /// </summary>
+    /// <remarks>
+    /// Reference the returned resource with Aspire's standard <c>WithReference</c> API to inject its
+    /// Cosmos DB connection string. floci-az serves the Cosmos SQL/NoSQL API from the parent
+    /// resource's endpoint under the <c>{account}-cosmos</c> path.
+    /// </remarks>
+    /// <ats-summary>Adds a Cosmos DB child resource to the Floci Azure emulator</ats-summary>
+    /// <param name="builder">The Floci Azure resource builder.</param>
+    /// <param name="name">The name of the Cosmos DB resource (default: <c>cosmos</c>).</param>
+    /// <param name="accountName">The Cosmos account name segment (default: <c>devstoreaccount1</c>).</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{FlociAzureCosmosResource}"/> for further configuration.</returns>
+    [AspireExport]
+    public static IResourceBuilder<FlociAzureCosmosResource> WithCosmos(
+        this IResourceBuilder<FlociAzureContainerResource> builder,
+        [ResourceName] string name = FlociAzureCosmosResource.DefaultName,
+        string? accountName = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+
+        var cosmosResource = new FlociAzureCosmosResource(
+            name,
+            accountName ?? FlociAzureContainerResource.DefaultAccountName,
+            builder.Resource);
+
+        return builder.ApplicationBuilder
+            .AddResource(cosmosResource)
+            .WithParentRelationship(builder);
+    }
+
+    /// <summary>
     /// Mounts the Docker socket into the Floci Azure container so that Azure Functions and other
     /// container-backed services can launch sibling containers.
     /// Also sets <c>FLOCI_AZ_DOCKER_DOCKER_HOST</c> to <c>unix:///var/run/docker.sock</c> (the

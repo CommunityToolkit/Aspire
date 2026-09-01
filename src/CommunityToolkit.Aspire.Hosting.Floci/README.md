@@ -73,6 +73,41 @@ await builder.addProject('api', '../MyApi/MyApi.csproj')
 | `ConnectionStrings__floci-az` | `http://localhost:{port}` (standard Aspire connection string) |
 | `AZURE_STORAGE_CONNECTION_STRING` | Development storage connection string pointed at the Floci Azure endpoint, carrying `BlobEndpoint`, `QueueEndpoint` and `TableEndpoint` and the well-known `devstoreaccount1` dev credentials |
 
+For **Cosmos DB**, use `WithCosmos()` / `withCosmos()` to model the Cosmos API as a child resource, then reference it through Aspire's standard connection-string flow:
+
+```csharp
+var azure = builder.AddFlociAzure("floci-az");
+var cosmos = azure.WithCosmos();
+
+builder.AddProject<MyApi>("api")
+    .WithReference(azure)    // storage variables (optional)
+    .WithReference(cosmos)   // ConnectionStrings__cosmos
+    .WaitFor(azure);
+```
+
+```typescript
+const azure = await builder.addFlociAzure('floci-az');
+const cosmos = await azure.withCosmos();
+
+await builder.addProject('api', '../MyApi/MyApi.csproj')
+    .withFlociAzureReference(azure)
+    .withReference(cosmos)
+    .waitFor(azure);
+```
+
+App side, this is the standard Aspire flow:
+
+```csharp
+builder.AddAzureCosmosClient("cosmos");
+```
+
+| Variable | Value |
+|---|---|
+| `ConnectionStrings__{resourceName}` (default `cosmos`) | `AccountEndpoint={scheme}://{host}:{port}/{account}-cosmos/;AccountKey=…` — the well-known Cosmos DB emulator key. Resource name and account name (default `devstoreaccount1`) are configurable. |
+
+The Cosmos child resource is additive, so combine `WithReference(cosmos)` with `WithReference(azure)` when you also want the base endpoint / storage variables. (Talking to the floci Cosmos emulator over HTTP from the .NET SDK still needs the usual client-side settings — Gateway mode, and HTTP/1.1 — which are the app's concern, as with any local Cosmos emulator.)
+
+
 **GCP**
 
 ```csharp
