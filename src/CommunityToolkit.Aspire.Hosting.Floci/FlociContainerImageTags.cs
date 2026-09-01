@@ -4,7 +4,7 @@ internal static class FlociContainerImageTags
 {
     public const string AwsRegistry = "docker.io";
     public const string AwsImage = "floci/floci";
-    public const string AwsTag = "1.6.0";
+    public const string AwsTag = "1.7.0";
 
     public const string AzureRegistry = "docker.io";
     public const string AzureImage = "floci/floci-az";
