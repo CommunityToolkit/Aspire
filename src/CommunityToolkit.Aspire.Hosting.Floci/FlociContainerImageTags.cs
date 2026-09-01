@@ -12,7 +12,7 @@ internal static class FlociContainerImageTags
 
     public const string GcpRegistry = "docker.io";
     public const string GcpImage = "floci/floci-gcp";
-    public const string GcpTag = "0.7.0";
+    public const string GcpTag = "0.8.0";
 
     public const string UIRegistry = "docker.io";
     public const string UIImage = "floci/floci-ui";
