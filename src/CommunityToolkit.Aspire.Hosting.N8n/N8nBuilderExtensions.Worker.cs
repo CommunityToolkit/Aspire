@@ -36,7 +36,7 @@ public static partial class N8nBuilderExtensions
             .WithHttpHealthCheck("/healthz", 200, N8nResource.PrimaryEndpointName)
             .WithEnvironment("N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS", "false")
             .WithEnvironment("N8N_ENCRYPTION_KEY", n8nBuilder.Resource.EncryptionKeyParameter)
-            .WithEnvironment("WEBHOOK_URL", n8nBuilder.GetEndpoint(N8nResource.PrimaryEndpointName, n8nBuilder.ApplicationBuilder.ExecutionContext.IsPublishMode ? KnownNetworkIdentifiers.PublicInternet : KnownNetworkIdentifiers.LocalhostNetwork))
+            .WithEnvironment("N8N_WEBHOOK_URL", n8nBuilder.GetEndpoint(N8nResource.PrimaryEndpointName, n8nBuilder.ApplicationBuilder.ExecutionContext.IsPublishMode ? KnownNetworkIdentifiers.PublicInternet : KnownNetworkIdentifiers.LocalhostNetwork))
             .WithEnvironment("QUEUE_HEALTH_CHECK_ACTIVE", "true")
             .WithParentRelationship(n8nBuilder);
 
