@@ -9,6 +9,7 @@
     <DebugType>embedded</DebugType>
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
     <IsPreview>false</IsPreview>
+    <!-- Aspire.Hosting supplies the integration analyzer through its build-transitive assets. -->
     <EnableAspireIntegrationAnalyzers Condition="$([System.String]::Copy('$(MSBuildProjectName)').StartsWith('CommunityToolkit.Aspire.Hosting.'))">true</EnableAspireIntegrationAnalyzers>
   </PropertyGroup>
 
