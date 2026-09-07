@@ -33,6 +33,10 @@ public class ListTemplatesResponseDataItem
     [JsonPropertyName("id")]
     public int? Id { get; set; }
 
+    /// <summary>Gets or sets the languages available in the active template version.</summary>
+    [JsonPropertyName("languages")]
+    public IReadOnlyList<string>? Languages { get; set; }
+
     /// <summary>Gets or sets <c>last_edited_by</c>.</summary>
     [JsonPropertyName("last_edited_by")]
     public ListTemplatesResponseDataItemLastEditedBy? LastEditedBy { get; set; }
