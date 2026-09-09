@@ -15,9 +15,6 @@
     <Project Path="examples/bitwarden-secret-manager/CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager.ApiService/CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager.ApiService.csproj" />
     <Project Path="examples/bitwarden-secret-manager/CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager.AppHost/CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager.AppHost.csproj" />
   </Folder>
-  <Folder Name="/examples/bun/">
-    <Project Path="examples/bun/CommunityToolkit.Aspire.Hosting.Bun.AppHost/CommunityToolkit.Aspire.Hosting.Bun.AppHost.csproj" />
-  </Folder>
   <Folder Name="/examples/dapr/">
     <Project Path="examples/dapr/CommunityToolkit.Aspire.Hosting.Azure.Dapr.AppHost/CommunityToolkit.Aspire.Hosting.Azure.Dapr.AppHost.csproj" />
     <Project Path="examples/dapr/CommunityToolkit.Aspire.Hosting.Dapr.AppHost/CommunityToolkit.Aspire.Hosting.Dapr.AppHost.csproj" />
@@ -263,7 +260,6 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Azure.Extensions/CommunityToolkit.Aspire.Hosting.Azure.Extensions.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager/CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager.csproj" />
-    <Project Path="src/CommunityToolkit.Aspire.Hosting.Bun/CommunityToolkit.Aspire.Hosting.Bun.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.DbGate/CommunityToolkit.Aspire.Hosting.DbGate.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Dbx/CommunityToolkit.Aspire.Hosting.Dbx.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Deno/CommunityToolkit.Aspire.Hosting.Deno.csproj" />
@@ -345,7 +341,6 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.Tests/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Azure.Extensions.Tests/CommunityToolkit.Aspire.Hosting.Azure.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager.Tests/CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager.Tests.csproj" />
-    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Bun.Tests/CommunityToolkit.Aspire.Hosting.Bun.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.DbGate.Tests/CommunityToolkit.Aspire.Hosting.DbGate.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Dbx.Tests/CommunityToolkit.Aspire.Hosting.Dbx.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Deno.Tests/CommunityToolkit.Aspire.Hosting.Deno.Tests.csproj" />
