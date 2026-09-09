@@ -196,11 +196,6 @@ This project is supported by the [.NET Foundation](https://dotnetfoundation.org)
 [rust-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Rust/
 [rust-shields-preview]: https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Hosting.Rust?label=nuget%20(preview)
 [rust-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Rust/absoluteLatest
-[bun-integration-docs]: https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-bun
-[bun-shields]: https://img.shields.io/nuget/v/CommunityToolkit.Aspire.Hosting.Bun
-[bun-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Bun/
-[bun-shields-preview]: https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Hosting.Bun?label=nuget%20(preview)
-[bun-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Bun/absoluteLatest
 [bitwarden-secret-manager-integration-docs]: https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-bitwarden-secret-manager
 [bitwarden-secret-manager-hosting-shields]: https://img.shields.io/nuget/v/CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager
 [bitwarden-secret-manager-hosting-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager/
