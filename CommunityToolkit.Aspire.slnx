@@ -60,6 +60,10 @@
     <Project Path="examples/flyway/02.ContainerConfiguration/02.ContainerConfiguration.csproj" />
     <Project Path="examples/flyway/03.Repair/03.Repair.csproj" />
   </Folder>
+  <Folder Name="/examples/glitchtip/">
+    <Project Path="examples/glitchtip/GlitchTip.Api/GlitchTip.Api.csproj" />
+    <Project Path="examples/glitchtip/GlitchTip.AppHost/GlitchTip.AppHost.csproj" />
+  </Folder>
   <Folder Name="/examples/goff/">
     <Project Path="examples/goff/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.ApiService/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.ApiService.csproj" />
     <Project Path="examples/goff/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.AppHost/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.AppHost.csproj" />
@@ -252,6 +256,8 @@
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/CommunityToolkit.Aspire.Bitwarden.SecretManager/CommunityToolkit.Aspire.Bitwarden.SecretManager.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.GlitchTip.AspNetCore/CommunityToolkit.Aspire.GlitchTip.AspNetCore.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.GlitchTip/CommunityToolkit.Aspire.GlitchTip.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.GoFeatureFlag/CommunityToolkit.Aspire.GoFeatureFlag.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.ActiveMQ/CommunityToolkit.Aspire.Hosting.ActiveMQ.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Adminer/CommunityToolkit.Aspire.Hosting.Adminer.csproj" />
@@ -267,6 +273,7 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Flagd/CommunityToolkit.Aspire.Hosting.Flagd.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Floci/CommunityToolkit.Aspire.Hosting.Floci.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Flyway/CommunityToolkit.Aspire.Hosting.Flyway.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.GlitchTip/CommunityToolkit.Aspire.Hosting.GlitchTip.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.GoFeatureFlag/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Golang/CommunityToolkit.Aspire.Hosting.Golang.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Java/CommunityToolkit.Aspire.Hosting.Java.csproj" />
@@ -332,6 +339,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/CommunityToolkit.Aspire.Bitwarden.SecretManager.Tests/CommunityToolkit.Aspire.Bitwarden.SecretManager.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.GlitchTip.Tests/CommunityToolkit.Aspire.GlitchTip.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.GoFeatureFlag.Tests/CommunityToolkit.Aspire.GoFeatureFlag.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.ActiveMQ.Tests/CommunityToolkit.Aspire.Hosting.ActiveMQ.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Adminer.Tests/CommunityToolkit.Aspire.Hosting.Adminer.Tests.csproj" />
@@ -347,6 +355,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Flagd.Tests/CommunityToolkit.Aspire.Hosting.Flagd.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Floci.Tests/CommunityToolkit.Aspire.Hosting.Floci.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Flyway.Tests/CommunityToolkit.Aspire.Hosting.Flyway.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.GlitchTip.Tests/CommunityToolkit.Aspire.Hosting.GlitchTip.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.Tests/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Java.Tests/CommunityToolkit.Aspire.Hosting.Java.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.JavaScript.Extensions.Tests/CommunityToolkit.Aspire.Hosting.JavaScript.Extensions.Tests.csproj" />

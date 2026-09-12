@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../../src/CommunityToolkit.Aspire.Hosting.GlitchTip/CommunityToolkit.Aspire.Hosting.GlitchTip.csproj" />
+    <ProjectReference Include="../CommunityToolkit.Aspire.Testing/CommunityToolkit.Aspire.Testing.csproj" />
+  </ItemGroup>
+</Project>
