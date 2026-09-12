@@ -1,4 +1,5 @@
 using Aspire.Hosting;
+using Aspire.Hosting.Utils;
 using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Redis.Extensions.Tests;
@@ -11,7 +12,7 @@ public class ResourceCreationTests
         var builder = DistributedApplication.CreateBuilder();
 
         var redisResourceBuilder = builder.AddRedis("redis")
-            .WithEndpoint("tcp", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 27017))
+            .WithEndpoint("tcp", endpoint => AllocateEndpoint(endpoint, "redis.dev.internal", 27017, tlsEnabled: false))
             .WithDbGate();
 
         var redisResource = redisResourceBuilder.Resource;
@@ -35,24 +36,46 @@ public class ResourceCreationTests
 
         Assert.Equal("redis", CONNECTIONS);
 
+        var password = await redisResource.PasswordParameter!.GetValueAsync(TestContext.Current.CancellationToken);
+
         Assert.Collection(envs,
             item =>
             {
                 Assert.Equal("LABEL_redis", item.Key);
                 Assert.Equal(redisResource.Name, item.Value);
             },
-            async item =>
+            item =>
             {
-                var redisUrl = redisResource.PasswordParameter is not null ?
-                $"rediss://:{await redisResource.PasswordParameter.GetValueAsync(default)}@{redisResource.Name}:{redisResource.PrimaryEndpoint.TargetPort}" : $"rediss://{redisResource.Name}:{redisResource.PrimaryEndpoint.TargetPort}";
                 Assert.Equal("URL_redis", item.Key);
-                Assert.Equal(redisUrl, item.Value);
+                Assert.Equal($"redis://:{password}@redis.dev.internal:6379", item.Value);
             },
             item =>
             {
                 Assert.Equal("ENGINE_redis", item.Key);
                 Assert.Equal("redis@dbgate-plugin-redis", item.Value);
             });
+
+        Assert.Single(dbGateResource.Annotations.OfType<CertificateTrustConfigurationCallbackAnnotation>());
+    }
+
+    [Fact]
+    public async Task WithDbGateUsesRedisUriExpressionWhenTlsIsDisabled()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var redisResource = builder.AddRedis("redis")
+            .WithEndpoint("tcp", endpoint => AllocateEndpoint(endpoint, "redis.dev.internal", 27017, tlsEnabled: false))
+            .WithDbGate()
+            .Resource;
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var dbGateResource = Assert.Single(appModel.Resources.OfType<DbGateContainerResource>());
+        var envs = await dbGateResource.GetEnvironmentVariablesAsync();
+        var password = await redisResource.PasswordParameter!.GetValueAsync(TestContext.Current.CancellationToken);
+
+        Assert.Equal($"redis://:{password}@redis.dev.internal:6379", envs["URL_redis"]);
     }
 
     [Fact]
@@ -113,13 +136,13 @@ public class ResourceCreationTests
         var builder = DistributedApplication.CreateBuilder();
 
         var redisResourceBuilder1 = builder.AddRedis("redis1")
-            .WithEndpoint("tcp", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 27017))
+            .WithEndpoint("tcp", endpoint => AllocateEndpoint(endpoint, "redis1.dev.internal", 27017, tlsEnabled: false))
             .WithDbGate();
 
         var redisResource1 = redisResourceBuilder1.Resource;
 
         var redisResourceBuilder2 = builder.AddRedis("redis2")
-            .WithEndpoint("tcp", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 27018))
+            .WithEndpoint("tcp", endpoint => AllocateEndpoint(endpoint, "redis2.dev.internal", 27018, tlsEnabled: false))
             .WithDbGate();
 
         var redisResource2 = redisResourceBuilder2.Resource;
@@ -143,19 +166,19 @@ public class ResourceCreationTests
 
         Assert.Equal("redis1,redis2", CONNECTIONS);
 
+        var redis1Password = await redisResource1.PasswordParameter!.GetValueAsync(default);
+        var redis2Password = await redisResource2.PasswordParameter!.GetValueAsync(default);
+
         Assert.Collection(envs,
             item =>
             {
                 Assert.Equal("LABEL_redis1", item.Key);
                 Assert.Equal(redisResource1.Name, item.Value);
             },
-            async item =>
+            item =>
             {
-                var redisUrl = redisResource1.PasswordParameter is not null ?
-                $"rediss://:{await redisResource1.PasswordParameter.GetValueAsync(default)}@{redisResource1.Name}:{redisResource1.PrimaryEndpoint.TargetPort}" : $"rediss://{redisResource1.Name}:{redisResource1.PrimaryEndpoint.TargetPort}";
-
                 Assert.Equal("URL_redis1", item.Key);
-                Assert.Equal(redisUrl, item.Value);
+                Assert.Equal($"redis://:{redis1Password}@redis1.dev.internal:6379", item.Value);
             },
             item =>
             {
@@ -167,18 +190,34 @@ public class ResourceCreationTests
                 Assert.Equal("LABEL_redis2", item.Key);
                 Assert.Equal(redisResource2.Name, item.Value);
             },
-            async item =>
+            item =>
             {
-                var redisUrl = redisResource2.PasswordParameter is not null ?
-                $"rediss://:{await redisResource2.PasswordParameter.GetValueAsync(default)}@{redisResource2.Name}:{redisResource2.PrimaryEndpoint.TargetPort}" : $"rediss://{redisResource2.Name}:{redisResource2.PrimaryEndpoint.TargetPort}";
-
                 Assert.Equal("URL_redis2", item.Key);
-                Assert.Equal(redisUrl, item.Value);
+                Assert.Equal($"redis://:{redis2Password}@redis2.dev.internal:6379", item.Value);
             },
             item =>
             {
                 Assert.Equal("ENGINE_redis2", item.Key);
                 Assert.Equal("redis@dbgate-plugin-redis", item.Value);
             });
+    }
+
+    private static void AllocateEndpoint(
+        EndpointAnnotation endpoint,
+        string containerHost,
+        int hostPort,
+        bool tlsEnabled)
+    {
+        endpoint.AllocatedEndpoint = new AllocatedEndpoint(endpoint, "localhost", hostPort);
+        endpoint.AllAllocatedEndpoints.AddOrUpdateAllocatedEndpoint(
+            KnownNetworkIdentifiers.DefaultAspireContainerNetwork,
+            new AllocatedEndpoint(
+                endpoint,
+                containerHost,
+                endpoint.TargetPort!.Value,
+                EndpointBindingMode.SingleAddress,
+                targetPortExpression: null,
+                networkId: KnownNetworkIdentifiers.DefaultAspireContainerNetwork));
+        endpoint.TlsEnabled = tlsEnabled;
     }
 }
