@@ -7,7 +7,8 @@ namespace Aspire.Hosting.ApplicationModel;
 /// floci-az serves Service Bus AMQP from an Artemis sidecar container that publishes the
 /// configured ports directly on the Docker host. The resource models those host ports as
 /// proxyless Aspire endpoints so DCP can allocate them without trying to proxy traffic to the
-/// parent container.
+/// parent container. Container consumers reach those same ports through the container runtime's
+/// host gateway. This resource is only supported in run mode.
 /// </remarks>
 /// <param name="name">The name of the resource.</param>
 /// <param name="parent">The parent Floci Azure emulator resource.</param>

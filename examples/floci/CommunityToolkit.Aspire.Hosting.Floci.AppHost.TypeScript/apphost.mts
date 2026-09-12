@@ -1,4 +1,5 @@
 import { mkdirSync } from "node:fs";
+import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createBuilder } from './.aspire/modules/aspire.mjs';
@@ -9,6 +10,13 @@ const builder = await createBuilder();
 const flociAws = await builder.addFlociAws('floci-aws');
 const flociAzure = await builder.addFlociAzure('floci-az');
 const flociGcp = await builder.addFlociGcp('floci-gcp');
+
+await flociAzure.withDockerSocket();
+await flociAzure.withEnvironment('FLOCI_AZ_DOCKER_RESOURCE_NAMESPACE', `sample-${randomUUID()}`);
+const serviceBus = await flociAzure.withServiceBus({ name: 'servicebus' });
+await serviceBus.amqpEndpoint();
+await serviceBus.amqpTlsEndpoint();
+await serviceBus.connectionStringExpression();
 
 // A single Floci UI console browses all three clouds — flociAws.withFlociUI() creates the
 // console wired to AWS, then withCloudReference* attaches the Azure and GCP resources to it.
@@ -29,9 +37,41 @@ const apiService = await builder.addProject("floci-api", apiServiceProjectPath)
     .withFlociAwsReference(flociAws)
     .withFlociAzureReference(flociAzure)
     .withFlociGcpReference(flociGcp)
+    .withFlociAzureServiceBusReference(serviceBus)
     .waitFor(flociAws)
     .waitFor(flociAzure)
     .waitFor(flociGcp);
+
+// Resolve the returned child handle from a real container and require an AMQP response.
+await builder.addContainer('servicebus-probe', 'node:22-alpine')
+    .withFlociAzureServiceBusReference(serviceBus)
+    .withHttpEndpoint({ targetPort: 8080 })
+    .withHttpHealthCheck({ path: '/' })
+    .waitFor(flociAzure)
+    .withArgs(['-e', `
+        const net = require('node:net');
+        const http = require('node:http');
+        const assert = require('node:assert/strict');
+        const connectionString = process.env.ConnectionStrings__servicebus;
+        const endpoint = new URL(connectionString.split(';')[0].slice('Endpoint='.length));
+        const header = Buffer.from([65, 77, 81, 80, 0, 1, 0, 0]);
+        let ready = false;
+        const socket = net.connect({ host: endpoint.hostname, port: Number(endpoint.port) }, () => socket.write(header));
+        socket.setTimeout(20000, () => { throw new Error('AMQP handshake timed out'); });
+        let response = Buffer.alloc(0);
+        socket.on('data', data => {
+            response = Buffer.concat([response, data]);
+            if (response.length >= header.length) {
+                assert.deepEqual(response.subarray(0, header.length), header);
+                ready = true;
+                socket.destroy();
+            }
+        });
+        http.createServer((request, response) => {
+            response.writeHead(ready ? 200 : 503);
+            response.end();
+        }).listen(8080, '0.0.0.0');
+    `]);
 
 // ── Custom port and region ────────────────────────────────────────────────────
 await builder.addFlociAws('floci-custom', {
@@ -85,6 +125,7 @@ if (includeCompileOnlyScenarios) {
     await _azurePodman.withDockerSocket({
         socketPath: '/run/user/1000/podman/podman.sock'
     });
+    await _azurePodman.withServiceBus({ name: 'podman-servicebus', amqpPort: 15673, amqpTlsPort: 15674 });
 
     const _gcpPodman = await builder.addFlociGcp('floci-gcp-podman');
     await _gcpPodman.withDockerSocket({

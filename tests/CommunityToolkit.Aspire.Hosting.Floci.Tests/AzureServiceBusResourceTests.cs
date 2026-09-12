@@ -1,4 +1,6 @@
 using Aspire.Hosting;
+using Aspire.Hosting.Utils;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Floci.Tests;
 
@@ -35,6 +37,30 @@ public class AzureServiceBusResourceTests
 
         Assert.Equal(5673, serviceBus.Resource.AmqpEndpoint.EndpointAnnotation.Port);
         Assert.Equal(5674, serviceBus.Resource.AmqpTlsEndpoint.EndpointAnnotation.Port);
+    }
+
+    [Fact]
+    public void EqualListenerPortsThrowBeforeRegisteringChild()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+        var azure = builder.AddFlociAzure("floci-az");
+
+        var exception = Assert.Throws<ArgumentException>(() => azure.WithServiceBus(amqpPort: 5673, amqpTlsPort: 5673));
+
+        Assert.Equal("amqpTlsPort", exception.ParamName);
+        Assert.DoesNotContain(builder.Resources, resource => resource is FlociAzureServiceBusResource);
+    }
+
+    [Fact]
+    public void PublishModeRejectsServiceBusBeforeRegisteringChild()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
+        var azure = builder.AddFlociAzure("floci-az");
+
+        var exception = Assert.Throws<NotSupportedException>(() => azure.WithServiceBus());
+
+        Assert.Contains("ExecutionContext.IsRunMode", exception.Message);
+        Assert.DoesNotContain(builder.Resources, resource => resource is FlociAzureServiceBusResource);
     }
 
     [Fact]
@@ -134,15 +160,50 @@ public class AzureServiceBusResourceTests
     }
 
     [Fact]
-    public async Task WithReferenceInjectsTheConnectionString()
+    public void ConflictingNamesThrow()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+        var azure = builder.AddFlociAzure("floci-az");
+        var serviceBus = azure.WithServiceBus("first");
+
+        Assert.Throws<InvalidOperationException>(() => azure.WithServiceBus("second"));
+        Assert.Same(serviceBus.Resource, azure.WithServiceBus("FIRST").Resource);
+        Assert.Single(builder.Resources.OfType<FlociAzureServiceBusResource>());
+    }
+
+    [Fact]
+    public async Task MultipleEmulatorsUseDistinctChildNamesAndConnectionKeys()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+        var first = builder.AddFlociAzure("first").WithServiceBus();
+        var second = builder.AddFlociAzure("second").WithServiceBus("second-servicebus");
+        AllocateEndpoints(first.Resource, 5673, 5674);
+        AllocateEndpoints(second.Resource, 5675, 5676);
+        var consumer = builder.AddExecutable("consumer", "dotnet", ".")
+            .WithReference(first)
+            .WithReference(second);
+
+        using var app = builder.Build();
+        var environment = await consumer.Resource.GetEnvironmentVariablesAsync(serviceProvider: app.Services);
+
+        Assert.Contains("Endpoint=sb://localhost:5673;", environment["ConnectionStrings__servicebus"]);
+        Assert.Contains("Endpoint=sb://localhost:5675;", environment["ConnectionStrings__second-servicebus"]);
+        Assert.Equal(2, builder.Resources.OfType<FlociAzureServiceBusResource>().Count());
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task WithReferenceInjectsTheConnectionString(bool useContainer)
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
         var serviceBus = builder.AddFlociAzure("floci-az").WithServiceBus();
         AllocateEndpoints(serviceBus.Resource, 5673, 5674);
 
-        var consumer = builder.AddContainer("api", "my-api-image")
-            .WithReference(serviceBus);
+        IResourceBuilder<IResourceWithEnvironment> consumer = useContainer
+            ? builder.AddContainer("api", "my-api-image").WithReference(serviceBus)
+            : builder.AddExecutable("api", "dotnet", ".").WithReference(serviceBus);
 
         using var app = builder.Build();
 
@@ -162,9 +223,36 @@ public class AzureServiceBusResourceTests
             : connectionString.ToString();
 
         Assert.Equal(
-            "Endpoint=sb://localhost:5673;SharedAccessKeyName=RootManageSharedAccessKey;" +
+            $"Endpoint=sb://{(useContainer ? "floci-servicebus-host.internal" : "localhost")}:5673;SharedAccessKeyName=RootManageSharedAccessKey;" +
             "SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;",
             value);
+    }
+
+    [Fact]
+    public async Task ContainerReferencePreservesCustomConnectionNameAndAvoidsHostTunnelDependency()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var azure = builder.AddFlociAzure("floci-az");
+        var serviceBus = azure.WithServiceBus();
+        var consumer = builder.AddContainer("api", "my-api-image")
+            .WithReference(serviceBus, connectionName: "messages");
+
+        // Dependency discovery runs before allocation and must not resolve the host ports
+        // or request an Aspire tunnel for the sidecar's host-only endpoints.
+        var dependencies = await consumer.Resource.GetResourceDependenciesAsync(builder.ExecutionContext,
+            new ResourceDependencyDiscoveryOptions { DiscoveryMode = ResourceDependencyDiscoveryMode.DirectOnly });
+        Assert.Contains(azure.Resource, dependencies);
+        Assert.DoesNotContain(serviceBus.Resource, dependencies);
+
+        AllocateEndpoints(serviceBus.Resource, 5673, 5674);
+        await using var app = await builder.BuildAsync();
+        var environment = await consumer.Resource.GetEnvironmentVariablesAsync(serviceProvider: app.Services);
+        Assert.Contains("Endpoint=sb://floci-servicebus-host.internal:5673;", environment["ConnectionStrings__messages"]);
+        Assert.DoesNotContain("ConnectionStrings__servicebus", environment);
+
+        var exception = await Assert.ThrowsAsync<AggregateException>(async () =>
+            await consumer.Resource.GetEnvironmentVariablesAsync(DistributedApplicationOperation.Publish, app.Services));
+        Assert.IsType<NotSupportedException>(Assert.Single(exception.InnerExceptions));
     }
 
     private static void AssertEndpoint(

@@ -85,11 +85,13 @@ public static partial class FlociHostingExtension
     /// sidecar is a separate container floci-az starts via Docker, so the emulator also needs
     /// <see cref="WithDockerSocket(IResourceBuilder{FlociAzureContainerResource}, string)"/>.
     /// Aspire allocates proxyless AMQP host endpoints when ports are not specified. Requires
-    /// floci-az 0.12.0 or later.
+    /// floci-az 0.12.0 or later. This API is run-only; call it inside an
+    /// <c>ExecutionContext.IsRunMode</c> branch when publishing the AppHost.
     /// </remarks>
     /// <ats-summary>Adds a Service Bus child resource to the Floci Azure emulator</ats-summary>
     /// <param name="builder">The Floci Azure resource builder.</param>
-    /// <param name="name">The name of the Service Bus resource (default: <c>servicebus</c>).</param>
+    /// <param name="name">The globally unique name of the Service Bus resource (default: <c>servicebus</c>).
+    /// Pass a distinct name for each additional emulator.</param>
     /// <param name="amqpPort">Host port for plain AMQP (default: allocated by Aspire).</param>
     /// <param name="amqpTlsPort">Host port for AMQPS/TLS (default: allocated by Aspire).</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{FlociAzureServiceBusResource}"/> for further configuration.</returns>
@@ -103,11 +105,28 @@ public static partial class FlociHostingExtension
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
+        if (builder.ApplicationBuilder.ExecutionContext.IsPublishMode)
+        {
+            throw new NotSupportedException(
+                "Floci Service Bus is only supported in run mode. Call WithServiceBus inside an ExecutionContext.IsRunMode branch and reference a deployable Service Bus resource when publishing.");
+        }
+
+        if (amqpPort is not null && amqpPort == amqpTlsPort)
+        {
+            throw new ArgumentException("AMQP and AMQPS must use different host ports.", nameof(amqpTlsPort));
+        }
+
         FlociAzureServiceBusResource? existing = builder.ApplicationBuilder.Resources
             .OfType<FlociAzureServiceBusResource>()
             .FirstOrDefault(resource => resource.Parent == builder.Resource);
         if (existing is not null)
         {
+            if (!string.Equals(name, existing.Name, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException(
+                    $"Service Bus is already configured on '{builder.Resource.Name}' as '{existing.Name}' and cannot be reconfigured with a different name.");
+            }
+
             int? existingAmqpPort = existing.AmqpEndpoint.EndpointAnnotation.Port;
             int? existingAmqpTlsPort = existing.AmqpTlsEndpoint.EndpointAnnotation.Port;
             if ((amqpPort is not null && amqpPort != existingAmqpPort)
@@ -133,7 +152,8 @@ public static partial class FlociHostingExtension
                 scheme: "amqps",
                 name: FlociAzureServiceBusResource.AmqpTlsEndpointName,
                 isProxied: false)
-            .WithParentRelationship(builder);
+            .WithParentRelationship(builder)
+            .ExcludeFromManifest();
 
         builder.WithEnvironment(context =>
         {
@@ -151,6 +171,47 @@ public static partial class FlociHostingExtension
         });
 
         return serviceBusBuilder;
+    }
+
+    /// <summary>
+    /// Adds a Service Bus connection string reference, using the Docker host gateway for container consumers.
+    /// </summary>
+    /// <ats-summary>Adds a Floci Azure Service Bus reference</ats-summary>
+    /// <typeparam name="TDestination">The type of the resource receiving the reference.</typeparam>
+    /// <param name="builder">The resource builder receiving the reference.</param>
+    /// <param name="serviceBus">The Service Bus child resource to reference.</param>
+    /// <param name="connectionName">The connection string name, defaulting to the child resource name.</param>
+    /// <returns>The resource builder receiving the reference.</returns>
+    [AspireExport("withFlociAzureServiceBusReference")]
+    public static IResourceBuilder<TDestination> WithReference<TDestination>(
+        this IResourceBuilder<TDestination> builder,
+        IResourceBuilder<FlociAzureServiceBusResource> serviceBus,
+        string? connectionName = null)
+        where TDestination : IResourceWithEnvironment
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(serviceBus);
+
+        if (builder.ApplicationBuilder.ExecutionContext.IsPublishMode)
+        {
+            throw new NotSupportedException("Floci Service Bus references are only supported in run mode.");
+        }
+
+        if (builder.Resource is not ContainerResource container)
+        {
+            return ResourceBuilderExtensions.WithReference(builder, serviceBus, connectionName);
+        }
+
+        builder.ApplicationBuilder.CreateResourceBuilder(container)
+            .WithContainerRuntimeArgs("--add-host", $"{FlociAzureServiceBusConnectionString.ContainerHost}:host-gateway");
+
+        return builder
+            .WithEnvironment(context =>
+            {
+                context.EnvironmentVariables[$"ConnectionStrings__{connectionName ?? serviceBus.Resource.Name}"] =
+                    new FlociAzureServiceBusConnectionString(serviceBus.Resource);
+            })
+            .WithRelationship(serviceBus.Resource, "Reference");
     }
 
     /// <summary>

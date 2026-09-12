@@ -28,10 +28,41 @@ public class AzureServiceBusFunctionalTests(ITestOutputHelper testOutputHelper)
         var consumer = builder.AddExecutable("consumer", "dotnet", builder.AppHostDirectory, "--version")
             .WithReference(serviceBus)
             .WaitFor(azure);
+        var containerConsumer = builder.AddContainer("container-consumer", "node", "22-alpine")
+            .WithReference(serviceBus)
+            .WaitFor(azure)
+            .WithArgs("-e", """
+                const net = require('node:net');
+                const assert = require('node:assert/strict');
+                const connectionString = process.env.ConnectionStrings__servicebus;
+                const endpoint = new URL(connectionString.split(';')[0].slice('Endpoint='.length));
+                assert.notEqual(endpoint.hostname, 'localhost');
+                const header = Buffer.from([65, 77, 81, 80, 0, 1, 0, 0]);
+                const socket = net.connect({ host: endpoint.hostname, port: Number(endpoint.port) }, () => socket.write(header));
+                socket.setTimeout(20000, () => { throw new Error('AMQP handshake timed out'); });
+                let response = Buffer.alloc(0);
+                socket.on('data', data => {
+                    response = Buffer.concat([response, data]);
+                    if (response.length >= header.length) {
+                        assert.deepEqual(response.subarray(0, header.length), header);
+                        socket.destroy();
+                    }
+                });
+                socket.on('end', () => assert.ok(response.length >= header.length, 'Missing AMQP response'));
+                """);
 
         await using var app = await builder.BuildAsync(cancellationToken);
         await app.StartAsync(cancellationToken);
         await app.ResourceNotifications.WaitForResourceHealthyAsync(azure.Resource.Name, cancellationToken);
+
+        await foreach (var resourceEvent in app.ResourceNotifications.WatchAsync(cancellationToken))
+        {
+            if (resourceEvent.Resource == containerConsumer.Resource && resourceEvent.Snapshot.ExitCode is { } exitCode)
+            {
+                Assert.Equal(0, exitCode);
+                break;
+            }
+        }
 
         Assert.NotEqual(serviceBus.Resource.AmqpEndpoint.Port, serviceBus.Resource.AmqpTlsEndpoint.Port);
 
