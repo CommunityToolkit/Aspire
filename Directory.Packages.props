@@ -76,6 +76,10 @@
   </ItemGroup>
   <ItemGroup Label="Integration Packages">
     <!-- External packages -->
+    <PackageVersion Include="Sentry" Version="6.6.0" />
+    <PackageVersion Include="Sentry.Extensions.Logging" Version="6.6.0" />
+    <PackageVersion Include="Sentry.AspNetCore" Version="6.6.0" />
+    <PackageVersion Include="Sentry.OpenTelemetry" Version="6.6.0" />
     <PackageVersion Include="AWSSDK.S3" Version="4.0.102.4" />
     <PackageVersion Include="Azure.Provisioning.AppContainers" Version="1.2.0" />
     <PackageVersion Include="Azure.Storage.Blobs" Version="12.29.2" />

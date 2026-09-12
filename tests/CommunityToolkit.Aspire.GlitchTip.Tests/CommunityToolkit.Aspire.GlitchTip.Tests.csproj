@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="OpenTelemetry.Exporter.InMemory" />
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.GlitchTip\CommunityToolkit.Aspire.GlitchTip.csproj" />
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.GlitchTip.AspNetCore\CommunityToolkit.Aspire.GlitchTip.AspNetCore.csproj" />
+  </ItemGroup>
+</Project>
