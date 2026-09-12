@@ -140,6 +140,8 @@ builder.AddAzureServiceBusClient("servicebus");
 
 `WithServiceBus` sets `FLOCI_AZ_SERVICES_SERVICE_BUS_MOCKED=false` and `FLOCI_AZ_SERVICES_SERVICE_BUS_START_ON_BOOT=true`. Aspire models the sidecar's AMQP and AMQPS host ports as proxyless endpoints and allocates them by default; pass `amqpPort` / `amqpTlsPort` to use fixed ports. The management plane (for example, `ServiceBusAdministrationClient`) remains on the base endpoint from `WithReference(azure)`. Requires `WithDockerSocket()` and floci-az 0.12.0 or later.
 
+When running multiple Floci Azure emulators on the same Docker host, set a different `FLOCI_AZ_DOCKER_RESOURCE_NAMESPACE` environment variable on each emulator to keep their sidecar container names separate. Port allocation alone does not isolate those names.
+
 **GCP**
 
 ```csharp
