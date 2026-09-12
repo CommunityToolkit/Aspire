@@ -222,6 +222,11 @@ internal sealed class BitwardenSecretManagerProvisioner(
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(logger);
 
+        if (!resource.ManagedSecrets.Any(secret => secret.ValueSource is null))
+        {
+            return;
+        }
+
         logger.LogDebug("Starting upstream managed secret value sync for resource '{ResourceName}'.", resource.Name);
 
         Guid projectId = resource.ProjectId ?? throw new DistributedApplicationException($"Bitwarden resource '{resource.Name}' has not resolved a project identifier.");
@@ -240,7 +245,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
         BitwardenLookupContext lookupContext = new(provider, organizationId, logger);
         int syncedCount = 0;
 
-        foreach (BitwardenSecretResource secret in resource.ManagedSecrets)
+        foreach (BitwardenSecretResource secret in resource.ManagedSecrets.Where(secret => secret.ValueSource is null))
         {
             if (secret.HasValue())
             {
@@ -301,9 +306,9 @@ internal sealed class BitwardenSecretManagerProvisioner(
 
         logger.LogDebug("Starting pre-sync for managed secrets of resource '{ResourceName}'.", resource.Name);
 
-        if (!resource.ManagedSecrets.Any())
+        if (!resource.ManagedSecrets.Any(secret => secret.ValueSource is null))
         {
-            logger.LogDebug("No managed secrets declared for resource '{ResourceName}'; skipping pre-sync.", resource.Name);
+            logger.LogDebug("No parameter-backed managed secrets declared for resource '{ResourceName}'; skipping pre-sync.", resource.Name);
             return;
         }
 
@@ -537,7 +542,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
             int preResolvedCount = 0;
             logger.LogDebug("Pre-syncing {ManagedSecretCount} managed secret(s) for resource '{ResourceName}'.", resource.ManagedSecrets.Count(), resource.Name);
 
-            foreach (BitwardenSecretResource secret in resource.ManagedSecrets)
+            foreach (BitwardenSecretResource secret in resource.ManagedSecrets.Where(secret => secret.ValueSource is null))
             {
                 // ConfigurationKey is internal to Aspire.Hosting; replicate it — managed secrets are never connection strings.
                 string configKey = $"Parameters:{secret.Name}";

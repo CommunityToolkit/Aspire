@@ -350,6 +350,33 @@ public static class BitwardenSecretManagerExtensions
     }
 
     /// <summary>
+    /// Adds a managed Bitwarden secret whose authoritative value is a deferred expression.
+    /// The expression is resolved before each write; stored values and parameter configuration are never used as input.
+    /// </summary>
+    /// <param name="builder">The parent Bitwarden resource builder.</param>
+    /// <param name="name">The Aspire resource name.</param>
+    /// <param name="value">The value supplied by another resource or deployment operation.</param>
+    /// <param name="remoteName">The Bitwarden secret name. Defaults to <paramref name="name"/>.</param>
+    /// <returns>The managed secret resource builder.</returns>
+    [AspireExport("addSecretWithValue")]
+    public static IResourceBuilder<BitwardenSecretResource> AddSecret(
+        this IResourceBuilder<BitwardenSecretManagerResource> builder,
+        [ResourceName] string name,
+        ReferenceExpression value,
+        string? remoteName = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentNullException.ThrowIfNull(value);
+        if (remoteName is not null)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(remoteName);
+        }
+
+        return AddSecretCore(builder, name, remoteName ?? name, value);
+    }
+
+    /// <summary>
     /// Injects structured Bitwarden client configuration into the destination resource.
     /// </summary>
     /// <typeparam name="TDestination">The destination resource type.</typeparam>
@@ -912,7 +939,8 @@ public static class BitwardenSecretManagerExtensions
     private static IResourceBuilder<BitwardenSecretResource> AddSecretCore(
         IResourceBuilder<BitwardenSecretManagerResource> builder,
         string name,
-        string remoteName)
+        string remoteName,
+        ReferenceExpression? valueSource = null)
     {
         if (builder.Resource.ManagedSecrets.Any(secret => string.Equals(secret.RemoteName, remoteName, StringComparison.OrdinalIgnoreCase)))
         {
@@ -921,7 +949,9 @@ public static class BitwardenSecretManagerExtensions
 
         string secretResourceName = $"{builder.Resource.Name}-{name}";
         var config = builder.ApplicationBuilder.Configuration;
-        BitwardenSecretResource secret = new(secretResourceName, remoteName, builder.Resource, paramDefault =>
+        BitwardenSecretResource secret = valueSource is not null
+            ? new(secretResourceName, remoteName, builder.Resource, valueSource)
+            : new(secretResourceName, remoteName, builder.Resource, paramDefault =>
         {
             string key = $"Parameters:{secretResourceName}";
             string? value = config[key];
@@ -939,7 +969,7 @@ public static class BitwardenSecretManagerExtensions
                 ResourceType = "Parameter",
                 Properties =
                 [
-                    new(CustomResourceKnownProperties.Source, $"Parameters:{secretResourceName}")
+                    new(CustomResourceKnownProperties.Source, valueSource is null ? $"Parameters:{secretResourceName}" : "Resource output")
                 ],
                 State = KnownResourceStates.Waiting
             })

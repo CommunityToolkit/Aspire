@@ -64,6 +64,15 @@ public class BitwardenSecretResource : ParameterResource, IResourceWithParent<Bi
         IsManaged = false;
     }
 
+    // Explicit outputs are not parameter inputs. The base getter never prompts or reads saved
+    // parameter state; IValueProvider resolves the deferred source when its owner is ready.
+    internal BitwardenSecretResource(string name, string remoteName, BitwardenSecretManagerResource parent, ReferenceExpression value)
+        : this(name, remoteName, parent, _ => string.Empty)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        ValueSource = value;
+    }
+
     /// <summary>
     /// Gets a value indicating whether this resource is a managed secret (owned and written by Aspire)
     /// as opposed to a reference-only secret (read from an existing Bitwarden secret).
@@ -85,6 +94,8 @@ public class BitwardenSecretResource : ParameterResource, IResourceWithParent<Bi
     /// </summary>
     public BitwardenSecretManagerResource Parent { get; }
 
+    internal ReferenceExpression? ValueSource { get; }
+
     internal Guid? ExistingSecretId { get; }
 
     /// <summary>
@@ -92,7 +103,7 @@ public class BitwardenSecretResource : ParameterResource, IResourceWithParent<Bi
     /// </summary>
     public Guid? ResolvedSecretId => SecretId ?? ExistingSecretId;
 
-    IEnumerable<object> IValueWithReferences.References => [Parent, this];
+    IEnumerable<object> IValueWithReferences.References => ValueSource is { } value ? [Parent, this, value] : [Parent, this];
 
     string IManifestExpressionProvider.ValueExpression => SecretId is Guid secretId
         ? $"{{{Parent.Name}.secrets.{secretId:D}}}"
@@ -100,6 +111,13 @@ public class BitwardenSecretResource : ParameterResource, IResourceWithParent<Bi
 
     ValueTask<string?> IValueProvider.GetValueAsync(CancellationToken cancellationToken)
     {
+        // An explicit source is authoritative, including after an earlier provisioning pass.
+        // Never substitute a previously bound remote value when this source fails or waits.
+        if (ValueSource is { } value)
+        {
+            return value.GetValueAsync(cancellationToken);
+        }
+
         // Prefer the Bitwarden-resolved value bound by the provisioner after provisioning.
         string? resolved = Parent.ResolveSecretValue(this);
         if (resolved is not null)
@@ -127,6 +145,6 @@ public class BitwardenSecretResource : ParameterResource, IResourceWithParent<Bi
     // dispatch path would inject empty string instead of the Bitwarden-resolved value.
     ValueTask<string?> IValueProvider.GetValueAsync(ValueProviderContext context, CancellationToken cancellationToken)
     {
-        return ((IValueProvider)this).GetValueAsync(cancellationToken);
+        return ValueSource is { } value ? value.GetValueAsync(context, cancellationToken) : ((IValueProvider)this).GetValueAsync(cancellationToken);
     }
 }

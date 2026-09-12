@@ -83,6 +83,22 @@ The value is resolved in this order during startup:
 
 Aspire finds or creates the secret entirely by name and cached ID. There is no explicit GUID adoption for managed secrets — if the same secret was created in a previous run it will be found automatically.
 
+### Values supplied by another resource
+
+Use the `ReferenceExpression` overload to publish a resource output as a managed secret. For example, a database resource can supply its connection string:
+
+```csharp
+var connection = bitwarden.AddSecret(
+    "database-connection",
+    database.Resource.ConnectionStringExpression,
+    remoteName: "Database connection");
+```
+
+The expression is authoritative. Each reconciliation resolves it before creating or updating the secret. This overload does not prompt for a secret value, read `Parameters:{parentName}-{name}`, or fetch a stored value during upstream pre-sync. An old deployment-state value or previously bound Bitwarden value cannot substitute for an unavailable source. Bitwarden IDs and authentication sessions can still be cached to locate and update the destination.
+
+The source remains deferred during app-model construction and pure publish. The owning pipeline must complete the operation that produces it before `bitwarden-provision-secrets-{parentName}` runs. If the source waits, fails, or is canceled, the secret write waits, fails, or is canceled too. Passing the secret to `WithEnvironment` preserves the consuming resource's value-resolution context.
+
+When a Bitwarden resource contains only explicit-output secrets, both upstream pre-sync phases return without contacting Bitwarden or resolving those outputs. Ordinary `AddSecret(name)` and `AddSecret(name, remoteName)` inputs retain their upstream/configuration/prompt behavior, including in a manager that also contains explicit outputs.
 ## Externally managed secrets
 
 Use `GetSecret(...)` to reference a secret that already exists in Bitwarden and is owned outside the AppHost. Aspire reads the value but never writes to it.
