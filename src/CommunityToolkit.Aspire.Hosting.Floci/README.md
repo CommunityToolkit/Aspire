@@ -107,6 +107,46 @@ builder.AddAzureCosmosClient("cosmos");
 
 The Cosmos child resource is additive, so combine `WithReference(cosmos)` with `WithReference(azure)` when you also want the base endpoint / storage variables. (Talking to the floci Cosmos emulator over HTTP from the .NET SDK still needs the usual client-side settings — Gateway mode, and HTTP/1.1 — which are the app's concern, as with any local Cosmos emulator.)
 
+For **Service Bus**, use `WithServiceBus()` / `withServiceBus()` to model the AMQP data plane as a child resource, then reference it with `WithReference()` / `withFlociAzureServiceBusReference()`:
+
+```csharp
+var azure = builder.AddFlociAzure("floci-az")
+    .WithDockerSocket();
+var serviceBus = azure.WithServiceBus();
+
+builder.AddProject<MyApi>("api")
+    .WithReference(serviceBus) // ConnectionStrings__servicebus
+    .WaitFor(azure);
+```
+
+```typescript
+const azure = (await builder.addFlociAzure('floci-az')).withDockerSocket();
+const serviceBus = await azure.withServiceBus();
+
+await builder.addProject('api', '../MyApi/MyApi.csproj')
+    .withFlociAzureServiceBusReference(serviceBus)
+    .waitFor(azure);
+```
+
+App side, this is the standard Aspire flow:
+
+```csharp
+builder.AddAzureServiceBusClient("servicebus");
+```
+
+| Variable | Value |
+|---|---|
+| `ConnectionStrings__{resourceName}` (default `servicebus`) | `Endpoint=sb://{host}:{amqpPort};SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;` — `{host}` is `localhost` for host processes and the container runtime's host gateway for containers |
+
+`WithServiceBus` sets `FLOCI_AZ_SERVICES_SERVICE_BUS_MOCKED=false` and `FLOCI_AZ_SERVICES_SERVICE_BUS_START_ON_BOOT=true`. Aspire models the sidecar's AMQP and AMQPS host ports as proxyless endpoints and allocates them by default; pass `amqpPort` / `amqpTlsPort` to use fixed ports. The management plane (for example, `ServiceBusAdministrationClient`) remains on the base endpoint from `WithReference(azure)`. Requires `WithDockerSocket()` and floci-az 0.12.0 or later.
+
+AMQP and AMQPS must use different host ports. Repeated calls on the same emulator return the existing child only when the resource name and any specified ports match.
+
+For container consumers, the Service Bus reference helper adds `floci-servicebus-host.internal:host-gateway` to the container's host mappings and uses the sidecar's published AMQP port. This requires a container runtime supporting Docker's `--add-host=...:host-gateway` option. Use the Service Bus reference helper instead of passing the child's raw endpoint or connection string expression to a container.
+
+Service Bus support is run-only. `WithServiceBus()` throws in publish mode because the Artemis sidecar has no deployable backing resource in the Aspire model. In an AppHost that also publishes, call it inside `if (builder.ExecutionContext.IsRunMode)` and reference a deployable Service Bus resource in the publish branch.
+
+When running multiple Floci Azure emulators on the same Docker host, set a different `FLOCI_AZ_DOCKER_RESOURCE_NAMESPACE` environment variable on each emulator to keep their sidecar container names separate. Also pass a globally unique child name to each additional `WithServiceBus` call, for example `secondAzure.WithServiceBus("second-servicebus")`. The first can keep the default `servicebus` connection name; references to the second inject `ConnectionStrings__second-servicebus`. Port allocation alone does not isolate resource or sidecar names.
 
 **GCP**
 
