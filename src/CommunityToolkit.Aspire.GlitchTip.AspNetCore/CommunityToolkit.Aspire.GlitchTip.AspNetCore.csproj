@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net10.0</TargetFrameworks>
+    <IsPreview>true</IsPreview>
+    <Description>ASP.NET Core request integration for the Aspire GlitchTip client.</Description>
+    <AdditionalPackageTags>glitchtip sentry aspnetcore observability client</AdditionalPackageTags>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Sentry.AspNetCore" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.GlitchTip\CommunityToolkit.Aspire.GlitchTip.csproj" />
+  </ItemGroup>
+</Project>

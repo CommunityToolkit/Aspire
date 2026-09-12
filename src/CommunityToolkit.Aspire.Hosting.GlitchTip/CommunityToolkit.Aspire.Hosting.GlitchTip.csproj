@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net10.0</TargetFrameworks>
+    <AdditionalPackageTags>hosting glitchtip sentry observability</AdditionalPackageTags>
+    <Description>Local GlitchTip hosting and shared-instance project, monitor, and artifact deployment for Aspire.</Description>
+    <IsPreview>true</IsPreview>
+    <NoWarn>$(NoWarn);ASPIREPIPELINES001;ASPIREPIPELINES004;ASPIRECOMPUTE001;ASPIRECOMPUTE003;ASPIREATS001</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" />
+    <PackageReference Include="Aspire.Hosting.Docker" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.GlitchTip.Tests" />
+  </ItemGroup>
+</Project>
