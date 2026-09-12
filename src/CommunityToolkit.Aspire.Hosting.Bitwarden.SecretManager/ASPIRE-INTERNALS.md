@@ -4,6 +4,33 @@ This integration reaches into several experimental and private Aspire APIs to de
 
 ---
 
+
+## Prerequisite for a clean implementation
+
+[Aspire PR 18108](https://github.com/microsoft/aspire/pull/18108) is a prerequisite for removing the parameter-state workarounds.
+It proposes optional parameters, public value/error setters, and parameter-processor notifications.
+
+The integration retains `ParameterResource` inheritance and uses one value state for base and interface getters.
+Reference providers fill that state after their producer finishes. The common Bitwarden writer then reads the prepared value.
+
+`ParameterResourceExtensions.SetParameterValue` updates `WaitForValueTcs` and `_lazyValue` through `UnsafeAccessor`.
+Aspire 13.5 replaces the waiting task during parameter processing. Updating the lazy value prevents a second pass from restoring stale input.
+`SetParameterException` updates both paths so a failed source cannot expose a previous value.
+These setters fail the operation if the expected internal members are unavailable.
+
+The pre-sync step clears generated output before parameter processing. Generated values must not become saved parameter overrides.
+On Aspire 13.5, processing an absent value converts it to an empty string. Readiness and pipeline dependencies protect consumers until preparation finishes.
+
+After the prerequisite API is available in the supported Aspire release:
+
+1. Use optional parameters for reference and unmanaged inputs.
+2. Replace value/error state access with `SetValueAsync` and `SetExceptionAsync`.
+3. Replace current-value inspection with `TryGetCurrentValue`.
+4. Remove manual prompt-list and parameter-notification updates covered by the public API.
+5. Retain tests for fresh values, explicit input, persistence, and producer order.
+
+Public setters alone do not prevent a later parameter-processing pass from saving generated output.
+The lifecycle rules in [ARCHITECTURE.md](ARCHITECTURE.md) still apply after the workaround is removed.
 ## Experimental APIs (diagnostic suppressions)
 
 These are public APIs guarded by `[Experimental]` attributes. They are stable enough to ship on but carry an explicit "may change" signal.
@@ -68,11 +95,11 @@ These access private members of `ParameterResource` and `ParameterProcessor` tha
 
 **File:** `ParameterResourceExtensions.cs`
 
-**Why needed:** Three uses:
+**Why needed:** Current-value inspection, pending prompt completion, and value/error replacement all use this accessor. The replacement setters also update `_lazyValue`. Existing prompt helpers use it as follows:
 
 1. **`HasValue()`** — synchronously checks whether a parameter has already been resolved. `WaitForValueTcs` is set by `ParameterProcessor.InitializeParametersAsync`; if it is completed and non-empty the parameter has a value. If it is null, the lazy value-getter is invoked synchronously instead (with `MissingParameterValueException` caught and mapped to `false`).
 
-2. **`ResolveWaitForValue(value)`** — called by the provisioner after resolving a secret from Bitwarden in run mode, to unblock any code awaiting `GetValueAsync()` without waiting for the dashboard prompt. `TrySetResult` is called only if the TCS is pending, so it never overwrites a value the user has already supplied interactively.
+2. **`ResolveWaitForValue(value)`** — used for credential prompt completion, to unblock any code awaiting `GetValueAsync()` without waiting for the dashboard prompt. `TrySetResult` is called only if the TCS is pending, so it never overwrites a value the user has already supplied interactively.
 
 3. **`GetResolvedWaitForValue()`** — reads back the value stored by `PromptAsync` in the pre-sync step, after `InitializeWaitForValue()` pre-created the TCS (see `set_WaitForValueTcs` below).
 
@@ -88,7 +115,7 @@ These access private members of `ParameterResource` and `ParameterProcessor` tha
 
 `GetResolvedWaitForValue()` is no longer used in this flow: the value is captured directly in the prompting code and passed to `ResolveWaitForValue`. The `GetResolvedWaitForValue()` helper is still present for symmetry but is currently unused.
 
-**Why `_lazyValue` cannot be used instead:** `ParameterResource._lazyValue` is a `Lazy<string>` with `LazyThreadSafetyMode.ExecutionAndPublication` (the default), which permanently caches exceptions. If the lazy factory is evaluated before `process-parameters` creates the TCS and the config key is absent, it throws and caches `MissingParameterValueException`. All subsequent calls — including `ParameterProcessor.ProcessParameterAsync` after `Reload()` — re-throw the cached exception and never see the updated `IConfiguration` value. The pre-sync step therefore reads `IConfiguration` directly and never calls `HasValue()`, `ValueInternal`, or any path that evaluates `_lazyValue` on the parameters it is pre-resolving.
+**Why configuration reload alone is insufficient:** `ParameterResource._lazyValue` is a `Lazy<string>` with `LazyThreadSafetyMode.ExecutionAndPublication` (the default), which permanently caches exceptions. If the lazy factory is evaluated before `process-parameters` creates the TCS and the config key is absent, it throws and caches `MissingParameterValueException`. All subsequent calls — including `ParameterProcessor.ProcessParameterAsync` after `Reload()` — re-throw the cached exception and never see the updated `IConfiguration` value. The pre-sync step therefore reads `IConfiguration` directly and never calls `HasValue()`, `ValueInternal`, or any path that evaluates `_lazyValue` on the parameters it is pre-resolving.
 
 **Breakage:** `MissingMethodException` at runtime.
 
