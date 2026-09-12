@@ -969,7 +969,7 @@ public static class BitwardenSecretManagerExtensions
                 ResourceType = "Parameter",
                 Properties =
                 [
-                    new(CustomResourceKnownProperties.Source, valueSource is null ? $"Parameters:{secretResourceName}" : "Resource output")
+                    new(CustomResourceKnownProperties.Source, secret.AcceptsParameterInput ? $"Parameters:{secretResourceName}" : "Resource output")
                 ],
                 State = KnownResourceStates.Waiting
             })

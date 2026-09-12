@@ -26,17 +26,16 @@ public class BitwardenSecretResource : ParameterResource, IResourceWithParent<Bi
         RemoteName = remoteName;
         Parent = parent;
         IsManaged = true;
+        AcceptsParameterInput = true;
+        ValueSource = ReferenceExpression.Create($"{new ParameterValueReference(this)}");
     }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BitwardenSecretResource"/> class for an unmanaged (reference-only) secret by remote name.
     /// </summary>
     internal BitwardenSecretResource(string name, string remoteName, BitwardenSecretManagerResource parent)
-        // Empty string instead of throwing MissingParameterValueException: ParameterProcessor.ProcessParameterAsync
-        // adds parameters to _unresolvedParameters when their valueGetter throws, which causes them to appear in
-        // the process-parameters prompt form. Unmanaged secrets have no local value by design — their value comes
-        // exclusively from Bitwarden — so they must never be prompted. Returning empty string keeps the TCS
-        // resolved without entering the unresolved list; the real value flows through IValueProvider.GetValueAsync.
+        // Reference-only secrets have no parameter input. Returning empty string keeps them
+        // out of ParameterProcessor's prompt list; their value provider reads Bitwarden instead.
         : base(name, _ => string.Empty, secret: true)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
@@ -46,30 +45,25 @@ public class BitwardenSecretResource : ParameterResource, IResourceWithParent<Bi
         RemoteName = remoteName;
         Parent = parent;
         IsManaged = false;
+        ValueSource = new RemoteValueReference(this);
     }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BitwardenSecretResource"/> class for an unmanaged (reference-only) secret by secret identifier.
     /// </summary>
     internal BitwardenSecretResource(string name, Guid secretId, BitwardenSecretManagerResource parent)
-        // See comment on the other unmanaged constructor.
-        : base(name, _ => string.Empty, secret: true)
+        : this(name, name, parent)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        ArgumentNullException.ThrowIfNull(parent);
-
-        RemoteName = name; // placeholder; actual name resolved from Bitwarden
-        Parent = parent;
         ExistingSecretId = secretId;
-        IsManaged = false;
     }
 
     // Explicit outputs are not parameter inputs. The base getter never prompts or reads saved
-    // parameter state; IValueProvider resolves the deferred source when its owner is ready.
+    // parameter state; the supplied expression resolves the output when its owner is ready.
     internal BitwardenSecretResource(string name, string remoteName, BitwardenSecretManagerResource parent, ReferenceExpression value)
         : this(name, remoteName, parent, _ => string.Empty)
     {
         ArgumentNullException.ThrowIfNull(value);
+        AcceptsParameterInput = false;
         ValueSource = value;
     }
 
@@ -94,7 +88,11 @@ public class BitwardenSecretResource : ParameterResource, IResourceWithParent<Bi
     /// </summary>
     public BitwardenSecretManagerResource Parent { get; }
 
-    internal ReferenceExpression? ValueSource { get; }
+    // Input reconciliation is separate from value evaluation. Only parameter-backed managed
+    // secrets may obtain their input from configuration, prompts, or Bitwarden pre-sync.
+    internal bool AcceptsParameterInput { get; }
+
+    internal IValueProvider ValueSource { get; }
 
     internal Guid? ExistingSecretId { get; }
 
@@ -103,48 +101,37 @@ public class BitwardenSecretResource : ParameterResource, IResourceWithParent<Bi
     /// </summary>
     public Guid? ResolvedSecretId => SecretId ?? ExistingSecretId;
 
-    IEnumerable<object> IValueWithReferences.References => ValueSource is { } value ? [Parent, this, value] : [Parent, this];
+    IEnumerable<object> IValueWithReferences.References => [Parent, this, ValueSource];
 
     string IManifestExpressionProvider.ValueExpression => SecretId is Guid secretId
         ? $"{{{Parent.Name}.secrets.{secretId:D}}}"
         : $"{{{Parent.Name}.secrets.{RemoteName}}}";
 
-    ValueTask<string?> IValueProvider.GetValueAsync(CancellationToken cancellationToken)
+    ValueTask<string?> IValueProvider.GetValueAsync(CancellationToken cancellationToken) =>
+        ValueSource.GetValueAsync(cancellationToken);
+
+    // Both interface overloads evaluate the same source. ParameterResource's public methods
+    // remain the parameter-input path used by Aspire's parameter processor.
+    ValueTask<string?> IValueProvider.GetValueAsync(ValueProviderContext context, CancellationToken cancellationToken) =>
+        ValueSource.GetValueAsync(context, cancellationToken);
+
+    private sealed class ParameterValueReference(BitwardenSecretResource resource) : IValueProvider, IManifestExpressionProvider
     {
-        // An explicit source is authoritative, including after an earlier provisioning pass.
-        // Never substitute a previously bound remote value when this source fails or waits.
-        if (ValueSource is { } value)
-        {
-            return value.GetValueAsync(cancellationToken);
-        }
+        public string ValueExpression => resource.ValueExpression;
 
-        // Prefer the Bitwarden-resolved value bound by the provisioner after provisioning.
-        string? resolved = Parent.ResolveSecretValue(this);
-        if (resolved is not null)
-        {
-            return ValueTask.FromResult<string?>(resolved);
-        }
-
-        // For unmanaged (reference-only) secrets, the value comes exclusively from Bitwarden.
-        // Return null until the provisioner binds the value via BindResolvedSecret.
-        if (!IsManaged)
-        {
-            return ValueTask.FromResult<string?>(null);
-        }
-
-        // For managed secrets: fall back to the ParameterResource mechanism (WaitForValueTcs set by
-        // ParameterProcessor, or the configuration-backed value getter supplied at construction time).
-
-        return GetValueAsync(cancellationToken);
+        public ValueTask<string?> GetValueAsync(CancellationToken cancellationToken) =>
+            resource.Parent.ResolveSecretValue(resource) is { } resolved
+                ? ValueTask.FromResult<string?>(resolved)
+                // Call the inherited parameter method directly. Referring to resource through
+                // IValueProvider here would evaluate ValueSource again and recurse.
+                : resource.GetValueAsync(cancellationToken);
     }
 
-    // ParameterResource.GetValueAsync(ValueProviderContext, CancellationToken) calls the public
-    // GetValueAsync(CancellationToken), NOT the interface override above. The public path resolves
-    // via WaitForValueTcs — which for unmanaged secrets is pre-set to empty string (the value getter
-    // returns "" so ParameterProcessor doesn't prompt for them). Without this override, the framework
-    // dispatch path would inject empty string instead of the Bitwarden-resolved value.
-    ValueTask<string?> IValueProvider.GetValueAsync(ValueProviderContext context, CancellationToken cancellationToken)
+    private sealed class RemoteValueReference(BitwardenSecretResource resource) : IValueProvider
     {
-        return ValueSource is { } value ? value.GetValueAsync(context, cancellationToken) : ((IValueProvider)this).GetValueAsync(cancellationToken);
+        // A plain provider preserves null until resolution. Interpolating a missing remote
+        // value into a ReferenceExpression would turn it into an empty, resolved string.
+        public ValueTask<string?> GetValueAsync(CancellationToken cancellationToken) =>
+            ValueTask.FromResult(resource.Parent.ResolveSecretValue(resource));
     }
 }

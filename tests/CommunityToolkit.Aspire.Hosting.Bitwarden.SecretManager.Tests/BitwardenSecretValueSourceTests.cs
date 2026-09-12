@@ -33,6 +33,8 @@ public class BitwardenSecretValueSourceTests
         Assert.Equal("Reporting DSN", secret.Resource.RemoteName);
         Assert.True(secret.Resource.Secret);
         Assert.True(secret.Resource.IsManaged);
+        Assert.False(secret.Resource.AcceptsParameterInput);
+        Assert.Same(expression, secret.Resource.ValueSource);
         Assert.Contains(expression, ((IValueWithReferences)secret.Resource).References);
         Assert.Contains(ManifestPublishingCallbackAnnotation.Ignore, secret.Resource.Annotations);
         Assert.Equal("{bitwarden.secrets.Reporting DSN}", ((IManifestExpressionProvider)secret.Resource).ValueExpression);
