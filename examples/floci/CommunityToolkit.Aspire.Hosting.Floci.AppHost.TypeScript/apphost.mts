@@ -1,3 +1,4 @@
+import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createBuilder } from './.aspire/modules/aspire.mjs';
@@ -51,7 +52,9 @@ await flociPersistent.withDataVolume('floci-data');
 
 // ── Persistent storage — bind mount ───────────────────────────────────────────
 const flociMount = await builder.addFlociAws('floci-mount');
-await flociMount.withDataBindMount('/tmp/floci-data');
+const flociDataPath = path.join(appHostDirectory, '.aspire', 'floci-data');
+mkdirSync(flociDataPath, { recursive: true });
+await flociMount.withDataBindMount(flociDataPath);
 
 // ── Compile-time coverage ─────────────────────────────────────────────────────
 // Guards with false so these are type-checked but never executed.
