@@ -43,7 +43,7 @@ public class ManagementLocalBootstrapTests
             payload => Assert.Equal("Aspire", payload!["name"]!.GetValue<string>()));
         handler.Expect(HttpMethod.Get, "/api/0/teams/aspire/aspire/", "{}", HttpStatusCode.NotFound);
         handler.Expect(HttpMethod.Post, "/api/0/organizations/aspire/teams/", "{\"slug\":\"aspire\"}", HttpStatusCode.Created);
-        var token = await GlitchTipLocalBootstrap.EnsureAsync(Instance, "admin@aspire.local", "private-password", "aspire", "aspire", default, handler, cookies);
+        var token = await GlitchTipLocalBootstrap.EnsureAsync(Instance, "admin@example.com", "private-password", "aspire", "aspire", default, handler, cookies);
         Assert.Equal("local-management-token", token);
         handler.AssertComplete();
     }
@@ -67,7 +67,7 @@ public class ManagementLocalBootstrapTests
         }).ToJsonString(), link: "<http://glitchtip.local/api/0/api-tokens/>; rel=\"next\"; results=\"false\"");
         handler.Expect(HttpMethod.Get, "/api/0/organizations/aspire/", "{\"slug\":\"aspire\"}");
         handler.Expect(HttpMethod.Get, "/api/0/teams/aspire/aspire/", "{\"slug\":\"aspire\"}");
-        var token = await GlitchTipLocalBootstrap.EnsureAsync(Instance, "admin@aspire.local", "private-password", "aspire", "aspire", default, handler, cookies);
+        var token = await GlitchTipLocalBootstrap.EnsureAsync(Instance, "admin@example.com", "private-password", "aspire", "aspire", default, handler, cookies);
         Assert.Equal("existing-token", token);
         handler.AssertComplete();
     }
@@ -81,7 +81,7 @@ public class ManagementLocalBootstrapTests
             request => cookies.Add(Instance, new Cookie("csrftoken", "csrf")));
         handler.Expect(HttpMethod.Post, "/_allauth/browser/v1/auth/signup", "private-password", HttpStatusCode.ServiceUnavailable);
         var error = await Assert.ThrowsAsync<DistributedApplicationException>(() => GlitchTipLocalBootstrap.EnsureAsync(
-            Instance, "admin@aspire.local", "private-password", "aspire", "aspire", default, handler, cookies));
+            Instance, "admin@example.com", "private-password", "aspire", "aspire", default, handler, cookies));
         Assert.DoesNotContain("private-password", error.ToString());
         Assert.Contains("503", error.Message);
         handler.AssertComplete();

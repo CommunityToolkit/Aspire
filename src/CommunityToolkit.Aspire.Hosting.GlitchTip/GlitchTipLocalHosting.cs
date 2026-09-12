@@ -18,7 +18,7 @@ internal static class GlitchTipLocalHosting
         var name = project.Resource.Name;
         var scope = GetStorageScope(builder.AppHostDirectory);
         var secretKey = builder.AddParameter($"{name}-{scope}-secret-key", new GlitchTipLocalSecretDefault(builder.UserSecretsManager, $"{name}-{scope}-secret-key", 64), secret: true);
-        var adminEmail = builder.AddParameter($"{name}-admin-email", "admin@aspire.local");
+        var adminEmail = builder.AddParameter($"{name}-admin-email", "admin@example.com");
         var adminPassword = builder.AddParameter($"{name}-{scope}-admin-password", new GlitchTipLocalSecretDefault(builder.UserSecretsManager, $"{name}-{scope}-admin-password", 32), secret: true);
         var organization = builder.AddParameter($"{name}-local-organization", "aspire");
         var team = builder.AddParameter($"{name}-local-team", "aspire");
@@ -40,7 +40,7 @@ internal static class GlitchTipLocalHosting
             .WithEnvironment("VALKEY_URL", "")
             .WithEnvironment("SECRET_KEY", secretKey)
             .WithEnvironment("EMAIL_URL", "consolemail://")
-            .WithEnvironment("DEFAULT_FROM_EMAIL", "glitchtip@aspire.local")
+            .WithEnvironment("DEFAULT_FROM_EMAIL", "glitchtip@example.com")
             .WithEnvironment("SERVER_ROLE", "all_in_one")
             .WithCertificateTrustScope(CertificateTrustScope.System)
             .WithEnvironment("GLITCHTIP_ENABLE_MCP", "True")
