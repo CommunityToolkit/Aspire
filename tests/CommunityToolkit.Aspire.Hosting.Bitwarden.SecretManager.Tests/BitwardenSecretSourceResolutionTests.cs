@@ -13,15 +13,15 @@ public class BitwardenSecretSourceResolutionTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task ParameterExpressionPreservesConfigurationAndBoundValuePrecedence(bool withContext)
+    public async Task ParameterReadsPreservePreparedInputAndIgnoreBoundRemoteValues(bool withContext)
     {
         using var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
         var manager = AddManager(builder);
         builder.Configuration["Parameters:bitwarden-input"] = "configured-input";
         var secret = manager.AddSecret("input").Resource;
 
-        Assert.True(secret.AcceptsParameterInput);
-        var expression = Assert.IsType<ReferenceExpression>(secret.ValueSource);
+        Assert.Contains(secret, manager.Resource.InputSecrets);
+        var expression = Assert.IsType<ReferenceExpression>(secret.ValueProvider.GetSourceExpression(secret));
         Assert.Equal("{bitwarden-input.value}", expression.ValueExpression);
         Assert.Single(builder.Resources, resource => resource.Name == secret.Name);
         Assert.Equal(4, builder.Resources.OfType<ParameterResource>().Count());
@@ -32,7 +32,7 @@ public class BitwardenSecretSourceResolutionTests
         Assert.Equal("prompted-input", await ReadAsync(secret, withContext));
 
         manager.Resource.BindResolvedSecret(Guid.NewGuid(), secret.RemoteName, "bound-value");
-        Assert.Equal("bound-value", await ReadAsync(secret, withContext));
+        Assert.Equal("prompted-input", await ReadAsync(secret, withContext));
         manager.Resource.ResetResolvedValues();
         Assert.Equal("prompted-input", await ReadAsync(secret, withContext));
     }
@@ -79,10 +79,9 @@ public class BitwardenSecretSourceResolutionTests
         var id = Guid.NewGuid();
         var secret = (byId ? manager.GetSecret("reference", id) : manager.GetSecret("reference", "remote-name")).Resource;
         builder.Configuration[$"Parameters:{secret.Name}"] = "ignored-input";
-        secret.InitializeWaitForValue();
-        secret.ResolveWaitForValue("ignored-prompt");
 
-        Assert.False(secret.AcceptsParameterInput);
+
+        Assert.DoesNotContain(secret, manager.Resource.InputSecrets);
         Assert.False(secret.IsManaged);
         Assert.Null(await ReadAsync(secret, withContext));
         manager.Resource.BindResolvedSecret(id, byId ? "name-from-server" : secret.RemoteName, string.Empty);

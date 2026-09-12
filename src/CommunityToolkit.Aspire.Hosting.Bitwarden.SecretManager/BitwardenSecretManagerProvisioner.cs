@@ -1,5 +1,5 @@
 #pragma warning disable ASPIREINTERACTION001
-#pragma warning disable ASPIREPIPELINES002
+#pragma warning disable ASPIREPIPELINES001, ASPIREPIPELINES002
 
 using System.Collections.Immutable;
 using Aspire.Hosting;
@@ -10,6 +10,7 @@ using CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager;
 
@@ -200,7 +201,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
 
             secret.SecretId = secretInfo.Id;
             resource.BindResolvedSecret(secretInfo.Id, secretInfo.Key, secretInfo.Value);
-            secret.ResolveWaitForValue(secretInfo.Value);
+            secret.SetParameterValue(secretInfo.Value);
             await NotifySecretValueResolvedAsync(secret, secretInfo.Value, services, cancellationToken).ConfigureAwait(false);
             logger.LogInformation("Synced reference secret '{RemoteName}' from Bitwarden secret {SecretId}.", secret.RemoteName, secretInfo.Id);
         }
@@ -222,7 +223,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(logger);
 
-        if (!resource.ManagedSecrets.Any(secret => secret.AcceptsParameterInput))
+        if (resource.InputSecrets.Count == 0)
         {
             return;
         }
@@ -245,7 +246,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
         BitwardenLookupContext lookupContext = new(provider, organizationId, logger);
         int syncedCount = 0;
 
-        foreach (BitwardenSecretResource secret in resource.ManagedSecrets.Where(secret => secret.AcceptsParameterInput))
+        foreach (BitwardenSecretResource secret in resource.InputSecrets)
         {
             if (secret.HasValue())
             {
@@ -271,7 +272,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
 
             secret.SecretId = upstreamSecret.Id;
             resource.BindResolvedSecret(upstreamSecret.Id, secret.RemoteName, upstreamSecret.Value);
-            secret.ResolveWaitForValue(upstreamSecret.Value);
+            secret.SetParameterValue(upstreamSecret.Value);
             await NotifySecretValueResolvedAsync(secret, upstreamSecret.Value, services, cancellationToken).ConfigureAwait(false);
             syncedCount++;
             logger.LogInformation("Synced managed secret '{RemoteName}' from existing Bitwarden secret {SecretId}.", secret.RemoteName, upstreamSecret.Id);
@@ -304,9 +305,25 @@ internal sealed class BitwardenSecretManagerProvisioner(
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(logger);
 
+        foreach (BitwardenSecretResource reference in resource.ReferenceSecrets)
+        {
+            ((BitwardenReferenceValueProvider)reference.ValueProvider).PrepareInput(reference);
+        }
+        foreach (BitwardenSecretResource reference in resource.UnmanagedSecrets)
+        {
+            reference.SetParameterValue(null);
+        }
+
+        // Pure artifact generation may process parameters, but must not authenticate or prefill remotely.
+        string? targetStep = services.GetService<IOptions<PipelineOptions>>()?.Value.Step;
+        if (targetStep is WellKnownPipelineSteps.Publish or WellKnownPipelineSteps.Build)
+        {
+            return;
+        }
+
         logger.LogDebug("Starting pre-sync for managed secrets of resource '{ResourceName}'.", resource.Name);
 
-        if (!resource.ManagedSecrets.Any(secret => secret.AcceptsParameterInput))
+        if (resource.InputSecrets.Count == 0)
         {
             logger.LogDebug("No parameter-backed managed secrets declared for resource '{ResourceName}'; skipping pre-sync.", resource.Name);
             return;
@@ -542,7 +559,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
             int preResolvedCount = 0;
             logger.LogDebug("Pre-syncing {ManagedSecretCount} managed secret(s) for resource '{ResourceName}'.", resource.ManagedSecrets.Count(), resource.Name);
 
-            foreach (BitwardenSecretResource secret in resource.ManagedSecrets.Where(secret => secret.AcceptsParameterInput))
+            foreach (BitwardenSecretResource secret in resource.InputSecrets)
             {
                 // ConfigurationKey is internal to Aspire.Hosting; replicate it — managed secrets are never connection strings.
                 string configKey = $"Parameters:{secret.Name}";
@@ -574,6 +591,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
                 }
 
                 var slot = await deploymentStateManager.AcquireSectionAsync(configKey, cancellationToken).ConfigureAwait(false);
+                secret.SetParameterValue(existing.Value);
                 slot.SetValue(existing.Value);
                 await deploymentStateManager.SaveSectionAsync(slot, cancellationToken).ConfigureAwait(false);
                 preResolvedCount++;
@@ -659,6 +677,8 @@ internal sealed class BitwardenSecretManagerProvisioner(
             foreach (BitwardenSecretResource secret in resource.ManagedSecrets)
             {
                 logger.LogDebug("Processing managed secret '{RemoteName}'.", secret.RemoteName);
+                await secret.ValueProvider.PrepareForWriteAsync(secret,
+                    new ValueProviderContext { ExecutionContext = services.GetService<DistributedApplicationExecutionContext>(), Caller = resource }, cancellationToken).ConfigureAwait(false);
                 await ReconcileManagedSecretAsync(resource, organizationId, secret, cacheContext.Cache, lookupContext, provider, interactionService, logger, staleManagedMappings, services, cancellationToken).ConfigureAwait(false);
             }
 
@@ -849,7 +869,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
         lookupContext.CacheSecret(secret);
         secretResource.SecretId = secret.Id;
         resource.BindResolvedSecret(secret.Id, secretResource.RemoteName, secret.Value);
-        secretResource.ResolveWaitForValue(secret.Value);
+        secretResource.SetParameterValue(resolvedValue);
         await NotifySecretValueResolvedAsync(secretResource, secret.Value, services, cancellationToken).ConfigureAwait(false);
         logger.LogInformation("Successfully provisioned managed secret '{RemoteName}' with ID {SecretId}.", secretResource.RemoteName, secret.Id);
     }
