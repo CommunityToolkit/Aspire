@@ -1,4 +1,5 @@
 using Aspire.Hosting;
+using Aspire.Hosting.Utils;
 using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Redis.Extensions.Tests;
@@ -11,7 +12,7 @@ public class ResourceCreationTests
         var builder = DistributedApplication.CreateBuilder();
 
         var redisResourceBuilder = builder.AddRedis("redis")
-            .WithEndpoint("tcp", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 27017))
+            .WithEndpoint("tcp", endpoint => AllocateEndpoint(endpoint, "redis.dev.internal", 27017, tlsEnabled: false))
             .WithDbGate();
 
         var redisResource = redisResourceBuilder.Resource;
@@ -26,7 +27,7 @@ public class ResourceCreationTests
 
         Assert.Equal("dbgate", dbGateResource.Name);
 
-        var envs = await GetEnvironmentVariablesAsync(builder, dbGateResource);
+        var envs = await dbGateResource.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
 
@@ -34,6 +35,8 @@ public class ResourceCreationTests
         envs.Remove("CONNECTIONS");
 
         Assert.Equal("redis", CONNECTIONS);
+
+        var password = await redisResource.PasswordParameter!.GetValueAsync(TestContext.Current.CancellationToken);
 
         Assert.Collection(envs,
             item =>
@@ -44,8 +47,7 @@ public class ResourceCreationTests
             item =>
             {
                 Assert.Equal("URL_redis", item.Key);
-                var redisUrl = Assert.IsType<ReferenceExpression>(item.Value);
-                Assert.Equal(redisResource.UriExpression.ValueExpression, redisUrl.ValueExpression);
+                Assert.Equal($"redis://:{password}@redis.dev.internal:6379", item.Value);
             },
             item =>
             {
@@ -62,11 +64,7 @@ public class ResourceCreationTests
         var builder = DistributedApplication.CreateBuilder();
 
         var redisResource = builder.AddRedis("redis")
-            .WithEndpoint("tcp", endpoint =>
-            {
-                endpoint.AllocatedEndpoint = new AllocatedEndpoint(endpoint, "localhost", 27017);
-                endpoint.TlsEnabled = false;
-            })
+            .WithEndpoint("tcp", endpoint => AllocateEndpoint(endpoint, "redis.dev.internal", 27017, tlsEnabled: false))
             .WithDbGate()
             .Resource;
 
@@ -74,10 +72,10 @@ public class ResourceCreationTests
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var dbGateResource = Assert.Single(appModel.Resources.OfType<DbGateContainerResource>());
-        var envs = await GetEnvironmentVariablesAsync(builder, dbGateResource);
-        var redisUrl = Assert.IsType<ReferenceExpression>(envs["URL_redis"]);
+        var envs = await dbGateResource.GetEnvironmentVariablesAsync();
+        var password = await redisResource.PasswordParameter!.GetValueAsync(TestContext.Current.CancellationToken);
 
-        Assert.Equal(redisResource.UriExpression.ValueExpression, redisUrl.ValueExpression);
+        Assert.Equal($"redis://:{password}@redis.dev.internal:6379", envs["URL_redis"]);
     }
 
     [Fact]
@@ -138,13 +136,13 @@ public class ResourceCreationTests
         var builder = DistributedApplication.CreateBuilder();
 
         var redisResourceBuilder1 = builder.AddRedis("redis1")
-            .WithEndpoint("tcp", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 27017))
+            .WithEndpoint("tcp", endpoint => AllocateEndpoint(endpoint, "redis1.dev.internal", 27017, tlsEnabled: false))
             .WithDbGate();
 
         var redisResource1 = redisResourceBuilder1.Resource;
 
         var redisResourceBuilder2 = builder.AddRedis("redis2")
-            .WithEndpoint("tcp", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 27018))
+            .WithEndpoint("tcp", endpoint => AllocateEndpoint(endpoint, "redis2.dev.internal", 27018, tlsEnabled: false))
             .WithDbGate();
 
         var redisResource2 = redisResourceBuilder2.Resource;
@@ -159,7 +157,7 @@ public class ResourceCreationTests
 
         Assert.Equal("dbgate", dbGateResource.Name);
 
-        var envs = await GetEnvironmentVariablesAsync(builder, dbGateResource);
+        var envs = await dbGateResource.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
 
@@ -167,6 +165,9 @@ public class ResourceCreationTests
         envs.Remove("CONNECTIONS");
 
         Assert.Equal("redis1,redis2", CONNECTIONS);
+
+        var redis1Password = await redisResource1.PasswordParameter!.GetValueAsync(default);
+        var redis2Password = await redisResource2.PasswordParameter!.GetValueAsync(default);
 
         Assert.Collection(envs,
             item =>
@@ -177,8 +178,7 @@ public class ResourceCreationTests
             item =>
             {
                 Assert.Equal("URL_redis1", item.Key);
-                var redisUrl = Assert.IsType<ReferenceExpression>(item.Value);
-                Assert.Equal(redisResource1.UriExpression.ValueExpression, redisUrl.ValueExpression);
+                Assert.Equal($"redis://:{redis1Password}@redis1.dev.internal:6379", item.Value);
             },
             item =>
             {
@@ -193,8 +193,7 @@ public class ResourceCreationTests
             item =>
             {
                 Assert.Equal("URL_redis2", item.Key);
-                var redisUrl = Assert.IsType<ReferenceExpression>(item.Value);
-                Assert.Equal(redisResource2.UriExpression.ValueExpression, redisUrl.ValueExpression);
+                Assert.Equal($"redis://:{redis2Password}@redis2.dev.internal:6379", item.Value);
             },
             item =>
             {
@@ -203,20 +202,22 @@ public class ResourceCreationTests
             });
     }
 
-    private static async Task<Dictionary<string, object>> GetEnvironmentVariablesAsync(
-        IDistributedApplicationBuilder builder,
-        IResource resource)
+    private static void AllocateEndpoint(
+        EndpointAnnotation endpoint,
+        string containerHost,
+        int hostPort,
+        bool tlsEnabled)
     {
-        Assert.True(resource.TryGetAnnotationsOfType<EnvironmentCallbackAnnotation>(out var annotations));
-
-        var environmentVariables = new Dictionary<string, object>();
-        var context = new EnvironmentCallbackContext(builder.ExecutionContext, environmentVariables);
-
-        foreach (var annotation in annotations)
-        {
-            await annotation.Callback(context);
-        }
-
-        return environmentVariables;
+        endpoint.AllocatedEndpoint = new AllocatedEndpoint(endpoint, "localhost", hostPort);
+        endpoint.AllAllocatedEndpoints.AddOrUpdateAllocatedEndpoint(
+            KnownNetworkIdentifiers.DefaultAspireContainerNetwork,
+            new AllocatedEndpoint(
+                endpoint,
+                containerHost,
+                endpoint.TargetPort!.Value,
+                EndpointBindingMode.SingleAddress,
+                targetPortExpression: null,
+                networkId: KnownNetworkIdentifiers.DefaultAspireContainerNetwork));
+        endpoint.TlsEnabled = tlsEnabled;
     }
 }
