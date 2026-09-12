@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" ExcludeAssets="all" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" ExcludeAssets="all" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" ExcludeAssets="all" />
+    <PackageReference Include="Microsoft.Testing.Extensions.HangDump" ExcludeAssets="all" />
+  </ItemGroup>
+</Project>
