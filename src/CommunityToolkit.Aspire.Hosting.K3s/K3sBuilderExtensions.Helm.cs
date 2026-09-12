@@ -224,22 +224,22 @@ public static class K3sHelmBuilderExtensions
         // can appear in the bind-mount before the k8s hostname resolves in the helm
         // container. Using `helm list` (which calls the k8s API) verifies both the
         // file and the network path before proceeding.
-        sb.AppendLine("_k3s_wait=0");
-        sb.AppendLine($"until [ -f {K3sFileHelpers.ContainerKubeconfigPath} ] && helm list --kubeconfig {K3sFileHelpers.ContainerKubeconfigPath} > /dev/null 2>&1; do");
-        sb.AppendLine("  _k3s_wait=$((_k3s_wait + 5))");
-        sb.AppendLine("  if [ \"$_k3s_wait\" -ge 600 ]; then");
-        sb.AppendLine("    echo 'Timed out waiting for k3s cluster to be ready after 10 minutes' >&2");
-        sb.AppendLine("    exit 1");
-        sb.AppendLine("  fi");
-        sb.AppendLine("  echo 'Waiting for k3s cluster to be ready and reachable...'");
-        sb.AppendLine("  sleep 5");
-        sb.AppendLine("done");
+        sb.AppendShellLine("_k3s_wait=0");
+        sb.AppendShellLine($"until [ -f {K3sFileHelpers.ContainerKubeconfigPath} ] && helm list --kubeconfig {K3sFileHelpers.ContainerKubeconfigPath} > /dev/null 2>&1; do");
+        sb.AppendShellLine("  _k3s_wait=$((_k3s_wait + 5))");
+        sb.AppendShellLine("  if [ \"$_k3s_wait\" -ge 600 ]; then");
+        sb.AppendShellLine("    echo 'Timed out waiting for k3s cluster to be ready after 10 minutes' >&2");
+        sb.AppendShellLine("    exit 1");
+        sb.AppendShellLine("  fi");
+        sb.AppendShellLine("  echo 'Waiting for k3s cluster to be ready and reachable...'");
+        sb.AppendShellLine("  sleep 5");
+        sb.AppendShellLine("done");
 
         if (release.RepoUrl is not null)
         {
             var alias = $"aspire-k3s-{release.ReleaseName}";
-            sb.AppendLine($"helm repo add --force-update {ShellEscape(alias)} {ShellEscape(release.RepoUrl)}");
-            sb.AppendLine($"helm repo update {ShellEscape(alias)}");
+            sb.AppendShellLine($"helm repo add --force-update {ShellEscape(alias)} {ShellEscape(release.RepoUrl)}");
+            sb.AppendShellLine($"helm repo update {ShellEscape(alias)}");
         }
 
         var chartRef = release.RepoUrl is not null

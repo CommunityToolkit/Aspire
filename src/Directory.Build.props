@@ -5,20 +5,15 @@
     <IsPackable>true</IsPackable>
 
     <DocsPath>README.md</DocsPath>
-    <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <DebugType>embedded</DebugType>
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
     <IsPreview>false</IsPreview>
+    <!-- Aspire.Hosting supplies the integration analyzer through its build-transitive assets. -->
+    <EnableAspireIntegrationAnalyzers Condition="$([System.String]::Copy('$(MSBuildProjectName)').StartsWith('CommunityToolkit.Aspire.Hosting.'))">true</EnableAspireIntegrationAnalyzers>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitHub">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
-
     <PackageReference Include="Microsoft.DotNet.GenAPI.Task" PrivateAssets="All" />
-    <PackageReference Include="Aspire.Hosting.Integration.Analyzers" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
