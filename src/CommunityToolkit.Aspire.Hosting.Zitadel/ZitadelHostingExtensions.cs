@@ -35,7 +35,7 @@ public static class ZitadelHostingExtensions
         ArgumentNullException.ThrowIfNull(name);
 
         var usernameParameter = username?.Resource ?? new ParameterResource($"{name}-username", _ => "admin", false);
-        var passwordParameter = password?.Resource ?? ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder, $"{name}-password", minSpecial: 1);
+        var passwordParameter = password?.Resource ?? ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder, $"{name}-password", minLower: 1, minUpper: 1, minNumeric: 1, minSpecial: 1);
         var masterKeyParameter = masterKey?.Resource ?? ParameterResourceBuilderExtensions.CreateGeneratedParameter(builder, $"{name}-masterKey", true, new GenerateParameterDefault
         {
             MinLength = 32, // Zitadel requires 32, CreateDefaultPasswordParameter generates 22
