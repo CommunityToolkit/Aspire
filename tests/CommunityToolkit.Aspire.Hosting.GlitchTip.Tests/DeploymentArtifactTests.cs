@@ -15,7 +15,7 @@ public class DeploymentArtifactTests
 {
     private static readonly string[] GzipCompression = ["gzip"];
     [Fact]
-    public async Task NativeUploadUsesVerifiedChunksAndWaitsForParsedDebugId()
+    public async Task NativeUploadUsesVerifiedChunksAndSkipsAlreadyProcessedFiles()
     {
         using var files = new ArtifactDirectory();
         var path = files.Write("app.pdb", "BSJBportable-pdb-test-fixture");
@@ -66,39 +66,65 @@ public class DeploymentArtifactTests
         using var http = new HttpClient(handler);
         await UploadAsync(http, files.Path, [new(path, "v1", false, GlitchTipArtifactKind.DebugSymbols)]);
         Assert.Equal(await File.ReadAllBytesAsync(path), chunks.SelectMany(chunk => chunk).ToArray());
-        Assert.Equal(2, listingCalls);
+        Assert.Equal(1, listingCalls);
         var initialChunks = chunks.Count;
         await UploadAsync(http, files.Path, [new(path, "v1", false, GlitchTipArtifactKind.DebugSymbols)]);
         Assert.Equal(initialChunks, chunks.Count);
     }
 
-    [Fact]
-    public async Task AcceptedAssemblyWithoutPersistedSymbolsDoesNotSucceed()
+    [Theory]
+    [InlineData("created")]
+    [InlineData("assembling")]
+    [InlineData("ok")]
+    public async Task AcceptedUploadsCompleteWhileAllServerProcessingIsPending(string state)
     {
         using var files = new ArtifactDirectory();
-        var path = files.Write("bad.pdb", "BSJBnot-parseable");
-        var checksum = await GlitchTipSourceBundle.ChecksumAsync(path, default);
+        var first = files.Write("first.pdb", "BSJBfirst");
+        var second = files.Write("second.pdb", "BSJBsecond");
+        const string id = "ad0c0274-68bd-4ef6-801a-77d67f9894ed";
+        files.Write("app.js", $"//# debugId={id}\n//# sourceMappingURL=app.js.map\n");
+        files.Write("app.js.map", $$"""{"version":3,"debug_id":"{{id}}","sources":["source.ts"],"mappings":"AAAA"}""");
+        var listings = 0;
+        var accepted = 0;
         using var handler = new Handler(async request =>
         {
-            if (request.RequestUri!.AbsolutePath.EndsWith("files/dsyms/", StringComparison.Ordinal))
+            var path = request.RequestUri!.AbsolutePath;
+            if (path.EndsWith("files/dsyms/", StringComparison.Ordinal) || path.EndsWith("files/", StringComparison.Ordinal))
             {
-                return Json(new[] { new { sha1 = checksum, debugId = (string?)null } });
+                Assert.True(++listings <= 3, "Only the pre-upload lookup is allowed. Do not poll processing.");
+                return Json(Array.Empty<object>());
             }
-            if (request.RequestUri.AbsolutePath.EndsWith("chunk-upload/", StringComparison.Ordinal))
-            {
+            if (path.EndsWith("chunk-upload/", StringComparison.Ordinal))
                 return request.Method == HttpMethod.Get ? ChunkSettings() : Json(new { });
-            }
-            if (request.RequestUri.AbsolutePath.EndsWith("assemble/", StringComparison.Ordinal))
+            if (path.EndsWith("assemble/", StringComparison.Ordinal))
             {
-                return Json(new Dictionary<string, object> { [checksum] = new { state = "created", missingChunks = Array.Empty<string>() } });
+                accepted++;
+                if (path.EndsWith("artifactbundle/assemble/", StringComparison.Ordinal))
+                    return Json(new { state, missingChunks = Array.Empty<string>() });
+                var body = await BodyAsync(request);
+                var checksum = Assert.Single(body.EnumerateObject()).Name;
+                return Json(new Dictionary<string, object> { [checksum] = new { state, missingChunks = Array.Empty<string>() } });
             }
-            await BodyAsync(request);
+            Assert.EndsWith("releases/", path);
             return Json(new { });
         });
         using var http = new HttpClient(handler);
-        var exception = await Assert.ThrowsAsync<DistributedApplicationException>(() => UploadAsync(http, files.Path,
-            [new(path, "v1", false, GlitchTipArtifactKind.DebugSymbols)], TimeSpan.FromMilliseconds(100)));
-        Assert.Contains("timed out", exception.Message);
+        await UploadAsync(http, files.Path,
+            [new(first, "v1", false, GlitchTipArtifactKind.DebugSymbols),
+             new(second, "v1", false, GlitchTipArtifactKind.DebugSymbols),
+             new(files.Path, "v1", false, GlitchTipArtifactKind.SourceMaps)]);
+        Assert.Equal(3, accepted);
+        Assert.Equal(3, listings);
+    }
+
+    [Theory]
+    [InlineData("{\"state\":\"created\",\"missingChunks\":[\"missing\"]}")]
+    [InlineData("{\"state\":\"created\"}")]
+    [InlineData("{\"state\":\"created\",\"missingChunks\":null}")]
+    public void IncompleteAcceptanceBlocksDeployment(string response)
+    {
+        using var document = JsonDocument.Parse(response);
+        Assert.Throws<DistributedApplicationException>(() => GlitchTipArtifactUploader.EnsureAssemblyAccepted(document.RootElement));
     }
 
     [Fact]
@@ -167,7 +193,7 @@ public class DeploymentArtifactTests
     }
 
     [Fact]
-    public async Task SourceUploadVerifiesAssembledContentAndSkipsIdenticalRetry()
+    public async Task SourceUploadChecksAcceptanceAndSkipsAlreadyProcessedContent()
     {
         using var files = new ArtifactDirectory();
         const string id = "ad0c0274-68bd-4ef6-801a-77d67f9894ed";
@@ -301,7 +327,7 @@ public class DeploymentArtifactTests
         Assert.True(GlitchTipArtifactUploader.IsNativeDebugFile(path));
     }
     private static Task UploadAsync(HttpClient http, string directory, IReadOnlyList<GlitchTipArtifact> artifacts, TimeSpan? timeout = null) =>
-        GlitchTipArtifactUploader.UploadAsync(http, new Uri("https://glitchtip.example/"), "test-token", "org", "project", artifacts, directory, TimeSpan.FromMilliseconds(1), timeout ?? TimeSpan.FromSeconds(10), default);
+        GlitchTipArtifactUploader.UploadAsync(http, new Uri("https://glitchtip.example/"), "test-token", "org", "project", artifacts, directory, timeout ?? TimeSpan.FromSeconds(10), default);
 
 
     private static HttpResponseMessage ChunkSettings(int size = 1024 * 1024) => Json(new

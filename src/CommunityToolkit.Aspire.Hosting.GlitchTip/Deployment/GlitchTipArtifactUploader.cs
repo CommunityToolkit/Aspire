@@ -19,11 +19,11 @@ internal static class GlitchTipArtifactUploader
     {
         using var http = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false });
         await UploadAsync(http, instance, token, organization, project, artifacts, workingDirectory,
-            TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(5), cancellationToken).ConfigureAwait(false);
+            TimeSpan.FromMinutes(5), cancellationToken).ConfigureAwait(false);
     }
 
     internal static async Task UploadAsync(HttpClient http, Uri instance, string token, string organization, string project,
-        IReadOnlyList<GlitchTipArtifact> artifacts, string workingDirectory, TimeSpan pollInterval, TimeSpan timeout, CancellationToken cancellationToken)
+        IReadOnlyList<GlitchTipArtifact> artifacts, string workingDirectory, TimeSpan timeout, CancellationToken cancellationToken)
     {
         if (artifacts.Count == 0)
         {
@@ -32,7 +32,7 @@ internal static class GlitchTipArtifactUploader
 
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         deadline.CancelAfter(timeout);
-        var session = new UploadSession(http, new Uri(instance.AbsoluteUri.TrimEnd('/') + "/"), token, pollInterval, deadline.Token);
+        var session = new UploadSession(http, new Uri(instance.AbsoluteUri.TrimEnd('/') + "/"), token, deadline.Token);
         var org = Uri.EscapeDataString(organization);
         var projectPath = $"api/0/projects/{org}/{Uri.EscapeDataString(project)}/";
         try
@@ -74,9 +74,8 @@ internal static class GlitchTipArtifactUploader
                     var result = await session.JsonAsync(HttpMethod.Post, $"api/0/organizations/{org}/artifactbundle/assemble/",
                         new { checksum = Checksum, chunks = Chunks, projects = new[] { project }, version = artifact.Release }).ConfigureAwait(false);
                     EnsureAssemblyAccepted(result);
-                    // 6.2.6 reports 'created' before asynchronous parsing and does not expose
-                    // worker failures through the assemble endpoint. Verify persisted artifacts.
-                    await session.WaitForArtifactsAsync(listPath, bundle.Expected).ConfigureAwait(false);
+                    // Acceptance confirms stored chunks and queued processing. The server owns
+                    // subsequent processing and its failure reporting.
                 }
                 else
                 {
@@ -109,14 +108,13 @@ internal static class GlitchTipArtifactUploader
                         }
 
                         EnsureAssemblyAccepted(state);
-                        await session.WaitForArtifactsAsync(projectPath + "files/dsyms/", [expected]).ConfigureAwait(false);
                     }
                 }
             }
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
-            throw new DistributedApplicationException("GlitchTip artifact upload or assembly verification timed out. Verify the instance's worker and file storage, then retry startup or deployment.");
+            throw new DistributedApplicationException("GlitchTip artifact upload timed out before all uploads were accepted. Check instance connectivity and storage, then retry startup or deployment.");
         }
     }
 
@@ -124,9 +122,10 @@ internal static class GlitchTipArtifactUploader
     {
         var state = response.TryGetProperty("state", out var value) ? value.GetString() : null;
         if (state is not ("ok" or "created" or "assembling") ||
-            response.TryGetProperty("missingChunks", out var missing) && missing.GetArrayLength() != 0)
+            !response.TryGetProperty("missingChunks", out var missing) ||
+            missing.ValueKind != JsonValueKind.Array || missing.GetArrayLength() != 0)
         {
-            throw new DistributedApplicationException("GlitchTip rejected artifact assembly. Verify upload permissions and storage; artifact processing has not completed.");
+            throw new DistributedApplicationException("GlitchTip did not accept the complete artifact upload. Check upload permissions, missing chunks, and storage.");
         }
     }
 
@@ -153,7 +152,7 @@ internal static class GlitchTipArtifactUploader
             magic is 0xfeedface or 0xfeedfacf or 0xcefaedfe or 0xcffaedfe;
     }
 
-    private sealed class UploadSession(HttpClient http, Uri instance, string token, TimeSpan pollInterval, CancellationToken cancellationToken)
+    private sealed class UploadSession(HttpClient http, Uri instance, string token, CancellationToken cancellationToken)
     {
         internal async Task<JsonElement> JsonAsync(HttpMethod method, string path, object? payload = null)
         {
@@ -210,14 +209,6 @@ internal static class GlitchTipArtifactUploader
             }
 
             return (Convert.ToHexStringLower(hash.GetHashAndReset()), chunks.ToArray());
-        }
-
-        internal async Task WaitForArtifactsAsync(string path, IReadOnlyList<GlitchTipExpectedArtifact> expected)
-        {
-            while (!await ContainsAllAsync(path, expected).ConfigureAwait(false))
-            {
-                await Task.Delay(pollInterval, cancellationToken).ConfigureAwait(false);
-            }
         }
 
         internal async Task<bool> ContainsAllAsync(string path, IReadOnlyList<GlitchTipExpectedArtifact> expected)

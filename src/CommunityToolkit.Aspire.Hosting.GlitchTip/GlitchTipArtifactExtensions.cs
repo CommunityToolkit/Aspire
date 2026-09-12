@@ -36,7 +36,7 @@ public static class GlitchTipArtifactExtensions
     public static IResourceBuilder<T> WithGlitchTipSourceMaps<T>(this IResourceBuilder<T> builder, string path, bool optional = false) where T : IResourceWithEnvironment =>
         Add(builder, path, optional, GlitchTipArtifactKind.SourceMaps);
 
-    /// <summary>Registers dSYM, PDB, or ELF debug artifacts for deployment and enabled local uploads, verifying server processing.</summary>
+    /// <summary>Registers dSYM, PDB, or ELF debug artifacts for deployment and enabled local uploads.</summary>
     /// <typeparam name="T">The reporting service.</typeparam>
     /// <param name="builder">The consumer resource.</param>
     /// <param name="path">A file or directory, relative to the AppHost directory.</param>
