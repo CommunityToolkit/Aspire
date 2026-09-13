@@ -107,6 +107,6 @@ internal static class GlitchTipMonitoring
             }
         }
         using var client = new GlitchTipManagementClient(management.Instance, management.Token);
-        await client.ReconcileMonitorsAsync(management.Organization, project.Id, resource.EnvironmentName, desired, cancellationToken).ConfigureAwait(false);
+        await client.ReconcileMonitorsAsync(management.Organization, project.Id, project.Slug, resource.EnvironmentName, desired, cancellationToken).ConfigureAwait(false);
     }
 }

@@ -139,38 +139,51 @@ internal sealed class GlitchTipManagementClient : IDisposable
     internal async Task ReconcileMonitorsAsync(
         string organizationSlug,
         string projectId,
+        string projectSlug,
         string environment,
         IReadOnlyList<GlitchTipMonitorDefinition> monitors,
         CancellationToken cancellationToken = default)
     {
         ValidateSlug(organizationSlug, nameof(organizationSlug));
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+        ValidateProjectSlug(projectSlug);
         ArgumentException.ThrowIfNullOrWhiteSpace(environment);
         ArgumentNullException.ThrowIfNull(monitors);
         var desired = new Dictionary<string, GlitchTipMonitorDefinition>(StringComparer.Ordinal);
         foreach (var monitor in monitors)
         {
             ValidateMonitor(monitor);
-            if (!desired.TryAdd(GetMonitorName(projectId, environment, monitor.Identity), monitor))
+            if (!desired.TryAdd(GetMonitorName(projectSlug, monitor.Identity), monitor))
             {
                 throw new ArgumentException("GlitchTip HTTP health-check identities must be unique within the stack.", nameof(monitors));
             }
         }
 
         var path = $"api/0/organizations/{organizationSlug}/monitors/";
-        var scope = GetMonitorPrefix(projectId, environment);
+        var legacyScope = GetMonitorPrefix(projectId, environment);
         var existing = (await GetAllAsync(path, cancellationToken).ConfigureAwait(false))
             .Where(item => StringValue(item, "projectID") == projectId &&
-                StringValue(item, "name")?.StartsWith(scope, StringComparison.Ordinal) == true)
+                (IsManagedMonitorName(projectSlug, StringValue(item, "name")) ||
+                 StringValue(item, "name")?.StartsWith(legacyScope, StringComparison.Ordinal) == true))
             .ToList();
         if (existing.GroupBy(item => RequiredString(item, "name"), StringComparer.Ordinal).Any(group => group.Count() > 1))
         {
             throw ContractError("Duplicate Aspire-managed monitors exist. Remove the duplicates before reconciling.");
         }
 
+        // Check migration conflicts before changing any monitor. Never choose between histories.
+        var matches = desired.ToDictionary(pair => pair.Key, pair => existing.Where(item =>
+            StringValue(item, "name") == pair.Key ||
+            StringValue(item, "name") == GetLegacyMonitorName(projectId, environment, pair.Value.Identity)).ToList(), StringComparer.Ordinal);
+        if (matches.Values.Any(items => items.Count > 1))
+        {
+            throw ContractError("Both legacy and readable Aspire-managed monitors exist for the same check. Remove the duplicate before reconciling.");
+        }
+        var retainedIds = new HashSet<string>(StringComparer.Ordinal);
         foreach (var (name, definition) in desired)
         {
-            var current = existing.SingleOrDefault(item => StringValue(item, "name") == name);
+            var current = matches[name].SingleOrDefault();
+            if (current is not null) retainedIds.Add(RequiredString(current, "id"));
             var payload = new JsonObject
             {
                 ["name"] = name,
@@ -202,7 +215,7 @@ internal sealed class GlitchTipManagementClient : IDisposable
         }
 
         // Only clean up once every desired monitor has been applied successfully.
-        foreach (var obsolete in existing.Where(item => !desired.ContainsKey(RequiredString(item, "name"))))
+        foreach (var obsolete in existing.Where(item => !retainedIds.Contains(RequiredString(item, "id"))))
         {
             using var response = await SendAsync(HttpMethod.Delete,
                 path + Uri.EscapeDataString(RequiredString(obsolete, "id")) + "/", null, cancellationToken).ConfigureAwait(false);
@@ -213,7 +226,32 @@ internal sealed class GlitchTipManagementClient : IDisposable
         }
     }
 
-    internal static string GetMonitorName(string projectId, string environment, string identity)
+    internal static string GetMonitorName(string projectSlug, string identity)
+    {
+        var parts = identity.Split(':', 3);
+        if (parts.Length != 3 || parts.Any(string.IsNullOrWhiteSpace) || !parts[2].StartsWith('/'))
+        {
+            throw new ArgumentException("Monitor identity must contain the resource, endpoint, and absolute health-check path.", nameof(identity));
+        }
+        var check = parts[2] == "/" ? "/" : parts[2][1..];
+        // Keep the common HTTP check concise while distinguishing other named endpoints.
+        if (parts[1] != "http") check += $" ({parts[1]})";
+        var name = $"{projectSlug} / {parts[0]} / {check}";
+        if (name.Length > 200 || name.Any(char.IsControl) || !IsManagedMonitorName(projectSlug, name))
+        {
+            throw new ArgumentException("The readable GlitchTip monitor name must fit 200 characters and contain no control characters or ' / ' in its resource or check name.", nameof(identity));
+        }
+        return name;
+    }
+
+    private static bool IsManagedMonitorName(string projectSlug, string? name)
+    {
+        var parts = name?.Split(" / ", StringSplitOptions.None);
+        return parts is { Length: 3 } && parts[0] == projectSlug &&
+            !string.IsNullOrWhiteSpace(parts[1]) && !string.IsNullOrWhiteSpace(parts[2]);
+    }
+
+    internal static string GetLegacyMonitorName(string projectId, string environment, string identity)
     {
         return GetMonitorPrefix(projectId, environment) + Hash(identity);
     }

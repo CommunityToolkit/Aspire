@@ -168,7 +168,11 @@ api.WithGlitchTipMonitorUrl(ReferenceExpression.Create($"{healthUrl}"));
 
 This value can come from platform configuration or an endpoint expression. Aspire resolves the declaration; it does not discover reverse-proxy routes, expose the service publicly, or probe the URL from the deployment machine. Server-side restrictions on private addresses still apply on a shared instance.
 
-Monitors are always Aspire managed, with identity derived from the project, AppHost environment, resource, endpoint, and path. Reconciliation restores declared settings and removes obsolete managed monitors for that project/environment after all desired updates succeed. It preserves manual monitors and monitors for other environments. Avoid editing the managed identity in a monitor's name. Undeclared response-body and confirmation-threshold settings are preserved on updates.
+Monitors use their GlitchTip project association and the reserved name `{project} / {resource} / {check}`, such as `my-stack / api / health`. The check uses the declared health-check path, even when the deployed monitor URL differs. Named endpoints other than `http` add their name, such as `health (https)`. Names must fit GlitchTip's 200-character limit. Resource and check names cannot contain the separator ` / `.
+
+One stack owns one project. Reconciliation updates its declared monitors and removes obsolete monitors with the reserved naming pattern after all desired updates succeed. Other names and other projects remain untouched. Do not use the reserved pattern for manual monitors or rename managed monitors in GlitchTip. Undeclared response-body and confirmation-threshold settings remain unchanged.
+
+Existing hashed monitors for the current project and AppHost environment are renamed in place, preserving their IDs and uptime history. Legacy monitors from other environments remain untouched. If both names exist for one check, reconciliation fails before changing any monitors so the operator can resolve the duplicate.
 
 ### Source maps and debug symbols
 

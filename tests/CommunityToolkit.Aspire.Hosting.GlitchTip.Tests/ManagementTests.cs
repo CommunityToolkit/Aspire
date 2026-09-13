@@ -181,16 +181,16 @@ public class ManagementTests
         using var handler = new ScriptedHandler();
         using var client = CreateClient(handler);
         var error = await Assert.ThrowsAsync<ArgumentException>(() => client.ReconcileMonitorsAsync(
-            "org", "42", "production", [new("web:http:/health", url, 60, 20, 200)]));
+            "org", "42", "stack", "production", [new("web:http:/health", url, 60, 20, 200)]));
         Assert.Contains("WithGlitchTipMonitorUrl", error.Message);
         handler.AssertComplete();
     }
     [Fact]
-    public async Task ReconcilesOnlyCurrentProjectAndEnvironmentPreservingUndeclaredFields()
+    public async Task ReconcilesOnlyReservedNamesInTheProjectPreservingUndeclaredFields()
     {
-        var currentName = GlitchTipManagementClient.GetMonitorName("42", "production", "web:http:/health");
-        var staleName = GlitchTipManagementClient.GetMonitorName("42", "production", "retired:http:/health");
-        var otherEnvironment = GlitchTipManagementClient.GetMonitorName("42", "staging", "web:http:/health");
+        var currentName = GlitchTipManagementClient.GetMonitorName("stack", "web:http:/health");
+        var staleName = GlitchTipManagementClient.GetMonitorName("stack", "retired:http:/health");
+        var otherEnvironment = GlitchTipManagementClient.GetLegacyMonitorName("42", "staging", "web:http:/health");
         using var handler = new ScriptedHandler();
         handler.Expect(HttpMethod.Get, "/api/0/organizations/org/monitors/", new JsonArray(
             Monitor("1", currentName, "https://old.example/health", expectedBody: "still important", confirmationThreshold: 3),
@@ -209,31 +209,101 @@ public class ManagementTests
             });
         handler.Expect(HttpMethod.Delete, "/api/0/organizations/org/monitors/2/", "", HttpStatusCode.NoContent);
         using var client = CreateClient(handler);
-        await client.ReconcileMonitorsAsync("org", "42", "production", [new("web:http:/health", "https://new.example/health")]);
+        await client.ReconcileMonitorsAsync("org", "42", "stack", "production", [new("web:http:/health", "https://new.example/health")]);
         handler.AssertComplete();
+    }
+
+    [Theory]
+    [InlineData("web:http:/health", "stack / web / health")]
+    [InlineData("web:https:/health", "stack / web / health (https)")]
+    [InlineData("web:http:/health/ready", "stack / web / health/ready")]
+    [InlineData("web:http:/", "stack / web / /")]
+    public void MonitorNamesIdentifyTheProjectResourceAndCheck(string identity, string expected)
+    {
+        Assert.Equal(expected, GlitchTipManagementClient.GetMonitorName("stack", identity));
+    }
+
+    [Fact]
+    public async Task RenamesLegacyMonitorInPlaceAndThenRequiresNoMutation()
+    {
+        var legacy = GlitchTipManagementClient.GetLegacyMonitorName("42", "production", "web:http:/health");
+        const string readable = "stack / web / health";
+        var renamed = Monitor("7", readable, "https://example.test/alive", expectedBody: "Healthy", confirmationThreshold: 2);
+        using var handler = new ScriptedHandler();
+        handler.Expect(HttpMethod.Get, "/api/0/organizations/org/monitors/", new JsonArray(
+            Monitor("7", legacy, "https://example.test/alive", expectedBody: "Healthy", confirmationThreshold: 2),
+            Monitor("8", "Vista UI", "https://example.test/alive")).ToJsonString());
+        handler.Expect(HttpMethod.Put, "/api/0/organizations/org/monitors/7/", renamed.ToJsonString(), assertBody: payload =>
+        {
+            Assert.Equal(readable, payload!["name"]!.GetValue<string>());
+            Assert.Equal("Healthy", payload["expectedBody"]!.GetValue<string>());
+            Assert.Equal(2, payload["confirmationThreshold"]!.GetValue<int>());
+        });
+        handler.Expect(HttpMethod.Get, "/api/0/organizations/org/monitors/", new JsonArray(renamed).ToJsonString());
+        using var client = CreateClient(handler);
+        await client.ReconcileMonitorsAsync("org", "42", "stack", "production", [new("web:http:/health", "https://example.test/alive")]);
+        await client.ReconcileMonitorsAsync("org", "42", "stack", "production", [new("web:http:/health", "https://example.test/alive")]);
+        handler.AssertComplete();
+    }
+
+    [Fact]
+    public async Task ConflictingLegacyAndReadableMonitorsFailBeforeAnyMutation()
+    {
+        var legacy = GlitchTipManagementClient.GetLegacyMonitorName("42", "production", "web:http:/health");
+        using var handler = new ScriptedHandler();
+        handler.Expect(HttpMethod.Get, "/api/0/organizations/org/monitors/", new JsonArray(
+            Monitor("7", legacy, "https://example.test/health"),
+            Monitor("8", "stack / web / health", "https://example.test/health")).ToJsonString());
+        using var client = CreateClient(handler);
+        await Assert.ThrowsAsync<GlitchTipManagementException>(() => client.ReconcileMonitorsAsync("org", "42", "stack", "production",
+            [new("first:http:/health", "https://example.test/health"), new("web:http:/health", "https://example.test/health")]));
+        handler.AssertComplete();
+    }
+
+    [Fact]
+    public async Task RemovingAllChecksDeletesOnlyReservedMonitorsInTheProject()
+    {
+        using var handler = new ScriptedHandler();
+        handler.Expect(HttpMethod.Get, "/api/0/organizations/org/monitors/", new JsonArray(
+            Monitor("1", "stack / web / health", "https://example.test/health"),
+            Monitor("2", "stack / notes", "https://example.test/health"),
+            Monitor("3", "stack / web / health", "https://example.test/health", projectId: "99")).ToJsonString());
+        handler.Expect(HttpMethod.Delete, "/api/0/organizations/org/monitors/1/", "", HttpStatusCode.NoContent);
+        using var client = CreateClient(handler);
+        await client.ReconcileMonitorsAsync("org", "42", "stack", "production", []);
+        handler.AssertComplete();
+    }
+
+    [Fact]
+    public void MonitorNameLimitIsValidatedWithoutTruncatingIdentity()
+    {
+        var prefix = "stack / web / ";
+        Assert.Equal(200, GlitchTipManagementClient.GetMonitorName("stack", "web:http:/" + new string('a', 200 - prefix.Length)).Length);
+        Assert.Throws<ArgumentException>(() => GlitchTipManagementClient.GetMonitorName("stack", "web:http:/" + new string('a', 201 - prefix.Length)));
+        Assert.Throws<ArgumentException>(() => GlitchTipManagementClient.GetMonitorName("stack", "web:http:/health / ambiguous"));
     }
 
     [Fact]
     public async Task UnchangedMonitorRequiresNoMutation()
     {
-        var name = GlitchTipManagementClient.GetMonitorName("42", "production", "web:http:/health");
+        var name = GlitchTipManagementClient.GetMonitorName("stack", "web:http:/health");
         using var handler = new ScriptedHandler();
         handler.Expect(HttpMethod.Get, "/api/0/organizations/org/monitors/",
             new JsonArray(Monitor("1", name, "https://example.test/health")).ToJsonString());
         using var client = CreateClient(handler);
-        await client.ReconcileMonitorsAsync("org", "42", "production", [new("web:http:/health", "https://example.test/health")]);
+        await client.ReconcileMonitorsAsync("org", "42", "stack", "production", [new("web:http:/health", "https://example.test/health")]);
         handler.AssertComplete();
     }
 
     [Fact]
     public async Task FailedMonitorCreationDoesNotDeleteObsoleteMonitors()
     {
-        var stale = GlitchTipManagementClient.GetMonitorName("42", "production", "retired");
+        var stale = GlitchTipManagementClient.GetMonitorName("stack", "retired:http:/health");
         using var handler = new ScriptedHandler();
         handler.Expect(HttpMethod.Get, "/api/0/organizations/org/monitors/", new JsonArray(Monitor("1", stale, "https://old.example/health")).ToJsonString());
         handler.Expect(HttpMethod.Post, "/api/0/organizations/org/monitors/", "private-content", HttpStatusCode.ServiceUnavailable);
         using var client = CreateClient(handler);
-        await Assert.ThrowsAsync<GlitchTipManagementException>(() => client.ReconcileMonitorsAsync("org", "42", "production", [new("new", "https://new.example/health")]));
+        await Assert.ThrowsAsync<GlitchTipManagementException>(() => client.ReconcileMonitorsAsync("org", "42", "stack", "production", [new("new:http:/health", "https://new.example/health")]));
         handler.AssertComplete();
     }
 
@@ -242,8 +312,8 @@ public class ManagementTests
     {
         using var handler = new ScriptedHandler();
         using var client = CreateClient(handler);
-        await Assert.ThrowsAsync<ArgumentException>(() => client.ReconcileMonitorsAsync("org", "42", "production",
-            [new("same", "https://one.example/health"), new("same", "https://two.example/health")]));
+        await Assert.ThrowsAsync<ArgumentException>(() => client.ReconcileMonitorsAsync("org", "42", "stack", "production",
+            [new("same:http:/health", "https://one.example/health"), new("same:http:/health", "https://two.example/health")]));
         handler.AssertComplete();
     }
 
