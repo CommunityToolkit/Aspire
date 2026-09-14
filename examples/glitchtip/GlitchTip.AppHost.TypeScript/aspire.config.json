@@ -1,0 +1,7 @@
+{
+  "appHost": { "path": "apphost.mts", "language": "typescript/nodejs" },
+  "sdk": { "version": "13.5.0" },
+  "packages": {
+    "CommunityToolkit.Aspire.Hosting.GlitchTip": "../../../src/CommunityToolkit.Aspire.Hosting.GlitchTip/CommunityToolkit.Aspire.Hosting.GlitchTip.csproj"
+  }
+}
