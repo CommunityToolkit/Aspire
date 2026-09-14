@@ -18,6 +18,8 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
 
     private readonly BitwardenProjectIdReference _projectIdReference;
     private readonly List<BitwardenSecretResource> _secrets = [];
+    internal List<BitwardenSecretResource> InputSecrets { get; } = [];
+    internal List<BitwardenSecretResource> ReferenceSecrets { get; } = [];
     private readonly Dictionary<Guid, string> _resolvedSecretValues = [];
     private readonly Dictionary<string, Guid> _resolvedSecretIdsByRemoteName = new(StringComparer.OrdinalIgnoreCase);
 
@@ -259,12 +261,20 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
         ProjectId = null;
         ExistingProjectId = null;
         ResolvedRemoteProjectName = null;
+        foreach (BitwardenSecretResource reference in ReferenceSecrets)
+        {
+            ((CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager.BitwardenReferenceValueProvider)reference.ValueProvider).PrepareInput(reference);
+        }
         _resolvedSecretValues.Clear();
         _resolvedSecretIdsByRemoteName.Clear();
 
         foreach (BitwardenSecretResource secret in _secrets)
         {
             secret.SecretId = null;
+            if (!secret.IsManaged)
+            {
+                secret.SetParameterValue(null);
+            }
         }
     }
 
@@ -277,6 +287,11 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
     {
         _resolvedSecretValues[secretId] = value;
         _resolvedSecretIdsByRemoteName[remoteName] = secretId;
+        foreach (BitwardenSecretResource reference in UnmanagedSecrets.Where(secret =>
+            secret.ResolvedSecretId == secretId || (secret.ExistingSecretId is null && string.Equals(secret.RemoteName, remoteName, StringComparison.OrdinalIgnoreCase))))
+        {
+            reference.SetParameterValue(value);
+        }
     }
 
     internal void RegisterSecret(BitwardenSecretResource secret)
@@ -285,6 +300,7 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
         if (!_secrets.Contains(secret))
         {
             _secrets.Add(secret);
+            secret.ValueProvider.Register(this, secret);
         }
     }
 

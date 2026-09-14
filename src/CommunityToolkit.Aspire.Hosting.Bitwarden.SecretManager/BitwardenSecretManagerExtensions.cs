@@ -350,6 +350,33 @@ public static class BitwardenSecretManagerExtensions
     }
 
     /// <summary>
+    /// Adds a managed Bitwarden secret whose authoritative value is a deferred expression.
+    /// An explicit parameter value overrides the expression. Otherwise each write resolves a fresh expression value.
+    /// </summary>
+    /// <param name="builder">The parent Bitwarden resource builder.</param>
+    /// <param name="name">The Aspire resource name.</param>
+    /// <param name="value">The value supplied by another resource or deployment operation.</param>
+    /// <param name="remoteName">The Bitwarden secret name. Defaults to <paramref name="name"/>.</param>
+    /// <returns>The managed secret resource builder.</returns>
+    [AspireExport("addSecretWithValue")]
+    public static IResourceBuilder<BitwardenSecretResource> AddSecret(
+        this IResourceBuilder<BitwardenSecretManagerResource> builder,
+        [ResourceName] string name,
+        ReferenceExpression value,
+        string? remoteName = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentNullException.ThrowIfNull(value);
+        if (remoteName is not null)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(remoteName);
+        }
+
+        return AddSecretCore(builder, name, remoteName ?? name, value);
+    }
+
+    /// <summary>
     /// Injects structured Bitwarden client configuration into the destination resource.
     /// </summary>
     /// <typeparam name="TDestination">The destination resource type.</typeparam>
@@ -651,13 +678,8 @@ public static class BitwardenSecretManagerExtensions
 
         builder.WithPipelineStepFactory(async _ =>
         {
-            // Runs before process-parameters (wired in WithPipelineConfiguration below).
-            // Only handles managed (AddSecret) secrets — unmanaged (GetSecret) secrets return
-            // string.Empty from their valueGetter so ParameterProcessor never adds them to
-            // _unresolvedParameters and process-parameters never prompts for them.
-            // Prompts for any missing credentials, then fetches existing managed secret values
-            // from Bitwarden and writes them to deployment state. Calls IConfigurationRoot.Reload()
-            // so _valueGetter reads the fresh values when ParameterProcessor first evaluates them.
+            // Reset generated state before parameter processing. Deployment also prefills
+            // missing ordinary inputs from Bitwarden. Pure publish/build performs no remote read.
             PipelineStep preSyncManagedStep = new()
             {
                 Name = preSyncManagedStepName,
@@ -912,7 +934,8 @@ public static class BitwardenSecretManagerExtensions
     private static IResourceBuilder<BitwardenSecretResource> AddSecretCore(
         IResourceBuilder<BitwardenSecretManagerResource> builder,
         string name,
-        string remoteName)
+        string remoteName,
+        ReferenceExpression? valueSource = null)
     {
         if (builder.Resource.ManagedSecrets.Any(secret => string.Equals(secret.RemoteName, remoteName, StringComparison.OrdinalIgnoreCase)))
         {
@@ -921,7 +944,9 @@ public static class BitwardenSecretManagerExtensions
 
         string secretResourceName = $"{builder.Resource.Name}-{name}";
         var config = builder.ApplicationBuilder.Configuration;
-        BitwardenSecretResource secret = new(secretResourceName, remoteName, builder.Resource, paramDefault =>
+        BitwardenSecretResource secret = valueSource is not null
+            ? new(secretResourceName, remoteName, builder.Resource, valueSource, () => config[$"Parameters:{secretResourceName}"])
+            : new(secretResourceName, remoteName, builder.Resource, paramDefault =>
         {
             string key = $"Parameters:{secretResourceName}";
             string? value = config[key];
@@ -939,7 +964,7 @@ public static class BitwardenSecretManagerExtensions
                 ResourceType = "Parameter",
                 Properties =
                 [
-                    new(CustomResourceKnownProperties.Source, $"Parameters:{secretResourceName}")
+                    new(CustomResourceKnownProperties.Source, secret.ValueProvider.GetSourceExpression(secret).ValueExpression)
                 ],
                 State = KnownResourceStates.Waiting
             })
@@ -1025,6 +1050,8 @@ public static class BitwardenSecretManagerExtensions
 
             // Phase 3: wait for any remaining parameters before entering Running.
             await WaitForRemainingParametersAsync(resource, services, cancellationToken).ConfigureAwait(false);
+            // Do not release WaitFor consumers until computed values and remote writes are ready.
+            await provisioner.ProvisionSecretsAsync(resource, services, logger, cancellationToken).ConfigureAwait(false);
 
             await notifications.PublishUpdateAsync(resource, state => state with
             {
@@ -1037,8 +1064,6 @@ public static class BitwardenSecretManagerExtensions
                         new("CacheFile", resource.CacheFile)
                     ])
             }).ConfigureAwait(false);
-
-            await provisioner.ProvisionSecretsAsync(resource, services, logger, cancellationToken).ConfigureAwait(false);
 
             await notifications.PublishUpdateAsync(resource, state => state with
             {
@@ -1087,7 +1112,7 @@ public static class BitwardenSecretManagerExtensions
 
         // Each BitwardenSecretResource is a ParameterResource; GetValueAsync waits for
         // ParameterProcessor to resolve the value (from config, user secrets, or interactive prompt).
-        foreach (BitwardenSecretResource secret in resource.ManagedSecrets)
+        foreach (BitwardenSecretResource secret in resource.InputSecrets)
         {
             await ((IValueProvider)secret).GetValueAsync(cancellationToken).ConfigureAwait(false);
         }
