@@ -71,6 +71,28 @@ public class ZitadelHostingExtensionsTests
     }
 
     [Fact]
+    public void AddZitadel_Default_Password_Meets_Complexity_Requirements()
+    {
+        // Publish mode exposes the generator without wrapping it in persisted user secrets.
+        var builder = DistributedApplication.CreateBuilder(["Publishing:Publisher=manifest"]);
+        var zitadel = builder.AddZitadel("zitadel");
+
+        // Check the guarantees so this test cannot pass by chance if a minimum is removed.
+        var generation = Assert.IsType<GenerateParameterDefault>(zitadel.Resource.AdminPasswordParameter.Default);
+        Assert.True(generation.MinLower >= 1);
+        Assert.True(generation.MinUpper >= 1);
+        Assert.True(generation.MinNumeric >= 1);
+        Assert.True(generation.MinSpecial >= 1);
+
+        var password = generation.GetDefaultValue();
+
+        Assert.Contains(password, char.IsLower);
+        Assert.Contains(password, char.IsUpper);
+        Assert.Contains(password, char.IsDigit);
+        Assert.Contains(password, c => !char.IsLetterOrDigit(c));
+    }
+
+    [Fact]
     public void AddZitadel_Uses_Custom_Username_And_Password()
     {
         var builder = DistributedApplication.CreateBuilder();
