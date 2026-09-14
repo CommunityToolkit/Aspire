@@ -1,0 +1,22 @@
+{
+  "appHost": {
+    "path": "apphost.mts",
+    "language": "typescript/nodejs"
+  },
+  "sdk": {
+    "version": "13.5.3"
+  },
+  "profiles": {
+    "https": {
+      "applicationUrl": "https://localhost:17104;http://localhost:15230",
+      "environmentVariables": {
+        "ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL": "https://localhost:21075",
+        "ASPIRE_RESOURCE_SERVICE_ENDPOINT_URL": "https://localhost:22069"
+      }
+    }
+  },
+  "packages": {
+    "CommunityToolkit.Aspire.Hosting.N8n": "../../../src/CommunityToolkit.Aspire.Hosting.N8n/CommunityToolkit.Aspire.Hosting.N8n.csproj",
+    "Aspire.Hosting.PostgreSQL": ""
+  }
+}
