@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" />
+    <ProjectReference Include="../../../src/CommunityToolkit.Aspire.GlitchTip.AspNetCore/CommunityToolkit.Aspire.GlitchTip.AspNetCore.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,8 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.5.1">
+  <PropertyGroup><TargetFramework>net10.0</TargetFramework><OutputType>Exe</OutputType><UserSecretsId>aspire-toolkit-glitchtip-example</UserSecretsId></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../src/CommunityToolkit.Aspire.Hosting.GlitchTip/CommunityToolkit.Aspire.Hosting.GlitchTip.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="../GlitchTip.Api/GlitchTip.Api.csproj" />
+    <PackageReference Include="Aspire.Hosting.Docker" />
+  </ItemGroup>
+</Project>
