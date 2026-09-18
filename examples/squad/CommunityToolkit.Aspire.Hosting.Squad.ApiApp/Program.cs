@@ -226,8 +226,7 @@ app.MapPost("/ask",
 
         return Results.Ok(new { squad = q.Squad, turns });
     })
-    .WithName("Ask")
-    .WithOpenApi();
+    .WithName("Ask");
 
 app.Run();
 
