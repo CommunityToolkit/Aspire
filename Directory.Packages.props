@@ -37,7 +37,7 @@
     <PackageVersion Include="AspNetCore.HealthChecks.SqlServer" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.SurrealDb" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.Uris" Version="9.0.0" />
-    <PackageVersion Include="Dapr.AspNetCore" Version="1.18.5" />
+    <PackageVersion Include="Dapr.AspNetCore" Version="1.18.7" />
     <PackageVersion Include="Dapr.Client" Version="1.18.5" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.16" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="8.0.16" />
@@ -60,7 +60,6 @@
     <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="$(ServiceDiscoveryVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="$(DotNetExtensionsVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Options" Version="$(DotNetExtensionsVersion)" />
-    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="$(DotNetExtensionsVersion)" />
     <!-- OpenTelemetry packages -->
     <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.3" />
@@ -76,7 +75,8 @@
   </ItemGroup>
   <ItemGroup Label="Integration Packages">
     <!-- External packages -->
-    <PackageVersion Include="AWSSDK.S3" Version="4.0.102.4" />
+    <PackageVersion Include="AWSSDK.S3" Version="4.0.103.3" />
+    <PackageVersion Include="Azure.Messaging.ServiceBus" Version="7.20.1" />
     <PackageVersion Include="Azure.Provisioning.AppContainers" Version="1.2.0" />
     <PackageVersion Include="Azure.Storage.Blobs" Version="12.29.2" />
     <PackageVersion Include="Google.Cloud.Storage.V1" Version="4.15.0" />
@@ -87,12 +87,11 @@
          workaround until Microsoft.Agents.AI.GitHub.Copilot ships the
          buildTransitive bridge from microsoft/agent-framework#6457, so keep the
          direct ref pinned until that preview lands. -->
-    <PackageVersion Include="GitHub.Copilot.SDK" Version="1.0.11" />
+    <PackageVersion Include="GitHub.Copilot.SDK" Version="1.0.14" />
     <PackageVersion Include="JsonSchema.Net" Version="9.4.0" />
     <PackageVersion Include="KubernetesClient" Version="19.0.2" />
     <PackageVersion Include="OllamaSharp" Version="5.4.12" />
     <PackageVersion Include="OpenFeature.Providers.GOFeatureFlag" Version="1.0.0" />
-    <PackageVersion Include="Minio" Version="6.0.5" />
     <PackageVersion Include="MassTransit" Version="8.5.5" />
     <PackageVersion Include="MassTransit.ActiveMQ" Version="8.5.5" />
     <PackageVersion Include="MassTransit.RabbitMQ" Version="8.5.5" />
@@ -136,10 +135,10 @@
     <PackageVersion Include="xunit.v3.extensibility.core" Version="3.2.0" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
     <PackageVersion Include="Microsoft.DotNet.XUnitV3Extensions" Version="11.0.0-beta.25509.1" />
-    <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.1.0" />
-    <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="2.0.2" />
-    <PackageVersion Include="Microsoft.Testing.Extensions.CrashDump" Version="2.0.2" />
-    <PackageVersion Include="Microsoft.Testing.Extensions.HangDump" Version="2.0.2" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.11.0" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="2.4.0" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.CrashDump" Version="2.3.3" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.HangDump" Version="2.3.3" />
     <PackageVersion Include="GitHubActionsTestLogger" Version="3.0.5" />
     <PackageVersion Include="Moq" Version="$(MoqVersion)" />
     <!-- Build dependencies -->
