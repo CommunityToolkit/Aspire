@@ -77,12 +77,47 @@ IResourceBuilder<BitwardenSecretResource> managedSecret = bitwarden.AddSecret("a
 
 The value is resolved in this order during startup:
 
-1. **Bitwarden upstream** — if the secret already exists, its current value is synced automatically. No prompt or configuration needed.
-2. **Configuration** — reads `Parameters:{bitwardenResourceName}-{secretName}` (e.g. `Parameters:bitwarden-api-key`).
-3. **Interactive prompt** — the dashboard prompts for the value. Once supplied, Bitwarden creates the secret.
-
+1. **Configuration and defaults** — preserve the supplied parameter value.
+2. **Bitwarden prefill** — use the existing remote value when local input is missing.
+3. **Interactive prompt** — ask for input when neither source supplies it.
 Aspire finds or creates the secret entirely by name and cached ID. There is no explicit GUID adoption for managed secrets — if the same secret was created in a previous run it will be found automatically.
 
+### Values supplied by another resource
+
+Use the `ReferenceExpression` overload to publish a resource output as a managed secret. For example, a database resource can supply its connection string:
+
+```csharp
+var connection = bitwarden.AddSecret(
+    "database-connection",
+    database.Resource.ConnectionStringExpression,
+    remoteName: "Database connection");
+```
+
+The secret keeps `ParameterResource` inheritance. An explicit `Parameters:{parentName}-{name}` value overrides the expression.
+For this example, the override key is `Parameters:bitwarden-database-connection`.
+
+Without an override, each reconciliation reads a fresh expression value before the common writer updates Bitwarden.
+A failed, canceled, or empty source fails the operation. An old remote value cannot replace it.
+
+Reference secrets do not prompt or use remote prefill. Ordinary inputs in the same manager retain their prefill behavior.
+
+The source stays deferred during model construction and pure publish. The deployment pipeline must finish the producer before `bitwarden-provision-secrets-{parentName}`.
+Local consumers must wait for Bitwarden reconciliation before reading a prepared value.
+
+The provider resolves one value in the Bitwarden resource's context. All consumers read that parameter snapshot.
+Use direct resource references when host and container consumers need different endpoint addresses.
+
+Generated values remain in memory for the operation. Before the next parameter-processing pass, the integration clears them or restores explicit input.
+Explicit overrides can persist as ordinary inputs. Remove the saved input too when removing an override.
+
+### Aspire compatibility
+
+The current implementation uses Aspire internals to update inherited parameter state.
+[Aspire PR 18108](https://github.com/microsoft/aspire/pull/18108) is a prerequisite for a clean implementation with public setters and optional parameters.
+See [ASPIRE-INTERNALS.md](ASPIRE-INTERNALS.md) for the compatibility boundary and replacement plan.
+
+Aspire 13.5 temporarily represents an absent processed parameter as an empty string. Dependent operations must wait for value preparation.
+The writer rejects an absent computed value. Do not use the temporary empty value as application configuration.
 ## Externally managed secrets
 
 Use `GetSecret(...)` to reference a secret that already exists in Bitwarden and is owned outside the AppHost. Aspire reads the value but never writes to it.

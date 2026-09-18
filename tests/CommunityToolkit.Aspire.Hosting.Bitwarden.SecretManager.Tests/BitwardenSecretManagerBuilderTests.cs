@@ -1,4 +1,5 @@
 using Aspire.Hosting;
+using CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager.Extensions;
 using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager.Tests;
@@ -411,6 +412,7 @@ public class BitwardenSecretManagerBuilderTests
 
         Guid secretId = Guid.NewGuid();
         managedSecret.Resource.SecretId = secretId;
+        managedSecret.Resource.SetParameterValue("resolved-managed-value");
         bitwarden.Resource.BindResolvedSecret(secretId, managedSecret.Resource.RemoteName, "resolved-managed-value");
 
         var consumer = appBuilder.AddContainer("consumer", "busybox", "1.37.0");

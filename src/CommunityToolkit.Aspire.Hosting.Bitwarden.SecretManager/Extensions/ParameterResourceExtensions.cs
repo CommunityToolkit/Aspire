@@ -27,6 +27,46 @@ internal static class ParameterResourceExtensions
 
     extension(ParameterResource parameter)
     {
+        // Compatibility boundary until Aspire PR 18108 provides optional parameters and setters.
+        // Aspire 13.5 replaces the waiting task during processing, so update its lazy input too.
+        internal void SetParameterValue(string? value)
+        {
+            try
+            {
+                GetLazyValue(parameter) = new Lazy<string>(() => value!);
+                var pending = GetWaitForValueTcs(parameter);
+                if (pending is null || !pending.TrySetResult(value!))
+                {
+                    var completed = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+                    completed.SetResult(value!);
+                    SetWaitForValueTcs(parameter, completed);
+                }
+            }
+            catch (MissingMemberException ex)
+            {
+                throw new DistributedApplicationException("Aspire parameter internals changed. The Bitwarden value setter requires the API proposed by Aspire PR 18108.", ex);
+            }
+        }
+
+        internal void SetParameterException(Exception exception)
+        {
+            try
+            {
+                GetLazyValue(parameter) = new Lazy<string>(() => throw exception);
+                var pending = GetWaitForValueTcs(parameter);
+                if (pending is null || !pending.TrySetException(exception))
+                {
+                    var failed = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+                    failed.SetException(exception);
+                    SetWaitForValueTcs(parameter, failed);
+                }
+            }
+            catch (MissingMemberException ex)
+            {
+                throw new DistributedApplicationException("Aspire parameter internals changed. The Bitwarden error setter requires the API proposed by Aspire PR 18108.", ex);
+            }
+        }
+
         public bool HasValue()
         {
             // Messy but there is no obvious better way to synchronously check if the parameter has a value
@@ -148,6 +188,9 @@ internal static class ParameterResourceExtensions
 
     [UnsafeAccessor(UnsafeAccessorKind.Method, Name = "get_WaitForValueTcs")]
     static extern TaskCompletionSource<string>? GetWaitForValueTcs(ParameterResource parameter);
+
+    [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_lazyValue")]
+    static extern ref Lazy<string> GetLazyValue(ParameterResource parameter);
 
     [UnsafeAccessor(UnsafeAccessorKind.Method, Name = "set_WaitForValueTcs")]
     static extern void SetWaitForValueTcs(ParameterResource parameter, TaskCompletionSource<string>? value);
