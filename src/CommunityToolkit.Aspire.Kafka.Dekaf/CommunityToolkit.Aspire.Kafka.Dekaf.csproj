@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- Dekaf's DI and health check packages require .NET 10. -->
+    <TargetFrameworks>net10.0</TargetFrameworks>
+    <AdditionalPackageTags>kafka messaging dekaf schema-registry client</AdditionalPackageTags>
+    <Description>Dekaf Kafka producers, consumers, admin clients, and schema registry clients with Aspire configuration, health checks, logging, tracing, and metrics.</Description>
+    <IsPreview>true</IsPreview>
+    <!-- Native options use reflection-based binding; the public registration APIs carry the corresponding annotations. -->
+    <IsAotCompatible>false</IsAotCompatible>
+    <EnableConfigurationBindingGenerator>false</EnableConfigurationBindingGenerator>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Dekaf.Extensions.DependencyInjection" />
+    <PackageReference Include="Dekaf.Extensions.HealthChecks" />
+    <PackageReference Include="Dekaf.SchemaRegistry" />
+    <!-- Dekaf 1.19 requires the 10.0.12 configuration and hosting abstractions. -->
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" VersionOverride="10.0.12" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" VersionOverride="10.0.12" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
+    <Compile Include="$(SharedDir)/HealthChecksExtensions.cs" Link="Utils/HealthChecksExtensions.cs" />
+    <None Include="ConfigurationSchema.json" Pack="true" PackagePath="/" />
+    <None Include="buildTransitive/CommunityToolkit.Aspire.Kafka.Dekaf.targets" Pack="true" PackagePath="buildTransitive/net10.0/" />
+  </ItemGroup>
+</Project>
