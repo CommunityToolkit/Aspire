@@ -82,7 +82,8 @@ public static class MeilisearchBuilderExtensions
              {
                  context.EnvironmentVariables["MEILI_MASTER_KEY"] = meilisearch.MasterKeyParameter;
              })
-             .WithHealthCheck(healthCheckKey);
+             .WithHealthCheck(healthCheckKey)
+             .WithIconName("DatabaseSearch");
     }
 
     /// <summary>

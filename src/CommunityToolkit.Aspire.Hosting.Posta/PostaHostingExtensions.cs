@@ -497,6 +497,7 @@ public static class PostaHostingExtensions
             .WithImage(PostaContainerImageTags.Image)
             .WithImageTag(PostaContainerImageTags.Tag)
             .WithImageRegistry(PostaContainerImageTags.Registry)
+            .WithIconName("MailMultiple")
             .WithHttpEndpoint(
                 targetPort: PostaResource.HttpEndpointPort,
                 port: port,

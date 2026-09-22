@@ -623,7 +623,7 @@ public static class BitwardenSecretManagerExtensions
             builder.AppHostDirectory);
         resource.CacheFile = BuildDefaultCachePath(resource, builder.Environment.EnvironmentName);
 
-        var resourceBuilder = ConfigureBitwardenSecretManager(builder.AddResource(resource));
+        var resourceBuilder = ConfigureBitwardenSecretManager(builder.AddResource(resource).WithIconName("Vault"));
 
         resourceBuilder.WithReferenceRelationship(accessToken.Resource);
         resourceBuilder.WithReferenceRelationship(projectNameOrId.Resource);
@@ -870,6 +870,7 @@ public static class BitwardenSecretManagerExtensions
 
         return builder.ApplicationBuilder.AddResource(secret)
             .WithParentRelationship(builder)
+            .WithIconName("LockClosed")
             .WithInitialState(new CustomResourceSnapshot
             {
                 ResourceType = "Parameter",
@@ -900,6 +901,7 @@ public static class BitwardenSecretManagerExtensions
 
         return builder.ApplicationBuilder.AddResource(secret)
             .WithParentRelationship(builder)
+            .WithIconName("LockClosed")
             .WithInitialState(new CustomResourceSnapshot
             {
                 ResourceType = "Parameter",
@@ -934,6 +936,7 @@ public static class BitwardenSecretManagerExtensions
 
         return builder.ApplicationBuilder.AddResource(secret)
             .WithParentRelationship(builder)
+            .WithIconName("LockClosed")
             .WithInitialState(new CustomResourceSnapshot
             {
                 ResourceType = "Parameter",

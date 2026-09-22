@@ -48,6 +48,7 @@ public static class PowerShellRunspacePoolResourceBuilderExtensions
                     new("RunspacePool", builder.Resource.Name)
                 ]
             })
+            .WithIconName("WindowConsole")
             .ExcludeFromManifest()
             .WithCommand("break", "Stop script execution",
             async _ =>

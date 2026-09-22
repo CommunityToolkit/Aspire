@@ -55,6 +55,7 @@ public static class DataApiBuilderHostingExtension
             .WithImage(DataApiBuilderContainerImageTags.Image)
             .WithImageTag(DataApiBuilderContainerImageTags.Tag)
             .WithImageRegistry(DataApiBuilderContainerImageTags.Registry)
+            .WithIconName("DatabaseLink")
             .WithHttpEndpoint(port: httpPort,
                 targetPort: DataApiBuilderContainerResource.HttpEndpointPort,
                 name: DataApiBuilderContainerResource.HttpEndpointName)

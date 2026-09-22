@@ -66,6 +66,7 @@ public static class IDistributedApplicationResourceBuilderExtensions
         builder.ApplicationBuilder.AddDapr();
 
         var sidecarBuilder = builder.ApplicationBuilder.AddResource(new DaprSidecarResource($"{builder.Resource.Name}-dapr"))
+                                                       .WithIconName("Cube")
                                                        .WithInitialState(new()
                                                        {
                                                            Properties = [],

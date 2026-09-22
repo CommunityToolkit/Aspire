@@ -53,6 +53,7 @@ public static class DuckDBResourceBuilderExtensions
             ]
         };
         return builder.AddResource(resource)
+                      .WithIconName("Database")
                       .WithInitialState(state);
     }
 

@@ -59,6 +59,7 @@ public static partial class OllamaResourceBuilderExtensions
 
         return builder.ApplicationBuilder
             .AddResource(modelResource)
+            .WithIconName("BrainCircuit")
             .WithHealthCheck(healthCheckKey)
             .WithModelCommands(modelName)
             .WithModelDownload();

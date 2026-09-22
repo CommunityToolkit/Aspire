@@ -43,6 +43,7 @@ public static class DenoAppHostingExtensions
         var resource = new DenoAppResource(name, "deno", workingDirectory);
 
         return builder.AddResource(resource)
+                      .WithIconName("CodeTsRectangle")
                       .WithDenoDefaults()
                       .WithArgs(effectiveArgs);
     }
@@ -78,6 +79,7 @@ public static class DenoAppHostingExtensions
         var resource = new DenoAppResource(name, "deno", workingDirectory);
 
         return builder.AddResource(resource)
+              .WithIconName("CodeTsRectangle")
               .WithArgs(allArgs);
     }
 
@@ -111,6 +113,7 @@ public static class DenoAppHostingExtensions
             var installer = new DenoInstallerResource(installerName, resource.Resource.WorkingDirectory);
 
             var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
+                .WithIconName("ArrowDownload")
                 .WithArgs("install")
                 .WithParentRelationship(resource.Resource)
                 .ExcludeFromManifest();

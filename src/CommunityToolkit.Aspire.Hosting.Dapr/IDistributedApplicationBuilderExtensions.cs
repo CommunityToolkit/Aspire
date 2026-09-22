@@ -51,6 +51,7 @@ public static partial class IDistributedApplicationBuilderExtensions
         var resource = new DaprComponentResource(name, type) { Options = options };
         var resourceBuilder = builder
             .AddResource(resource)
+            .WithIconName("PuzzlePiece")
             .WithInitialState(new()
             {
                 Properties = [],

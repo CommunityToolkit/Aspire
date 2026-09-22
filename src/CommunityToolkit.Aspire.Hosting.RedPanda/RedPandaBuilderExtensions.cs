@@ -138,7 +138,8 @@ public static class RedPandaBuilderExtensions
             .WithEntrypoint("/usr/bin/rpk")
             .WithArgs(context => ConfigureRedPandaArgs(context, resource, options))
             .WithHttpHealthCheck("/v1/status/ready", endpointName: RedPandaServerResource.AdminEndpointName)
-            .WithHealthCheck(kafkaHealthCheckKey);
+            .WithHealthCheck(kafkaHealthCheckKey)
+            .WithIconName("MailMultiple");
     }
 
     /// <summary>
@@ -209,6 +210,7 @@ public static class RedPandaBuilderExtensions
             // Nest the Console under the Redpanda resource in the dashboard so the management UIs
             // appear as children of the broker they belong to.
             .WithParentRelationship(builder)
+            .WithIconName("WindowDatabase")
             .ExcludeFromManifest();
 
         configureContainer?.Invoke(consoleBuilder);
@@ -265,6 +267,7 @@ public static class RedPandaBuilderExtensions
             // Nest the Kafka UI under the Redpanda resource in the dashboard so the management UIs
             // appear as children of the broker they belong to.
             .WithParentRelationship(builder)
+            .WithIconName("WindowDatabase")
             .ExcludeFromManifest();
 
         configureContainer?.Invoke(kafkaUiBuilder);
