@@ -2,10 +2,6 @@ var builder = DistributedApplication.CreateBuilder(args);
 
 var server = builder.AddSqlServer("sql");
 
-// Each deployed project/package gets its own dedicated database. Sharing a
-// single database between multiple concurrent deployments causes resource
-// contention on the SQL Server container, which can destabilize sibling
-// deployments and lead to intermittent transient login failures.
 var database = server.AddDatabase("Database1");
 
 var chinookDatabase = server.AddDatabase("Database2");
