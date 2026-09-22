@@ -71,7 +71,8 @@ public static class StableDiffusionCppResourceBuilderExtensions
             {
                 annotation.DisplayText = "Web UI";
             })
-            .WithHttpHealthCheck("/");
+            .WithHttpHealthCheck("/")
+            .WithIconName("ImageSparkle");
     }
 
     /// <summary>
@@ -205,7 +206,8 @@ public static class StableDiffusionCppResourceBuilderExtensions
                 HuggingFaceModelDownloader.DownloadAsync(@event, model, cancellationToken));
 
         return builder.ApplicationBuilder.AddResource(model)
-            .WithParentRelationship(builder.Resource);
+            .WithParentRelationship(builder.Resource)
+            .WithIconName("ImageSparkle");
     }
 
     private static string GetImageSha256(StableDiffusionCppImageVariant imageVariant) =>

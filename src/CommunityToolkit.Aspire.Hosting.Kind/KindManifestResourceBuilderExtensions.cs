@@ -92,7 +92,8 @@ public static class KindManifestResourceBuilderExtensions
                     new("ManifestPath", resource.ManifestPath),
                     new("Mode", "apply"),
                 ]
-            });
+            })
+            .WithIconName("Archive");
 
         resourceBuilder.OnInitializeResource(async (resource, e, ct) =>
         {

@@ -92,6 +92,7 @@ public static class ActiveMQBuilderExtensions
         IResourceBuilder<T> result = builder.AddResource(activeMq)
             .WithImage(activeMq.ActiveMqSettings.Image, activeMq.ActiveMqSettings.Tag)
             .WithImageRegistry(activeMq.ActiveMqSettings.Registry)
+            .WithIconName("MailMultiple")
             .WithEndpoint(port: port, targetPort: 61616, name: ActiveMQServerResourceBase.PrimaryEndpointName, scheme: scheme)
             .WithEndpoint(port: webPort, targetPort: 8161, name: "web", scheme: "http")
             .WithEnvironment(context =>

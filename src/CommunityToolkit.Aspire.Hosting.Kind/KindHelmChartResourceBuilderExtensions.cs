@@ -69,7 +69,8 @@ public static class KindHelmChartResourceBuilderExtensions
                     new("ReleaseName", resource.ReleaseName),
                     new("ChartRef", resource.ChartRef),
                 ]
-            });
+            })
+            .WithIconName("Archive");
 
         resourceBuilder.OnInitializeResource(async (resource, e, ct) =>
         {

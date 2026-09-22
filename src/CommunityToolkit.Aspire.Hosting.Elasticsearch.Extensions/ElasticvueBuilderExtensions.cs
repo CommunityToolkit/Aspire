@@ -52,6 +52,7 @@ public static class ElasticvueBuilderExtensions
         var elasticVueContainerBuilder = builder.AddResource(elasticVueContainer)
                                             .WithImage(ElasticvueContainerImageTags.Image, ElasticvueContainerImageTags.Tag)
                                             .WithImageRegistry(ElasticvueContainerImageTags.Registry)
+                                            .WithIconName("WindowDatabase")
                                             .WithHttpEndpoint(targetPort: 8080, port: port, name: ElasticvueContainerResource.PrimaryEndpointName)
                                             .WithUrlForEndpoint(ElasticvueContainerResource.PrimaryEndpointName, e => e.DisplayText = "Dashboard")
                                             .ExcludeFromManifest();

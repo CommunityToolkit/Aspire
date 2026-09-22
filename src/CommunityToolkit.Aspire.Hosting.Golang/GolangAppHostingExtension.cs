@@ -83,7 +83,8 @@ public static class GolangAppHostingExtension
         return builder.AddResource(resource)
                       .WithGolangDefaults()
                       .WithArgs([.. allArgs])
-                      .PublishAsGolangDockerfile(workingDirectory, executable, buildTags);
+                      .PublishAsGolangDockerfile(workingDirectory, executable, buildTags)
+                      .WithIconName("Code");
     }
 
     private static IResourceBuilder<GolangAppExecutableResource> WithGolangDefaults(
@@ -290,6 +291,7 @@ public static class GolangAppHostingExtension
             var installerBuilder = builder.ApplicationBuilder.AddResource(installer)
                 .WithArgs("mod", "tidy")
                 .WithParentRelationship(builder.Resource)
+                .WithIconName("ArrowDownload")
                 .ExcludeFromManifest();
 
             configureInstaller?.Invoke(installerBuilder);
@@ -353,6 +355,7 @@ public static class GolangAppHostingExtension
             var installerBuilder = builder.ApplicationBuilder.AddResource(installer)
                 .WithArgs("mod", "download")
                 .WithParentRelationship(builder.Resource)
+                .WithIconName("ArrowDownload")
                 .ExcludeFromManifest();
 
             configureInstaller?.Invoke(installerBuilder);

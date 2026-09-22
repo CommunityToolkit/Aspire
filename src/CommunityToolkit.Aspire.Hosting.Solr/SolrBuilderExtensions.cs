@@ -34,6 +34,7 @@ public static class SolrBuilderExtensions
                      .WithImage(SolrContainerImageTags.Image, SolrContainerImageTags.Tag)
                      .WithImageRegistry(SolrContainerImageTags.Registry)
                      .WithHttpEndpoint(targetPort: 8983, port: port, name: SolrResource.PrimaryEndpointName)
+                     .WithIconName("DatabaseSearch")
                      .WithArgs(context =>
                      {
                          var configSetAnnotation = context.Resource.Annotations.OfType<SolrConfigSetAnnotation>().LastOrDefault();

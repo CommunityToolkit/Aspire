@@ -79,7 +79,8 @@ public static class LavinMQHostingExtension
                           targetPort: LavinMQContainerResource.DefaultManagementPort,
                           name: LavinMQContainerResource.ManagementEndpointName,
                           scheme: LavinMQContainerResource.ManagementEndpointSchema)
-                      .WithHealthCheck(healthCheckKey);
+                      .WithHealthCheck(healthCheckKey)
+                      .WithIconName("MailMultiple");
     }
 
     /// <summary>

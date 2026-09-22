@@ -73,7 +73,8 @@ public static class KurrentDBBuilderExtensions
             .WithImage(KurrentDBContainerImageTags.Image, KurrentDBContainerImageTags.Tag)
             .WithImageRegistry(KurrentDBContainerImageTags.Registry)
             .WithEnvironment(ConfigureKurrentDBContainer)
-            .WithHealthCheck(healthCheckKey);
+            .WithHealthCheck(healthCheckKey)
+            .WithIconName("Database");
     }
 
     /// <summary>
