@@ -123,6 +123,7 @@ function Invoke-CleanupStep {
         & $Action
     }
     catch {
+        Write-Host ($_ | Out-String)
         $message = "Cleanup step '$Description' failed: $($_.Exception.Message)"
         if ($null -ne $Failures) {
             $Failures.Add($message)
@@ -268,6 +269,7 @@ catch {
 finally {
     Invoke-CleanupStep -Description "stop Aspire app" -Action {
         if ($appStarted) {
+            Write-Host "Shutting down Aspire app..."
             Push-Location $appHostDirectory
             try {
                 Invoke-ExternalCommand "aspire" @(
