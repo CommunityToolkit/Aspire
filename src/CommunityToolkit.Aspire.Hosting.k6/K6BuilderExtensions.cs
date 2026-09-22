@@ -70,13 +70,15 @@ public static class K6BuilderExtensions
     /// </summary>
     /// <param name="builder">The resource builder.</param>
     /// <param name="scriptPath">The path to the JS script to run.</param>
-    /// <param name="virtualUsers">The number of virtual users for the test. Defaults to `10`.</param>
-    /// <param name="duration">The duration of the test. Defaults to `30s`.</param>
+    /// <param name="virtualUsers">The number of virtual users for the test..</param>
+    /// <param name="duration">The duration of the test, e.g. <c>30s</c>.</param>
     /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
     /// <remarks>
+    /// <c>--vus</c> and <c>--duration</c> are the k6 CLI shorthand for a single constant-VU scenario and take precedence over the script's <c>options.scenarios</c>.
+    /// Leave them <see langword="null"/> when the script defines its own scenarios or executors.
     /// <example>
-    /// Add a Grafana k6 container to the application model and reference it in a .NET project. Additionally, in this
-    /// example a script runs when the container starts.
+    /// Add a Grafana k6 container to the application model and reference it in a .NET project.
+    /// Additionally, in this example a script runs when the container starts.
     /// <code lang="csharp">
     /// var builder = DistributedApplication.CreateBuilder(args);
     ///
@@ -95,23 +97,30 @@ public static class K6BuilderExtensions
     public static IResourceBuilder<K6Resource> WithScript(
         this IResourceBuilder<K6Resource> builder,
         string scriptPath,
-        int virtualUsers = 10,
-        string duration = "30s")
+        int? virtualUsers = null,
+        string? duration = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(scriptPath);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(virtualUsers);
-        ArgumentNullException.ThrowIfNull(duration);
 
-        return builder.WithArgs(
-            "run", 
-            "--address",
-            $"0.0.0.0:{K6Port}",
-            "--vus", 
-            virtualUsers.ToString(CultureInfo.InvariantCulture), 
-            "--duration", 
-            duration, 
-            scriptPath);
+        var args = new List<string> { "run", "--address", $"0.0.0.0:{K6Port}" };
+
+        if (virtualUsers is not null)
+        {
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(virtualUsers.Value, nameof(virtualUsers));
+            args.Add("--vus");
+            args.Add(virtualUsers.Value.ToString(CultureInfo.InvariantCulture));
+        }
+
+        if (duration is not null)
+        {
+            args.Add("--duration");
+            args.Add(duration);
+        }
+
+        args.Add(scriptPath);
+
+        return builder.WithArgs(args.ToArray());
     }
 
     /// <summary>
