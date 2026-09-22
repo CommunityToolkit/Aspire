@@ -1,4 +1,5 @@
-﻿using Testcontainers.MsSql;
+﻿using CommunityToolkit.Aspire.Testing;
+using Testcontainers.MsSql;
 
 namespace CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.Tests;
 
@@ -25,7 +26,7 @@ public sealed class SqlServerContainerFixture : IAsyncLifetime
 
     public static async Task<MsSqlContainer> CreateContainerAsync()
     {
-        var container = new MsSqlBuilder($"{Registry}/{Image}:{Tag}")
+        var container = new MsSqlBuilder($"{TestContainerRegistry.Resolve(Registry)}/{Image}:{Tag}")
             .Build();
         await container.StartAsync();
 
