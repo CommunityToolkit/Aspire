@@ -72,6 +72,7 @@ public static class K6BuilderExtensions
     /// <param name="scriptPath">The path to the JS script to run.</param>
     /// <param name="virtualUsers">The number of virtual users for the test..</param>
     /// <param name="duration">The duration of the test, e.g. <c>30s</c>.</param>
+    /// <param name="summaryMode">The summary mode of the test execution.</param>
     /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
     /// <remarks>
     /// <c>--vus</c> and <c>--duration</c> are the k6 CLI shorthand for a single constant-VU scenario and take precedence over the script's <c>options.scenarios</c>.
@@ -98,7 +99,8 @@ public static class K6BuilderExtensions
         this IResourceBuilder<K6Resource> builder,
         string scriptPath,
         int? virtualUsers = null,
-        string? duration = null)
+        string? duration = null,
+        K6SummaryMode? summaryMode = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(scriptPath);
@@ -118,9 +120,15 @@ public static class K6BuilderExtensions
             args.Add(duration);
         }
 
+        if (summaryMode is not null)
+        {
+            args.Add("--summary-mode");
+            args.Add(summaryMode.Value.ToString().ToLowerInvariant());
+        }
+
         args.Add(scriptPath);
 
-        return builder.WithArgs(args.ToArray());
+        return builder.WithArgs([.. args]);
     }
 
     /// <summary>
