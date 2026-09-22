@@ -8,9 +8,9 @@ namespace CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.Tests;
 public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_SqlDatabaseProjects_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_SqlDatabaseProjects_AppHost>>
 {
     [Theory]
-    [InlineData("sdk-project", "SdkProject", "TargetDatabase")]
-    [InlineData("other-sdk-project", "SdkProject", "OtherTargetDatabase")]
-    [InlineData("chinook", "InvoiceLine", "TargetDatabase")]
+    [InlineData("sdk-project", "SdkProject", "Database1")]
+    [InlineData("other-sdk-project", "SdkProject", "Database3")]
+    [InlineData("chinook", "InvoiceLine", "Database2")]
     public async Task ProjectBasedResourceStartsAndRespondsOk(string resourceName, string tableName, string database)
     {
         await fixture.ResourceNotificationService.WaitForResourceAsync(resourceName, KnownResourceStates.TerminalStates).WaitAsync(TimeSpan.FromMinutes(5));
