@@ -68,14 +68,30 @@ public class AddRustFsTests
 
         var primaryEndpoint = Assert.Single(endpoints, e => e.Name == "http");
         Assert.Equal(9000, primaryEndpoint.TargetPort);
+        primaryEndpoint.AllAllocatedEndpoints.AddOrUpdateAllocatedEndpoint(
+            KnownNetworkIdentifiers.DefaultAspireContainerNetwork,
+            new AllocatedEndpoint(
+                primaryEndpoint,
+                "127.0.0.1",
+                primaryEndpoint.TargetPort!.Value,
+                EndpointBindingMode.SingleAddress,
+                networkId: KnownNetworkIdentifiers.DefaultAspireContainerNetwork));
 
         var consoleEndpoint = Assert.Single(endpoints, e => e.Name == "console");
         Assert.Equal(9001, consoleEndpoint.TargetPort);
+        consoleEndpoint.AllAllocatedEndpoints.AddOrUpdateAllocatedEndpoint(
+            KnownNetworkIdentifiers.DefaultAspireContainerNetwork,
+            new AllocatedEndpoint(
+                consoleEndpoint,
+                "127.0.0.1",
+                consoleEndpoint.TargetPort!.Value,
+                EndpointBindingMode.SingleAddress,
+                networkId: KnownNetworkIdentifiers.DefaultAspireContainerNetwork));
 
         var config = await resource.GetEnvironmentVariablesAsync();
 
-        Assert.Equal("9000", config["RUSTFS_ADDRESS"]);
-        Assert.Equal("9001", config["RUSTFS_CONSOLE_ADDRESS"]);
+        Assert.Equal("127.0.0.1:9000", config["RUSTFS_ADDRESS"]);
+        Assert.Equal("127.0.0.1:9001", config["RUSTFS_CONSOLE_ADDRESS"]);
     }
 
     [Fact]

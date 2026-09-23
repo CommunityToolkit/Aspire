@@ -525,7 +525,7 @@ public class AddDbGateTests
         static void UpdateResourceEndpoint(IResourceWithEndpoints resource)
         {
             var endpoint = resource.GetEndpoint("tcp").EndpointAnnotation;
-            var ae = new AllocatedEndpoint(endpoint, "storage.dev.internal", 10000, EndpointBindingMode.SingleAddress, null, KnownNetworkIdentifiers.DefaultAspireContainerNetwork);
+            var ae = new AllocatedEndpoint(endpoint, resource.Name, endpoint.TargetPort ?? 10000, EndpointBindingMode.SingleAddress, null, KnownNetworkIdentifiers.DefaultAspireContainerNetwork);
             endpoint.AllAllocatedEndpoints.AddOrUpdateAllocatedEndpoint(KnownNetworkIdentifiers.DefaultAspireContainerNetwork, ae);
         }
     }
