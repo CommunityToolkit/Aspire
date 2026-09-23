@@ -61,13 +61,18 @@ public static class ListmonkBuilderExtensions
         ArgumentException.ThrowIfNullOrEmpty(name);
 
         var resource = new ListmonkResource(name);
+        EndpointReference bindEndpoint = new(
+            resource,
+            ListmonkResource.PrimaryEndpointName,
+            KnownNetworkIdentifiers.DefaultAspireContainerNetwork);
+
         return builder.AddResource(resource)
             .WithImage(ListmonkContainerImageTags.Image, ListmonkContainerImageTags.Tag)
             .WithImageRegistry(ListmonkContainerImageTags.Registry)
             .WithHttpEndpoint(port: port, targetPort: ListmonkPort, name: ListmonkResource.PrimaryEndpointName)
             .WithEntrypoint("sh")
             .WithArgs("-c", "./listmonk --install --idempotent --yes --config '' && ./listmonk --upgrade --yes --config '' && ./listmonk --config ''")
-            .WithEnvironment(AppAddressEnvVarName, ReferenceExpression.Create($"{resource.PrimaryEndpoint.Property(EndpointProperty.IPV4Host)}:{resource.PrimaryEndpoint.Property(EndpointProperty.TargetPort)}"))
+            .WithEnvironment(AppAddressEnvVarName, ReferenceExpression.Create($"{bindEndpoint.Property(EndpointProperty.IPV4Host)}:{bindEndpoint.Property(EndpointProperty.TargetPort)}"))
             .WithHttpHealthCheck("/health")
             .WithIconName("MailMultiple");
     }
@@ -104,8 +109,8 @@ public static class ListmonkBuilderExtensions
         var postgres = database.Resource.Parent;
 
         return builder
-            .WithEnvironment(DatabaseHostEnvVarName, postgres.Name)
-            .WithEnvironment(DatabasePortEnvVarName, ReferenceExpression.Create($"{postgres.PrimaryEndpoint.Property(EndpointProperty.TargetPort)}"))
+            .WithEnvironment(DatabaseHostEnvVarName, postgres.PrimaryEndpoint.Property(EndpointProperty.Host))
+            .WithEnvironment(DatabasePortEnvVarName, postgres.PrimaryEndpoint.Property(EndpointProperty.Port))
             .WithEnvironment(DatabaseUserEnvVarName, postgres.UserNameReference)
             .WithEnvironment(DatabasePasswordEnvVarName, postgres.PasswordParameter)
             .WithEnvironment(DatabaseNameEnvVarName, ReferenceExpression.Create($"{database.Resource.DatabaseName}"))
