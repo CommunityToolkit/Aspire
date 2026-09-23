@@ -79,10 +79,8 @@ public static class RustFsBuilderExtensions
             .WithImage(RustFsContainerImageTags.Image, RustFsContainerImageTags.Tag)
             .WithImageRegistry(RustFsContainerImageTags.Registry)
             .WithHttpEndpoint(name: RustFsResource.PrimaryEndpointName, port: port,
-                env: "RUSTFS_ADDRESS",
                 targetPort: RustFsResource.PrimaryTargetPort)
             .WithHttpEndpoint(name: RustFsResource.ConsoleEndpointName, port: consolePort,
-                env: "RUSTFS_CONSOLE_ADDRESS",
                 targetPort: RustFsResource.ConsoleTargetPort)
             .WithUrlForEndpoint(RustFsResource.PrimaryEndpointName, annot =>
             {
@@ -97,6 +95,13 @@ public static class RustFsBuilderExtensions
             .WithEnvironment(SecretKeyEnvVarName, $"{resource.SecretKey}")
             .WithHttpHealthCheck("/health", 200, RustFsResource.PrimaryEndpointName)
             .WithIconName("HardDrive");
+
+        var primaryEndpoint = resourceBuilder.GetEndpoint(RustFsResource.PrimaryEndpointName);
+        var consoleEndpoint = resourceBuilder.GetEndpoint(RustFsResource.ConsoleEndpointName);
+
+        resourceBuilder
+            .WithEnvironment("RUSTFS_ADDRESS", ReferenceExpression.Create($"{primaryEndpoint.Property(EndpointProperty.IPV4Host)}:{primaryEndpoint.Property(EndpointProperty.TargetPort)}"))
+            .WithEnvironment("RUSTFS_CONSOLE_ADDRESS", ReferenceExpression.Create($"{consoleEndpoint.Property(EndpointProperty.IPV4Host)}:{consoleEndpoint.Property(EndpointProperty.TargetPort)}"));
 
         return resourceBuilder;
     }
