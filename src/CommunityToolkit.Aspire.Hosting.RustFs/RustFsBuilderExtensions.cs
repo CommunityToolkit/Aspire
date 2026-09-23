@@ -17,6 +17,34 @@ public static class RustFsBuilderExtensions
     private const string SecretKeyEnvVarName = "RUSTFS_SECRET_KEY";
 
     /// <summary>
+    /// Configures the host port that the RustFs resource is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for RustFs.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
+    /// <returns>The resource builder for RustFs.</returns>
+    [AspireExport]
+    public static IResourceBuilder<RustFsResource> WithHostPort(this IResourceBuilder<RustFsResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(RustFsResource.PrimaryEndpointName, endpoint => endpoint.Port = port);
+    }
+
+    /// <summary>
+    /// Configures the host port that the RustFs console endpoint is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for RustFs.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
+    /// <returns>The resource builder for RustFs.</returns>
+    [AspireExport]
+    public static IResourceBuilder<RustFsResource> WithConsoleHostPort(this IResourceBuilder<RustFsResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(RustFsResource.ConsoleEndpointName, endpoint => endpoint.Port = port);
+    }
+
+    /// <summary>
     /// Adds a RustFs container to the application model. The default image is "rustfs/rustfs".
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>

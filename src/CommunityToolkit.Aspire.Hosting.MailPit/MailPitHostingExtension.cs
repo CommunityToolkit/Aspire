@@ -11,6 +11,34 @@ namespace Aspire.Hosting;
 public static class MailPitHostingExtension
 {
     /// <summary>
+    /// Configures the host port that the MailPit HTTP endpoint is exposed on instead of using a randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for MailPit.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used a random port will be assigned.</param>
+    /// <returns>The resource builder for MailPit.</returns>
+    [AspireExport]
+    public static IResourceBuilder<MailPitContainerResource> WithHttpHostPort(this IResourceBuilder<MailPitContainerResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(MailPitContainerResource.HttpEndpointName, endpoint => endpoint.Port = port);
+    }
+
+    /// <summary>
+    /// Configures the host port that the MailPit SMTP endpoint is exposed on instead of using a randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for MailPit.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used a random port will be assigned.</param>
+    /// <returns>The resource builder for MailPit.</returns>
+    [AspireExport]
+    public static IResourceBuilder<MailPitContainerResource> WithSmtpHostPort(this IResourceBuilder<MailPitContainerResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(MailPitContainerResource.SmtpEndpointName, endpoint => endpoint.Port = port);
+    }
+
+    /// <summary>
     /// Adds a MailPit container resource to the <see cref="IDistributedApplicationBuilder"/>.
     /// </summary>
     /// <ats-summary>Adds a MailPit container resource</ats-summary>

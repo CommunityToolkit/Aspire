@@ -19,6 +19,20 @@ public static class MeilisearchBuilderExtensions
     private const int MeilisearchPort = 7700;
 
     /// <summary>
+    /// Configures the host port that the Meilisearch resource is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for Meilisearch.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
+    /// <returns>The resource builder for Meilisearch.</returns>
+    [AspireExport]
+    public static IResourceBuilder<MeilisearchResource> WithHostPort(this IResourceBuilder<MeilisearchResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(MeilisearchResource.PrimaryEndpointName, endpoint => endpoint.Port = port);
+    }
+
+    /// <summary>
     /// Adds an Meilisearch container resource to the application model.
     /// The default image is <inheritdoc cref="MeilisearchContainerImageTags.Image"/> and the tag is <inheritdoc cref="MeilisearchContainerImageTags.Tag"/>.
     /// </summary>

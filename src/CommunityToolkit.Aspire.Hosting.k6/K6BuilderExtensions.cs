@@ -17,6 +17,20 @@ public static class K6BuilderExtensions
     private const int K6Port = 6565;
 
     /// <summary>
+    /// Configures the host port that the Grafana k6 resource is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for Grafana k6.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
+    /// <returns>The resource builder for Grafana k6.</returns>
+    [AspireExport]
+    public static IResourceBuilder<K6Resource> WithHostPort(this IResourceBuilder<K6Resource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(K6Resource.PrimaryEndpointName, endpoint => endpoint.Port = port);
+    }
+
+    /// <summary>
     /// Adds a Grafana k6 container resource to the application model.
     /// The default image is <inheritdoc cref="K6ContainerImageTags.Image"/> and the tag is <inheritdoc cref="K6ContainerImageTags.Tag"/>.
     /// </summary>

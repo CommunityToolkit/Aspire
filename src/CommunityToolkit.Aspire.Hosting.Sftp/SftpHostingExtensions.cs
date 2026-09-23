@@ -11,6 +11,20 @@ namespace Aspire.Hosting;
 public static class SftpHostingExtensions
 {
     /// <summary>
+    /// Configures the host port that the SFTP resource is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for SFTP.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
+    /// <returns>The resource builder for SFTP.</returns>
+    [AspireExport]
+    public static IResourceBuilder<SftpContainerResource> WithHostPort(this IResourceBuilder<SftpContainerResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(SftpContainerResource.SftpEndpointName, endpoint => endpoint.Port = port);
+    }
+
+    /// <summary>
     /// Adds atmoz SFTP to the application model.
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>

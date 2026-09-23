@@ -18,6 +18,20 @@ public static class UmamiBuilderExtensions
     private const string DatabaseStorageEnvVarName = "DATABASE_URL";
 
     /// <summary>
+    /// Configures the host port that the Umami resource is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for Umami.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
+    /// <returns>The resource builder for Umami.</returns>
+    [AspireExport]
+    public static IResourceBuilder<UmamiResource> WithHostPort(this IResourceBuilder<UmamiResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(UmamiResource.PrimaryEndpointName, endpoint => endpoint.Port = port);
+    }
+
+    /// <summary>
     /// Adds a Umami resource to the application model. A container is used for local development.
     /// The default image is <inheritdoc cref="UmamiContainerImageTags.Image"/> and the tag is <inheritdoc cref="UmamiContainerImageTags.Tag"/>.
     /// </summary>

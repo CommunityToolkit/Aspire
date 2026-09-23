@@ -11,6 +11,34 @@ namespace Aspire.Hosting;
 public static class PapercutSmtpHostingExtension
 {
     /// <summary>
+    /// Configures the host port that the Papercut SMTP HTTP endpoint is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for Papercut SMTP.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
+    /// <returns>The resource builder for Papercut SMTP.</returns>
+    [AspireExport]
+    public static IResourceBuilder<PapercutSmtpContainerResource> WithHttpHostPort(this IResourceBuilder<PapercutSmtpContainerResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(PapercutSmtpContainerResource.HttpEndpointName, endpoint => endpoint.Port = port);
+    }
+
+    /// <summary>
+    /// Configures the host port that the Papercut SMTP SMTP endpoint is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for Papercut SMTP.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
+    /// <returns>The resource builder for Papercut SMTP.</returns>
+    [AspireExport]
+    public static IResourceBuilder<PapercutSmtpContainerResource> WithSmtpHostPort(this IResourceBuilder<PapercutSmtpContainerResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(PapercutSmtpContainerResource.SmtpEndpointName, endpoint => endpoint.Port = port);
+    }
+
+    /// <summary>
     /// Adds Papercut SMTP to the application model.
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>

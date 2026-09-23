@@ -1,4 +1,4 @@
-﻿using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.ApplicationModel;
 using Microsoft.Extensions.DependencyInjection;
 
 #pragma warning disable ASPIREATS001 // AspireExport is experimental
@@ -11,6 +11,34 @@ namespace Aspire.Hosting;
 /// </summary>
 public static class LogtoBuilderExtensions
 {
+    /// <summary>
+    /// Configures the host port that the Logto resource is exposed on instead of using a randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for Logto.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used a random port will be assigned.</param>
+    /// <returns>The resource builder for Logto.</returns>
+    [AspireExport]
+    public static IResourceBuilder<LogtoResource> WithHostPort(this IResourceBuilder<LogtoResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(LogtoResource.PrimaryEndpointName, endpoint => endpoint.Port = port);
+    }
+
+    /// <summary>
+    /// Configures the host port that the Logto admin endpoint is exposed on instead of using a randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for Logto.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used a random port will be assigned.</param>
+    /// <returns>The resource builder for Logto.</returns>
+    [AspireExport]
+    public static IResourceBuilder<LogtoResource> WithAdminHostPort(this IResourceBuilder<LogtoResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(LogtoResource.AdminEndpointName, endpoint => endpoint.Port = port);
+    }
+
     /// <summary>
     /// Adds a Logto resource to the Aspire distributed application by configuring it
     /// with the specified name, associated PostgreSQL server resource, and database name.

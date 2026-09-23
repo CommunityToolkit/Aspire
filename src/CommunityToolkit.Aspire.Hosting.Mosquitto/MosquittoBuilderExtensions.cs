@@ -26,6 +26,20 @@ public static class MosquittoBuilderExtensions
         """;
 
     /// <summary>
+    /// Configures the host port that the Mosquitto resource is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for Mosquitto.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
+    /// <returns>The resource builder for Mosquitto.</returns>
+    [AspireExport]
+    public static IResourceBuilder<MosquittoServerResource> WithHostPort(this IResourceBuilder<MosquittoServerResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(MosquittoServerResource.PrimaryEndpointName, endpoint => endpoint.Port = port);
+    }
+
+    /// <summary>
     /// Adds a Mosquitto container resource to the application. Mosquitto is an open source MQTT
     /// message broker, so the resource can be referenced by any MQTT client integration.
     /// </summary>
