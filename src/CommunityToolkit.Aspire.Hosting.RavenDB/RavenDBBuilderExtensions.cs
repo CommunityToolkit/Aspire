@@ -183,8 +183,7 @@ public static class RavenDBBuilderExtensions
 
     private static void ConfigureEnvironmentVariables(EnvironmentCallbackContext context, RavenDBServerResource serverResource, Dictionary<string, object>? environmentVariables = null)
     {
-        var tcpPort = serverResource.TcpEndpoint.IsAllocated ? serverResource.TcpEndpoint.Port : serverResource.TcpEndpoint.TargetPort;
-        context.EnvironmentVariables.TryAdd("RAVEN_ServerUrl_Tcp", $"{serverResource.TcpEndpoint.Scheme}://0.0.0.0:{tcpPort}");
+        context.EnvironmentVariables.TryAdd("RAVEN_ServerUrl_Tcp", ReferenceExpression.Create($"{serverResource.TcpEndpoint.Scheme}://{serverResource.TcpEndpoint.Property(EndpointProperty.IPV4Host)}:{serverResource.TcpEndpoint.Property(EndpointProperty.TargetPort)}"));
 
         if (environmentVariables is null)
         {
