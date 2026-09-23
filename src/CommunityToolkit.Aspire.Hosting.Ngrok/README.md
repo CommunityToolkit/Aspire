@@ -48,7 +48,7 @@ This will return a JSON response with the ngrok tunneled endpoints.
       "public_url": "https://<your-ngrok-domain>",
       "proto": "https",
       "config": {
-        "addr": "http://host.docker.internal:5165",
+        "addr": "http://my-http.dev.internal:5165",
         "inspect": true
       },
       // ...
@@ -59,7 +59,7 @@ This will return a JSON response with the ngrok tunneled endpoints.
       "public_url": "https://0849-94-134-176-242.ngrok-free.app",
       "proto": "https",
       "config": {
-          "addr": "http://host.docker.internal:3657",
+          "addr": "http://other-http.dev.internal:3657",
           "inspect": true
       },
       // ...

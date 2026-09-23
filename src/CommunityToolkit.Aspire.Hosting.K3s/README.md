@@ -237,14 +237,15 @@ await builder.build().run();
 ## Reaching Aspire services from k3s pods
 
 k3s pods run on the internal pod network (`10.42.0.0/16`). Flannel masquerades outbound
-pod traffic through the k3s container's DCP network IP, so pods can reach DCP services
-using `host.docker.internal` and the host-mapped port.
+pod traffic through the k3s container's DCP network IP, so use the referenced service's
+IPv4 host and port rather than assuming a container-runtime host name.
 
 ```csharp
 var postgres = builder.AddPostgres("db");
 
 cluster.AddHelmRelease("my-operator", "my-operator-chart")
-    .WithHelmValue("database.host", "host.docker.internal")
+    .WithHelmValue("database.host",
+        postgres.GetEndpoint("tcp").Property(EndpointProperty.IPV4Host))
     .WithHelmValue("database.port",
         postgres.GetEndpoint("tcp").Property(EndpointProperty.Port));
 ```
