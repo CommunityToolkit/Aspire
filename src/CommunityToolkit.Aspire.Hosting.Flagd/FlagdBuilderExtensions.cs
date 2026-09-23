@@ -49,6 +49,34 @@ public static class FlagdBuilderExtensions
     }
 
     /// <summary>
+    /// Configures the host port that the flagd resource is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for flagd.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
+    /// <returns>The resource builder for flagd.</returns>
+    [AspireExport]
+    public static IResourceBuilder<FlagdResource> WithHostPort(this IResourceBuilder<FlagdResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(FlagdResource.HttpEndpointName, endpoint => endpoint.Port = port);
+    }
+
+    /// <summary>
+    /// Configures the host port that the flagd OFREP endpoint is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for flagd.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
+    /// <returns>The resource builder for flagd.</returns>
+    [AspireExport]
+    public static IResourceBuilder<FlagdResource> WithOfrepHostPort(this IResourceBuilder<FlagdResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(FlagdResource.OfrepEndpointName, endpoint => endpoint.Port = port);
+    }
+
+    /// <summary>
     /// Configures logging level for flagd. If a flag or targeting rule isn't proceeding the way you'd expect this can be enabled to get more verbose logging.
     /// </summary>
     /// <param name="builder">The resource builder.</param>

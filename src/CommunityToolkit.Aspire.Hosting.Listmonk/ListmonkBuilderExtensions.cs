@@ -7,6 +7,20 @@ namespace Aspire.Hosting;
 /// </summary>
 public static class ListmonkBuilderExtensions
 {
+    /// <summary>
+    /// Configures the host port that the listmonk resource is exposed on instead of using a randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for listmonk.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used a random port will be assigned.</param>
+    /// <returns>The resource builder for listmonk.</returns>
+    [AspireExport]
+    public static IResourceBuilder<ListmonkResource> WithHostPort(this IResourceBuilder<ListmonkResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(ListmonkResource.PrimaryEndpointName, endpoint => endpoint.Port = port);
+    }
+
     private const int ListmonkPort = 9000;
     private const string UploadsPath = "/listmonk/uploads";
     private const string AppAddressEnvVarName = "LISTMONK_app__address";

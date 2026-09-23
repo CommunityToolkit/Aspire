@@ -12,6 +12,20 @@ namespace Aspire.Hosting;
 public static class NgrokExtensions
 {
     /// <summary>
+    /// Configures the host port that the ngrok resource is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for ngrok.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
+    /// <returns>The resource builder for ngrok.</returns>
+    [AspireExport]
+    public static IResourceBuilder<NgrokResource> WithHostPort(this IResourceBuilder<NgrokResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint("http", endpoint => endpoint.Port = port);
+    }
+
+    /// <summary>
     /// Configures a container resource for grok which is pre-configured to connect to the resource that this method is used on.
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
