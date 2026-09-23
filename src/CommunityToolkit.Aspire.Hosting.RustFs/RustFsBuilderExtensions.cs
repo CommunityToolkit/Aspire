@@ -67,7 +67,8 @@ public static class RustFsBuilderExtensions
             .WithEnvironment("RUSTFS_CONSOLE_ADDRESS", ":" + RustFsResource.ConsoleTargetPort.ToString())
             .WithEnvironment(AccessKeyEnvVarName, $"{resource.AccessKey}")
             .WithEnvironment(SecretKeyEnvVarName, $"{resource.SecretKey}")
-            .WithHttpHealthCheck("/health", 200, RustFsResource.PrimaryEndpointName);
+            .WithHttpHealthCheck("/health", 200, RustFsResource.PrimaryEndpointName)
+            .WithIconName("HardDrive");
 
         return resourceBuilder;
     }
@@ -210,6 +211,7 @@ public static class RustFsBuilderExtensions
         var bucketBuilder = builder.ApplicationBuilder
             .AddResource(bucketResource)
             .WithParentRelationship(builder)
+            .WithIconName("FolderOpen")
             .WithInitialState(new()
             {
                 ResourceType = "RustFsBucket",

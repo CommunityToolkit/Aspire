@@ -58,7 +58,9 @@ public static class UvAppHostingExtension
 
         var projectResource = new UvAppResource(name, projectExecutable, projectDirectory);
 
-        var resourceBuilder = builder.AddResource(projectResource).WithArgs(context =>
+        var resourceBuilder = builder.AddResource(projectResource)
+            .WithIconName("CodePyRectangle")
+            .WithArgs(context =>
         {
             // If the project is to be automatically instrumented, add the instrumentation executable arguments first.
             if (!string.IsNullOrEmpty(instrumentationExecutable))

@@ -405,6 +405,7 @@ public static partial class PerlAppResourceBuilderExtensions
         var installerBuilder = resource.ApplicationBuilder
             .AddResource(installer)
             .WithParentRelationship(resource.Resource)
+            .WithIconName("ArrowDownload")
             .ExcludeFromManifest();
 
         resource.ApplicationBuilder.Eventing.Subscribe<BeforeStartEvent>(async (evt, ct) =>
@@ -487,6 +488,7 @@ public static partial class PerlAppResourceBuilderExtensions
         var installerBuilder = resource.ApplicationBuilder
             .AddResource(installer)
             .WithParentRelationship(resource.Resource)
+            .WithIconName("ArrowDownload")
             .ExcludeFromManifest();
 
         resource.ApplicationBuilder.Eventing.Subscribe<BeforeStartEvent>(async (evt, ct) =>

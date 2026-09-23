@@ -146,7 +146,8 @@ public static class RavenDBBuilderExtensions
             .WithImage(RavenDBContainerImageTags.Image, RavenDBContainerImageTags.Tag)
             .WithImageRegistry(RavenDBContainerImageTags.Registry)
             .WithEnvironment(context => ConfigureEnvironmentVariables(context, serverResource, environmentVariables))
-            .WithHealthCheck(healthCheckKey);
+            .WithHealthCheck(healthCheckKey)
+            .WithIconName("DatabaseMultiple");
     }
 
     private static Dictionary<string, object> GetEnvironmentVariablesFromServerSettings(RavenDBServerSettings serverSettings)
@@ -253,7 +254,8 @@ public static class RavenDBBuilderExtensions
                 name: healthCheckKey, 
                 certificate: databaseResource.Parent.ClientCertificate);
 
-        var dbBuilder = builder.ApplicationBuilder.AddResource(databaseResource);
+        var dbBuilder = builder.ApplicationBuilder.AddResource(databaseResource)
+            .WithIconName("Database");
 
         // Wire an "RavenDB Studio" deep-link onto the database child resource.
         // The database has no endpoints of its own, so its own URL pipeline never runs; build the link

@@ -40,6 +40,7 @@ public static class FlagdBuilderExtensions
             .WithImage(FlagdContainerImageTags.Image, FlagdContainerImageTags.Tag)
             .WithOtlpExporter()
             .WithImageRegistry(FlagdContainerImageTags.Registry)
+            .WithIconName("Flag")
             .WithHttpEndpoint(port: port, targetPort: FlagdPort, name: FlagdResource.HttpEndpointName)
             .WithHttpEndpoint(null, HealthCheckPort, FlagdResource.HealthCheckEndpointName)
             .WithHttpHealthCheck("/healthz", endpointName: FlagdResource.HealthCheckEndpointName)

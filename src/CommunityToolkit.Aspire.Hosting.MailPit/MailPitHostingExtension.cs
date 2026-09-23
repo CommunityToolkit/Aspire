@@ -49,7 +49,8 @@ public static class MailPitHostingExtension
             .WithHttpHealthCheck(
                 path: "/readyz",
                 statusCode: 200,
-                endpointName: MailPitContainerResource.HttpEndpointName);
+                endpointName: MailPitContainerResource.HttpEndpointName)
+            .WithIconName("Mail");
 
         return rb;
     }

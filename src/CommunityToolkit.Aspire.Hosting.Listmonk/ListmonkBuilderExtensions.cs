@@ -68,7 +68,8 @@ public static class ListmonkBuilderExtensions
             .WithEntrypoint("sh")
             .WithArgs("-c", "./listmonk --install --idempotent --yes --config '' && ./listmonk --upgrade --yes --config '' && ./listmonk --config ''")
             .WithEnvironment(AppAddressEnvVarName, "0.0.0.0:9000")
-            .WithHttpHealthCheck("/health");
+            .WithHttpHealthCheck("/health")
+            .WithIconName("MailMultiple");
     }
 
     /// <summary>

@@ -27,7 +27,7 @@ public sealed class KurrentDBContainerFixture : IAsyncLifetime
     {
         if (RequiresDockerAttribute.IsSupported)
         {
-            Container = new ContainerBuilder($"{KurrentDBContainerImageTags.Registry}/{KurrentDBContainerImageTags.Image}:{KurrentDBContainerImageTags.Tag}")
+            Container = new ContainerBuilder($"{TestContainerRegistry.Resolve(KurrentDBContainerImageTags.Registry)}/{KurrentDBContainerImageTags.Image}:{KurrentDBContainerImageTags.Tag}")
               .WithPortBinding(2113, true)
               .WithWaitStrategy(Wait.ForUnixContainer().UntilHttpRequestIsSucceeded(r => r.ForPort(2113)))
               .WithEnvironment("KURRENTDB_CLUSTER_SIZE", "1")

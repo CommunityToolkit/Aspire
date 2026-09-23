@@ -39,6 +39,7 @@ public static class AzureDaprHostingExtensions
 
         return builder.ApplicationBuilder
                                     .AddResource(azureDaprComponentResource)
+                                    .WithIconName("PuzzlePiece")
                                     .WithManifestPublishingCallback(azureDaprComponentResource.WriteToManifest);
     }
 

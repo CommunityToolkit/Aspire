@@ -46,6 +46,7 @@ public static class DistributedApplicationBuilderExtensions
                 .WithImage(FlywayContainerImageTags.Image)
                 .WithImageTag(FlywayContainerImageTags.Tag)
                 .WithImageRegistry(FlywayContainerImageTags.Registry)
+                .WithIconName("DatabaseArrowUp")
                 .WithEnvironment("FLYWAY_LOCATIONS", $"filesystem:{FlywayResource.MigrationScriptsDirectory}")
                 .WithEnvironment("REDGATE_DISABLE_TELEMETRY", "true")
                 .WithBindMount(Path.GetFullPath(migrationScriptsPath), FlywayResource.MigrationScriptsDirectory, isReadOnly: true);

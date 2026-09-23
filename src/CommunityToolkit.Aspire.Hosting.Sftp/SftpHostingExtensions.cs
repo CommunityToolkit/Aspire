@@ -46,7 +46,8 @@ public static class SftpHostingExtensions
                 ep.Port = port;
                 ep.TargetPort = SftpContainerResource.SftpEndpointPort;
                 ep.UriScheme = SftpContainerResource.SftpEndpointScheme;
-            });
+            })
+            .WithIconName("FolderOpen");
 
         return resourceBuilder;
     }
