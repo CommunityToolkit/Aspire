@@ -86,6 +86,36 @@ public static class ActiveMQBuilderExtensions
         return builder.Build(port, scheme, webPort, activeMq);
     }
 
+    /// <summary>
+    /// Configures the host port that the ActiveMQ resource is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for ActiveMQ.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
+    /// <returns>The resource builder for ActiveMQ.</returns>
+    [AspireExport]
+    public static IResourceBuilder<T> WithHostPort<T>(this IResourceBuilder<T> builder, int? port)
+        where T : ActiveMQServerResourceBase
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(ActiveMQServerResourceBase.PrimaryEndpointName, endpoint => endpoint.Port = port);
+    }
+
+    /// <summary>
+    /// Configures the host port that the ActiveMQ web console is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for ActiveMQ.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
+    /// <returns>The resource builder for ActiveMQ.</returns>
+    [AspireExport]
+    public static IResourceBuilder<T> WithWebHostPort<T>(this IResourceBuilder<T> builder, int? port)
+        where T : ActiveMQServerResourceBase
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint("web", endpoint => endpoint.Port = port);
+    }
+
     private static IResourceBuilder<T> Build<T>(this IDistributedApplicationBuilder builder, int? port, string scheme, int? webPort, T activeMq)
     where T : ActiveMQServerResourceBase
     {

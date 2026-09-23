@@ -271,6 +271,20 @@ public static class K3sBuilderExtensions
     }
 
     /// <summary>
+    /// Configures the host port that the k3s cluster resource is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for the k3s cluster.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
+    /// <returns>The resource builder for the k3s cluster.</returns>
+    [AspireExport]
+    public static IResourceBuilder<K3sClusterResource> WithHostPort(this IResourceBuilder<K3sClusterResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(K3sClusterResource.ApiServerEndpointName, endpoint => endpoint.Port = port);
+    }
+
+    /// <summary>
     /// Sets the k3s image version used by the cluster server and all its agent nodes.
     /// </summary>
     /// <param name="builder">The k3s cluster resource builder.</param>

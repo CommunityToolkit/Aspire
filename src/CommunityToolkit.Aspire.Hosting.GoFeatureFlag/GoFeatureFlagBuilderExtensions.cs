@@ -69,6 +69,20 @@ public static class GoFeatureFlagBuilderExtensions
     }
 
     /// <summary>
+    /// Configures the host port that the GO Feature Flag resource is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for GO Feature Flag.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
+    /// <returns>The resource builder for GO Feature Flag.</returns>
+    [AspireExport]
+    public static IResourceBuilder<GoFeatureFlagResource> WithHostPort(this IResourceBuilder<GoFeatureFlagResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(GoFeatureFlagResource.PrimaryEndpointName, endpoint => endpoint.Port = port);
+    }
+
+    /// <summary>
     /// Adds a named volume for the data folder to a GO Feature flag container resource.
     /// </summary>
     /// <param name="builder">The resource builder.</param>

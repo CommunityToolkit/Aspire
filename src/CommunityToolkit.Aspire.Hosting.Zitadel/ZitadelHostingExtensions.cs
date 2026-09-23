@@ -12,6 +12,20 @@ namespace Aspire.Hosting;
 public static class ZitadelHostingExtensions
 {
     /// <summary>
+    /// Configures the host port that the Zitadel resource is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for Zitadel.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
+    /// <returns>The resource builder for Zitadel.</returns>
+    [AspireExport]
+    public static IResourceBuilder<ZitadelResource> WithHostPort(this IResourceBuilder<ZitadelResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(ZitadelResource.HttpEndpointName, endpoint => endpoint.Port = port);
+    }
+
+    /// <summary>
     /// Adds a Zitadel container resource to the <see cref="IDistributedApplicationBuilder"/>.
     /// </summary>
     /// <ats-summary>Adds a Zitadel container resource</ats-summary>

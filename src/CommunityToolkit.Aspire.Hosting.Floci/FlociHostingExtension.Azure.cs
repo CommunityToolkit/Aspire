@@ -46,6 +46,22 @@ public static partial class FlociHostingExtension
     }
 
     /// <summary>
+    /// Configures the host port that the Floci Azure resource is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for Floci Azure.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
+    /// <returns>The resource builder for Floci Azure.</returns>
+    [AspireExport("withHostPortAzure", MethodName = "withHostPort")]
+    public static IResourceBuilder<FlociAzureContainerResource> WithHostPort(
+        this IResourceBuilder<FlociAzureContainerResource> builder,
+        int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(builder.Resource.EndpointName, endpoint => endpoint.Port = port);
+    }
+
+    /// <summary>
     /// Adds a reference to a Floci Azure emulator resource, injecting the standard
     /// <c>ConnectionStrings__{name}</c> entry plus <c>AZURE_STORAGE_CONNECTION_STRING</c> — a
     /// development storage connection string carrying the <c>Blob</c>, <c>Queue</c> and <c>Table</c>
