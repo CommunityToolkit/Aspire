@@ -103,14 +103,16 @@ public static class K6BuilderExtensions
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(virtualUsers);
         ArgumentNullException.ThrowIfNull(duration);
 
+        var endpoint = builder.Resource.PrimaryEndpoint;
+
         return builder.WithArgs(
-            "run", 
+            "run",
             "--address",
-            $"0.0.0.0:{K6Port}",
-            "--vus", 
-            virtualUsers.ToString(CultureInfo.InvariantCulture), 
-            "--duration", 
-            duration, 
+            ReferenceExpression.Create($"{endpoint.Property(EndpointProperty.IPV4Host)}:{endpoint.Property(EndpointProperty.TargetPort)}"),
+            "--vus",
+            virtualUsers.ToString(CultureInfo.InvariantCulture),
+            "--duration",
+            duration,
             scriptPath);
     }
 

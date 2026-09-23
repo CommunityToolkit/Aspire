@@ -67,16 +67,16 @@ public static class ListmonkBuilderExtensions
             .WithHttpEndpoint(port: port, targetPort: ListmonkPort, name: ListmonkResource.PrimaryEndpointName)
             .WithEntrypoint("sh")
             .WithArgs("-c", "./listmonk --install --idempotent --yes --config '' && ./listmonk --upgrade --yes --config '' && ./listmonk --config ''")
-            .WithEnvironment(AppAddressEnvVarName, "0.0.0.0:9000")
+            .WithEnvironment(AppAddressEnvVarName, ReferenceExpression.Create($"{resource.PrimaryEndpoint.Property(EndpointProperty.IPV4Host)}:{resource.PrimaryEndpoint.Property(EndpointProperty.TargetPort)}"))
             .WithHttpHealthCheck("/health")
             .WithIconName("MailMultiple");
     }
 
     /// <summary>
-    /// Configures the listmonk web server address.
+    /// Configures the listmonk web server bind host, overriding the default which is derived from the resource's endpoint.
     /// </summary>
     /// <param name="builder">The listmonk resource builder.</param>
-    /// <param name="address">The address value for <c>LISTMONK_app__address</c>, for example <c>0.0.0.0:9000</c>.</param>
+    /// <param name="address">The host value to bind the listmonk web server to, for example <c>0.0.0.0</c>.</param>
     /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
     [AspireExport]
     public static IResourceBuilder<ListmonkResource> WithAppAddress(this IResourceBuilder<ListmonkResource> builder, string address)
@@ -84,7 +84,7 @@ public static class ListmonkBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(address);
 
-        return builder.WithEnvironment(AppAddressEnvVarName, address);
+        return builder.WithEndpoint(ListmonkResource.PrimaryEndpointName, endpoint => endpoint.TargetHost = address);
     }
 
     /// <summary>
