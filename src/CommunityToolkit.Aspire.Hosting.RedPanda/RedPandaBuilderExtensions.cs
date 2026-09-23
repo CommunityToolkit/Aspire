@@ -331,29 +331,19 @@ public static class RedPandaBuilderExtensions
     {
         // The console runs in its own container; reading from endpoint properties resolves the correct
         // host/port for whichever network the console reaches Redpanda over.
-        var brokers = ReferenceExpression.Create($"{resource.InternalEndpoint.Property(EndpointProperty.HostAndPort)}");
-
-        var schemaRegistry = ReferenceExpression.Create($"{resource.SchemaRegistryEndpoint.Property(EndpointProperty.Scheme)}://{resource.SchemaRegistryEndpoint.Property(EndpointProperty.HostAndPort)}");
-
-        var adminApi = ReferenceExpression.Create($"{resource.AdminEndpoint.Property(EndpointProperty.Scheme)}://{resource.AdminEndpoint.Property(EndpointProperty.HostAndPort)}");
-
-        context.EnvironmentVariables["KAFKA_BROKERS"] = brokers;
+        context.EnvironmentVariables["KAFKA_BROKERS"] = resource.InternalEndpoint.Property(EndpointProperty.HostAndPort);
         context.EnvironmentVariables["KAFKA_SCHEMAREGISTRY_ENABLED"] = "true";
-        context.EnvironmentVariables["KAFKA_SCHEMAREGISTRY_URLS"] = schemaRegistry;
+        context.EnvironmentVariables["KAFKA_SCHEMAREGISTRY_URLS"] = resource.SchemaRegistryEndpoint;
         context.EnvironmentVariables["REDPANDA_ADMINAPI_ENABLED"] = "true";
-        context.EnvironmentVariables["REDPANDA_ADMINAPI_URLS"] = adminApi;
+        context.EnvironmentVariables["REDPANDA_ADMINAPI_URLS"] = resource.AdminEndpoint;
     }
 
     private static void ConfigureKafkaUiContainer(EnvironmentCallbackContext context, RedPandaServerResource resource)
     {
         // Kafka UI runs in its own container; reading from endpoint properties resolves the correct
         // host/port for whichever network the UI reaches Redpanda over.
-        var bootstrapServers = ReferenceExpression.Create($"{resource.InternalEndpoint.Property(EndpointProperty.HostAndPort)}");
-
-        var schemaRegistry = ReferenceExpression.Create($"{resource.SchemaRegistryEndpoint.Property(EndpointProperty.Scheme)}://{resource.SchemaRegistryEndpoint.Property(EndpointProperty.HostAndPort)}");
-
         context.EnvironmentVariables["KAFKA_CLUSTERS_0_NAME"] = resource.Name;
-        context.EnvironmentVariables["KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS"] = bootstrapServers;
-        context.EnvironmentVariables["KAFKA_CLUSTERS_0_SCHEMAREGISTRY"] = schemaRegistry;
+        context.EnvironmentVariables["KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS"] = resource.InternalEndpoint.Property(EndpointProperty.HostAndPort);
+        context.EnvironmentVariables["KAFKA_CLUSTERS_0_SCHEMAREGISTRY"] = resource.SchemaRegistryEndpoint;
     }
 }

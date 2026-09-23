@@ -7,8 +7,8 @@ namespace Aspire.Hosting.ApplicationModel;
 /// floci-az serves Service Bus AMQP from an Artemis sidecar container that publishes the
 /// configured ports directly on the Docker host. The resource models those host ports as
 /// proxyless Aspire endpoints so DCP can allocate them without trying to proxy traffic to the
-/// parent container. Container consumers reach those same ports through the container runtime's
-/// host gateway. This resource is only supported in run mode.
+/// parent container. Endpoint references are resolved from each consumer's network context.
+/// This resource is only supported in run mode.
 /// </remarks>
 /// <param name="name">The name of the resource.</param>
 /// <param name="parent">The parent Floci Azure emulator resource.</param>
@@ -55,7 +55,7 @@ public class FlociAzureServiceBusResource(
     /// </summary>
     public ReferenceExpression ConnectionStringExpression =>
         ReferenceExpression.Create(
-            $"Endpoint={AmqpEndpoint};SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey={DefaultSasKey};UseDevelopmentEmulator=true;");
+            $"Endpoint=sb://{AmqpEndpoint.Property(EndpointProperty.Host)}:{AmqpEndpoint.Property(EndpointProperty.Port)};SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey={DefaultSasKey};UseDevelopmentEmulator=true;");
 
     IEnumerable<KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties() =>
         Parent.CombineProperties([

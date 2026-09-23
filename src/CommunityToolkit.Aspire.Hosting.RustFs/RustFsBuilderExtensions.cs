@@ -51,8 +51,10 @@ public static class RustFsBuilderExtensions
             .WithImage(RustFsContainerImageTags.Image, RustFsContainerImageTags.Tag)
             .WithImageRegistry(RustFsContainerImageTags.Registry)
             .WithHttpEndpoint(name: RustFsResource.PrimaryEndpointName, port: port,
+                env: "RUSTFS_ADDRESS",
                 targetPort: RustFsResource.PrimaryTargetPort)
             .WithHttpEndpoint(name: RustFsResource.ConsoleEndpointName, port: consolePort,
+                env: "RUSTFS_CONSOLE_ADDRESS",
                 targetPort: RustFsResource.ConsoleTargetPort)
             .WithUrlForEndpoint(RustFsResource.PrimaryEndpointName, annot =>
             {
@@ -63,8 +65,6 @@ public static class RustFsBuilderExtensions
                 annot.DisplayText = "Console";
             })
             .WithEnvironment("STORAGE_TYPE", "rustfs")
-            .WithEnvironment("RUSTFS_ADDRESS", ":" + RustFsResource.PrimaryTargetPort.ToString())
-            .WithEnvironment("RUSTFS_CONSOLE_ADDRESS", ":" + RustFsResource.ConsoleTargetPort.ToString())
             .WithEnvironment(AccessKeyEnvVarName, $"{resource.AccessKey}")
             .WithEnvironment(SecretKeyEnvVarName, $"{resource.SecretKey}")
             .WithHttpHealthCheck("/health", 200, RustFsResource.PrimaryEndpointName)

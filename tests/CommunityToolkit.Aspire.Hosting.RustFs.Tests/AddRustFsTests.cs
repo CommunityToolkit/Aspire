@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Aspire.Hosting;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.RustFs.Tests;
 
@@ -49,7 +50,7 @@ public class AddRustFsTests
     }
 
     [Fact]
-    public void RustFsResourceHasCorrectEndpoints()
+    public async Task RustFsResourceHasCorrectEndpoints()
     {
         var builder = DistributedApplication.CreateBuilder();
 
@@ -70,6 +71,11 @@ public class AddRustFsTests
 
         var consoleEndpoint = Assert.Single(endpoints, e => e.Name == "console");
         Assert.Equal(9001, consoleEndpoint.TargetPort);
+
+        var config = await resource.GetEnvironmentVariablesAsync();
+
+        Assert.Equal("9000", config["RUSTFS_ADDRESS"]);
+        Assert.Equal("9001", config["RUSTFS_CONSOLE_ADDRESS"]);
     }
 
     [Fact]

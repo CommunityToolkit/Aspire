@@ -1,3 +1,4 @@
+using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using k8s;
 using k8s.KubeConfigModels;
@@ -13,7 +14,7 @@ namespace CommunityToolkit.Aspire.Hosting;
 /// it rewrites the server URL for two variants:
 /// <list type="bullet">
 ///   <item><c>local/kubeconfig.yaml</c> — <c>server: https://localhost:{allocatedPort}</c> (host processes)</item>
-///   <item><c>container/kubeconfig.yaml</c> — <c>server: https://{name}:6443</c> (DCP-network containers)</item>
+///   <item><c>container/kubeconfig.yaml</c> — the API endpoint resolved for the Aspire container network</item>
 /// </list>
 /// Then creates a short-lived <see cref="Kubernetes"/> client (disposed after each check)
 /// to call <c>ListNodeAsync</c>, confirming that all expected nodes are <c>Ready</c>.
@@ -148,7 +149,16 @@ internal sealed class K3sReadinessHealthCheck(
         Directory.CreateDirectory(containerDir);
         await WriteKubeconfigAsync(
             Path.Combine(containerDir, "kubeconfig.yaml"),
-            BuildConfigYaml(parsed, $"https://{resource.Name}:6443"),
+            BuildConfigYaml(
+                parsed,
+                await resource.ApiEndpoint.GetValueAsync(
+                    new ValueProviderContext
+                    {
+                        Network = KnownNetworkIdentifiers.DefaultAspireContainerNetwork,
+                    },
+                    ct).ConfigureAwait(false)
+                    ?? throw new DistributedApplicationException(
+                        "The k3s API endpoint could not be resolved for the Aspire container network.")),
             ct).ConfigureAwait(false);
 
         return localPath;
