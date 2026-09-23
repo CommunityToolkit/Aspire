@@ -68,11 +68,11 @@ public class AddListmonkTests
         using var appBuilder = TestDistributedApplicationBuilder.Create();
 
         var listmonk = appBuilder.AddListmonk("listmonk")
-            .WithAppAddress("0.0.0.0:9100");
+            .WithAppAddress("myhost");
 
         var config = await listmonk.Resource.GetEnvironmentVariablesAsync();
 
-        Assert.Equal("0.0.0.0:9100", config["LISTMONK_app__address"]);
+        Assert.Equal("myhost:9000", config["LISTMONK_app__address"]);
     }
 
     [Fact]

@@ -105,7 +105,13 @@ public static class K6BuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(scriptPath);
 
-        var args = new List<string> { "run", "--address", $"0.0.0.0:{K6Port}" };
+        var endpoint = builder.Resource.PrimaryEndpoint;
+        var args = new List<object>
+        {
+            "run",
+            "--address",
+            ReferenceExpression.Create($"{endpoint.Property(EndpointProperty.IPV4Host)}:{endpoint.Property(EndpointProperty.TargetPort)}")
+        };
 
         if (virtualUsers is not null)
         {

@@ -56,11 +56,10 @@ public static class StableDiffusionCppResourceBuilderExtensions
             .WithImageSHA256(GetImageSha256(imageVariant))
             .WithImageRegistry(StableDiffusionCppContainerImageTags.Registry)
             .WithEntrypoint("/sd-server")
-            .WithArgs(
-                "--listen-ip", "0.0.0.0",
-                "--listen-port", StableDiffusionCppResource.HttpTargetPort.ToString(),
-                "--lora-model-dir", "/models/loras",
-                "--hires-upscalers-dir", "/models/upscalers")
+            .WithArgs("--listen-ip", resource.PrimaryEndpoint.Property(EndpointProperty.IPV4Host))
+            .WithArgs("--listen-port", resource.PrimaryEndpoint.Property(EndpointProperty.TargetPort))
+            .WithArgs("--lora-model-dir", "/models/loras")
+            .WithArgs("--hires-upscalers-dir", "/models/upscalers")
             .WithBindMount(modelsDirectory, "/models")
             .WithBindMount(outputDirectory, "/output")
             .WithHttpEndpoint(

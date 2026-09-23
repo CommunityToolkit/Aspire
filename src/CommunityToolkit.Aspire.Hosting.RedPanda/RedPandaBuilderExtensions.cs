@@ -306,41 +306,36 @@ public static class RedPandaBuilderExtensions
 
         // Two Kafka listeners: an "internal" listener for container-to-container traffic over the
         // Aspire container network, and an "external" listener that is reachable from the host.
+        // Use fresh (unpinned) endpoint references for binding so the address resolves relative to the
+        // broker itself, rather than the host-pinned references used for advertising below.
+        var internalBindEndpoint = resource.GetEndpoint(RedPandaServerResource.InternalEndpointName);
+        var kafkaBindEndpoint = resource.GetEndpoint(RedPandaServerResource.PrimaryEndpointName);
         context.Args.Add("--kafka-addr");
-        context.Args.Add($"internal://0.0.0.0:{RedPandaServerResource.KafkaInternalBrokerPort},external://0.0.0.0:{RedPandaServerResource.KafkaBrokerPort}");
+        context.Args.Add(ReferenceExpression.Create(
+            $"internal://{internalBindEndpoint.Property(EndpointProperty.IPV4Host)}:{internalBindEndpoint.Property(EndpointProperty.TargetPort)},external://{kafkaBindEndpoint.Property(EndpointProperty.IPV4Host)}:{kafkaBindEndpoint.Property(EndpointProperty.TargetPort)}"));
 
         // Advertised listeners tell clients how to reach the broker after the initial connection.
-        var internalPort = RedPandaServerResource.KafkaInternalBrokerPort.ToString(CultureInfo.InvariantCulture);
-        var advertised = context.ExecutionContext.IsRunMode
-            // In run mode, the internal listener is reached over the default Aspire container network using
-            // the resource name, and the external listener is reached from the host on the mapped port.
-            ? ReferenceExpression.Create(
-                $"internal://{resource.Name}:{internalPort},external://localhost:{resource.PrimaryEndpoint.Property(EndpointProperty.Port)}")
-            : ReferenceExpression.Create(
-                $"internal://{resource.InternalEndpoint.Property(EndpointProperty.HostAndPort)},external://{resource.PrimaryEndpoint.Property(EndpointProperty.HostAndPort)}");
+        // Reading from endpoint properties (rather than branching on run/publish mode) lets the
+        // framework resolve the correct host/port for the network context automatically.
+        var advertised = ReferenceExpression.Create(
+            $"internal://{resource.InternalEndpoint.Property(EndpointProperty.HostAndPort)},external://{resource.PrimaryEndpoint.Property(EndpointProperty.HostAndPort)}");
 
         context.Args.Add("--advertise-kafka-addr");
         context.Args.Add(advertised);
 
         context.Args.Add("--schema-registry-addr");
-        context.Args.Add($"0.0.0.0:{RedPandaServerResource.SchemaRegistryPort}");
+        context.Args.Add(ReferenceExpression.Create($"{resource.SchemaRegistryEndpoint.Property(EndpointProperty.IPV4Host)}:{resource.SchemaRegistryEndpoint.Property(EndpointProperty.TargetPort)}"));
     }
 
     private static void ConfigureConsoleContainer(EnvironmentCallbackContext context, RedPandaServerResource resource)
     {
-        // The console runs in its own container, so it reaches Redpanda over the default Aspire container
-        // network in run mode (using the resource name + target ports) and over the host otherwise.
-        var brokers = context.ExecutionContext.IsRunMode
-            ? ReferenceExpression.Create($"{resource.Name}:{resource.InternalEndpoint.Property(EndpointProperty.TargetPort)}")
-            : ReferenceExpression.Create($"{resource.InternalEndpoint.Property(EndpointProperty.HostAndPort)}");
+        // The console runs in its own container; reading from endpoint properties resolves the correct
+        // host/port for whichever network the console reaches Redpanda over.
+        var brokers = ReferenceExpression.Create($"{resource.InternalEndpoint.Property(EndpointProperty.HostAndPort)}");
 
-        var schemaRegistry = context.ExecutionContext.IsRunMode
-            ? ReferenceExpression.Create($"http://{resource.Name}:{resource.SchemaRegistryEndpoint.Property(EndpointProperty.TargetPort)}")
-            : ReferenceExpression.Create($"{resource.SchemaRegistryEndpoint.Property(EndpointProperty.Scheme)}://{resource.SchemaRegistryEndpoint.Property(EndpointProperty.HostAndPort)}");
+        var schemaRegistry = ReferenceExpression.Create($"{resource.SchemaRegistryEndpoint.Property(EndpointProperty.Scheme)}://{resource.SchemaRegistryEndpoint.Property(EndpointProperty.HostAndPort)}");
 
-        var adminApi = context.ExecutionContext.IsRunMode
-            ? ReferenceExpression.Create($"http://{resource.Name}:{resource.AdminEndpoint.Property(EndpointProperty.TargetPort)}")
-            : ReferenceExpression.Create($"{resource.AdminEndpoint.Property(EndpointProperty.Scheme)}://{resource.AdminEndpoint.Property(EndpointProperty.HostAndPort)}");
+        var adminApi = ReferenceExpression.Create($"{resource.AdminEndpoint.Property(EndpointProperty.Scheme)}://{resource.AdminEndpoint.Property(EndpointProperty.HostAndPort)}");
 
         context.EnvironmentVariables["KAFKA_BROKERS"] = brokers;
         context.EnvironmentVariables["KAFKA_SCHEMAREGISTRY_ENABLED"] = "true";
@@ -351,15 +346,11 @@ public static class RedPandaBuilderExtensions
 
     private static void ConfigureKafkaUiContainer(EnvironmentCallbackContext context, RedPandaServerResource resource)
     {
-        // Kafka UI runs in its own container, so it reaches Redpanda over the default Aspire container
-        // network in run mode (using the resource name + target ports) and over the host otherwise.
-        var bootstrapServers = context.ExecutionContext.IsRunMode
-            ? ReferenceExpression.Create($"{resource.Name}:{resource.InternalEndpoint.Property(EndpointProperty.TargetPort)}")
-            : ReferenceExpression.Create($"{resource.InternalEndpoint.Property(EndpointProperty.HostAndPort)}");
+        // Kafka UI runs in its own container; reading from endpoint properties resolves the correct
+        // host/port for whichever network the UI reaches Redpanda over.
+        var bootstrapServers = ReferenceExpression.Create($"{resource.InternalEndpoint.Property(EndpointProperty.HostAndPort)}");
 
-        var schemaRegistry = context.ExecutionContext.IsRunMode
-            ? ReferenceExpression.Create($"http://{resource.Name}:{resource.SchemaRegistryEndpoint.Property(EndpointProperty.TargetPort)}")
-            : ReferenceExpression.Create($"{resource.SchemaRegistryEndpoint.Property(EndpointProperty.Scheme)}://{resource.SchemaRegistryEndpoint.Property(EndpointProperty.HostAndPort)}");
+        var schemaRegistry = ReferenceExpression.Create($"{resource.SchemaRegistryEndpoint.Property(EndpointProperty.Scheme)}://{resource.SchemaRegistryEndpoint.Property(EndpointProperty.HostAndPort)}");
 
         context.EnvironmentVariables["KAFKA_CLUSTERS_0_NAME"] = resource.Name;
         context.EnvironmentVariables["KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS"] = bootstrapServers;
