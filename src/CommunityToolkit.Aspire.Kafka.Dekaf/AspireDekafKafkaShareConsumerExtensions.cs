@@ -146,15 +146,20 @@ public static partial class AspireDekafKafkaShareConsumerExtensions
         Action<IServiceProvider, ShareConsumerBuilder<TKey, TValue>>? configureBuilder,
         string connectionName,
         string? serviceKey,
-        Action<DekafBuilder, Action<IServiceProvider, ShareConsumerBuilder<TKey, TValue>>, Action<DeadLetterQueueBuilder>?>? registerConsumer = null)
+        Action<DekafBuilder, Action<IServiceProvider, ShareConsumerBuilder<TKey, TValue>>, Action<DeadLetterQueueBuilder>?>? registerConsumer = null,
+        Type? hostedServiceType = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(connectionName);
 
-        var configuration = DekafKafkaCommon.GetConfiguration(builder, DefaultConfigSectionName, connectionName, "Config:BootstrapServers");
+        var configuration = DekafKafkaCommon.GetConfiguration(builder, DefaultConfigSectionName, connectionName, "ConnectionString", "Config:BootstrapServers");
         var settings = configuration.Get<KafkaShareConsumerSettings>() ?? new();
         settings.ConnectionString = builder.Configuration.GetConnectionString(connectionName) ?? settings.ConnectionString;
         configureSettings?.Invoke(settings);
+
+        Func<IServiceProvider, IKafkaShareConsumer<TKey, TValue>> getConsumer = services => serviceKey is null
+            ? services.GetRequiredService<IKafkaShareConsumer<TKey, TValue>>()
+            : services.GetRequiredKeyedService<IKafkaShareConsumer<TKey, TValue>>(serviceKey);
 
         builder.Services.AddDekaf(dekaf =>
         {
@@ -172,6 +177,15 @@ public static partial class AspireDekafKafkaShareConsumerExtensions
             if (registerConsumer is not null)
             {
                 registerConsumer(dekaf, Configure, settings.ConfigureDeadLetterQueue);
+
+                // Native hosted registration installs an alias for its private DI-owned client.
+                // Capture this alias factory before another worker replaces the public alias.
+                var alias = builder.Services.Last(descriptor => descriptor.ServiceType == typeof(IKafkaShareConsumer<TKey, TValue>)
+                    && descriptor.IsKeyedService == (serviceKey is not null)
+                    && (serviceKey is null || Equals(descriptor.ServiceKey, serviceKey)));
+                getConsumer = serviceKey is null
+                    ? services => (IKafkaShareConsumer<TKey, TValue>)alias.ImplementationFactory!(services)
+                    : services => (IKafkaShareConsumer<TKey, TValue>)alias.KeyedImplementationFactory!(services, serviceKey);
             }
             else if (serviceKey is null)
             {
@@ -187,12 +201,11 @@ public static partial class AspireDekafKafkaShareConsumerExtensions
 
         if (!settings.DisableHealthChecks)
         {
-            var healthCheckName = DekafKafkaCommon.GetHealthCheckName<TKey, TValue>("shareconsumer", serviceKey);
+            var healthCheckName = hostedServiceType is null
+                ? DekafKafkaCommon.GetHealthCheckName<TKey, TValue>("shareconsumer", serviceKey)
+                : DekafKafkaCommon.GetHealthCheckName($"shareconsumer_service<{hostedServiceType},{typeof(TKey)},{typeof(TValue)}>", serviceKey);
             builder.TryAddHealthCheck(new HealthCheckRegistration(healthCheckName,
-                services => new KafkaShareConsumerHealthCheck<TKey, TValue>(
-                    serviceKey is null
-                        ? services.GetRequiredService<IKafkaShareConsumer<TKey, TValue>>()
-                        : services.GetRequiredKeyedService<IKafkaShareConsumer<TKey, TValue>>(serviceKey)),
+                services => new KafkaShareConsumerHealthCheck<TKey, TValue>(getConsumer(services)),
                 failureStatus: default, tags: default));
         }
     }

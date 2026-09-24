@@ -1,16 +1,61 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System.Reflection;
 using Dekaf.Consumer.DeadLetter;
 using Dekaf.Extensions.Hosting;
 using Dekaf.ShareConsumer;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace CommunityToolkit.Aspire.Kafka.Dekaf.Tests;
 
 public class ShareConsumerServiceTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task WorkersWithTheSameMessageTypesHaveIndependentHealthChecks(bool keyed)
+    {
+        var builder = ClientTestHelpers.CreateBuilder();
+        if (keyed)
+        {
+            builder.AddKeyedDekafKafkaShareConsumerService<TestShareService, string, string>("messaging");
+            builder.AddKeyedDekafKafkaShareConsumerService<OtherShareService, string, string>("messaging");
+            builder.AddKeyedDekafKafkaShareConsumer<string, string>("messaging");
+        }
+        else
+        {
+            builder.AddDekafKafkaShareConsumerService<TestShareService, string, string>("messaging");
+            builder.AddDekafKafkaShareConsumerService<OtherShareService, string, string>("messaging");
+            builder.AddDekafKafkaShareConsumer<string, string>("messaging");
+        }
+
+        await using var services = builder.Services.BuildServiceProvider();
+        var workers = services.GetServices<IHostedService>().ToArray();
+        var first = Assert.Single(workers.OfType<TestShareService>()).Consumer;
+        var second = Assert.Single(workers.OfType<OtherShareService>()).Consumer;
+        var standalone = ClientTestHelpers.GetShareConsumer(services, keyed);
+        Assert.NotSame(first, second);
+        Assert.NotSame(second, standalone);
+        var registrations = services.GetRequiredService<IOptions<HealthCheckServiceOptions>>().Value.Registrations;
+        Assert.Equal(3, registrations.Count);
+
+        // Verify each check retains its worker's consumer even after the public alias is replaced.
+        var checkedConsumers = registrations.Select(registration =>
+        {
+            var check = registration.Factory(services);
+            var field = Assert.Single(check.GetType().GetFields(BindingFlags.Instance | BindingFlags.NonPublic),
+                field => field.FieldType == typeof(IKafkaShareConsumer<string, string>));
+            return field.GetValue(check);
+        }).ToArray();
+        Assert.Contains(first, checkedConsumers);
+        Assert.Contains(second, checkedConsumers);
+        Assert.Contains(standalone, checkedConsumers);
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
@@ -72,6 +117,14 @@ public class ShareConsumerServiceTests
         public IKafkaShareConsumer<string, string> Consumer { get; } = consumer;
         public DeadLetterOptions? DeadLetter { get; } = deadLetterOptions;
         protected override IEnumerable<string> Topics => ["orders"];
+        protected override ValueTask ProcessAsync(ShareConsumeResult<string, string> result, CancellationToken cancellationToken) => ValueTask.CompletedTask;
+    }
+
+    public sealed class OtherShareService(IKafkaShareConsumer<string, string> consumer, ILogger<OtherShareService> logger)
+        : KafkaShareConsumerService<string, string>(consumer, logger)
+    {
+        public IKafkaShareConsumer<string, string> Consumer { get; } = consumer;
+        protected override IEnumerable<string> Topics => ["other-orders"];
         protected override ValueTask ProcessAsync(ShareConsumeResult<string, string> result, CancellationToken cancellationToken) => ValueTask.CompletedTask;
     }
 }

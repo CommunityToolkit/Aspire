@@ -150,7 +150,7 @@ public static class AspireDekafKafkaConsumerExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(connectionName);
 
-        var configuration = DekafKafkaCommon.GetConfiguration(builder, DefaultConfigSectionName, connectionName, "Config:BootstrapServers");
+        var configuration = DekafKafkaCommon.GetConfiguration(builder, DefaultConfigSectionName, connectionName, "ConnectionString", "Config:BootstrapServers");
         var settings = configuration.Get<KafkaConsumerSettings>() ?? new();
         settings.ConnectionString = builder.Configuration.GetConnectionString(connectionName) ?? settings.ConnectionString;
         configureSettings?.Invoke(settings);

@@ -28,7 +28,8 @@ public static partial class AspireDekafKafkaShareConsumerExtensions
         Action<IServiceProvider, ShareConsumerBuilder<TKey, TValue>>? configureBuilder = null)
         where TService : KafkaShareConsumerService<TKey, TValue>
         => AddDekafKafkaShareConsumerInternal(builder, configureSettings, configureBuilder, connectionName, serviceKey: null,
-            (dekaf, configure, deadLetter) => dekaf.AddShareConsumerService<TService, TKey, TValue>(configure, deadLetter));
+            (dekaf, configure, deadLetter) => dekaf.AddShareConsumerService<TService, TKey, TValue>(configure, deadLetter),
+            hostedServiceType: typeof(TService));
 
     /// <summary>Registers a keyed share consumer and starts an independently configured Dekaf hosted service.</summary>
     /// <typeparam name="TService">The hosted share consumer service type.</typeparam>
@@ -50,6 +51,7 @@ public static partial class AspireDekafKafkaShareConsumerExtensions
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
         AddDekafKafkaShareConsumerInternal(builder, configureSettings, configureBuilder, name, serviceKey: name,
-            (dekaf, configure, deadLetter) => dekaf.AddShareConsumerService<TService, TKey, TValue>(name, configure, deadLetter));
+            (dekaf, configure, deadLetter) => dekaf.AddShareConsumerService<TService, TKey, TValue>(name, configure, deadLetter),
+            hostedServiceType: typeof(TService));
     }
 }

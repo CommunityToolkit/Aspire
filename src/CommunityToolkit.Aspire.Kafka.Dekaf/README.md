@@ -117,7 +117,7 @@ Configuration precedence, from lowest to highest:
 4. `configureSettings` customizations, including `ConnectionString`.
 5. `configureBuilder` customizations.
 
-Producer, consumer, share consumer, and admin `Config` sections use [Dekaf's native configuration names](https://thomhurst.github.io/Dekaf/docs/dependency-injection), not Confluent configuration names. Native `BootstrapServers` accepts either a comma-separated string or an array. A named bootstrap server list replaces the entire default list, while retaining other default options such as authentication and timeouts. The configuration schema describes common Aspire settings; native Dekaf options remain open because the schema generator does not support their init-only properties. Root clients use `KafkaClientBuilder` callbacks for native options.
+Producer, consumer, share consumer, and admin `Config` sections use [Dekaf's native configuration names](https://thomhurst.github.io/Dekaf/docs/dependency-injection), not Confluent configuration names. Native `BootstrapServers` accepts either a comma-separated string or an array. A named `ConnectionString` or native bootstrap server list replaces all default connection fields, while retaining other default options such as authentication and timeouts. Named native endpoints therefore take precedence over a shared `ConnectionString`; `ConnectionStrings:{connectionName}` still takes precedence over both. The configuration schema describes common Aspire settings; native Dekaf options remain open because the schema generator does not support their init-only properties. Root clients use `KafkaClientBuilder` callbacks for native options.
 
 Use `configureSettings` for Aspire settings and `configureBuilder` for the full native builder surface:
 
@@ -200,7 +200,7 @@ Explicit mode leaves records unacknowledged until the application decides their 
 
 ### Hosted processing and dead-letter routing
 
-`AddDekafKafkaShareConsumerService<TService, TKey, TValue>` and its keyed counterpart register a consumer together with a `KafkaShareConsumerService<TKey, TValue>`. Each service type and key pair receives an independent consumer. Native hosted processing uses explicit acknowledgements, accepts successful records, renews acquisition locks, and handles shutdown. Keep the acknowledgement mode explicit for these services.
+`AddDekafKafkaShareConsumerService<TService, TKey, TValue>` and its keyed counterpart register a consumer together with a `KafkaShareConsumerService<TKey, TValue>`. Each service type and key pair receives an independent consumer and health check. The check retains that worker's consumer even if a later registration replaces the public `IKafkaShareConsumer<TKey, TValue>` alias. Native hosted processing uses explicit acknowledgements, accepts successful records, renews acquisition locks, and handles shutdown. Keep the acknowledgement mode explicit for these services.
 
 ```csharp
 builder.AddKeyedDekafKafkaShareConsumerService<OrderWorker, string, string>("messaging",
@@ -319,6 +319,7 @@ Health checks are enabled by default and can be disabled with `DisableHealthChec
 | Producer | `Kafka.Dekaf_producer<TKey,TValue>` | A producer flush checkpoint completes within the timeout. |
 | Consumer | `Kafka.Dekaf_consumer<TKey,TValue>` | Consumer group liveness and lag for assigned partitions. |
 | Share consumer | `Kafka.Dekaf_shareconsumer<TKey,TValue>` | Stable share group membership and a heartbeat within three broker-directed intervals. No records are acquired or acknowledged. |
+| Hosted share consumer | `Kafka.Dekaf_shareconsumer_service<TService,TKey,TValue>` | The matching worker's share group membership and heartbeat freshness. |
 | Shared root client | `Kafka.Dekaf_client` | An active cluster-description request through the root's shared connections. |
 | Admin client | `Kafka.Dekaf_admin` | An active cluster-description request returns at least one broker. |
 | Schema registry | `Kafka.Dekaf_schema_registry` | An authenticated request to list subjects succeeds, including for an empty registry. |

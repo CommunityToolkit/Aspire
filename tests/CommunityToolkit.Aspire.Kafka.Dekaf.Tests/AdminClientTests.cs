@@ -61,6 +61,7 @@ public class AdminClientTests
     {
         var builder = ClientTestHelpers.CreateBuilder();
         builder.Configuration["ConnectionStrings:messaging"] = null;
+        builder.Configuration["Aspire:Kafka:Dekaf:AdminClient:ConnectionString"] = "default-connection:9092";
         builder.Configuration["Aspire:Kafka:Dekaf:AdminClient:Config:BootstrapServers:0"] = "default:9092";
         builder.Configuration["Aspire:Kafka:Dekaf:AdminClient:messaging:Config:BootstrapControllers:0"] = "named-controller:9093";
         if (keyed)

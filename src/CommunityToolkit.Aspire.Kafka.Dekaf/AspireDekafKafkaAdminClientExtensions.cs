@@ -68,7 +68,7 @@ public static class AspireDekafKafkaAdminClientExtensions
         ArgumentException.ThrowIfNullOrEmpty(connectionName);
 
         var configuration = DekafKafkaCommon.GetConfiguration(builder, "Aspire:Kafka:Dekaf:AdminClient", connectionName,
-            "Config:BootstrapServers", "Config:BootstrapControllers");
+            "ConnectionString", "Config:BootstrapServers", "Config:BootstrapControllers");
         var settings = configuration.Get<KafkaAdminClientSettings>() ?? new();
         settings.ConnectionString = builder.Configuration.GetConnectionString(connectionName) ?? settings.ConnectionString;
         configureSettings?.Invoke(settings);

@@ -11,17 +11,17 @@ namespace CommunityToolkit.Aspire.Kafka.Dekaf.Tests;
 
 public class NamedConnectionConfigurationTests
 {
-    public static TheoryData<string, bool, bool, bool> BootstrapServerConfigurations
+    public static TheoryData<string, bool, string, bool> BootstrapServerConfigurations
     {
         get
         {
-            TheoryData<string, bool, bool, bool> configurations = [];
+            TheoryData<string, bool, string, bool> configurations = [];
             foreach (var role in new[] { "Producer", "Consumer", "ShareConsumer", "AdminClient" })
             foreach (var keyed in new[] { false, true })
-            foreach (var defaultArray in new[] { false, true })
+            foreach (var defaultFormat in new[] { "Array", "Scalar", "ConnectionString" })
             foreach (var namedArray in new[] { false, true })
             {
-                configurations.Add(role, keyed, defaultArray, namedArray);
+                configurations.Add(role, keyed, defaultFormat, namedArray);
             }
             return configurations;
         }
@@ -29,19 +29,23 @@ public class NamedConnectionConfigurationTests
 
     [Theory]
     [MemberData(nameof(BootstrapServerConfigurations))]
-    public async Task NamedBootstrapServersReplaceDefaultServers(string role, bool keyed, bool defaultArray, bool namedArray)
+    public async Task NamedBootstrapServersReplaceDefaultServers(string role, bool keyed, string defaultFormat, bool namedArray)
     {
         var builder = ClientTestHelpers.CreateBuilder();
         builder.Configuration["ConnectionStrings:messaging"] = null;
         var section = $"Aspire:Kafka:Dekaf:{role}";
-        if (defaultArray)
+        if (defaultFormat == "Array")
         {
             builder.Configuration[$"{section}:Config:BootstrapServers:0"] = "default:9092";
             builder.Configuration[$"{section}:Config:BootstrapServers:1"] = "default-backup:9092";
         }
-        else
+        else if (defaultFormat == "Scalar")
         {
             builder.Configuration[$"{section}:Config:BootstrapServers"] = "default:9092,default-backup:9092";
+        }
+        else
+        {
+            builder.Configuration[$"{section}:ConnectionString"] = "default:9092,default-backup:9092";
         }
         builder.Configuration[$"{section}:messaging:Config:BootstrapServers{(namedArray ? ":0" : "")}"] = "named:9092";
 
