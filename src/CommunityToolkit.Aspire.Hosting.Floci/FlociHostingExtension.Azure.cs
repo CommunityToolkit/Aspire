@@ -190,7 +190,7 @@ public static partial class FlociHostingExtension
     }
 
     /// <summary>
-    /// Adds a Service Bus connection string reference resolved from the destination resource's network context.
+    /// Adds a Service Bus connection string reference, using the Docker host gateway for container consumers.
     /// </summary>
     /// <ats-summary>Adds a Floci Azure Service Bus reference</ats-summary>
     /// <typeparam name="TDestination">The type of the resource receiving the reference.</typeparam>
@@ -213,13 +213,21 @@ public static partial class FlociHostingExtension
             throw new NotSupportedException("Floci Service Bus references are only supported in run mode.");
         }
 
+        if (builder.Resource is not ContainerResource container)
+        {
+            return ResourceBuilderExtensions.WithReference(builder, serviceBus, connectionName);
+        }
+
+        builder.ApplicationBuilder.CreateResourceBuilder(container)
+            .WithContainerRuntimeArgs("--add-host", $"{FlociAzureServiceBusConnectionString.ContainerHost}:host-gateway");
+
         return builder
             .WithEnvironment(context =>
             {
                 context.EnvironmentVariables[$"ConnectionStrings__{connectionName ?? serviceBus.Resource.Name}"] =
-                    serviceBus.Resource.ConnectionStringExpression;
+                    new FlociAzureServiceBusConnectionString(serviceBus.Resource);
             })
-            .WithRelationship(serviceBus.Resource.Parent, "Reference");
+            .WithRelationship(serviceBus.Resource, "Reference");
     }
 
     /// <summary>

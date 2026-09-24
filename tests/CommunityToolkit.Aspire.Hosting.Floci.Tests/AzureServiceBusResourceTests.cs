@@ -219,17 +219,11 @@ public class AzureServiceBusResourceTests
 
         object connectionString = envVars["ConnectionStrings__servicebus"];
         string? value = connectionString is IValueProvider provider
-            ? await provider.GetValueAsync(
-                new ValueProviderContext
-                {
-                    Caller = consumer.Resource,
-                    ExecutionContext = builder.ExecutionContext,
-                },
-                CancellationToken.None)
+            ? await provider.GetValueAsync(CancellationToken.None)
             : connectionString.ToString();
 
         Assert.Equal(
-            $"Endpoint=sb://{(useContainer ? "192.0.2.10" : "localhost")}:5673;SharedAccessKeyName=RootManageSharedAccessKey;" +
+            $"Endpoint=sb://{(useContainer ? "floci-servicebus-host.internal" : "localhost")}:5673;SharedAccessKeyName=RootManageSharedAccessKey;" +
             "SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;",
             value);
     }
@@ -247,31 +241,18 @@ public class AzureServiceBusResourceTests
         // or request an Aspire tunnel for the sidecar's host-only endpoints.
         var dependencies = await consumer.Resource.GetResourceDependenciesAsync(builder.ExecutionContext,
             new ResourceDependencyDiscoveryOptions { DiscoveryMode = ResourceDependencyDiscoveryMode.DirectOnly });
-        Assert.Contains(serviceBus.Resource, dependencies);
+        Assert.Contains(azure.Resource, dependencies);
+        Assert.DoesNotContain(serviceBus.Resource, dependencies);
 
         AllocateEndpoints(serviceBus.Resource, 5673, 5674);
         await using var app = await builder.BuildAsync();
-        var environment = new Dictionary<string, object>();
-        var environmentContext = new EnvironmentCallbackContext(
-            builder.ExecutionContext,
-            consumer.Resource,
-            environment);
-        foreach (var annotation in consumer.Resource.Annotations.OfType<EnvironmentCallbackAnnotation>())
-        {
-            await annotation.Callback(environmentContext);
-        }
-
-        var connectionString = Assert.IsAssignableFrom<IValueProvider>(environment["ConnectionStrings__messages"]);
-        var resolved = await connectionString.GetValueAsync(
-            new ValueProviderContext
-            {
-                Caller = consumer.Resource,
-                ExecutionContext = builder.ExecutionContext,
-            },
-            CancellationToken.None);
-        Assert.Contains("Endpoint=sb://192.0.2.10:5673;", resolved);
+        var environment = await consumer.Resource.GetEnvironmentVariablesAsync(serviceProvider: app.Services);
+        Assert.Contains("Endpoint=sb://floci-servicebus-host.internal:5673;", environment["ConnectionStrings__messages"]);
         Assert.DoesNotContain("ConnectionStrings__servicebus", environment);
 
+        var exception = await Assert.ThrowsAsync<AggregateException>(async () =>
+            await consumer.Resource.GetEnvironmentVariablesAsync(DistributedApplicationOperation.Publish, app.Services));
+        Assert.IsType<NotSupportedException>(Assert.Single(exception.InnerExceptions));
     }
 
     private static void AssertEndpoint(
@@ -295,21 +276,5 @@ public class AzureServiceBusResourceTests
             new AllocatedEndpoint(serviceBus.AmqpEndpoint.EndpointAnnotation, "localhost", amqpPort);
         serviceBus.AmqpTlsEndpoint.EndpointAnnotation.AllocatedEndpoint =
             new AllocatedEndpoint(serviceBus.AmqpTlsEndpoint.EndpointAnnotation, "localhost", amqpTlsPort);
-        serviceBus.AmqpEndpoint.EndpointAnnotation.AllAllocatedEndpoints.AddOrUpdateAllocatedEndpoint(
-            KnownNetworkIdentifiers.DefaultAspireContainerNetwork,
-            new AllocatedEndpoint(
-                serviceBus.AmqpEndpoint.EndpointAnnotation,
-                "192.0.2.10",
-                amqpPort,
-                EndpointBindingMode.SingleAddress,
-                networkId: KnownNetworkIdentifiers.DefaultAspireContainerNetwork));
-        serviceBus.AmqpTlsEndpoint.EndpointAnnotation.AllAllocatedEndpoints.AddOrUpdateAllocatedEndpoint(
-            KnownNetworkIdentifiers.DefaultAspireContainerNetwork,
-            new AllocatedEndpoint(
-                serviceBus.AmqpTlsEndpoint.EndpointAnnotation,
-                "192.0.2.10",
-                amqpTlsPort,
-                EndpointBindingMode.SingleAddress,
-                networkId: KnownNetworkIdentifiers.DefaultAspireContainerNetwork));
     }
 }
