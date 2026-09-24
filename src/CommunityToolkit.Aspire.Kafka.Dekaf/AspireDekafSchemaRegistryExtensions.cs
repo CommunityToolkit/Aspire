@@ -67,7 +67,8 @@ public static class AspireDekafSchemaRegistryExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(connectionName);
 
-        var configuration = DekafKafkaCommon.GetConfiguration(builder, "Aspire:Kafka:Dekaf:SchemaRegistry", connectionName);
+        var configuration = DekafKafkaCommon.GetConfiguration(builder, "Aspire:Kafka:Dekaf:SchemaRegistry", connectionName,
+            "Config:Url", "Config:Urls");
         if (builder.Configuration.GetConnectionString(connectionName) is { } connectionString)
         {
             // Native options are init-only, so apply the connection before binding. Dekaf gives

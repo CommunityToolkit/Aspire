@@ -138,7 +138,7 @@ public class ProducerConfigurationTests
         Assert.NotSame(second, third);
         Assert.Equal(["other:9092"], ClientTestHelpers.GetOptions<ProducerOptions>(third).BootstrapServers);
         var checks = services.GetRequiredService<IOptions<HealthCheckServiceOptions>>().Value.Registrations;
-        Assert.Equal(["Kafka.Dekaf_producer", "Kafka.Dekaf_producer_messaging", "Kafka.Dekaf_producer_other"], checks.Select(check => check.Name));
+        Assert.Equal(["Kafka.Dekaf_producer<System.String,System.String>", "Kafka.Dekaf_producer<System.String,System.String>_messaging", "Kafka.Dekaf_producer<System.String,System.String>_other"], checks.Select(check => check.Name));
 
         await services.DisposeAsync();
         Assert.True(((global::Dekaf.Diagnostics.IKafkaClientStatusProvider)first).GetStatus().IsStopped);

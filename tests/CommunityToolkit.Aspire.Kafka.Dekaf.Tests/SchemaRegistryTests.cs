@@ -17,6 +17,46 @@ public class SchemaRegistryTests
     [InlineData(false, true)]
     [InlineData(true, false)]
     [InlineData(true, true)]
+    public async Task NamedRegistryUrlsReplaceDefaultUrls(bool keyed, bool namedArray)
+    {
+        var builder = ClientTestHelpers.CreateBuilder();
+        builder.Configuration[$"{Section}:Config:Urls:0"] = "https://default.example.com";
+        builder.Configuration[$"{Section}:Config:Urls:1"] = "https://default-backup.example.com";
+        builder.Configuration[$"{Section}:Config:BasicAuthUserInfo"] = "test-user:test-password";
+        builder.Configuration[$"{Section}:registry:Config:{(namedArray ? "Urls:0" : "Url")}"] = "https://named.example.com";
+        using var handler = new SchemaRegistryTestHandler();
+        ISchemaRegistryClient CreateClient(IServiceProvider _, SchemaRegistryConfig config)
+        {
+            Assert.Equal("test-user:test-password", config.BasicAuthUserInfo);
+            if (namedArray)
+            {
+                Assert.Equal(["https://named.example.com"], config.Urls);
+            }
+            else
+            {
+                Assert.Null(config.Urls);
+            }
+            return new SchemaRegistryClient(config, handler);
+        }
+        if (keyed)
+        {
+            builder.AddKeyedDekafSchemaRegistryClient("registry", clientFactory: CreateClient);
+        }
+        else
+        {
+            builder.AddDekafSchemaRegistryClient("registry", clientFactory: CreateClient);
+        }
+
+        using var host = builder.Build();
+        await GetClient(host.Services, keyed).GetAllSubjectsAsync(TestContext.Current.CancellationToken);
+        Assert.Equal("named.example.com", Assert.Single(handler.Requests).Uri.Host);
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
     public async Task ConfigurationPrecedencePreservesNativeOptions(bool keyed, bool connectionString)
     {
         var builder = ClientTestHelpers.CreateBuilder();

@@ -117,7 +117,7 @@ Configuration precedence, from lowest to highest:
 4. `configureSettings` customizations, including `ConnectionString`.
 5. `configureBuilder` customizations.
 
-Producer, consumer, share consumer, and admin `Config` sections use [Dekaf's native configuration names](https://thomhurst.github.io/Dekaf/docs/dependency-injection), not Confluent configuration names. Native `BootstrapServers` accepts either a comma-separated string or an array. The configuration schema describes common Aspire settings; native Dekaf options remain open because the schema generator does not support their init-only properties. Root clients use `KafkaClientBuilder` callbacks for native options.
+Producer, consumer, share consumer, and admin `Config` sections use [Dekaf's native configuration names](https://thomhurst.github.io/Dekaf/docs/dependency-injection), not Confluent configuration names. Native `BootstrapServers` accepts either a comma-separated string or an array. A named bootstrap server list replaces the entire default list, while retaining other default options such as authentication and timeouts. The configuration schema describes common Aspire settings; native Dekaf options remain open because the schema generator does not support their init-only properties. Root clients use `KafkaClientBuilder` callbacks for native options.
 
 Use `configureSettings` for Aspire settings and `configureBuilder` for the full native builder surface:
 
@@ -138,7 +138,7 @@ builder.AddDekafKafkaProducer<string, Order>("messaging",
         .WithValueSerializer(services.GetRequiredService<OrderSerializer>()));
 ```
 
-Admin clients bind `AdminClientOptions` from `AdminClient:Config`, including authentication, TLS, request timeouts, and transport settings. An optional `clientFactory` receives application services and the bound options:
+Admin clients bind `AdminClientOptions` from `AdminClient:Config`, including authentication, TLS, request timeouts, and transport settings. Native `BootstrapControllers` arrays support controller-only connections when no broker connection string is supplied. Named broker or controller endpoints replace both default endpoint lists; an Aspire broker connection string also clears configured controllers because Dekaf requires these modes to be mutually exclusive. An optional `clientFactory` receives application services and the bound options:
 
 ```csharp
 builder.AddDekafKafkaAdminClient("messaging",
@@ -271,7 +271,7 @@ builder.AddDekafKafkaConsumer<string, Order>("messaging",
         .SubscribeTo("orders"));
 ```
 
-Set `ConnectionStrings:schema-registry` to a registry URL, or a comma-separated list of failover URLs. Registry settings bind from `Aspire:Kafka:Dekaf:SchemaRegistry`, followed by its named subsection. The connection string overrides `Config.Url` and `Config.Urls`; `configureSettings` runs last.
+Set `ConnectionStrings:schema-registry` to a registry URL, or a comma-separated list of failover URLs. Registry settings bind from `Aspire:Kafka:Dekaf:SchemaRegistry`, followed by its named subsection. A named `Config.Url` or `Config.Urls` replaces both default URL fields, including all failover entries. The connection string overrides `Config.Url` and `Config.Urls`; `configureSettings` runs last.
 
 ```json
 {
@@ -316,14 +316,14 @@ Health checks are enabled by default and can be disabled with `DisableHealthChec
 
 | Registration | Check name | What it checks |
 | --- | --- | --- |
-| Producer | `Kafka.Dekaf_producer` | A producer flush checkpoint completes within the timeout. |
-| Consumer | `Kafka.Dekaf_consumer` | Consumer group liveness and lag for assigned partitions. |
-| Share consumer | `Kafka.Dekaf_shareconsumer` | Stable share group membership and a heartbeat within three broker-directed intervals. No records are acquired or acknowledged. |
+| Producer | `Kafka.Dekaf_producer<TKey,TValue>` | A producer flush checkpoint completes within the timeout. |
+| Consumer | `Kafka.Dekaf_consumer<TKey,TValue>` | Consumer group liveness and lag for assigned partitions. |
+| Share consumer | `Kafka.Dekaf_shareconsumer<TKey,TValue>` | Stable share group membership and a heartbeat within three broker-directed intervals. No records are acquired or acknowledged. |
 | Shared root client | `Kafka.Dekaf_client` | An active cluster-description request through the root's shared connections. |
 | Admin client | `Kafka.Dekaf_admin` | An active cluster-description request returns at least one broker. |
 | Schema registry | `Kafka.Dekaf_schema_registry` | An authenticated request to list subjects succeeds, including for an empty registry. |
 
-Keyed check names append `_{name}`. Producer, consumer, admin, and root check timeouts default to five seconds and can be configured through `HealthCheck.Timeout`. The share consumer check reads a local status snapshot; idle members with no assigned partitions can be healthy. The schema registry check defaults to 30 seconds, configurable through `HealthCheckTimeout`; it requires permission to list subjects and does not register or modify schemas.
+Producer, consumer, and share consumer check names include the full CLR key and value type names, for example `Kafka.Dekaf_producer<System.String,System.String>`. This gives different message types independent checks, including when they share a service key. Keyed check names append `_{name}`. Producer, consumer, admin, and root check timeouts default to five seconds and can be configured through `HealthCheck.Timeout`. The share consumer check reads a local status snapshot; idle members with no assigned partitions can be healthy. The schema registry check defaults to 30 seconds, configurable through `HealthCheckTimeout`; it requires permission to list subjects and does not register or modify schemas.
 
 A successful producer flush does **not** prove broker connectivity or successful message delivery. An idle producer can pass its flush check while brokers are unavailable. Register the admin client for active connectivity monitoring and observe produce results for delivery success. Unlike the Confluent integration's health check, these checks do not publish synthetic messages to a health-check topic.
 

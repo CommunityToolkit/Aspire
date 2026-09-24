@@ -154,7 +154,7 @@ public class ConsumerConfigurationTests
         Assert.NotSame(second, third);
         Assert.Equal(["other:9092"], ClientTestHelpers.GetOptions<ConsumerOptions>(third).BootstrapServers);
         var checks = services.GetRequiredService<IOptions<HealthCheckServiceOptions>>().Value.Registrations;
-        Assert.Equal(["Kafka.Dekaf_consumer", "Kafka.Dekaf_consumer_messaging", "Kafka.Dekaf_consumer_other"], checks.Select(check => check.Name));
+        Assert.Equal(["Kafka.Dekaf_consumer<System.String,System.String>", "Kafka.Dekaf_consumer<System.String,System.String>_messaging", "Kafka.Dekaf_consumer<System.String,System.String>_other"], checks.Select(check => check.Name));
 
         await services.DisposeAsync();
         Assert.True(((global::Dekaf.Diagnostics.IKafkaClientStatusProvider)first).GetStatus().IsStopped);

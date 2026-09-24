@@ -193,7 +193,7 @@ public class ShareConsumerConfigurationTests
         Assert.NotSame(second, third);
         Assert.Equal(["other:9092"], ClientTestHelpers.GetOptions<ShareConsumerOptions>(third).BootstrapServers);
         var checks = services.GetRequiredService<IOptions<HealthCheckServiceOptions>>().Value.Registrations;
-        Assert.Equal(["Kafka.Dekaf_shareconsumer", "Kafka.Dekaf_shareconsumer_messaging", "Kafka.Dekaf_shareconsumer_other"], checks.Select(check => check.Name));
+        Assert.Equal(["Kafka.Dekaf_shareconsumer<System.String,System.String>", "Kafka.Dekaf_shareconsumer<System.String,System.String>_messaging", "Kafka.Dekaf_shareconsumer<System.String,System.String>_other"], checks.Select(check => check.Name));
 
         await services.DisposeAsync();
         Assert.True(((global::Dekaf.Diagnostics.IKafkaClientStatusProvider)first).GetStatus().IsStopped);

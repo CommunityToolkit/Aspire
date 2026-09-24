@@ -67,12 +67,21 @@ public static class AspireDekafKafkaAdminClientExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(connectionName);
 
-        var configuration = DekafKafkaCommon.GetConfiguration(builder, "Aspire:Kafka:Dekaf:AdminClient", connectionName);
+        var configuration = DekafKafkaCommon.GetConfiguration(builder, "Aspire:Kafka:Dekaf:AdminClient", connectionName,
+            "Config:BootstrapServers", "Config:BootstrapControllers");
         var settings = configuration.Get<KafkaAdminClientSettings>() ?? new();
         settings.ConnectionString = builder.Configuration.GetConnectionString(connectionName) ?? settings.ConnectionString;
         configureSettings?.Invoke(settings);
 
         var nativeConfiguration = DekafKafkaCommon.NormalizeBootstrapServers(configuration.GetSection("Config"), settings.ConnectionString);
+        if (settings.ConnectionString is not null)
+        {
+            // An Aspire broker connection replaces controller-only configuration too.
+            // Dekaf rejects options containing both bootstrap servers and controllers.
+            nativeConfiguration = new ConfigurationBuilder().AddInMemoryCollection(nativeConfiguration.AsEnumerable()
+                .Where(entry => !entry.Key.Equals("BootstrapControllers", StringComparison.OrdinalIgnoreCase)
+                    && !entry.Key.StartsWith("BootstrapControllers:", StringComparison.OrdinalIgnoreCase))).Build();
+        }
         var nativeOptions = new AdminClientOptions { BootstrapServers = [] };
         nativeConfiguration.Bind(nativeOptions);
 

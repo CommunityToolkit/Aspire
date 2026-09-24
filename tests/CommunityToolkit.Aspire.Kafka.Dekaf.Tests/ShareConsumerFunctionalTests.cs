@@ -145,7 +145,7 @@ public class ShareConsumerFunctionalTests(KafkaContainerFixture fixture)
 
             Assert.True(accepted && rejected);
             var report = await host.Services.GetRequiredService<HealthCheckService>().CheckHealthAsync(timeout.Token);
-            Assert.Equal(HealthStatus.Healthy, report.Entries[keyed ? "Kafka.Dekaf_shareconsumer_messaging" : "Kafka.Dekaf_shareconsumer"].Status);
+            Assert.Equal(HealthStatus.Healthy, report.Entries[keyed ? "Kafka.Dekaf_shareconsumer<System.String,System.String>_messaging" : "Kafka.Dekaf_shareconsumer<System.String,System.String>"].Status);
 
             // A new poll must not redeliver accepted or rejected records.
             using var emptyPoll = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token);

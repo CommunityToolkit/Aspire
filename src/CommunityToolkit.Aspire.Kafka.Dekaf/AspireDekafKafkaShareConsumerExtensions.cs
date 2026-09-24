@@ -151,7 +151,7 @@ public static partial class AspireDekafKafkaShareConsumerExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(connectionName);
 
-        var configuration = DekafKafkaCommon.GetConfiguration(builder, DefaultConfigSectionName, connectionName);
+        var configuration = DekafKafkaCommon.GetConfiguration(builder, DefaultConfigSectionName, connectionName, "Config:BootstrapServers");
         var settings = configuration.Get<KafkaShareConsumerSettings>() ?? new();
         settings.ConnectionString = builder.Configuration.GetConnectionString(connectionName) ?? settings.ConnectionString;
         configureSettings?.Invoke(settings);
@@ -187,7 +187,7 @@ public static partial class AspireDekafKafkaShareConsumerExtensions
 
         if (!settings.DisableHealthChecks)
         {
-            var healthCheckName = DekafKafkaCommon.GetHealthCheckName("shareconsumer", serviceKey);
+            var healthCheckName = DekafKafkaCommon.GetHealthCheckName<TKey, TValue>("shareconsumer", serviceKey);
             builder.TryAddHealthCheck(new HealthCheckRegistration(healthCheckName,
                 services => new KafkaShareConsumerHealthCheck<TKey, TValue>(
                     serviceKey is null

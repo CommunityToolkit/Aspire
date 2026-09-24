@@ -150,7 +150,7 @@ public static class AspireDekafKafkaConsumerExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(connectionName);
 
-        var configuration = DekafKafkaCommon.GetConfiguration(builder, DefaultConfigSectionName, connectionName);
+        var configuration = DekafKafkaCommon.GetConfiguration(builder, DefaultConfigSectionName, connectionName, "Config:BootstrapServers");
         var settings = configuration.Get<KafkaConsumerSettings>() ?? new();
         settings.ConnectionString = builder.Configuration.GetConnectionString(connectionName) ?? settings.ConnectionString;
         configureSettings?.Invoke(settings);
@@ -181,7 +181,7 @@ public static class AspireDekafKafkaConsumerExtensions
 
         if (!settings.DisableHealthChecks)
         {
-            var healthCheckName = DekafKafkaCommon.GetHealthCheckName("consumer", serviceKey);
+            var healthCheckName = DekafKafkaCommon.GetHealthCheckName<TKey, TValue>("consumer", serviceKey);
             builder.TryAddHealthCheck(new HealthCheckRegistration(healthCheckName,
                 services => new DekafConsumerHealthCheck<TKey, TValue>(
                     serviceKey is null

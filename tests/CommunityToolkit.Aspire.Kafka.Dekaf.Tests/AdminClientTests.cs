@@ -14,6 +14,72 @@ namespace CommunityToolkit.Aspire.Kafka.Dekaf.Tests;
 public class AdminClientTests
 {
     [Theory]
+    [InlineData(false, "Named")]
+    [InlineData(true, "Named")]
+    [InlineData(false, "ConnectionString")]
+    [InlineData(true, "ConnectionString")]
+    [InlineData(false, "Settings")]
+    [InlineData(true, "Settings")]
+    public async Task BootstrapServerOverridesReplaceDefaultControllers(bool keyed, string source)
+    {
+        var builder = ClientTestHelpers.CreateBuilder();
+        builder.Configuration["ConnectionStrings:messaging"] = source == "ConnectionString" ? "override:9092" : null;
+        builder.Configuration["Aspire:Kafka:Dekaf:AdminClient:Config:BootstrapControllers:0"] = "default-controller:9093";
+        builder.Configuration["Aspire:Kafka:Dekaf:AdminClient:Config:ClientId"] = "admin-client";
+        if (source == "Named")
+        {
+            builder.Configuration["Aspire:Kafka:Dekaf:AdminClient:messaging:Config:BootstrapServers:0"] = "override:9092";
+        }
+        void Configure(KafkaAdminClientSettings settings)
+        {
+            if (source == "Settings")
+            {
+                settings.ConnectionString = "override:9092";
+            }
+        }
+        if (keyed)
+        {
+            builder.AddKeyedDekafKafkaAdminClient("messaging", Configure);
+        }
+        else
+        {
+            builder.AddDekafKafkaAdminClient("messaging", Configure);
+        }
+
+        await using var services = builder.Services.BuildServiceProvider();
+        var client = keyed ? services.GetRequiredKeyedService<IAdminClient>("messaging") : services.GetRequiredService<IAdminClient>();
+        var options = ClientTestHelpers.GetOptions<AdminClientOptions>(client);
+        Assert.Equal(["override:9092"], options.BootstrapServers);
+        Assert.Empty(options.BootstrapControllers);
+        Assert.Equal("admin-client", options.ClientId);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task NamedControllersReplaceDefaultBootstrapServers(bool keyed)
+    {
+        var builder = ClientTestHelpers.CreateBuilder();
+        builder.Configuration["ConnectionStrings:messaging"] = null;
+        builder.Configuration["Aspire:Kafka:Dekaf:AdminClient:Config:BootstrapServers:0"] = "default:9092";
+        builder.Configuration["Aspire:Kafka:Dekaf:AdminClient:messaging:Config:BootstrapControllers:0"] = "named-controller:9093";
+        if (keyed)
+        {
+            builder.AddKeyedDekafKafkaAdminClient("messaging");
+        }
+        else
+        {
+            builder.AddDekafKafkaAdminClient("messaging");
+        }
+
+        await using var services = builder.Services.BuildServiceProvider();
+        var client = keyed ? services.GetRequiredKeyedService<IAdminClient>("messaging") : services.GetRequiredService<IAdminClient>();
+        var options = ClientTestHelpers.GetOptions<AdminClientOptions>(client);
+        Assert.Empty(options.BootstrapServers);
+        Assert.Equal(["named-controller:9093"], options.BootstrapControllers);
+    }
+
+    [Theory]
     [InlineData(false)]
     [InlineData(true)]
     public async Task NativeBootstrapServersAcceptCommaSeparatedValues(bool keyed)

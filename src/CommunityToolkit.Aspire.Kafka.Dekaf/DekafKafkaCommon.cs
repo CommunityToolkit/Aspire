@@ -40,17 +40,24 @@ internal static class DekafKafkaCommon
     /// <param name="builder">The host application builder.</param>
     /// <param name="sectionName">The configuration section for the client role.</param>
     /// <param name="connectionName">The named connection whose overrides take precedence.</param>
+    /// <param name="connectionPaths">Alternative connection fields that must be replaced together when the named section supplies one.</param>
     /// <returns>The merged client configuration.</returns>
-    internal static IConfigurationRoot GetConfiguration(IHostApplicationBuilder builder, string sectionName, string connectionName)
+    internal static IConfigurationRoot GetConfiguration(IHostApplicationBuilder builder, string sectionName, string connectionName, params string[] connectionPaths)
     {
         var section = builder.Configuration.GetSection(sectionName);
+        var namedSection = section.GetSection(connectionName);
+        var replaceConnection = connectionPaths.Any(path => namedSection.GetSection(path).Exists());
+        var defaults = section.AsEnumerable(makePathsRelative: true).Where(entry =>
+            !replaceConnection || !connectionPaths.Any(path =>
+                entry.Key.Equals(path, StringComparison.OrdinalIgnoreCase)
+                || entry.Key.StartsWith(path + ":", StringComparison.OrdinalIgnoreCase)));
 
         // Merge before passing native configuration to Dekaf so default and named options
-        // are applied together. For example, Producer:orders:Config:ClientId
-        // overrides Producer:Config:ClientId while retaining other default options.
+        // are applied together. Replace connection lists as a unit: merging their indexed
+        // keys can leave a default backup broker or registry from a different cluster.
         return new ConfigurationBuilder()
-            .AddInMemoryCollection(section.AsEnumerable(makePathsRelative: true))
-            .AddInMemoryCollection(section.GetSection(connectionName).AsEnumerable(makePathsRelative: true))
+            .AddInMemoryCollection(defaults)
+            .AddInMemoryCollection(namedSection.AsEnumerable(makePathsRelative: true))
             .Build();
     }
 
@@ -62,6 +69,15 @@ internal static class DekafKafkaCommon
     /// <returns>The health check registration name.</returns>
     internal static string GetHealthCheckName(string role, string? serviceKey)
         => serviceKey is null ? $"Kafka.Dekaf_{role}" : $"Kafka.Dekaf_{role}_{serviceKey}";
+
+    /// <summary>Distinguishes health checks for different closed generic client registrations.</summary>
+    /// <typeparam name="TKey">The message key type.</typeparam>
+    /// <typeparam name="TValue">The message value type.</typeparam>
+    /// <param name="role">The client role.</param>
+    /// <param name="serviceKey">The service key, or null for an unkeyed registration.</param>
+    /// <returns>The health check registration name.</returns>
+    internal static string GetHealthCheckName<TKey, TValue>(string role, string? serviceKey)
+        => GetHealthCheckName($"{role}<{typeof(TKey)},{typeof(TValue)}>", serviceKey);
 
     /// <summary>
     /// Registers Dekaf's shared OpenTelemetry meter and activity source when enabled.
