@@ -37,6 +37,17 @@
                     "DisableTracing": {
                       "type": "boolean",
                       "description": "Gets or sets whether this registration adds the shared Dekaf activity source to OpenTelemetry. The default is false."
+                    },
+                    "HealthCheck": {
+                      "type": "object",
+                      "description": "Options for the Kafka health check.",
+                      "properties": {
+                        "Timeout": {
+                          "type": "string",
+                          "pattern": "^-?(\\d{1,7}|((\\d{1,7}[\\.:])?(([01]?\\d|2[0-3]):[0-5]?\\d|([01]?\\d|2[0-3]):[0-5]?\\d:[0-5]?\\d)(\\.\\d{1,7})?))$",
+                          "description": "The timeout for checking broker connectivity. The default is 5 seconds."
+                        }
+                      }
                     }
                   },
                   "description": "Provides settings for a Dekaf Kafka admin client."
@@ -59,6 +70,34 @@
                     "DisableTracing": {
                       "type": "boolean",
                       "description": "Gets or sets whether this registration adds the shared Dekaf activity source to OpenTelemetry. The default is false."
+                    },
+                    "HealthCheck": {
+                      "type": "object",
+                      "description": "Options for the Kafka health check.",
+                      "properties": {
+                        "Timeout": {
+                          "type": "string",
+                          "pattern": "^-?(\\d{1,7}|((\\d{1,7}[\\.:])?(([01]?\\d|2[0-3]):[0-5]?\\d|([01]?\\d|2[0-3]):[0-5]?\\d:[0-5]?\\d)(\\.\\d{1,7})?))$",
+                          "description": "The timeout for watermark offset queries. The default is 5 seconds."
+                        },
+                        "DegradedThreshold": {
+                          "type": "integer",
+                          "description": "The maximum acceptable consumer lag per partition before reporting Degraded. The default is 1000 and must be less than UnhealthyThreshold."
+                        },
+                        "UnhealthyThreshold": {
+                          "type": "integer",
+                          "description": "The maximum acceptable consumer lag per partition before reporting Unhealthy. The default is 10000 and must be greater than DegradedThreshold."
+                        },
+                        "NoAssignmentStatus": {
+                          "type": "string",
+                          "enum": [
+                            "Unhealthy",
+                            "Degraded",
+                            "Healthy"
+                          ],
+                          "description": "The status for a live, joined consumer with no assigned partitions. The default is Healthy."
+                        }
+                      }
                     }
                   },
                   "description": "Provides settings for a Dekaf Kafka consumer."
@@ -81,6 +120,17 @@
                     "DisableTracing": {
                       "type": "boolean",
                       "description": "Gets or sets whether this registration adds the shared Dekaf activity source to OpenTelemetry. The default is false."
+                    },
+                    "HealthCheck": {
+                      "type": "object",
+                      "description": "Options for the Kafka health check.",
+                      "properties": {
+                        "Timeout": {
+                          "type": "string",
+                          "pattern": "^-?(\\d{1,7}|((\\d{1,7}[\\.:])?(([01]?\\d|2[0-3]):[0-5]?\\d|([01]?\\d|2[0-3]):[0-5]?\\d:[0-5]?\\d)(\\.\\d{1,7})?))$",
+                          "description": "The timeout for waiting for a producer flush checkpoint. The default is 5 seconds."
+                        }
+                      }
                     }
                   },
                   "description": "Provides settings for a Dekaf Kafka producer."
@@ -140,6 +190,17 @@
                     "DisableTracing": {
                       "type": "boolean",
                       "description": "Gets or sets whether this registration adds the shared Dekaf activity source to OpenTelemetry. The default is false."
+                    },
+                    "HealthCheck": {
+                      "type": "object",
+                      "description": "Options for the Kafka health check.",
+                      "properties": {
+                        "Timeout": {
+                          "type": "string",
+                          "pattern": "^-?(\\d{1,7}|((\\d{1,7}[\\.:])?(([01]?\\d|2[0-3]):[0-5]?\\d|([01]?\\d|2[0-3]):[0-5]?\\d:[0-5]?\\d)(\\.\\d{1,7})?))$",
+                          "description": "The timeout for checking broker connectivity. The default is 5 seconds."
+                        }
+                      }
                     }
                   },
                   "type": "object"

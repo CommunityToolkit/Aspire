@@ -44,4 +44,51 @@ public class ConfigurationSchemaTests
 
         Assert.Equal(valid, schema.Evaluate(configuration.RootElement).IsValid);
     }
+
+    [Theory]
+    [InlineData("Producer")]
+    [InlineData("Consumer")]
+    [InlineData("AdminClient")]
+    [InlineData("Client")]
+    public void SchemaValidatesHealthCheckTimeout(string role)
+    {
+        AssertHealthCheckValid(role, """{ "Timeout": "00:00:02" }""", true);
+        AssertHealthCheckValid(role, """{ "Timeout": "invalid" }""", false);
+        AssertHealthCheckValid(role, """{ "Timeout": 2 }""", false);
+        AssertHealthCheckValid(role, "false", false);
+    }
+
+    [Theory]
+    [InlineData("""{ "DegradedThreshold": 500, "UnhealthyThreshold": 5000 }""", true)]
+    [InlineData("""{ "DegradedThreshold": "invalid" }""", false)]
+    [InlineData("""{ "UnhealthyThreshold": 1.5 }""", false)]
+    [InlineData("""{ "NoAssignmentStatus": "Healthy" }""", true)]
+    [InlineData("""{ "NoAssignmentStatus": "Degraded" }""", true)]
+    [InlineData("""{ "NoAssignmentStatus": "Unhealthy" }""", true)]
+    [InlineData("""{ "NoAssignmentStatus": "Unknown" }""", false)]
+    public void SchemaValidatesConsumerHealthCheckOptions(string healthCheck, bool valid)
+    {
+        AssertHealthCheckValid("Consumer", healthCheck, valid);
+    }
+
+    private static void AssertHealthCheckValid(string role, string healthCheck, bool valid)
+    {
+        var schema = JsonSchema.FromFile(Path.Combine(AppContext.BaseDirectory, "ConfigurationSchema.json"),
+            new BuildOptions { Dialect = Dialect.Draft07, SchemaRegistry = new SchemaRegistry() });
+        using var configuration = JsonDocument.Parse($$"""
+            {
+              "Aspire": {
+                "Kafka": {
+                  "Dekaf": {
+                    "{{role}}": {
+                      "HealthCheck": {{healthCheck}}
+                    }
+                  }
+                }
+              }
+            }
+            """);
+
+        Assert.Equal(valid, schema.Evaluate(configuration.RootElement).IsValid);
+    }
 }
