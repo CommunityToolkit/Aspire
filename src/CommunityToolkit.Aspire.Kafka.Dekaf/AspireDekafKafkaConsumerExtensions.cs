@@ -169,11 +169,11 @@ public static class AspireDekafKafkaConsumerExtensions
 
             if (serviceKey is null)
             {
-                dekaf.AddConsumer(configuration.GetSection("Config"), (Action<IServiceProvider, ConsumerBuilder<TKey, TValue>>)Configure);
+                dekaf.AddConsumer(configuration.GetSection("Config"), (Action<IServiceProvider, ConsumerBuilder<TKey, TValue>>)Configure, settings.ConfigureDeadLetterQueue);
             }
             else
             {
-                dekaf.AddConsumer(serviceKey, configuration.GetSection("Config"), (Action<IServiceProvider, ConsumerBuilder<TKey, TValue>>)Configure);
+                dekaf.AddConsumer(serviceKey, configuration.GetSection("Config"), (Action<IServiceProvider, ConsumerBuilder<TKey, TValue>>)Configure, settings.ConfigureDeadLetterQueue);
             }
         });
 

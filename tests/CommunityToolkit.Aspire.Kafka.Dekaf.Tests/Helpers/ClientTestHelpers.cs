@@ -3,6 +3,7 @@
 
 using System.Reflection;
 using Dekaf.Consumer;
+using Dekaf.ShareConsumer;
 using Dekaf.Producer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
@@ -17,7 +18,8 @@ internal static class ClientTestHelpers
         builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
         {
             ["ConnectionStrings:messaging"] = "localhost:19092",
-            ["Aspire:Kafka:Dekaf:Consumer:Config:GroupId"] = "test-group"
+            ["Aspire:Kafka:Dekaf:Consumer:Config:GroupId"] = "test-group",
+            ["Aspire:Kafka:Dekaf:ShareConsumer:Config:GroupId"] = "test-share-group"
         });
         return builder;
     }
@@ -33,6 +35,9 @@ internal static class ClientTestHelpers
 
     internal static IKafkaProducer<string, string> GetProducer(IServiceProvider services, bool keyed)
         => keyed ? services.GetRequiredKeyedService<IKafkaProducer<string, string>>("messaging") : services.GetRequiredService<IKafkaProducer<string, string>>();
+
+    internal static IKafkaShareConsumer<string, string> GetShareConsumer(IServiceProvider services, bool keyed)
+        => keyed ? services.GetRequiredKeyedService<IKafkaShareConsumer<string, string>>("messaging") : services.GetRequiredService<IKafkaShareConsumer<string, string>>();
 
     internal static IKafkaConsumer<string, string> GetConsumer(IServiceProvider services, bool keyed)
         => keyed ? services.GetRequiredKeyedService<IKafkaConsumer<string, string>>("messaging") : services.GetRequiredService<IKafkaConsumer<string, string>>();

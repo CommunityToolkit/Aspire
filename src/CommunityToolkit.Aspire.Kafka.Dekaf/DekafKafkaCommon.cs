@@ -13,6 +13,27 @@ namespace CommunityToolkit.Aspire.Kafka.Dekaf;
 /// </summary>
 internal static class DekafKafkaCommon
 {
+    /// <summary>Normalizes comma-separated bootstrap servers and replaces the entire native server list when overridden.</summary>
+    /// <param name="configuration">The native client options section.</param>
+    /// <param name="bootstrapServers">The optional Aspire connection string override.</param>
+    /// <returns>Native options with bootstrap servers represented as an indexed list.</returns>
+    internal static IConfiguration NormalizeBootstrapServers(IConfiguration configuration, string? bootstrapServers = null)
+    {
+        bootstrapServers ??= configuration["BootstrapServers"];
+        if (bootstrapServers is null)
+        {
+            return configuration;
+        }
+
+        // Remove indexed entries too: a shorter override must not retain old backup brokers.
+        var entries = configuration.AsEnumerable(makePathsRelative: true).Where(entry =>
+            !entry.Key.Equals("BootstrapServers", StringComparison.OrdinalIgnoreCase)
+            && !entry.Key.StartsWith("BootstrapServers:", StringComparison.OrdinalIgnoreCase));
+        var servers = bootstrapServers.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+            .Select((server, index) => new KeyValuePair<string, string?>($"BootstrapServers:{index}", server));
+        return new ConfigurationBuilder().AddInMemoryCollection(entries.Concat(servers)).Build();
+    }
+
     /// <summary>
     /// Combines default settings with the overrides for a named connection.
     /// </summary>

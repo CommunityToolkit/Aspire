@@ -99,6 +99,50 @@
                     }
                   },
                   "description": "Provides settings for a Dekaf Schema Registry client."
+                },
+                "ShareConsumer": {
+                  "description": "Provides settings for a Dekaf Kafka share consumer (KIP-932).",
+                  "type": "object",
+                  "properties": {
+                    "ConnectionString": {
+                      "type": "string",
+                      "description": "Gets or sets the comma-separated bootstrap servers."
+                    },
+                    "DisableHealthChecks": {
+                      "type": "boolean",
+                      "description": "Gets or sets whether health checks are disabled. The default is false."
+                    },
+                    "DisableMetrics": {
+                      "type": "boolean",
+                      "description": "Gets or sets whether this registration adds the shared Dekaf meter to OpenTelemetry. The default is false."
+                    },
+                    "DisableTracing": {
+                      "type": "boolean",
+                      "description": "Gets or sets whether this registration adds the shared Dekaf activity source to OpenTelemetry. The default is false."
+                    }
+                  }
+                },
+                "Client": {
+                  "description": "Provides settings for a Dekaf root client with shared connections.",
+                  "properties": {
+                    "ConnectionString": {
+                      "type": "string",
+                      "description": "Gets or sets the comma-separated bootstrap servers."
+                    },
+                    "DisableHealthChecks": {
+                      "type": "boolean",
+                      "description": "Gets or sets whether health checks are disabled. The default is false."
+                    },
+                    "DisableMetrics": {
+                      "type": "boolean",
+                      "description": "Gets or sets whether this registration adds the shared Dekaf meter to OpenTelemetry. The default is false."
+                    },
+                    "DisableTracing": {
+                      "type": "boolean",
+                      "description": "Gets or sets whether this registration adds the shared Dekaf activity source to OpenTelemetry. The default is false."
+                    }
+                  },
+                  "type": "object"
                 }
               }
             }

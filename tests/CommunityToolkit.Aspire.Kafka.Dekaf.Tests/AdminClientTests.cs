@@ -4,6 +4,7 @@
 using System.Net.Sockets;
 using Dekaf.Admin;
 using Dekaf.Diagnostics;
+using Dekaf.Security.Sasl;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
@@ -15,6 +16,73 @@ public class AdminClientTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
+    public async Task NativeBootstrapServersAcceptCommaSeparatedValues(bool keyed)
+    {
+        var builder = ClientTestHelpers.CreateBuilder();
+        builder.Configuration["ConnectionStrings:messaging"] = null;
+        builder.Configuration["Aspire:Kafka:Dekaf:AdminClient:Config:BootstrapServers"] = "first:9092, second:9092";
+        if (keyed)
+        {
+            builder.AddKeyedDekafKafkaAdminClient("messaging");
+        }
+        else
+        {
+            builder.AddDekafKafkaAdminClient("messaging");
+        }
+        await using var services = builder.Services.BuildServiceProvider();
+        var client = keyed ? services.GetRequiredKeyedService<IAdminClient>("messaging") : services.GetRequiredService<IAdminClient>();
+        Assert.Equal(["first:9092", "second:9092"], ClientTestHelpers.GetOptions<AdminClientOptions>(client).BootstrapServers);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task NativeConfigurationPreservesSecurityAndReplacesBootstrapServers(bool keyed)
+    {
+        var builder = ClientTestHelpers.CreateBuilder();
+        builder.Configuration["Aspire:Kafka:Dekaf:AdminClient:Config:BootstrapServers:0"] = "default:9092";
+        builder.Configuration["Aspire:Kafka:Dekaf:AdminClient:Config:BootstrapServers:1"] = "backup:9092";
+        builder.Configuration["Aspire:Kafka:Dekaf:AdminClient:Config:ClientId"] = "default-admin";
+        builder.Configuration["Aspire:Kafka:Dekaf:AdminClient:messaging:Config:ClientId"] = "named-admin";
+        builder.Configuration["Aspire:Kafka:Dekaf:AdminClient:Config:RequestTimeoutMs"] = "2468";
+        builder.Configuration["Aspire:Kafka:Dekaf:AdminClient:Config:UseTls"] = "true";
+        builder.Configuration["Aspire:Kafka:Dekaf:AdminClient:Config:SaslMechanism"] = "ScramSha512";
+        builder.Configuration["Aspire:Kafka:Dekaf:AdminClient:Config:SaslUsername"] = "test-user";
+        builder.Configuration["Aspire:Kafka:Dekaf:AdminClient:Config:SaslPassword"] = "test-password";
+        if (keyed)
+        {
+            builder.AddKeyedDekafKafkaAdminClient("messaging");
+        }
+        else
+        {
+            builder.AddDekafKafkaAdminClient("messaging");
+        }
+        await using var services = builder.Services.BuildServiceProvider();
+        var client = keyed ? services.GetRequiredKeyedService<IAdminClient>("messaging") : services.GetRequiredService<IAdminClient>();
+        var options = ClientTestHelpers.GetOptions<AdminClientOptions>(client);
+        Assert.Equal(["localhost:19092"], options.BootstrapServers);
+        Assert.Equal("named-admin", options.ClientId);
+        Assert.Equal(2468, options.RequestTimeoutMs);
+        Assert.True(options.UseTls);
+        Assert.Equal(SaslMechanism.ScramSha512, options.SaslMechanism);
+        Assert.Equal("test-user", options.SaslUsername);
+        Assert.Equal("test-password", options.SaslPassword);
+    }
+
+    [Fact]
+    public async Task AdminClientCanUseNativeBootstrapServersWithoutConnectionString()
+    {
+        var builder = ClientTestHelpers.CreateBuilder();
+        builder.Configuration["ConnectionStrings:messaging"] = null;
+        builder.Configuration["Aspire:Kafka:Dekaf:AdminClient:Config:BootstrapServers:0"] = "native:9092";
+        builder.AddDekafKafkaAdminClient("messaging");
+        await using var services = builder.Services.BuildServiceProvider();
+        Assert.Equal(["native:9092"], ClientTestHelpers.GetOptions<AdminClientOptions>(services.GetRequiredService<IAdminClient>()).BootstrapServers);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
     public async Task ConnectionAndBuilderOverridesAreApplied(bool keyed)
     {
         var builder = ClientTestHelpers.CreateBuilder();
@@ -23,13 +91,13 @@ public class AdminClientTests
         {
             builder.AddKeyedDekafKafkaAdminClient("messaging",
                 settings => settings.ConnectionString = "settings:9092",
-                (services, client) => client.WithClientId(services.GetRequiredService<string>()));
+                (services, options) => new AdminClientBuilder().WithBootstrapServers(options.BootstrapServers.ToArray()).WithClientId(services.GetRequiredService<string>()).Build());
         }
         else
         {
             builder.AddDekafKafkaAdminClient("messaging",
                 settings => settings.ConnectionString = "settings:9092",
-                (services, client) => client.WithClientId(services.GetRequiredService<string>()));
+                (services, options) => new AdminClientBuilder().WithBootstrapServers(options.BootstrapServers.ToArray()).WithClientId(services.GetRequiredService<string>()).Build());
         }
 
         await using var services = builder.Services.BuildServiceProvider();

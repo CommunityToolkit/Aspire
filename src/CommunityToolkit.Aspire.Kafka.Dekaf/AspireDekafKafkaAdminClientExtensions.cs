@@ -24,7 +24,7 @@ public static class AspireDekafKafkaAdminClientExtensions
     /// <param name="builder">The host builder.</param>
     /// <param name="connectionName">The name of the connection string.</param>
     /// <param name="configureSettings">Optional settings customization.</param>
-    /// <param name="configureBuilder">Optional native builder customization using application services.</param>
+    /// <param name="clientFactory">Optional client factory receiving application services and the bound native options. The host owns the returned client.</param>
     /// <remarks>
     /// Reads settings from <c>Aspire:Kafka:Dekaf:AdminClient</c> and its named subsection.
     /// The health check describes the cluster without creating topics or publishing messages.
@@ -34,8 +34,8 @@ public static class AspireDekafKafkaAdminClientExtensions
     [RequiresUnreferencedCode("Dekaf configuration binding requires unreferenced members to be preserved.")]
     public static void AddDekafKafkaAdminClient(this IHostApplicationBuilder builder, string connectionName,
         Action<KafkaAdminClientSettings>? configureSettings = null,
-        Action<IServiceProvider, AdminClientBuilder>? configureBuilder = null)
-        => AddAdminClient(builder, connectionName, serviceKey: null, configureSettings, configureBuilder);
+        Func<IServiceProvider, AdminClientOptions, IAdminClient>? clientFactory = null)
+        => AddAdminClient(builder, connectionName, serviceKey: null, configureSettings, clientFactory);
 
     /// <summary>
     /// Registers <see cref="IAdminClient"/> as a keyed singleton with a broker connectivity health check.
@@ -43,7 +43,7 @@ public static class AspireDekafKafkaAdminClientExtensions
     /// <param name="builder">The host builder.</param>
     /// <param name="name">The service key and connection string name.</param>
     /// <param name="configureSettings">Optional settings customization.</param>
-    /// <param name="configureBuilder">Optional native builder customization using application services.</param>
+    /// <param name="clientFactory">Optional client factory receiving application services and the bound native options. The host owns the returned client.</param>
     /// <remarks>
     /// Reads settings from <c>Aspire:Kafka:Dekaf:AdminClient</c> and its named subsection.
     /// <code>builder.AddKeyedDekafKafkaAdminClient("messaging");</code>
@@ -52,17 +52,17 @@ public static class AspireDekafKafkaAdminClientExtensions
     [RequiresUnreferencedCode("Dekaf configuration binding requires unreferenced members to be preserved.")]
     public static void AddKeyedDekafKafkaAdminClient(this IHostApplicationBuilder builder, string name,
         Action<KafkaAdminClientSettings>? configureSettings = null,
-        Action<IServiceProvider, AdminClientBuilder>? configureBuilder = null)
+        Func<IServiceProvider, AdminClientOptions, IAdminClient>? clientFactory = null)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
-        AddAdminClient(builder, name, serviceKey: name, configureSettings, configureBuilder);
+        AddAdminClient(builder, name, serviceKey: name, configureSettings, clientFactory);
     }
 
     [RequiresDynamicCode("Dekaf configuration binding requires dynamic code.")]
     [RequiresUnreferencedCode("Dekaf configuration binding requires unreferenced members to be preserved.")]
     private static void AddAdminClient(IHostApplicationBuilder builder, string connectionName, string? serviceKey,
         Action<KafkaAdminClientSettings>? configureSettings,
-        Action<IServiceProvider, AdminClientBuilder>? configureBuilder)
+        Func<IServiceProvider, AdminClientOptions, IAdminClient>? clientFactory)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(connectionName);
@@ -72,16 +72,21 @@ public static class AspireDekafKafkaAdminClientExtensions
         settings.ConnectionString = builder.Configuration.GetConnectionString(connectionName) ?? settings.ConnectionString;
         configureSettings?.Invoke(settings);
 
+        var nativeConfiguration = DekafKafkaCommon.NormalizeBootstrapServers(configuration.GetSection("Config"), settings.ConnectionString);
+        var nativeOptions = new AdminClientOptions { BootstrapServers = [] };
+        nativeConfiguration.Bind(nativeOptions);
+
         IAdminClient CreateClient(IServiceProvider services)
         {
-            var client = new AdminClientBuilder().WithLoggerFactory(services.GetRequiredService<ILoggerFactory>());
-            if (settings.ConnectionString is not null)
+            if (clientFactory is not null)
             {
-                client.WithBootstrapServers(settings.ConnectionString);
+                return clientFactory(services, nativeOptions);
             }
-
-            configureBuilder?.Invoke(services, client);
-            return client.Build();
+            if (nativeOptions.BootstrapServers.Count == 0 && nativeOptions.BootstrapControllers.Count == 0)
+            {
+                throw new InvalidOperationException("Bootstrap servers or controllers must be specified.");
+            }
+            return new AdminClient(nativeOptions, services.GetRequiredService<ILoggerFactory>());
         }
 
         if (serviceKey is null)

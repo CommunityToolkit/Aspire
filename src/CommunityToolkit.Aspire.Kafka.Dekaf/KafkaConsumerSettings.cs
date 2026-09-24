@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Dekaf.Extensions.HealthChecks;
+using Dekaf.Consumer.DeadLetter;
 
 namespace CommunityToolkit.Aspire.Kafka.Dekaf;
 
@@ -10,6 +11,9 @@ namespace CommunityToolkit.Aspire.Kafka.Dekaf;
 /// </summary>
 public sealed class KafkaConsumerSettings
 {
+    /// <summary>Gets or sets optional native dead-letter queue configuration for a hosted consumer service.</summary>
+    public Action<DeadLetterQueueBuilder>? ConfigureDeadLetterQueue { get; set; }
+
     /// <summary>
     /// Gets or sets the comma-separated bootstrap servers.
     /// </summary>
