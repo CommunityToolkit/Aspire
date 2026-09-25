@@ -104,24 +104,6 @@ public class K8sManifestResource(string name, string manifestPath, KindClusterRe
         get => CommunityToolkit.Aspire.Hosting.Kind.K8sManifestAnnotations.GetWaitPolicy(this).ClusterReadyTimeout;
         set => CommunityToolkit.Aspire.Hosting.Kind.K8sManifestAnnotations.GetOrCreateWaitPolicy(this).ClusterReadyTimeout = value;
     }
-
-    /// <summary>
-    /// Gets or sets the maximum time to wait for applied CRDs to reach the <c>Established</c> condition.
-    /// </summary>
-    public TimeSpan CrdWaitTimeout
-    {
-        get => CommunityToolkit.Aspire.Hosting.Kind.K8sManifestAnnotations.GetWaitPolicy(this).Crd.Timeout;
-        set => CommunityToolkit.Aspire.Hosting.Kind.K8sManifestAnnotations.GetOrCreateWaitPolicy(this).Crd.Timeout = value;
-    }
-
-    /// <summary>
-    /// Gets or sets how CRD wait failures are handled.
-    /// </summary>
-    public CrdWaitBehavior CrdWaitBehavior
-    {
-        get => CommunityToolkit.Aspire.Hosting.Kind.K8sManifestAnnotations.GetWaitPolicy(this).Crd.FailureBehavior;
-        set => CommunityToolkit.Aspire.Hosting.Kind.K8sManifestAnnotations.GetOrCreateWaitPolicy(this).Crd.FailureBehavior = value;
-    }
 }
 
 #pragma warning restore ASPIREATS001

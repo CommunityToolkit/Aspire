@@ -19,6 +19,8 @@ internal static class KindInfrastructureExtensions
     {
         services.TryAddSingleton<IProcessRunner, DefaultProcessRunner>();
         services.TryAddSingleton<IKindContainerRuntimeResolver, KindContainerRuntimeResolver>();
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IKindPostApplyCheck, KindCrdEstablishmentCheck>());
+        services.TryAddSingleton<KindPostApplyChecks>();
         return services;
     }
 }

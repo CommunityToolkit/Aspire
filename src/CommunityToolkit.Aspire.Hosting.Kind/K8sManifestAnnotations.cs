@@ -21,18 +21,9 @@ internal sealed class K8sManifestApplyOptionsAnnotation : IResourceAnnotation
     public TimeSpan ApplyTimeout { get; set; } = KubectlTimeouts.DefaultApplyTimeout;
 }
 
-internal sealed class K8sManifestCrdWaitPolicy
-{
-    public TimeSpan Timeout { get; set; } = KubectlTimeouts.DefaultCrdWaitTimeout;
-
-    public CrdWaitBehavior FailureBehavior { get; set; } = CrdWaitBehavior.Fail;
-}
-
 internal sealed class K8sManifestWaitPolicyAnnotation : IResourceAnnotation
 {
     public TimeSpan ClusterReadyTimeout { get; set; } = TimeSpan.FromSeconds(60);
-
-    public K8sManifestCrdWaitPolicy Crd { get; } = new();
 }
 
 internal static class K8sManifestAnnotations

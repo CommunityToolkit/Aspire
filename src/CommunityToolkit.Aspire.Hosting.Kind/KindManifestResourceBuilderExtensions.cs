@@ -27,8 +27,12 @@ public static class KindManifestResourceBuilderExtensions
     /// <returns>A reference to the <see cref="IResourceBuilder{K8sManifestResource}"/>.</returns>
     /// <remarks>
     /// The manifest is applied after the parent Kind cluster reaches the
-    /// <see cref="KnownResourceStates.Running"/> state. Downstream resources that call
-    /// <c>WaitFor</c> on the manifest resource only start once <c>kubectl apply</c> succeeds.
+    /// <see cref="KnownResourceStates.Running"/> state. After apply succeeds, the manifest
+    /// becomes running after directly applied CRDs have been checked once for Established.
+    /// By default, a failed check prevents the manifest from running; with
+    /// <see cref="CrdWaitBehavior.BestEffort"/>, it runs with CRD readiness unverified.
+    /// Downstream resources that call <c>WaitFor</c> start after the check completes
+    /// according to the configured behavior.
     /// Requires <c>kubectl</c> on <c>PATH</c>.
     /// </remarks>
     [AspireExport]
@@ -81,6 +85,8 @@ public static class KindManifestResourceBuilderExtensions
         IResourceBuilder<KindClusterResource> builder,
         K8sManifestResource resource)
     {
+        builder.ApplicationBuilder.Services.AddKindInfrastructure();
+
         var resourceBuilder = builder.ApplicationBuilder
             .AddResource(resource)
             .ExcludeFromManifest()
@@ -114,6 +120,7 @@ public static class KindManifestResourceBuilderExtensions
                 var processRunner = e.Services.GetRequiredService<IProcessRunner>();
                 var kubectlManager = CreateKubectlManager(processRunner, resource);
                 await kubectlManager.ApplyAsync(resource, logger, ct);
+                await e.Services.GetRequiredService<KindPostApplyChecks>().RunAsync(resource, ct);
                 var applyOptions = K8sManifestAnnotations.GetApplyOptions(resource);
 
                 await notifications.PublishUpdateAsync(resource,
@@ -253,41 +260,6 @@ public static class KindManifestResourceBuilderExtensions
         K8sManifestAnnotations.GetOrCreateApplyOptions(builder.Resource).ApplyTimeout = KubectlTimeouts.Normalize(timeout, nameof(timeout));
         return builder;
     }
-
-    /// <summary>
-    /// Sets the maximum time to wait for applied CRDs to reach the <c>Established</c> condition.
-    /// </summary>
-    /// <param name="builder">The manifest resource builder.</param>
-    /// <param name="timeout">The CRD wait timeout.</param>
-    /// <returns>A reference to the <see cref="IResourceBuilder{K8sManifestResource}"/>.</returns>
-    [AspireExport]
-    public static IResourceBuilder<K8sManifestResource> WithCrdWaitTimeout(
-        this IResourceBuilder<K8sManifestResource> builder,
-        TimeSpan timeout)
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-
-        K8sManifestAnnotations.GetOrCreateWaitPolicy(builder.Resource).Crd.Timeout = KubectlTimeouts.Normalize(timeout, nameof(timeout));
-        return builder;
-    }
-
-    /// <summary>
-    /// Sets whether CRD wait failures fail the manifest resource or are logged as best-effort warnings.
-    /// </summary>
-    /// <param name="builder">The manifest resource builder.</param>
-    /// <param name="behavior">The CRD wait behavior.</param>
-    /// <returns>A reference to the <see cref="IResourceBuilder{K8sManifestResource}"/>.</returns>
-    [AspireExport]
-    public static IResourceBuilder<K8sManifestResource> WithCrdWaitBehavior(
-        this IResourceBuilder<K8sManifestResource> builder,
-        CrdWaitBehavior behavior)
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-
-        K8sManifestAnnotations.GetOrCreateWaitPolicy(builder.Resource).Crd.FailureBehavior = behavior;
-        return builder;
-    }
-
 }
 
 #pragma warning restore ASPIREATS001
