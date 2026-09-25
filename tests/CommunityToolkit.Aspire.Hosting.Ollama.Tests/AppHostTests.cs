@@ -16,7 +16,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.Ollama_AppHost> 
         var rns = fixture.ResourceNotificationService;
         
         await Task.WhenAll([
-            .. ollamaResources.Select(o => rns.WaitForResourceAsync(o.Name, KnownResourceStates.Running))
+            .. ollamaResources.Select(o => rns.WaitForResourceHealthyAsync(o.Name))
         ]).WaitAsync(TimeSpan.FromMinutes(5));
         
         foreach (var ollama in ollamaResources)
