@@ -7,5 +7,5 @@ internal static class FlagdContainerImageTags
     /// <summary>open-feature/flagd</summary>
     public const string Image = "open-feature/flagd";
     /// <summary>v0.14.2</summary>
-    public const string Tag = "v0.14.2";
+    public const string Tag = "v0.17.0";
 }
