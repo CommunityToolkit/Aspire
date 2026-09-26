@@ -5,12 +5,9 @@ namespace Aspire.Hosting;
 /// </summary>
 internal sealed class LogtoContainerImageTags
 {
-    /// <summary>docker.io</summary>
     public const string Registry = "docker.io";
 
-    /// <summary>svhd/logto</summary>
     public const string Image = "svhd/logto";
 
-    /// <summary>1.43</summary>
     public const string Tag = "1.43";
 }
