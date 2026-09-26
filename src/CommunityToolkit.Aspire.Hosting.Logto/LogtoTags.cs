@@ -1,4 +1,4 @@
-﻿namespace Aspire.Hosting;
+namespace Aspire.Hosting;
 
 /// <summary>
 /// Represents a collection of constants for container tags related to the Logto application.
@@ -12,5 +12,5 @@ internal sealed class LogtoContainerImageTags
     public const string Image = "svhd/logto";
 
     /// <summary>1.39</summary>
-    public const string Tag = "1.39";
+    public const string Tag = "1.43";
 }
