@@ -8,6 +8,5 @@ internal static class MosquittoContainerImageTags
     /// <remarks>eclipse-mosquitto</remarks>
     internal const string Image = "library/eclipse-mosquitto";
 
-    /// <remarks>2.0.22</remarks>
     internal const string Tag = "2.1.2-alpine";
 }
