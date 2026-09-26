@@ -8,17 +8,17 @@
 namespace Aspire.Hosting;
 
 /// <summary>
-/// Specifies how Kind manifest resources handle CRD Established-condition wait failures.
+/// Specifies how Kind manifest and Helm chart resources handle CRD Established-condition wait failures.
 /// </summary>
 public enum CrdWaitBehavior
 {
     /// <summary>
-    /// Fail the manifest resource when waiting for applied CRDs fails or times out.
+    /// Fail the deployed resource when waiting for discovered CRDs fails or times out.
     /// </summary>
     Fail,
 
     /// <summary>
-    /// Log a warning and continue when waiting for applied CRDs fails or times out.
+    /// Log a warning and continue with unverified CRD readiness when waiting fails or times out.
     /// </summary>
     BestEffort,
 }

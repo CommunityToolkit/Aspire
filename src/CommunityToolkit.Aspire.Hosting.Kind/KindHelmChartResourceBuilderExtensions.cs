@@ -36,6 +36,7 @@ public static class KindHelmChartResourceBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(name);
         ArgumentNullException.ThrowIfNull(chartRef);
+        builder.ApplicationBuilder.Services.AddKindInfrastructure();
 
         var resource = new KindHelmChartResource(name, chartRef, builder.Resource);
 
@@ -91,6 +92,7 @@ public static class KindHelmChartResourceBuilderExtensions
                 var processRunner = e.Services.GetRequiredService<IProcessRunner>();
                 var helmManager = new HelmManager(processRunner);
                 await helmManager.InstallAsync(resource, logger, ct);
+                await e.Services.GetRequiredService<KindPostApplyChecks>().RunAsync(resource, ct);
 
                 await notifications.PublishUpdateAsync(resource,
                     state => state with
@@ -180,42 +182,6 @@ public static class KindHelmChartResourceBuilderExtensions
 
         builder.Resource.Values.Remove(key);
         builder.Resource.StringValues[key] = value;
-        return builder;
-    }
-
-    /// <summary>
-    /// Retries Helm installs that race newly-created CRDs which have not reached the
-    /// <c>Established</c> condition yet.
-    /// </summary>
-    /// <param name="builder">The Helm chart resource builder.</param>
-    /// <param name="maxAttempts">The total number of install attempts. Must be 2 or greater.</param>
-    /// <param name="backoff">
-    /// The initial delay before retrying. Later retries back off exponentially.
-    /// When <see langword="null"/>, Kind uses a 5 second initial backoff.
-    /// </param>
-    /// <param name="crdWaitTimeout">
-    /// The timeout used while waiting for newly discovered CRDs to become <c>Established</c>
-    /// between retry attempts. When <see langword="null"/>, Kind uses a 5 minute timeout.
-    /// </param>
-    /// <returns>A reference to the <see cref="IResourceBuilder{KindHelmChartResource}"/>.</returns>
-    /// <remarks>
-    /// This is useful for charts that create CRDs and immediately render custom resources
-    /// that depend on those CRDs. Between attempts, Kind waits for newly observed CRDs
-    /// to report <c>Established</c>.
-    /// </remarks>
-    [AspireExport]
-    public static IResourceBuilder<KindHelmChartResource> WithCrdWaitRetry(
-        this IResourceBuilder<KindHelmChartResource> builder,
-        int maxAttempts = 3,
-        TimeSpan? backoff = null,
-        TimeSpan? crdWaitTimeout = null)
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentOutOfRangeException.ThrowIfLessThan(maxAttempts, 2);
-
-        builder.Resource.CrdWaitRetryMaxAttempts = maxAttempts;
-        builder.Resource.CrdWaitRetryBackoff = KubectlTimeouts.Normalize(backoff ?? KubectlTimeouts.DefaultCrdWaitRetryBackoff, nameof(backoff));
-        builder.Resource.CrdWaitRetryTimeout = KubectlTimeouts.Normalize(crdWaitTimeout ?? KubectlTimeouts.DefaultCrdWaitTimeout, nameof(crdWaitTimeout));
         return builder;
     }
 

@@ -48,10 +48,4 @@ public class KindHelmChartResource(string name, string chartRef, KindClusterReso
     /// Gets the inline Helm values that must be applied with <c>--set-string key=value</c>.
     /// </summary>
     public Dictionary<string, string> StringValues { get; } = [];
-
-    internal int CrdWaitRetryMaxAttempts { get; set; } = 1;
-
-    internal TimeSpan CrdWaitRetryTimeout { get; set; } = KubectlTimeouts.DefaultCrdWaitTimeout;
-
-    internal TimeSpan CrdWaitRetryBackoff { get; set; } = KubectlTimeouts.DefaultCrdWaitRetryBackoff;
 }

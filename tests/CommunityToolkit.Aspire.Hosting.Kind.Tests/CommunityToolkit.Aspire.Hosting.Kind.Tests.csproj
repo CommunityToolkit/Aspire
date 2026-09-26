@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="MessagePack" />
+    <PackageReference Include="Moq" />
     <PackageReference Include="Verify.XunitV3" />
   </ItemGroup>
 

@@ -6,7 +6,7 @@ An [Aspire](https://learn.microsoft.com/dotnet/aspire) hosting integration that 
 
 - **Docker or Podman** - Kind runs Kubernetes nodes as containers. Install [Docker](https://docs.docker.com/get-docker/) or [Podman](https://podman.io/docs/installation).
 - **Kind CLI** - The `kind` command must be available on your `PATH`. Install from [kind.sigs.k8s.io](https://kind.sigs.k8s.io/docs/user/quick-start/#installation).
-- **kubectl CLI** - Required for `AddManifest` / `AddManifestFromContent`. Install from [kubernetes.io](https://kubernetes.io/docs/tasks/tools/).
+- **kubectl CLI** - Required for `AddHelmChart`, `AddManifest`, and `AddManifestFromContent`. Install from [kubernetes.io](https://kubernetes.io/docs/tasks/tools/).
 - **Helm CLI** - Required for deploy scenarios and Helm chart resources. Install from [helm.sh](https://helm.sh/docs/intro/install/).
 
 ## Getting started
@@ -170,9 +170,12 @@ var redis = cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicha
     .WithChartVersion("20.0.0")
     .WithHelmValue("replica.replicaCount", "0")
     .WithHelmStringValue("auth.password", "000123")
-    .WithCrdWaitRetry()
     .WithNamespace("cache");
 ```
+
+Before installing a chart, Kind lists the cluster's CRDs. After a successful `helm upgrade --install`, it lists them again and uses the Kubernetes client to wait **once** for all newly observed CRDs to reach `Established` (with a five-minute timeout by default) **before** marking the release `Running`. Use `.WithCrdWait(options => options.Timeout = ...)` to adjust the CRD wait deadline. Each CRD listing has a ten-second API probe deadline. If no new CRDs are observed, no CRD wait runs. A failed install or CRD query sets `FailedToStart` without publishing `Running`; CRD wait failures do the same by default. Set `options.FailureBehavior = CrdWaitBehavior.BestEffort` to instead log unverified CRD readiness and permit `Running` after a CRD wait failure. Kind does not retry the Helm command. The separate workload health check continues to run after startup, and a workload health failure can leave a successfully installed release `Running` but `Unhealthy`. `.WaitFor(redis)` stays blocked until the CRD check completes **and** workload health passes; if no workloads are tracked, the workload check passes after installation.
+
+The CRD comparison does not establish chart ownership: it does not recheck existing CRDs and may include CRDs created concurrently by another installer. CRDs generated later by a controller are not covered.
 
 #### WithHelmStringValue
 
@@ -183,23 +186,9 @@ var redis = cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicha
     .WithHelmStringValue("auth.password", "000123");
 ```
 
-#### WithCrdWaitRetry
-
-Use `WithCrdWaitRetry` as an explicit opt-in retry policy for Helm installs. Without it, Kind makes a single Helm attempt and surfaces the original failure immediately. With it, Kind retries failed installs up to the configured attempt count, waits for any newly observed CRDs to reach `Established` between attempts, and then re-runs Helm after the configured backoff.
-
-Prefer `.WaitFor(...)` ordering or packaging tightly coupled CRDs and dependents into a single chart when you can; `WithCrdWaitRetry` is a fallback for charts that still need bounded retry behavior.
-
-```csharp
-var certManager = cluster.AddHelmChart("cert-manager", "jetstack/cert-manager")
-    .WithCrdWaitRetry(
-        maxAttempts: 3,
-        backoff: TimeSpan.FromSeconds(5),
-        crdWaitTimeout: TimeSpan.FromMinutes(2));
-```
-
 ### Applying raw manifests to the cluster
 
-Use `AddManifest` to apply a Kubernetes manifest (file, directory, or Kustomize overlay) to the cluster after it becomes healthy. This runs `kubectl apply -f <path> --kubeconfig <path>` against the cluster kubeconfig and is the natural equivalent of `AddHelmChart` for scenarios where a chart would be overkill. Manifest paths must be absolute so published AppHosts do not depend on the original AppHost project directory.
+Use `AddManifest` to apply a Kubernetes manifest (file, directory, or Kustomize overlay) after the Kind cluster becomes `Running`. This runs `kubectl apply -f <path> --kubeconfig <path> --output=name` against the cluster kubeconfig and is the natural equivalent of `AddHelmChart` for scenarios where a chart would be overkill. Manifest paths must be absolute so published AppHosts do not depend on the original AppHost project directory.
 
 `AddManifest` supports a single file, a directory, or a Kustomize overlay. URL fetch is not supported today — use a local file. For URL support, `curl` the file down as a build step and reference the local path.
 
@@ -232,7 +221,7 @@ cluster.AddManifestFromContent("demo-ns", """
     """);
 ```
 
-Downstream resources can wait on the manifest resource before starting so they only see the cluster after the manifests have been applied:
+Downstream resources can wait on the manifest resource before starting. `WaitFor` waits for the manifest to be both running and healthy:
 
 ```csharp
 var crds = cluster.AddManifest("crds", Path.Combine(manifestsRoot, "crds.yaml"));
@@ -244,7 +233,24 @@ var operatorContainer = builder.AddContainer("my-operator", "my-org/operator")
 
 Manifests persist with the cluster - deleted with session clusters, retained with persistent clusters.
 
-When `kubectl apply` reports custom resource definitions, Kind waits up to 5 minutes for those CRDs to reach the `Established` condition before marking the manifest resource running. The default behavior is fail-fast: a CRD wait timeout fails the manifest resource. Use `.WithCrdWaitTimeout(...)` to adjust the timeout, or `.WithCrdWaitBehavior(CrdWaitBehavior.BestEffort)` to log a warning and continue.
+After `kubectl apply` succeeds, Kind queries **all directly applied CRDs** reported by `kubectl apply` concurrently through the Kubernetes client until they reach the `Established` condition, then marks the manifest `Running` and releases `WaitFor` dependents. Subsequent polls query only CRDs not yet seen `Established`; the same applies to CRDs discovered after a Helm install. Missing CRDs are retried; CRDs whose names Kubernetes rejects fail the strict check immediately. A successful apply with no directly applied CRDs skips the wait and becomes `Running`; this does not verify readiness of other object kinds or CRDs later generated by a controller.
+
+The CRD check has a five-minute deadline by default. With the default strict policy, a failed CRD wait sets `FailedToStart` without ever publishing `Running`; `WaitFor` dependents remain blocked. Apply failures also set `FailedToStart`. For both manifests and Helm charts, configure the policy with `WithCrdWait`:
+
+```csharp
+cluster.AddManifest("crds", Path.Combine(manifestsRoot, "crds.yaml"))
+    .WithCrdWait(options =>
+    {
+        options.Timeout = TimeSpan.FromMinutes(2);
+        options.FailureBehavior = CrdWaitBehavior.BestEffort;
+    });
+```
+
+`BestEffort` logs an explicit **unverified** warning and permits `Running` after a failed CRD wait, **without verifying CRD readiness**. Dependents using `WaitFor` can then start; use the default strict policy when their startup requires those CRDs. Repeated `WithCrdWait` calls preserve options that the callback does not change. CRD waits are not recurring health probes: later health checks do not repeat the five-minute wait.
+
+Existing manifest-specific `WithCrdWaitTimeout` and `WithCrdWaitBehavior` overloads and the `K8sManifestResource.CrdWaitTimeout` and `CrdWaitBehavior` properties remain available but are obsolete compatibility shims. New code should use `WithCrdWait`. The obsolete `CrdWaitTimeout` property now validates when assigned, matching `CrdWaitOptions.Timeout`: zero, negative, and values over one hour throw immediately, while fractional seconds round up. Migrate direct property assignments to `WithCrdWait(options => options.Timeout = value)`.
+
+A `WaitFor` dependent remains waiting when the manifest is `FailedToStart`; it does not fail fast when CRD readiness fails. Aspire currently rejects `.WaitFor(crdManifest)` on another manifest under the **same Kind cluster**, because it implicitly waits on the dependency's parent (also the consumer's parent). This integration does not change that sibling-manifest ordering limitation; put resources that require ordering in a single multi-document manifest instead of using `WaitFor` between sibling manifests.
 
 #### WithClusterReadyTimeout
 
@@ -261,8 +267,8 @@ cluster.AddManifest("platform", Path.Combine(builder.AppHostDirectory, "manifest
 
 If a manifest declares its own `metadata.namespace` that conflicts with `--namespace`, `kubectl` rejects the apply. Prefer one of these patterns:
 
-- Create the namespace with a separate `AddManifest("ns", Path.Combine(builder.AppHostDirectory, "manifests", "namespace.yaml"))` and `.WaitFor()` it before applying namespaced manifests.
-- Omit `.WithNamespace()` and let each manifest declare its own namespace.
+- Put the `Namespace` document first in the same multi-document manifest file as its namespaced objects, set their `metadata.namespace`, and apply the file with one `AddManifest(...)` resource (without `.WithNamespace()`).
+- If the namespace already exists, omit `.WithNamespace()` and let each namespaced object declare its own `metadata.namespace`.
 
 #### WithServerSideApply
 
@@ -360,8 +366,7 @@ builder.AddContainer("my-container", "my-image")
 | `WithServerSideApply(bool forceConflicts = false)` | For `AddManifest`: use server-side apply, optionally with `--force-conflicts` |
 | `WithFieldManager(string)` | For `AddManifest`: set the `kubectl apply --field-manager` identifier |
 | `WithApplyTimeout(TimeSpan)` | For `AddManifest`: set the maximum time for `kubectl apply` |
-| `WithCrdWaitTimeout(TimeSpan)` | For `AddManifest`: set the CRD `Established` wait timeout |
-| `WithCrdWaitBehavior(CrdWaitBehavior)` | For `AddManifest`: choose fail-fast or best-effort CRD wait behavior |
+| `WithCrdWait(Action<CrdWaitOptions>)` | For `AddManifest` or `AddHelmChart`: configure the CRD `Established` timeout and failure behavior |
 | `WithKind()` | Configures a `KubernetesEnvironmentResource` to deploy to a local Kind cluster (scenario 2) |
 
 ## Security & scope notes
