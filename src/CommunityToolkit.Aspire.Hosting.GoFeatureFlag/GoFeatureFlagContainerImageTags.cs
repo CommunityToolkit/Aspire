@@ -5,10 +5,7 @@ namespace CommunityToolkit.Aspire.Hosting.GoFeatureFlag;
 
 internal static class GoFeatureFlagContainerImageTags
 {
-    /// <summary>docker.io</summary>
     public const string Registry = "docker.io";
-    /// <summary>gofeatureflag/go-feature-flag</summary>
     public const string Image = "gofeatureflag/go-feature-flag";
-    /// <summary>v1.55.3</summary>
     public const string Tag = "v1.55.3";
 }
