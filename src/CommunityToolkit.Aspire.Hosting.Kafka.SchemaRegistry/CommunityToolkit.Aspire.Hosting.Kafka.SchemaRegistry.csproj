@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>$(DefaultTargetFramework)</TargetFrameworks>
+    <AdditionalPackageTags>kafka schema-registry confluent hosting</AdditionalPackageTags>
+    <Description>An Aspire hosting integration for Confluent Schema Registry connected to an Aspire Kafka resource.</Description>
+    <IsPreview>true</IsPreview>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.Kafka" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,11 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.5.0">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsAspireHost>true</IsAspireHost>
+    <UserSecretsId>communitytoolkit-aspire-kafka-dekaf-example</UserSecretsId>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../src/CommunityToolkit.Aspire.Hosting.Kafka.SchemaRegistry/CommunityToolkit.Aspire.Hosting.Kafka.SchemaRegistry.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="../CommunityToolkit.Aspire.Kafka.Dekaf.ApiService/CommunityToolkit.Aspire.Kafka.Dekaf.ApiService.csproj" />
+  </ItemGroup>
+</Project>

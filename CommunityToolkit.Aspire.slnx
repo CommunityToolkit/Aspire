@@ -1,5 +1,9 @@
 <Solution>
   <Folder Name="/examples/" />
+  <Folder Name="/examples/kafka-dekaf/">
+    <Project Path="examples/kafka-dekaf/CommunityToolkit.Aspire.Kafka.Dekaf.ApiService/CommunityToolkit.Aspire.Kafka.Dekaf.ApiService.csproj" />
+    <Project Path="examples/kafka-dekaf/CommunityToolkit.Aspire.Kafka.Dekaf.AppHost/CommunityToolkit.Aspire.Kafka.Dekaf.AppHost.csproj" />
+  </Folder>
   <Folder Name="/examples/activemq/">
     <Project Path="examples/activemq/CommunityToolkit.Aspire.Hosting.ActiveMQ.AppHost/CommunityToolkit.Aspire.Hosting.ActiveMQ.AppHost.csproj" />
     <Project Path="examples/activemq/CommunityToolkit.Aspire.Hosting.ActiveMQ.MassTransit/CommunityToolkit.Aspire.Hosting.ActiveMQ.MassTransit.csproj" />
@@ -248,6 +252,8 @@
     <Project Path="examples\zitadel\CommunityToolkit.Aspire.Hosting.Zitadel.AppHost\CommunityToolkit.Aspire.Hosting.Zitadel.AppHost.csproj" />
   </Folder>
   <Folder Name="/src/">
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Kafka.SchemaRegistry/CommunityToolkit.Aspire.Hosting.Kafka.SchemaRegistry.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Kafka.Dekaf/CommunityToolkit.Aspire.Kafka.Dekaf.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Bitwarden.SecretManager/CommunityToolkit.Aspire.Bitwarden.SecretManager.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.GoFeatureFlag/CommunityToolkit.Aspire.GoFeatureFlag.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.ActiveMQ/CommunityToolkit.Aspire.Hosting.ActiveMQ.csproj" />
@@ -327,6 +333,8 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Dapr/CommunityToolkit.Aspire.Hosting.Dapr.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Kafka.SchemaRegistry.Tests/CommunityToolkit.Aspire.Hosting.Kafka.SchemaRegistry.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Kafka.Dekaf.Tests/CommunityToolkit.Aspire.Kafka.Dekaf.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Bitwarden.SecretManager.Tests/CommunityToolkit.Aspire.Bitwarden.SecretManager.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.GoFeatureFlag.Tests/CommunityToolkit.Aspire.GoFeatureFlag.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.ActiveMQ.Tests/CommunityToolkit.Aspire.Hosting.ActiveMQ.Tests.csproj" />

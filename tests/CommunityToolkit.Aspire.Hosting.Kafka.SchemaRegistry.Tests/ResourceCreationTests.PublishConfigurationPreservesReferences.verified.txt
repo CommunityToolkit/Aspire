@@ -1,0 +1,20 @@
+﻿{
+  ConnectionString: {registry.bindings.http.url},
+  ConnectionProperties: {
+    Host: {registry.bindings.http.host},
+    Port: {registry.bindings.http.port},
+    Uri: {registry.bindings.http.url}
+  },
+  RegistryEnvironment: {
+    SCHEMA_REGISTRY_HOST_NAME: {registry.bindings.http.host},
+    SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://{messaging.bindings.internal.host}:{messaging.bindings.internal.port},
+    SCHEMA_REGISTRY_KAFKASTORE_TOPIC_REPLICATION_FACTOR: 1,
+    SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:{registry.bindings.http.targetPort}
+  },
+  ConsumerEnvironment: {
+    ConnectionStrings__registry: {registry.connectionString},
+    REGISTRY_HOST: {registry.bindings.http.host},
+    REGISTRY_PORT: {registry.bindings.http.port},
+    REGISTRY_URI: {registry.bindings.http.url}
+  }
+}

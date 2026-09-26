@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../../src/CommunityToolkit.Aspire.Hosting.Kafka.SchemaRegistry/CommunityToolkit.Aspire.Hosting.Kafka.SchemaRegistry.csproj" />
+    <ProjectReference Include="../../src/CommunityToolkit.Aspire.Kafka.Dekaf/CommunityToolkit.Aspire.Kafka.Dekaf.csproj" />
+    <ProjectReference Include="../../examples/kafka-dekaf/CommunityToolkit.Aspire.Kafka.Dekaf.AppHost/CommunityToolkit.Aspire.Kafka.Dekaf.AppHost.csproj" />
+    <ProjectReference Include="../../examples/kafka-dekaf/CommunityToolkit.Aspire.Kafka.Dekaf.ApiService/CommunityToolkit.Aspire.Kafka.Dekaf.ApiService.csproj" />
+    <ProjectReference Include="../CommunityToolkit.Aspire.Testing/CommunityToolkit.Aspire.Testing.csproj" />
+    <PackageReference Include="Verify.XunitV3" />
+    <!-- The repository Verify version requires xUnit 3.2.2. -->
+    <PackageReference Update="xunit.v3.mtp-v2" VersionOverride="3.2.2" />
+  </ItemGroup>
+</Project>
