@@ -10,6 +10,7 @@ internal static class ActiveMQArtemisContainerImageSettings
     public const string Tag = "2.57.0";
     public const string EnvironmentVariableUsername = "ARTEMIS_USER";
     public const string EnvironmentVariablePassword = "ARTEMIS_PASSWORD";
+    public const string JolokiaPath = "/console/jolokia/read/org.apache.activemq.artemis:broker=%220.0.0.0%22/Started";
     public const string DataPath = "/var/lib/artemis-instance";
     public const string ConfPath = "/var/lib/artemis-instance/etc-override";
 

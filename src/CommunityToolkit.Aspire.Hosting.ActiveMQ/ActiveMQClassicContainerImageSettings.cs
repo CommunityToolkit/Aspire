@@ -10,6 +10,8 @@ internal static class ActiveMQClassicContainerImageSettings
     public const string Tag = "6.3.2";
     public const string EnvironmentVariableUsername = "ACTIVEMQ_CONNECTION_USER";
     public const string EnvironmentVariablePassword = "ACTIVEMQ_CONNECTION_PASSWORD";
+    public const string JolokiaPath =
+        "/api/jolokia/read/org.apache.activemq:type=Broker,brokerName=localhost,service=Health/CurrentStatus";
     public const string DataPath = "/opt/apache-activemq/data";
     public const string ConfPath = "/opt/apache-activemq/conf";
 }
