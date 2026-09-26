@@ -48,7 +48,8 @@ public static class ActiveMQBuilderExtensions
                                               ?? ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder, $"{name}-password", special: false);
 
         ActiveMQServerResource activeMq = new(name, userName?.Resource, passwordParameter, scheme);
-        return builder.Build(port, scheme, webPort, activeMq);
+        return builder.Build(port, scheme, webPort, activeMq)
+            .WithRunModeJettyAllowAllIps();
     }
 
     /// <summary>
@@ -101,80 +102,69 @@ public static class ActiveMQBuilderExtensions
                 context.EnvironmentVariables[activeMq.ActiveMqSettings.EnvironmentVariablePassword] = activeMq.PasswordParameter;
             });
 
-        if (activeMq is ActiveMQServerResource)
+        return result.WithJolokiaHealthCheck();
+    }
+
+    private static IResourceBuilder<ActiveMQServerResource> WithRunModeJettyAllowAllIps(this IResourceBuilder<ActiveMQServerResource> builder)
+    {
+        if (!builder.ApplicationBuilder.ExecutionContext.IsRunMode)
         {
-            result.WithContainerFiles(
-                destinationPath: "/opt/apache-activemq/conf",
-                callback: (_, _) =>
-                {
-                    IEnumerable<ContainerFileSystemItem> files = result.ApplicationBuilder.ExecutionContext.IsRunMode
-                        ? [
-                            new ContainerFile
-                            {
-                                Name = "jetty-spring.properties",
-                                // ActiveMQ reads this file's explicit XML list. Keep its effective
-                                // 6.3.2 defaults and add the run-only allowlist extension.
-                                Contents = """
-                                    jettyXmlFiles=jetty-bytebufferpool.xml,jetty-threadpool.xml,jetty-scheduler.xml,jetty-http-config.xml,jetty.xml,jetty-connection-limit.xml,jetty-network-connection-limit.xml,jetty-security.xml,jetty-min-data-rate.xml,jetty-thread-limit.xml,jetty-size-limit.xml,jetty-dos.xml
-                                    jettyHttpXmlFiles=jetty-http.xml
-                                    jettyHttpsXmlFiles=jetty-ssl.xml,jetty-ssl-context.xml,jetty-https.xml,jetty-secure-redirect.xml
-                                    jettyExtraXmlFiles=aspire-allow-all-ips.xml
-                                    httpEnabled=true
-                                    httpsEnabled=false
-                                    jetty.http.port=8161
-                                    jetty.ssl.port=8443
-                                    jetty.httpConfig.securePort=8443
-                                    jetty.sslContext.keyStorePath=conf/jetty-keystore.ks
-                                    jetty.sslContext.keyStoreType=PKCS12
-                                    jetty.sslContext.keyStorePassword=OBF:1v2j1uum1xtv1zej1zer1xtn1uvk1v1v
-                                    jetty.httpConfig.sendServerVersion=false
-                                    jetty.httpConfig.sendDateHeader=false
-                                    jetty.dos.leakingBucketTracker.maxRequestsPerSecond=100
-                                    """
-                            },
-                        ]
-                        : [];
-
-                    return Task.FromResult(files);
-                });
-
-            result.WithContainerFiles(
-                destinationPath: "/opt/apache-activemq/conf/jetty",
-                callback: (_, _) =>
-                {
-                    IEnumerable<ContainerFileSystemItem> files = result.ApplicationBuilder.ExecutionContext.IsRunMode
-                        ? [new ContainerFile
-                        {
-                            Name = "aspire-allow-all-ips.xml",
-                            Contents = """
-                                <?xml version="1.0"?>
-                                <!DOCTYPE Configure PUBLIC "-//Jetty//Configure//EN" "https://jetty.org/configure_10_0.dtd">
-                                <Configure id="Server" class="org.eclipse.jetty.server.Server">
-                                  <Call name="getDescendant">
-                                    <Arg>
-                                      <Call class="java.lang.Class" name="forName">
-                                        <Arg>org.eclipse.jetty.server.handler.InetAccessHandler</Arg>
-                                      </Call>
-                                    </Arg>
-                                    <Call name="include">
-                                      <Arg>
-                                        <Array type="java.lang.String">
-                                          <Item>0.0.0.0/0</Item>
-                                          <Item>::/0</Item>
-                                        </Array>
-                                      </Arg>
-                                    </Call>
-                                  </Call>
-                                </Configure>
-                                """
-                        }]
-                        : [];
-
-                    return Task.FromResult<IEnumerable<ContainerFileSystemItem>>(files);
-                });
+            return builder;
         }
 
-        return result.WithJolokiaHealthCheck();
+        return builder
+            .WithContainerFiles(
+                destinationPath: "/opt/apache-activemq/conf",
+                [new ContainerFile
+                {
+                    Name = "jetty-spring.properties",
+                    // ActiveMQ reads this file's explicit XML list. Keep its effective
+                    // 6.3.2 defaults and add the run-only allowlist extension.
+                    Contents = """
+                        jettyXmlFiles=jetty-bytebufferpool.xml,jetty-threadpool.xml,jetty-scheduler.xml,jetty-http-config.xml,jetty.xml,jetty-connection-limit.xml,jetty-network-connection-limit.xml,jetty-security.xml,jetty-min-data-rate.xml,jetty-thread-limit.xml,jetty-size-limit.xml,jetty-dos.xml
+                        jettyHttpXmlFiles=jetty-http.xml
+                        jettyHttpsXmlFiles=jetty-ssl.xml,jetty-ssl-context.xml,jetty-https.xml,jetty-secure-redirect.xml
+                        jettyExtraXmlFiles=aspire-allow-all-ips.xml
+                        httpEnabled=true
+                        httpsEnabled=false
+                        jetty.http.port=8161
+                        jetty.ssl.port=8443
+                        jetty.httpConfig.securePort=8443
+                        jetty.sslContext.keyStorePath=conf/jetty-keystore.ks
+                        jetty.sslContext.keyStoreType=PKCS12
+                        jetty.sslContext.keyStorePassword=OBF:1v2j1uum1xtv1zej1zer1xtn1uvk1v1v
+                        jetty.httpConfig.sendServerVersion=false
+                        jetty.httpConfig.sendDateHeader=false
+                        jetty.dos.leakingBucketTracker.maxRequestsPerSecond=100
+                        """
+                }])
+            .WithContainerFiles(
+                destinationPath: "/opt/apache-activemq/conf/jetty",
+                [new ContainerFile
+                {
+                    Name = "aspire-allow-all-ips.xml",
+                    Contents = """
+                        <?xml version="1.0"?>
+                        <!DOCTYPE Configure PUBLIC "-//Jetty//Configure//EN" "https://jetty.org/configure_10_0.dtd">
+                        <Configure id="Server" class="org.eclipse.jetty.server.Server">
+                          <Call name="getDescendant">
+                            <Arg>
+                              <Call class="java.lang.Class" name="forName">
+                                <Arg>org.eclipse.jetty.server.handler.InetAccessHandler</Arg>
+                              </Call>
+                            </Arg>
+                            <Call name="include">
+                              <Arg>
+                                <Array type="java.lang.String">
+                                  <Item>0.0.0.0/0</Item>
+                                  <Item>::/0</Item>
+                                </Array>
+                              </Arg>
+                            </Call>
+                          </Call>
+                        </Configure>
+                        """
+                }]);
     }
 
     /// <summary>
