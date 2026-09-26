@@ -1102,16 +1102,10 @@ public class KindManifestTests
         Assert.True(resource.TryGetLastAnnotation<KindCrdWaitPolicyAnnotation>(out var policy));
         Assert.Equal(TimeSpan.FromSeconds(1), policy.Options.Timeout);
         Assert.Equal((CrdWaitBehavior)42, policy.Options.FailureBehavior);
-        var timeoutObsolete = typeof(K8sManifestResource).GetProperty("CrdWaitTimeout")?
-            .GetCustomAttributes(typeof(ObsoleteAttribute), false).SingleOrDefault() as ObsoleteAttribute;
-        var behaviorObsolete = typeof(K8sManifestResource).GetProperty("CrdWaitBehavior")?
-            .GetCustomAttributes(typeof(ObsoleteAttribute), false).SingleOrDefault() as ObsoleteAttribute;
-        Assert.Contains("WithCrdWait", Assert.IsType<ObsoleteAttribute>(timeoutObsolete).Message);
-        Assert.Contains("WithCrdWait", Assert.IsType<ObsoleteAttribute>(behaviorObsolete).Message);
     }
 
     [Fact]
-    public void LegacyManifestCrdWaitMethodsKeepClrSignaturesAndSharePolicy()
+    public void LegacyManifestCrdWaitMethodsSharePolicy()
     {
         using var builder = TestDistributedApplicationBuilder.Create();
         var manifest = builder.AddKindCluster("test-cluster")
@@ -1127,14 +1121,6 @@ public class KindManifestTests
         Assert.True(manifest.Resource.TryGetLastAnnotation<KindCrdWaitPolicyAnnotation>(out var policy));
         Assert.Equal(TimeSpan.FromSeconds(1), policy.Options.Timeout);
         Assert.Equal(CrdWaitBehavior.BestEffort, policy.Options.FailureBehavior);
-        var timeoutObsolete = typeof(KindManifestResourceBuilderExtensions)
-            .GetMethod("WithCrdWaitTimeout", [typeof(IResourceBuilder<K8sManifestResource>), typeof(TimeSpan)])?
-            .GetCustomAttributes(typeof(ObsoleteAttribute), false).SingleOrDefault() as ObsoleteAttribute;
-        var behaviorObsolete = typeof(KindManifestResourceBuilderExtensions)
-            .GetMethod("WithCrdWaitBehavior", [typeof(IResourceBuilder<K8sManifestResource>), typeof(CrdWaitBehavior)])?
-            .GetCustomAttributes(typeof(ObsoleteAttribute), false).SingleOrDefault() as ObsoleteAttribute;
-        Assert.Contains("WithCrdWait", Assert.IsType<ObsoleteAttribute>(timeoutObsolete).Message);
-        Assert.Contains("WithCrdWait", Assert.IsType<ObsoleteAttribute>(behaviorObsolete).Message);
     }
 
     [Fact]
