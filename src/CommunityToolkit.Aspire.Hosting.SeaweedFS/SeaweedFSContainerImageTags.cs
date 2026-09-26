@@ -9,5 +9,5 @@ internal static class SeaweedFSContainerImageTags
     public const string Image = "chrislusf/seaweedfs";
 
     /// <summary>4.27</summary>
-    public const string Tag = "4.27";
+    public const string Tag = "4.46";
 }
