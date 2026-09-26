@@ -10,5 +10,5 @@ internal sealed class AzureStorageExplorerContainerImageTags
     /// <summary>sebagomez/azurestorageexplorer</summary>
     public const string Image = "sebagomez/azurestorageexplorer";
     /// <summary>3.1.0</summary>
-    public const string Tag = "3.1.0";
+    public const string Tag = "4.0.0";
 }
