@@ -5,7 +5,6 @@ internal static class AdminerContainerImageTags
     public const string Registry = "docker.io";
     /// <remarks>library/adminer</remarks>
     public const string Image = "library/adminer";
-    /// <remarks>5.1.0</remarks>
     public const string Tag = "6.1.1";
 }
 
