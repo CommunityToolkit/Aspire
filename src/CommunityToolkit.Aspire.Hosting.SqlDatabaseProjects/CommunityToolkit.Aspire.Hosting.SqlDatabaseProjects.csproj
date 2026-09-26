@@ -11,6 +11,7 @@
     <PackageReference Include="Aspire.Hosting" />
     <PackageReference Include="Aspire.Hosting.SqlServer" />
     <PackageReference Include="Microsoft.Build.Locator" />
+    <PackageReference Include="Microsoft.Identity.Client" />
     <PackageReference Include="Microsoft.SqlServer.DacFx" />
     <PackageReference Include="MessagePack" />
   </ItemGroup>
