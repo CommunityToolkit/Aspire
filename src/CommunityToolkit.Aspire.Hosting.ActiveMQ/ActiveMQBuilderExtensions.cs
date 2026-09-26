@@ -55,7 +55,7 @@ public static class ActiveMQBuilderExtensions
     /// Adds a ActiveMQ Artemis container to the application model.
     /// </summary>
     /// <remarks>
-    /// The default image and tag are "apache/activemq-artemis" and "2.42.0".
+    /// The default image and tag are "apache/artemis" and "2.57.0".
     /// </remarks>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
     /// <param name="name">The name of the resource. This name will be used as the connection string name when referenced in a dependency.</param>
