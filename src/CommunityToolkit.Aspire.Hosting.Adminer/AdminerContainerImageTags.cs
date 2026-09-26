@@ -6,6 +6,6 @@ internal static class AdminerContainerImageTags
     /// <remarks>library/adminer</remarks>
     public const string Image = "library/adminer";
     /// <remarks>5.1.0</remarks>
-    public const string Tag = "5.1.0";
+    public const string Tag = "6.1.1";
 }
 
