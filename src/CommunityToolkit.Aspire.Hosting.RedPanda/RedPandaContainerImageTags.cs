@@ -2,25 +2,19 @@ namespace CommunityToolkit.Aspire.Hosting.RedPanda;
 
 internal static class RedPandaContainerImageTags
 {
-    /// <remarks>docker.redpanda.com</remarks>
     internal const string Registry = "docker.redpanda.com";
 
-    /// <remarks>redpandadata/redpanda</remarks>
     internal const string Image = "redpandadata/redpanda";
 
     internal const string Tag = "v26.2.3";
 
-    /// <remarks>redpandadata/console</remarks>
     internal const string ConsoleImage = "redpandadata/console";
 
     internal const string ConsoleTag = "v3.12.0";
 
-    /// <remarks>docker.io</remarks>
     internal const string KafkaUiRegistry = "docker.io";
 
-    /// <remarks>kafbat/kafka-ui</remarks>
     internal const string KafkaUiImage = "kafbat/kafka-ui";
 
-    /// <remarks>v1.5.0</remarks>
     internal const string KafkaUiTag = "v1.5.0";
 }
