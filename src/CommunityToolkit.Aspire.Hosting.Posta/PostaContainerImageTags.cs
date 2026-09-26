@@ -9,5 +9,5 @@ internal static class PostaContainerImageTags
     public const string Image = "jkaninda/posta";
 
     /// <remarks>0.15.0</remarks>
-    public const string Tag = "0.15.0";
+    public const string Tag = "0.15.1";
 }
