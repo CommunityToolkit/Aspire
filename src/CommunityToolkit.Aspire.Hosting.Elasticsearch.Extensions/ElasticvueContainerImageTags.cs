@@ -21,8 +21,5 @@ internal static class ElasticvueContainerImageTags {
     /// <summary>  
     /// The Elasticvue container image tag.  
     /// </summary>  
-    /// <remarks>  
-    /// Current value: <c>1.11.1</c>.  
-    /// </remarks>  
-    public const string Tag = "1.16.0";
+    public const string Tag = "1.16.0";  
 }
