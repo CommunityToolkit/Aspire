@@ -7,5 +7,5 @@ internal static class KurrentDBContainerImageTags
 {
     public const string Registry = "docker.kurrent.io";
     public const string Image = "kurrent-latest/kurrentdb";
-    public const string Tag = "25.1";
+    public const string Tag = "26.1.1";
 }
