@@ -1,4 +1,5 @@
 using Aspire.Hosting;
+using Aspire.Hosting.ApplicationModel;
 using Microsoft.Extensions.Logging;
 
 namespace CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager.Tests;
@@ -704,6 +705,7 @@ internal sealed class FakeBitwardenProvider : IBitwardenSecretManagerProvider
 }
 
 #pragma warning disable ASPIREINTERACTION001
+#pragma warning disable ASPIRETERMINAL001
 internal sealed class FakeInteractionService : IInteractionService
 {
     private readonly string? _returnValue;
@@ -751,6 +753,14 @@ internal sealed class FakeInteractionService : IInteractionService
         ProgressInteractionOptions? options = null,
         CancellationToken cancellationToken = default)
         => Task.FromException<InteractionResult<bool>>(new NotSupportedException());
+
+    public Task<InteractionResult<bool>> PromptTerminalAsync(
+        string message,
+        AspireTerminal terminal,
+        TerminalInteractionOptions? options = null,
+        CancellationToken cancellationToken = default)
+        => Task.FromException<InteractionResult<bool>>(new NotSupportedException());
 }
+#pragma warning restore ASPIRETERMINAL001
 #pragma warning restore ASPIREINTERACTION001
 

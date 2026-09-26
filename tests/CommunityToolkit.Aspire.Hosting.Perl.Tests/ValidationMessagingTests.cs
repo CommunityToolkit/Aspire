@@ -171,6 +171,7 @@ public class ValidationMessagingTests
     }
 
 #pragma warning disable ASPIREINTERACTION001
+#pragma warning disable ASPIRETERMINAL001
     private sealed class RecordingInteractionService : IInteractionService
     {
         public bool IsAvailable => true;
@@ -241,6 +242,14 @@ public class ValidationMessagingTests
             ProgressInteractionOptions? options = null,
             CancellationToken cancellationToken = default)
             => Task.FromException<InteractionResult<bool>>(new NotSupportedException());
+
+        public Task<InteractionResult<bool>> PromptTerminalAsync(
+            string message,
+            AspireTerminal terminal,
+            TerminalInteractionOptions? options = null,
+            CancellationToken cancellationToken = default)
+            => Task.FromException<InteractionResult<bool>>(new NotSupportedException());
     }
+#pragma warning restore ASPIRETERMINAL001
 #pragma warning restore ASPIREINTERACTION001
 }

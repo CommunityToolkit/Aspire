@@ -62,8 +62,8 @@
     <PackageVersion Include="Microsoft.Extensions.Options" Version="$(DotNetExtensionsVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="$(DotNetExtensionsVersion)" />
     <!-- OpenTelemetry packages -->
-    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.3" />
-    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.15.3" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.17.0" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.17.0" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.15.2" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" Version="1.15.1-beta.1" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.15.1" />
@@ -101,7 +101,8 @@
     <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.2" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.2" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="$(DotNetExtensionsVersion)" />
-    <PackageVersion Include="Microsoft.SqlServer.DacFx" Version="170.2.70" />
+    <PackageVersion Include="Microsoft.SqlServer.DacFx" Version="170.5.96" />
+    <PackageVersion Include="Microsoft.Identity.Client" Version="4.80.0" />
     <PackageVersion Include="Microsoft.Build" Version="17.11.48" />
     <PackageVersion Include="Microsoft.Build.Framework" Version="17.11.48" />
     <PackageVersion Include="Microsoft.NET.StringTools" Version="18.4.0" />
@@ -109,7 +110,7 @@
     <PackageVersion Include="ErikEJ.Dacpac.Chinook" Version="1.0.0" />
     <PackageVersion Include="RavenDB.Client" Version="6.2.1" />
     <PackageVersion Include="RavenDB.TestDriver" Version="6.2.1" />
-    <PackageVersion Include="YamlDotNet" Version="16.3.0" />
+    <PackageVersion Include="YamlDotNet" Version="18.1.0" />
     <PackageVersion Include="Microsoft.Agents.AI.GitHub.Copilot" Version="1.15.0-rc1" />
     <PackageVersion Include="Squad.Agents.AI" Version="0.5.6-preview.23" />
     <PackageVersion Include="SurrealDb.MinimalApis.Extensions" Version="1.0.0" />
@@ -155,7 +156,7 @@
   </ItemGroup>
   <ItemGroup Label="Overrides">
     <PackageVersion Include="Microsoft.Bcl.Memory" Version="9.0.14" />
-    <PackageVersion Include="OpenTelemetry.Api" Version="1.15.3" />
+    <PackageVersion Include="OpenTelemetry.Api" Version="1.17.0" />
     <PackageVersion Include="System.Security.Cryptography.Xml" Version="8.0.4" />
     <!-- Override to address https://github.com/advisories/GHSA-hv8m-jj95-wg3x -->
     <PackageVersion Include="MessagePack" Version="2.5.302" />
