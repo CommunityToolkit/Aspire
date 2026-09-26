@@ -5,10 +5,7 @@ namespace Aspire.Hosting;
 
 internal sealed class AzureStorageExplorerContainerImageTags
 {
-    /// <summary>docker.io</summary>
     public const string Registry = "docker.io";
-    /// <summary>sebagomez/azurestorageexplorer</summary>
     public const string Image = "sebagomez/azurestorageexplorer";
-    /// <summary>4.0.0</summary>
     public const string Tag = "4.0.0";
 }
