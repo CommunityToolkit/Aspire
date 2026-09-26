@@ -19,7 +19,7 @@ public static class K3sBuilderExtensions
     /// <param name="builder">The distributed application builder.</param>
     /// <param name="name">
     /// The resource name. Also used as the DNS hostname by which containers in the DCP network
-    /// reach the cluster's API server (e.g. <c>https://{name}:6443</c>).
+    /// reach the cluster's API server through its Aspire endpoint.
     /// </param>
     /// <param name="apiServerPort">
     /// Host port to bind the Kubernetes API server (port 6443) to.
@@ -74,7 +74,7 @@ public static class K3sBuilderExtensions
         // AppHostDirectory/.k3s/{name}/ holds three sub-directories:
         //   cluster/  — bind-mounted into the k3s container; k3s writes kubeconfig.yaml here
         //   local/    — rewritten by the health check with server: https://localhost:{port}
-        //   container/ — rewritten by the health check with server: https://{name}:6443
+        //   container/ — rewritten by the health check using the container-network endpoint
         var kubeconfigDir = Path.Combine(builder.AppHostDirectory, ".k3s", name);
         var clusterDir = Path.Combine(kubeconfigDir, "cluster");
         Directory.CreateDirectory(clusterDir);
@@ -120,7 +120,9 @@ public static class K3sBuilderExtensions
             // ({resourceName}), and any forwarded address (0.0.0.0).
             .WithArgs($"--tls-san=127.0.0.1")
             .WithArgs($"--tls-san=localhost")
-            .WithArgs($"--tls-san={name}")
+            .WithArgs(
+                ReferenceExpression.Create(
+                    $"--tls-san={resource.ApiEndpoint.Property(EndpointProperty.Host)}"))
             .WithArgs("--tls-san=0.0.0.0")
 
             // Disable components not needed for local development.
@@ -266,6 +268,20 @@ public static class K3sBuilderExtensions
         });
 
         return resourceBuilder;
+    }
+
+    /// <summary>
+    /// Configures the host port that the k3s cluster resource is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for the k3s cluster.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
+    /// <returns>The resource builder for the k3s cluster.</returns>
+    [AspireExport]
+    public static IResourceBuilder<K3sClusterResource> WithHostPort(this IResourceBuilder<K3sClusterResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(K3sClusterResource.ApiServerEndpointName, endpoint => endpoint.Port = port);
     }
 
     /// <summary>
@@ -448,7 +464,7 @@ public static class K3sBuilderExtensions
     /// </param>
     /// <returns>The same builder, for chaining.</returns>
     /// <remarks>
-    /// Agent nodes connect to the server via DCP DNS (<c>https://{name}:6443</c>) and use
+    /// Agent nodes connect to the server through the API endpoint resolved in their resource context and use
     /// k3s's built-in retry loop, so no explicit <c>WaitFor</c> is needed. The cluster health
     /// check waits for <c>1 + count</c> nodes to reach <c>Ready</c> state before reporting
     /// healthy. Use <see cref="WithLifetime"/> with <see cref="ContainerLifetime.Persistent"/>
@@ -603,8 +619,8 @@ public static class K3sBuilderExtensions
     // ── Agent node creation ───────────────────────────────────────────────────
 
     // Shared by AddK3sCluster (via options.AgentCount) and WithAgentCount.
-    // Agents use DCP DNS (K3S_URL=https://{name}:6443) and retry until the server is
-    // reachable — no WaitFor to avoid a deadlock where the cluster health check waits
+    // Agents resolve the cluster API endpoint from their own container context and retry until
+    // the server is reachable — no WaitFor to avoid a deadlock where the cluster health check waits
     // for nodes to be Ready while nodes wait for the cluster to be healthy.
     private static void AddAgentNodes(
         IResourceBuilder<K3sClusterResource> clusterBuilder,
@@ -636,7 +652,7 @@ public static class K3sBuilderExtensions
                 .WithArgs("agent")
                 .WithArgs("-v", "0")
                 .WithArgs("--kubelet-arg=v=0")
-                .WithEnvironment("K3S_URL", $"https://{name}:6443")
+                .WithEnvironment("K3S_URL", resource.ApiEndpoint)
                 .WithEnvironment("K3S_TOKEN", $"aspire-k3s-{name}-token")
                 .WithEnvironment("K3S_NODE_NAME", agentName)
                 .WithContainerRuntimeArgs("--privileged")
@@ -729,6 +745,7 @@ public static class K3sBuilderExtensions
                 ctx.EnvironmentVariables[envKey] = $"{scheme}://host.docker.internal:{ep.HostPort}";
         }));
     }
+
 }
 
 #pragma warning restore ASPIREATS001

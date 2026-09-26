@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Aspire.Hosting.ApplicationModel;
@@ -22,6 +22,20 @@ public static class SurrealDbBuilderExtensions
     private const string UserEnvVarName = "SURREAL_USER";
     private const string PasswordEnvVarName = "SURREAL_PASS";
     private const string ImportFileEnvVarName = "SURREAL_IMPORT_FILE";
+
+    /// <summary>
+    /// Configures the host port that the SurrealDB resource is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for SurrealDB.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
+    /// <returns>The resource builder for SurrealDB.</returns>
+    [AspireExport]
+    public static IResourceBuilder<SurrealDbServerResource> WithHostPort(this IResourceBuilder<SurrealDbServerResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(SurrealDbServerResource.PrimaryEndpointName, endpoint => endpoint.Port = port);
+    }
 
     /// <summary>
     /// Adds a SurrealDB resource to the application model. A container is used for local development.

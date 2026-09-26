@@ -11,7 +11,7 @@ public class ResourceCreationTests
         var builder = DistributedApplication.CreateBuilder();
 
         var redisResourceBuilder = builder.AddRedis("redis")
-            .WithEndpoint("tcp", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 27017))
+            .WithEndpoint("tcp", e => AllocateEndpoint(e, "redis.dev.internal", 27017))
             .WithDbGate();
 
         var redisResource = redisResourceBuilder.Resource;
@@ -43,10 +43,9 @@ public class ResourceCreationTests
             },
             async item =>
             {
-                var redisUrl = redisResource.PasswordParameter is not null ?
-                $"rediss://:{await redisResource.PasswordParameter.GetValueAsync(default)}@{redisResource.Name}:{redisResource.PrimaryEndpoint.TargetPort}" : $"rediss://{redisResource.Name}:{redisResource.PrimaryEndpoint.TargetPort}";
+                var password = await redisResource.PasswordParameter!.GetValueAsync(default);
                 Assert.Equal("URL_redis", item.Key);
-                Assert.Equal(redisUrl, item.Value);
+                Assert.Equal($"rediss://:{password}@redis.dev.internal:6379", item.Value);
             },
             item =>
             {
@@ -113,13 +112,13 @@ public class ResourceCreationTests
         var builder = DistributedApplication.CreateBuilder();
 
         var redisResourceBuilder1 = builder.AddRedis("redis1")
-            .WithEndpoint("tcp", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 27017))
+            .WithEndpoint("tcp", e => AllocateEndpoint(e, "redis1.dev.internal", 27017))
             .WithDbGate();
 
         var redisResource1 = redisResourceBuilder1.Resource;
 
         var redisResourceBuilder2 = builder.AddRedis("redis2")
-            .WithEndpoint("tcp", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 27018))
+            .WithEndpoint("tcp", e => AllocateEndpoint(e, "redis2.dev.internal", 27018))
             .WithDbGate();
 
         var redisResource2 = redisResourceBuilder2.Resource;
@@ -151,11 +150,9 @@ public class ResourceCreationTests
             },
             async item =>
             {
-                var redisUrl = redisResource1.PasswordParameter is not null ?
-                $"rediss://:{await redisResource1.PasswordParameter.GetValueAsync(default)}@{redisResource1.Name}:{redisResource1.PrimaryEndpoint.TargetPort}" : $"rediss://{redisResource1.Name}:{redisResource1.PrimaryEndpoint.TargetPort}";
-
+                var password = await redisResource1.PasswordParameter!.GetValueAsync(default);
                 Assert.Equal("URL_redis1", item.Key);
-                Assert.Equal(redisUrl, item.Value);
+                Assert.Equal($"rediss://:{password}@redis1.dev.internal:6379", item.Value);
             },
             item =>
             {
@@ -169,16 +166,27 @@ public class ResourceCreationTests
             },
             async item =>
             {
-                var redisUrl = redisResource2.PasswordParameter is not null ?
-                $"rediss://:{await redisResource2.PasswordParameter.GetValueAsync(default)}@{redisResource2.Name}:{redisResource2.PrimaryEndpoint.TargetPort}" : $"rediss://{redisResource2.Name}:{redisResource2.PrimaryEndpoint.TargetPort}";
-
+                var password = await redisResource2.PasswordParameter!.GetValueAsync(default);
                 Assert.Equal("URL_redis2", item.Key);
-                Assert.Equal(redisUrl, item.Value);
+                Assert.Equal($"rediss://:{password}@redis2.dev.internal:6379", item.Value);
             },
             item =>
             {
                 Assert.Equal("ENGINE_redis2", item.Key);
                 Assert.Equal("redis@dbgate-plugin-redis", item.Value);
             });
+    }
+
+    private static void AllocateEndpoint(EndpointAnnotation endpoint, string containerHost, int hostPort)
+    {
+        endpoint.AllocatedEndpoint = new AllocatedEndpoint(endpoint, "localhost", hostPort);
+        endpoint.AllAllocatedEndpoints.AddOrUpdateAllocatedEndpoint(
+            KnownNetworkIdentifiers.DefaultAspireContainerNetwork,
+            new AllocatedEndpoint(
+                endpoint,
+                containerHost,
+                endpoint.TargetPort ?? 6379,
+                EndpointBindingMode.SingleAddress,
+                networkId: KnownNetworkIdentifiers.DefaultAspireContainerNetwork));
     }
 }

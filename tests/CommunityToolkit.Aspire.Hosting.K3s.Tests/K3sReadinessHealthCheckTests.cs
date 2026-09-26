@@ -190,14 +190,14 @@ public class K3sReadinessHealthCheckTests
     }
 
     [Fact]
-    public async Task CheckCoreAsync_ContainerVariantContainsClusterNameUrl()
+    public async Task CheckCoreAsync_ContainerVariantUsesContainerNetworkEndpoint()
     {
         var (healthCheck, dir, _) = MakeCheck(writeKubeconfig: true, nodeCount: 1, agentCount: 0);
 
         await healthCheck.CheckCoreAsync(port: 6443);
 
         var containerYaml = await File.ReadAllTextAsync(Path.Combine(dir, "container", "kubeconfig.yaml"));
-        Assert.Contains("https://k8s:6443", containerYaml);
+        Assert.Contains("https://k8s.dev.internal:6443", containerYaml);
     }
 
     // ── BuildConfigYaml ───────────────────────────────────────────────────────
@@ -334,7 +334,23 @@ public class K3sReadinessHealthCheckTests
         if (writeKubeconfig)
             File.WriteAllText(Path.Combine(clusterDir, "kubeconfig.yaml"), MinimalKubeconfig);
 
-        var cluster = new K3sClusterResource("k8s") { KubeconfigDirectory = dir };
+        var appBuilder = DistributedApplication.CreateBuilder();
+        var cluster = appBuilder.AddK3sCluster("k8s").Resource;
+        cluster.KubeconfigDirectory = dir;
+        var originalApiEndpoint = cluster.Annotations
+            .OfType<EndpointAnnotation>()
+            .Single(endpoint => endpoint.Name == K3sClusterResource.ApiServerEndpointName);
+        originalApiEndpoint.AllocatedEndpoint = new AllocatedEndpoint(originalApiEndpoint, "localhost", 6443);
+        originalApiEndpoint.AllAllocatedEndpoints.AddOrUpdateAllocatedEndpoint(
+            KnownNetworkIdentifiers.DefaultAspireContainerNetwork,
+            new AllocatedEndpoint(
+                originalApiEndpoint,
+                "k8s.dev.internal",
+                6443,
+                EndpointBindingMode.SingleAddress,
+                null,
+                KnownNetworkIdentifiers.DefaultAspireContainerNetwork));
+
         for (var i = 0; i < agentCount; i++)
         {
             cluster.AgentCount++;

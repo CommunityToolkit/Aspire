@@ -54,6 +54,22 @@ public static partial class FlociHostingExtension
     }
 
     /// <summary>
+    /// Configures the host port that the Floci AWS resource is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for Floci AWS.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
+    /// <returns>The resource builder for Floci AWS.</returns>
+    [AspireExport("withHostPortAws", MethodName = "withHostPort")]
+    public static IResourceBuilder<FlociAwsContainerResource> WithHostPort(
+        this IResourceBuilder<FlociAwsContainerResource> builder,
+        int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(FlociAwsContainerResource.AwsEndpointName, endpoint => endpoint.Port = port);
+    }
+
+    /// <summary>
     /// Adds a reference to a Floci AWS emulator resource, injecting the standard
     /// <c>ConnectionStrings__{name}</c> entry plus the AWS SDK environment variables
     /// (<c>AWS_ENDPOINT_URL</c>, <c>AWS_DEFAULT_REGION</c>, <c>AWS_ACCESS_KEY_ID</c>,
@@ -142,4 +158,3 @@ public static partial class FlociHostingExtension
         => WithDataBindMountCore(builder, source, isReadOnly);
 
 }
-

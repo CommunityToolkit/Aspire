@@ -10,6 +10,20 @@ namespace Aspire.Hosting;
 public static class StableDiffusionCppResourceBuilderExtensions
 {
     /// <summary>
+    /// Configures the host port that the stable-diffusion.cpp resource is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for stable-diffusion.cpp.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
+    /// <returns>The resource builder for stable-diffusion.cpp.</returns>
+    [AspireExport]
+    public static IResourceBuilder<StableDiffusionCppResource> WithHostPort(this IResourceBuilder<StableDiffusionCppResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(StableDiffusionCppResource.HttpEndpointName, endpoint => endpoint.Port = port);
+    }
+
+    /// <summary>
     /// Adds a stable-diffusion.cpp container resource using an official image.
     /// </summary>
     /// <param name="builder">The distributed application builder.</param>
@@ -56,11 +70,10 @@ public static class StableDiffusionCppResourceBuilderExtensions
             .WithImageSHA256(GetImageSha256(imageVariant))
             .WithImageRegistry(StableDiffusionCppContainerImageTags.Registry)
             .WithEntrypoint("/sd-server")
-            .WithArgs(
-                "--listen-ip", "0.0.0.0",
-                "--listen-port", StableDiffusionCppResource.HttpTargetPort.ToString(),
-                "--lora-model-dir", "/models/loras",
-                "--hires-upscalers-dir", "/models/upscalers")
+            .WithArgs("--listen-ip", resource.PrimaryEndpoint.Property(EndpointProperty.IPV4Host))
+            .WithArgs("--listen-port", resource.PrimaryEndpoint.Property(EndpointProperty.TargetPort))
+            .WithArgs("--lora-model-dir", "/models/loras")
+            .WithArgs("--hires-upscalers-dir", "/models/upscalers")
             .WithBindMount(modelsDirectory, "/models")
             .WithBindMount(outputDirectory, "/output")
             .WithHttpEndpoint(
