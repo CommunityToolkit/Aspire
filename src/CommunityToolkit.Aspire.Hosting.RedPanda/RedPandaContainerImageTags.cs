@@ -9,13 +9,13 @@ internal static class RedPandaContainerImageTags
     internal const string Image = "redpandadata/redpanda";
 
     /// <remarks>v26.1.10</remarks>
-    internal const string Tag = "v26.1.10";
+    internal const string Tag = "v26.2.3";
 
     /// <remarks>redpandadata/console</remarks>
     internal const string ConsoleImage = "redpandadata/console";
 
     /// <remarks>v3.7.4</remarks>
-    internal const string ConsoleTag = "v3.7.4";
+    internal const string ConsoleTag = "v3.12.0";
 
     /// <remarks>docker.io</remarks>
     internal const string KafkaUiRegistry = "docker.io";
