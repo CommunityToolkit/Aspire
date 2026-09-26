@@ -113,31 +113,9 @@ public static class ActiveMQBuilderExtensions
         }
 
         return builder
-            .WithContainerFiles(
-                destinationPath: "/opt/apache-activemq/conf",
-                [new ContainerFile
-                {
-                    Name = "jetty-spring.properties",
-                    // ActiveMQ reads this file's explicit XML list. Keep its effective
-                    // 6.3.2 defaults and add the run-only allowlist extension.
-                    Contents = """
-                        jettyXmlFiles=jetty-bytebufferpool.xml,jetty-threadpool.xml,jetty-scheduler.xml,jetty-http-config.xml,jetty.xml,jetty-connection-limit.xml,jetty-network-connection-limit.xml,jetty-security.xml,jetty-min-data-rate.xml,jetty-thread-limit.xml,jetty-size-limit.xml,jetty-dos.xml
-                        jettyHttpXmlFiles=jetty-http.xml
-                        jettyHttpsXmlFiles=jetty-ssl.xml,jetty-ssl-context.xml,jetty-https.xml,jetty-secure-redirect.xml
-                        jettyExtraXmlFiles=aspire-allow-all-ips.xml
-                        httpEnabled=true
-                        httpsEnabled=false
-                        jetty.http.port=8161
-                        jetty.ssl.port=8443
-                        jetty.httpConfig.securePort=8443
-                        jetty.sslContext.keyStorePath=conf/jetty-keystore.ks
-                        jetty.sslContext.keyStoreType=PKCS12
-                        jetty.sslContext.keyStorePassword=OBF:1v2j1uum1xtv1zej1zer1xtn1uvk1v1v
-                        jetty.httpConfig.sendServerVersion=false
-                        jetty.httpConfig.sendDateHeader=false
-                        jetty.dos.leakingBucketTracker.maxRequestsPerSecond=100
-                        """
-                }])
+            .WithEnvironment(
+                "JAVA_TOOL_OPTIONS",
+                "-Dwebconsole.jettyExtraXmlFiles=/opt/apache-activemq/conf/jetty/aspire-allow-all-ips.xml")
             .WithContainerFiles(
                 destinationPath: "/opt/apache-activemq/conf/jetty",
                 [new ContainerFile
