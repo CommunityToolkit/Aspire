@@ -4,8 +4,8 @@
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Utils;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using System.Text;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using System.Net.Sockets;
 
 #pragma warning disable ASPIREATS001 // AspireExport is experimental
 
@@ -100,7 +100,7 @@ public static class ActiveMQBuilderExtensions
                 context.EnvironmentVariables[activeMq.ActiveMqSettings.EnvironmentVariableUsername] = activeMq.UserNameReference;
                 context.EnvironmentVariables[activeMq.ActiveMqSettings.EnvironmentVariablePassword] = activeMq.PasswordParameter;
             });
-        return result.WithJolokiaHealthCheck();
+        return result.WithBrokerHealthCheck();
     }
 
     /// <summary>
@@ -157,71 +157,45 @@ public static class ActiveMQBuilderExtensions
         where T : ActiveMQServerResourceBase =>
         builder.WithBindMount(source, builder.Resource.ActiveMqSettings.ConfPath, isReadOnly);
 
-    private static IResourceBuilder<T> WithJolokiaHealthCheck<T>(
+    private static IResourceBuilder<T> WithBrokerHealthCheck<T>(
         this IResourceBuilder<T> builder)
     where T : ActiveMQServerResourceBase
     {
-        const int statusCode = 200;
-        const string endpointName = "web";
-        const string scheme = "http";
-
-        builder.OnResourceEndpointsAllocated((resource, @event, ct) =>
-        {
-            var endpoint = resource.GetEndpoint(endpointName);
-            if (!endpoint.Exists)
-            {
-                throw new DistributedApplicationException($"The endpoint '{endpointName}' does not exist on the resource '{builder.Resource.Name}'.");
-            }
-
-            if (endpoint.Scheme != scheme)
-            {
-                throw new DistributedApplicationException($"The endpoint '{endpointName}' on resource '{builder.Resource.Name}' was not using the '{scheme}' scheme.");
-            }
-
-            return Task.CompletedTask;
-        });
-
-        Uri? uri = null;
-        string basicAuthentication = string.Empty;
-        builder.OnBeforeResourceStarted(async (resource, _, ct) =>
-        {
-            var endpoint = resource.GetEndpoint(endpointName);
-            Uri baseUri = new (endpoint.Url, UriKind.Absolute);
-            string userName = (await resource.UserNameReference.GetValueAsync(ct))!;
-            string password = (await resource.PasswordParameter.GetValueAsync(ct))!;
-            basicAuthentication = "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes($"{userName}:{password}"));
-            uri = new UriBuilder(baseUri)
-            {
-                Path = builder.Resource.ActiveMqSettings.JolokiaPath
-            }.Uri;
-        });
-
+        const string endpointName = ActiveMQServerResourceBase.PrimaryEndpointName;
+        EndpointReference endpoint = builder.Resource.PrimaryEndpoint;
         string healthCheckKey = $"{builder.Resource.Name}_{endpointName}_check";
-        builder.ApplicationBuilder.Services.AddLogging(configure =>
-        {
-            // The AddUrlGroup health check makes use of http client factory.
-            configure.AddFilter($"System.Net.Http.HttpClient.{healthCheckKey}.LogicalHandler", LogLevel.None);
-            configure.AddFilter($"System.Net.Http.HttpClient.{healthCheckKey}.ClientHandler", LogLevel.None);
-        });
 
-        builder.ApplicationBuilder.Services.AddHealthChecks().AddUrlGroup(options =>
-        {
-            if (uri is null)
-            {
-                throw new DistributedApplicationException($"The URI for the health check is not set. Ensure that the resource has been allocated before the health check is executed.");
-            }
-
-            options.AddUri(uri, setup =>
-            {
-                setup.AddCustomHeader("Authorization", basicAuthentication);
-                setup.AddCustomHeader("origin", "localhost");
-                setup.ExpectHttpCode(statusCode);
-            });
-        }, healthCheckKey);
+        builder.ApplicationBuilder.Services.AddHealthChecks().Add(new HealthCheckRegistration(
+            healthCheckKey,
+            _ => new ActiveMQHealthCheck(endpoint),
+            failureStatus: HealthStatus.Unhealthy,
+            tags: null));
 
         builder.WithHealthCheck(healthCheckKey);
 
         return builder;
+    }
+}
+
+internal sealed class ActiveMQHealthCheck(EndpointReference endpoint) : IHealthCheck
+{
+    public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
+    {
+        if (!endpoint.IsAllocated)
+        {
+            return HealthCheckResult.Unhealthy("The ActiveMQ endpoint has not been allocated.");
+        }
+
+        try
+        {
+            using var client = new TcpClient();
+            await client.ConnectAsync(endpoint.Host, endpoint.Port, cancellationToken).ConfigureAwait(false);
+            return HealthCheckResult.Healthy();
+        }
+        catch (Exception ex)
+        {
+            return HealthCheckResult.Unhealthy("Failed to connect to the ActiveMQ broker.", ex);
+        }
     }
 }
 

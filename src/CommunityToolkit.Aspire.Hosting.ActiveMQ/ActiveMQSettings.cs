@@ -10,7 +10,6 @@ internal static class ActiveMQSettings
             Tag = ActiveMQClassicContainerImageSettings.Tag,
             EnvironmentVariableUsername = ActiveMQClassicContainerImageSettings.EnvironmentVariableUsername,
             EnvironmentVariablePassword = ActiveMQClassicContainerImageSettings.EnvironmentVariablePassword,
-            JolokiaPath = ActiveMQClassicContainerImageSettings.JolokiaPath,
             DataPath = ActiveMQClassicContainerImageSettings.DataPath,
             ConfPath = ActiveMQClassicContainerImageSettings.ConfPath
         };
@@ -23,7 +22,6 @@ internal static class ActiveMQSettings
             Tag = ActiveMQArtemisContainerImageSettings.Tag,
             EnvironmentVariableUsername = ActiveMQArtemisContainerImageSettings.EnvironmentVariableUsername,
             EnvironmentVariablePassword = ActiveMQArtemisContainerImageSettings.EnvironmentVariablePassword,
-            JolokiaPath = ActiveMQArtemisContainerImageSettings.JolokiaPath,
             DataPath = ActiveMQArtemisContainerImageSettings.DataPath,
             ConfPath = ActiveMQArtemisContainerImageSettings.ConfPath
         };
@@ -34,7 +32,6 @@ internal static class ActiveMQSettings
         public required string Tag { get; init; }
         public required string EnvironmentVariableUsername { get; init; }
         public required string EnvironmentVariablePassword { get; init; }
-        public required string JolokiaPath { get; init; }
         public required string DataPath { get; init; }
         public required string ConfPath { get; init; }
     }

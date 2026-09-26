@@ -26,10 +26,6 @@ public interface IActiveMQSettings
     /// </summary>
     string EnvironmentVariablePassword { get; }
     /// <summary>
-    /// Gets the Jolokia path for the ActiveMQ container for the health-check.
-    /// </summary>
-    string JolokiaPath { get; }
-    /// <summary>
     /// Gets the data path for the ActiveMQ container.
     /// </summary>
     string DataPath { get; }
