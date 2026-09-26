@@ -7,6 +7,6 @@ internal static class MeilisearchContainerImageTags
     /// <summary>getmeili/meilisearch</summary>
     public const string Image = "getmeili/meilisearch";
     /// <summary>v1.21</summary>
-    public const string Tag = "v1.21";
+    public const string Tag = "v1.54.0";
 }
 
