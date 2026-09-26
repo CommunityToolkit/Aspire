@@ -8,5 +8,5 @@ internal static class OllamaContainerImageTags
 
     public const string OpenWebUIRegistry = "ghcr.io";
     public const string OpenWebUIImage = "open-webui/open-webui";
-    public const string OpenWebUITag = "v0.11.4";
+    public const string OpenWebUITag = "0.11.4";
 }
