@@ -37,20 +37,21 @@ Where MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION, and PREVIEW_VERSION are the r
 
 When using a nightly build, we want to blank out the `AspirePreviewSuffix` to avoid confusion with the actual preview versions.
 
-## Step 2: Update all AppHost project files
+## Step 2: Configure the AppHost SDK version in `global.json`
 
-Search the entire repository for **all** `.csproj` files whose `<Project Sdk="...">` attribute references `Aspire.AppHost.Sdk`. There are many of these across `tests/`, `tests-app-hosts/`, and `examples/`.
+Set the `Aspire.AppHost.Sdk` version in the root `global.json` under `msbuild-sdks`. This keeps the SDK package version in one place while preserving the standard project SDK reference.
 
-Each one must be updated to the full version string:
-
-```xml
-<Project Sdk="Aspire.AppHost.Sdk/MAJOR_VERSION.MINOR_VERSION.PATCH_VERSION-PREVIEW_VERSION">
+```json
+"msbuild-sdks": {
+  "Aspire.AppHost.Sdk": "VERSION"
+}
 ```
 
-**We cannot use a MSBuild variable in the Project SDK attribute, so you must hardcode the version in every file.**
+Search the repository for all `.csproj` files that reference `Aspire.AppHost.Sdk`. Each AppHost project should use the standard SDK reference with no version in the project file:
 
-Use a command like `grep -rl "Aspire.AppHost.Sdk" --include="*.csproj"` to find all files that need updating.
-
+```xml
+<Project Sdk="Aspire.AppHost.Sdk">
+```
 ## Step 3: Update TypeScript AppHost `aspire.config.json` files
 
 Search the entire repository for all `aspire.config.json` files (typically under `examples/` in directories ending with `.AppHost.TypeScript`). Each file has an `sdk.version` field that must be updated to the new version.
