@@ -41,9 +41,9 @@ internal sealed class KindCrdEstablishmentCheck(
         List<string> remainingNames = crdNames.Select(GetDefinitionName).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
         resource.TryGetLastAnnotation<KindCrdWaitPolicyAnnotation>(out var waitPolicy);
         var timeout = KubectlTimeouts.Normalize(
-            waitPolicy?.Timeout ?? KubectlTimeouts.DefaultCrdWaitTimeout,
-            nameof(KindCrdWaitPolicyAnnotation.Timeout));
-        var failureBehavior = waitPolicy?.FailureBehavior ?? CrdWaitBehavior.Fail;
+            waitPolicy?.Options.Timeout ?? KubectlTimeouts.DefaultCrdWaitTimeout,
+            nameof(CrdWaitOptions.Timeout));
+        var failureBehavior = waitPolicy?.Options.FailureBehavior ?? CrdWaitBehavior.Fail;
         ILogger logger = loggerService.GetLogger(resource);
         logger.LogInformation(
             "Waiting for {CrdCount} custom resource definition(s) to become Established...",

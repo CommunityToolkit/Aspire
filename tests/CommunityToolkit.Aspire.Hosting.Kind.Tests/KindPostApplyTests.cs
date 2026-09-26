@@ -252,8 +252,11 @@ public class KindPostApplyTests
                 Properties = [],
             });
         var resource = cluster.AddManifestFromContent("manifest", "kind: Namespace")
-            .WithCrdWaitBehavior(CrdWaitBehavior.BestEffort)
-            .WithCrdWaitTimeout(TimeSpan.FromSeconds(1)).Resource;
+            .WithCrdWait(options =>
+            {
+                options.FailureBehavior = CrdWaitBehavior.BestEffort;
+                options.Timeout = TimeSpan.FromSeconds(1);
+            }).Resource;
         builder.Services.AddSingleton<IProcessRunner>(runner);
         builder.Services.AddSingleton<Func<string, IKubernetes>>(_ => _ => kubernetes.Client);
         using var app = builder.Build();
@@ -302,7 +305,7 @@ public class KindPostApplyTests
                 Properties = [],
             });
         var resource = cluster.AddManifestFromContent("manifest", "kind: Namespace")
-            .WithCrdWaitBehavior(CrdWaitBehavior.BestEffort).Resource;
+            .WithCrdWait(options => options.FailureBehavior = CrdWaitBehavior.BestEffort).Resource;
         builder.Services.AddSingleton<IProcessRunner>(runner);
         builder.Services.AddSingleton<Func<string, IKubernetes>>(_ => _ => kubernetes.Client);
         using var app = builder.Build();
@@ -347,7 +350,7 @@ public class KindPostApplyTests
         using var builder = TestDistributedApplicationBuilder.Create();
         var resource = builder.AddKindCluster("test-cluster")
             .AddManifestFromContent("manifest", "kind: CustomResourceDefinition")
-            .WithCrdWaitBehavior(CrdWaitBehavior.BestEffort).Resource;
+            .WithCrdWait(options => options.FailureBehavior = CrdWaitBehavior.BestEffort).Resource;
         KindDeploymentOutcomes.GetOrCreate(resource).CrdNames =
             ["customresourcedefinition.apiextensions.k8s.io/widgets.example.com"];
         using var cts = new CancellationTokenSource();

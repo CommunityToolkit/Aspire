@@ -81,6 +81,38 @@ public static class KindManifestResourceBuilderExtensions
         return AddManifestResource(builder, resource);
     }
 
+    /// <summary>
+    /// Sets the maximum time to wait for applied CRDs to reach the <c>Established</c> condition.
+    /// </summary>
+    /// <param name="builder">The manifest resource builder.</param>
+    /// <param name="timeout">The CRD wait timeout.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{K8sManifestResource}"/>.</returns>
+    [Obsolete("Use WithCrdWait instead.")]
+    public static IResourceBuilder<K8sManifestResource> WithCrdWaitTimeout(
+        this IResourceBuilder<K8sManifestResource> builder,
+        TimeSpan timeout)
+    {
+        return KindDeployedResourceBuilderExtensions.WithCrdWait(
+            builder,
+            options => options.Timeout = timeout);
+    }
+
+    /// <summary>
+    /// Sets whether CRD wait failures prevent the manifest from running.
+    /// </summary>
+    /// <param name="builder">The manifest resource builder.</param>
+    /// <param name="behavior">The CRD wait behavior.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{K8sManifestResource}"/>.</returns>
+    [Obsolete("Use WithCrdWait instead.")]
+    public static IResourceBuilder<K8sManifestResource> WithCrdWaitBehavior(
+        this IResourceBuilder<K8sManifestResource> builder,
+        CrdWaitBehavior behavior)
+    {
+        return KindDeployedResourceBuilderExtensions.WithCrdWait(
+            builder,
+            options => options.FailureBehavior = behavior);
+    }
+
     private static IResourceBuilder<K8sManifestResource> AddManifestResource(
         IResourceBuilder<KindClusterResource> builder,
         K8sManifestResource resource)

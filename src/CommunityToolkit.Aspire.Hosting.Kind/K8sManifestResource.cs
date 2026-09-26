@@ -104,6 +104,34 @@ public class K8sManifestResource(string name, string manifestPath, KindClusterRe
         get => CommunityToolkit.Aspire.Hosting.Kind.K8sManifestAnnotations.GetWaitPolicy(this).ClusterReadyTimeout;
         set => CommunityToolkit.Aspire.Hosting.Kind.K8sManifestAnnotations.GetOrCreateWaitPolicy(this).ClusterReadyTimeout = value;
     }
+
+    /// <summary>
+    /// Gets or sets the maximum time to wait for applied CRDs to reach the <c>Established</c> condition.
+    /// </summary>
+    /// <remarks>
+    /// Assignments must be greater than zero and no more than one hour. Fractional seconds are rounded up.
+    /// Use <c>WithCrdWait(options =&gt; options.Timeout = value)</c> for new code.
+    /// </remarks>
+    [Obsolete("Use WithCrdWait on the resource builder instead.")]
+    public TimeSpan CrdWaitTimeout
+    {
+        get => this.TryGetLastAnnotation<CommunityToolkit.Aspire.Hosting.Kind.KindCrdWaitPolicyAnnotation>(out var policy)
+            ? policy.Options.Timeout
+            : CommunityToolkit.Aspire.Hosting.Kind.KubectlTimeouts.DefaultCrdWaitTimeout;
+        set => CommunityToolkit.Aspire.Hosting.Kind.KindCrdWaitPolicies.GetOrCreate(this).Options.Timeout = value;
+    }
+
+    /// <summary>
+    /// Gets or sets how CRD wait failures are handled.
+    /// </summary>
+    [Obsolete("Use WithCrdWait on the resource builder instead.")]
+    public CrdWaitBehavior CrdWaitBehavior
+    {
+        get => this.TryGetLastAnnotation<CommunityToolkit.Aspire.Hosting.Kind.KindCrdWaitPolicyAnnotation>(out var policy)
+            ? policy.Options.FailureBehavior
+            : Aspire.Hosting.CrdWaitBehavior.Fail;
+        set => CommunityToolkit.Aspire.Hosting.Kind.KindCrdWaitPolicies.GetOrCreate(this).Options.FailureBehavior = value;
+    }
 }
 
 #pragma warning restore ASPIREATS001

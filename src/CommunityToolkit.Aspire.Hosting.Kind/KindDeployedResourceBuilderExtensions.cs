@@ -14,42 +14,42 @@ namespace Aspire.Hosting;
 public static class KindDeployedResourceBuilderExtensions
 {
     /// <summary>
-    /// Sets the maximum time for the post-apply check to wait for CRDs
-    /// to reach the <c>Established</c> condition before Running.
+    /// Configures how the post-apply check waits for CRDs to reach the
+    /// <c>Established</c> condition before the resource becomes running.
     /// </summary>
     /// <typeparam name="T">The deployed resource type.</typeparam>
     /// <param name="builder">The Kind deployment resource builder.</param>
-    /// <param name="timeout">The CRD wait timeout.</param>
+    /// <param name="configure">The callback used to configure the CRD wait options.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    [AspireExport]
-    public static IResourceBuilder<T> WithCrdWaitTimeout<T>(
+    /// <remarks>
+    /// Repeated calls start from the current policy and preserve options that the callback does not change.
+    /// Timeout assignments are validated immediately. Changes are applied only after the callback completes.
+    /// </remarks>
+    [AspireExport(RunSyncOnBackgroundThread = true)]
+    public static IResourceBuilder<T> WithCrdWait<T>(
         this IResourceBuilder<T> builder,
-        TimeSpan timeout)
+        Action<CrdWaitOptions> configure)
         where T : KindDeployedResource
     {
         ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(configure);
 
-        KindCrdWaitPolicies.GetOrCreate(builder.Resource).Timeout = KubectlTimeouts.Normalize(timeout, nameof(timeout));
-        return builder;
-    }
+        builder.Resource.TryGetLastAnnotation<KindCrdWaitPolicyAnnotation>(out var policy);
+        var options = new CrdWaitOptions
+        {
+            Timeout = policy?.Options.Timeout ?? KubectlTimeouts.DefaultCrdWaitTimeout,
+            FailureBehavior = policy?.Options.FailureBehavior ?? CrdWaitBehavior.Fail,
+        };
+        configure(options);
 
-    /// <summary>
-    /// Sets whether CRD establishment failures prevent Running or are logged as
-    /// best-effort warnings while allowing the Kind deployment to run unverified.
-    /// </summary>
-    /// <typeparam name="T">The deployed resource type.</typeparam>
-    /// <param name="builder">The Kind deployment resource builder.</param>
-    /// <param name="behavior">The CRD wait behavior.</param>
-    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    [AspireExport]
-    public static IResourceBuilder<T> WithCrdWaitBehavior<T>(
-        this IResourceBuilder<T> builder,
-        CrdWaitBehavior behavior)
-        where T : KindDeployedResource
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-
-        KindCrdWaitPolicies.GetOrCreate(builder.Resource).FailureBehavior = behavior;
+        if (policy is null)
+        {
+            builder.Resource.Annotations.Add(new KindCrdWaitPolicyAnnotation(options));
+        }
+        else
+        {
+            policy.Options = options;
+        }
         return builder;
     }
 }

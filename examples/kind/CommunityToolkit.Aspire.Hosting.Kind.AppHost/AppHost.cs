@@ -40,7 +40,7 @@ cluster.AddManifest("ssa-config", Path.Combine(manifestMountSource, "extra-confi
 
 // Demonstrate best-effort CRD waiting when a local demo should continue after a CRD wait timeout.
 cluster.AddManifest("best-effort-crds", Path.Combine(manifestMountSource, "extra-config.yaml"))
-    .WithCrdWaitBehavior(CrdWaitBehavior.BestEffort);
+    .WithCrdWait(options => options.FailureBehavior = CrdWaitBehavior.BestEffort);
 
 cluster.AddManifestFromContent("demo-ns", """
     apiVersion: v1

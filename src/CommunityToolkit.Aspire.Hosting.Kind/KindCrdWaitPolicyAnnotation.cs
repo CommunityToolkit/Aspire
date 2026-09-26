@@ -8,9 +8,14 @@ namespace CommunityToolkit.Aspire.Hosting.Kind;
 
 internal sealed class KindCrdWaitPolicyAnnotation : IResourceAnnotation
 {
-    public TimeSpan Timeout { get; set; } = KubectlTimeouts.DefaultCrdWaitTimeout;
+    public KindCrdWaitPolicyAnnotation(CrdWaitOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
 
-    public CrdWaitBehavior FailureBehavior { get; set; } = CrdWaitBehavior.Fail;
+        Options = options;
+    }
+
+    public CrdWaitOptions Options { get; set; }
 }
 
 internal static class KindCrdWaitPolicies
@@ -22,7 +27,7 @@ internal static class KindCrdWaitPolicies
             return annotation;
         }
 
-        annotation = new KindCrdWaitPolicyAnnotation();
+        annotation = new KindCrdWaitPolicyAnnotation(new CrdWaitOptions());
         resource.Annotations.Add(annotation);
         return annotation;
     }

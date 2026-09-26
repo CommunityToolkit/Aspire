@@ -561,7 +561,7 @@ public class KindHelmChartTests
             Task.FromException<k8s.Models.V1CustomResourceDefinition>(new HttpRequestException("connection refused")));
         using var builder = TestDistributedApplicationBuilder.Create();
         var chart = builder.AddKindCluster("test-cluster").AddHelmChart("redis", "chart/ref");
-        Assert.Same(chart, chart.WithCrdWaitBehavior(CrdWaitBehavior.BestEffort));
+        Assert.Same(chart, chart.WithCrdWait(options => options.FailureBehavior = CrdWaitBehavior.BestEffort));
         builder.Services.AddSingleton<IProcessRunner>(runner);
         builder.Services.AddSingleton<Func<string, IKubernetes>>(_ => _ => kubernetes.Client);
         using var app = builder.Build();
@@ -575,14 +575,15 @@ public class KindHelmChartTests
     }
 
     [Fact]
-    public void WithCrdWaitTimeoutConfiguresHelmCrdPolicy()
+    public void WithCrdWaitConfiguresHelmPolicyWithInferredResourceType()
     {
         using var builder = TestDistributedApplicationBuilder.Create();
         var chart = builder.AddKindCluster("test-cluster").AddHelmChart("redis", "chart/ref");
 
-        Assert.Same(chart, chart.WithCrdWaitTimeout(TimeSpan.FromMilliseconds(500)));
+        Assert.Same(chart, chart.WithCrdWait(options => options.Timeout = TimeSpan.FromMilliseconds(500)));
         Assert.True(chart.Resource.TryGetLastAnnotation<KindCrdWaitPolicyAnnotation>(out var policy));
-        Assert.Equal(TimeSpan.FromSeconds(1), policy.Timeout);
+        Assert.Equal(TimeSpan.FromSeconds(1), policy.Options.Timeout);
+        Assert.Equal(CrdWaitBehavior.Fail, policy.Options.FailureBehavior);
     }
 
     [Fact]

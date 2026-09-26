@@ -350,7 +350,7 @@ public class KindManifestTests
                 Properties = [],
             });
         cluster.AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"))
-            .WithCrdWaitTimeout(TimeSpan.FromSeconds(1));
+            .WithCrdWait(options => options.Timeout = TimeSpan.FromSeconds(1));
         using var app = builder.Build();
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
         cts.CancelAfter(TimeSpan.FromSeconds(30));
@@ -787,89 +787,256 @@ public class KindManifestTests
     }
 
     [Fact]
-    public void WithCrdWaitTimeoutSetsCrdWaitPolicy()
+    public void CrdWaitOptionsUseExpectedDefaults()
+    {
+        var options = new CrdWaitOptions();
+
+        Assert.Equal(TimeSpan.FromMinutes(5), options.Timeout);
+        Assert.Equal(CrdWaitBehavior.Fail, options.FailureBehavior);
+    }
+
+    [Fact]
+    public void CrdWaitOptionsTimeoutRoundsFractionalSecondsAtAssignment()
+    {
+        var options = new CrdWaitOptions
+        {
+            Timeout = TimeSpan.FromMilliseconds(500),
+        };
+
+        Assert.Equal(TimeSpan.FromSeconds(1), options.Timeout);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    [InlineData(3_600_001)]
+    public void CrdWaitOptionsTimeoutRejectsInvalidAssignment(long milliseconds)
+    {
+        var options = new CrdWaitOptions();
+
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            options.Timeout = TimeSpan.FromMilliseconds(milliseconds));
+        Assert.Equal(TimeSpan.FromMinutes(5), options.Timeout);
+    }
+
+    [Fact]
+    public void WithCrdWaitUsesDefaultsForNewPolicy()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var manifest = builder.AddKindCluster("test-cluster")
+            .AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"));
+
+        manifest.WithCrdWait(_ => { });
+
+        Assert.True(manifest.Resource.TryGetLastAnnotation<KindCrdWaitPolicyAnnotation>(out var policy));
+        Assert.Equal(TimeSpan.FromMinutes(5), policy.Options.Timeout);
+        Assert.Equal(CrdWaitBehavior.Fail, policy.Options.FailureBehavior);
+    }
+
+    [Fact]
+    public void WithCrdWaitInvokesCallbackOnce()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var manifest = builder.AddKindCluster("test-cluster")
+            .AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"));
+        var callbackCount = 0;
+
+        manifest.WithCrdWait(_ => callbackCount++);
+
+        Assert.Equal(1, callbackCount);
+    }
+
+    [Fact]
+    public void WithCrdWaitConfiguresManifestPolicyWithInferredResourceType()
     {
         using var builder = TestDistributedApplicationBuilder.Create();
 
         var cluster = builder.AddKindCluster("test-cluster");
-        cluster.AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"))
-            .WithCrdWaitTimeout(TimeSpan.FromSeconds(45));
+        var manifest = cluster.AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"));
+        Assert.Same(manifest, manifest.WithCrdWait(options =>
+        {
+            options.Timeout = TimeSpan.FromSeconds(45);
+            options.FailureBehavior = CrdWaitBehavior.BestEffort;
+        }));
 
         using var app = builder.Build();
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
         var resource = Assert.Single(appModel.Resources.OfType<K8sManifestResource>());
         Assert.True(resource.TryGetLastAnnotation<KindCrdWaitPolicyAnnotation>(out var policy));
-        Assert.Equal(TimeSpan.FromSeconds(45), policy.Timeout);
-        Assert.Equal(CrdWaitBehavior.Fail, policy.FailureBehavior);
+        Assert.Equal(TimeSpan.FromSeconds(45), policy.Options.Timeout);
+        Assert.Equal(CrdWaitBehavior.BestEffort, policy.Options.FailureBehavior);
     }
 
     [Fact]
-    public void WithCrdWaitTimeoutRejectsZero()
+    public void WithCrdWaitAnnotationStoresExactCallbackOptionsInstance()
     {
         using var builder = TestDistributedApplicationBuilder.Create();
-        var cluster = builder.AddKindCluster("test-cluster");
+        var manifest = builder.AddKindCluster("test-cluster")
+            .AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"));
+        CrdWaitOptions? configuredOptions = null;
+
+        manifest.WithCrdWait(options =>
+        {
+            configuredOptions = options;
+            options.Timeout = TimeSpan.FromMilliseconds(500);
+        });
+
+        Assert.True(manifest.Resource.TryGetLastAnnotation<KindCrdWaitPolicyAnnotation>(out var policy));
+        Assert.NotNull(configuredOptions);
+        Assert.Same(configuredOptions, policy.Options);
+        Assert.Equal(TimeSpan.FromSeconds(1), configuredOptions.Timeout);
+    }
+
+    [Fact]
+    public void CapturedCrdWaitOptionsRejectInvalidMutationAfterConfiguration()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var manifest = builder.AddKindCluster("test-cluster")
+            .AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"));
+        CrdWaitOptions? configuredOptions = null;
+        manifest.WithCrdWait(options =>
+        {
+            configuredOptions = options;
+            options.Timeout = TimeSpan.FromSeconds(45);
+        });
+        Assert.NotNull(configuredOptions);
+        Assert.True(manifest.Resource.TryGetLastAnnotation<KindCrdWaitPolicyAnnotation>(out var policy));
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => configuredOptions.Timeout = TimeSpan.Zero);
+
+        Assert.Same(configuredOptions, policy.Options);
+        Assert.Equal(TimeSpan.FromSeconds(45), policy.Options.Timeout);
+    }
+
+    [Fact]
+    public void FailedWithCrdWaitConfigurationKeepsOriginalOptionsReference()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var manifest = builder.AddKindCluster("test-cluster")
+            .AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"));
+        CrdWaitOptions? originalOptions = null;
+        manifest.WithCrdWait(options =>
+        {
+            originalOptions = options;
+            options.Timeout = TimeSpan.FromSeconds(45);
+        });
+        Assert.True(manifest.Resource.TryGetLastAnnotation<KindCrdWaitPolicyAnnotation>(out var policy));
+        CrdWaitOptions? failedOptions = null;
+
+        Assert.Throws<InvalidOperationException>(() => manifest.WithCrdWait(options =>
+        {
+            failedOptions = options;
+            options.Timeout = TimeSpan.FromSeconds(30);
+            throw new InvalidOperationException("Configuration failed.");
+        }));
+
+        Assert.NotNull(originalOptions);
+        Assert.NotNull(failedOptions);
+        Assert.NotSame(originalOptions, failedOptions);
+        Assert.Same(originalOptions, policy.Options);
+        Assert.Equal(TimeSpan.FromSeconds(45), policy.Options.Timeout);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    [InlineData(3_600_001)]
+    public void WithCrdWaitRejectsInvalidTimeoutWithoutAttachingPolicy(long milliseconds)
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var manifest = builder.AddKindCluster("test-cluster")
+            .AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"));
 
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            cluster.AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"))
-                .WithCrdWaitTimeout(TimeSpan.Zero));
+            manifest.WithCrdWait(options => options.Timeout = TimeSpan.FromMilliseconds(milliseconds)));
+        Assert.False(manifest.Resource.TryGetLastAnnotation<KindCrdWaitPolicyAnnotation>(out _));
     }
 
     [Fact]
-    public void WithCrdWaitTimeoutRejectsNegative()
+    public void WithCrdWaitRoundsFractionalSecondsUp()
     {
         using var builder = TestDistributedApplicationBuilder.Create();
-        var cluster = builder.AddKindCluster("test-cluster");
+        var manifest = builder.AddKindCluster("test-cluster")
+            .AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"));
 
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
-            cluster.AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"))
-                .WithCrdWaitTimeout(TimeSpan.FromSeconds(-1)));
+        manifest.WithCrdWait(options => options.Timeout = TimeSpan.FromMilliseconds(500));
+
+        Assert.True(manifest.Resource.TryGetLastAnnotation<KindCrdWaitPolicyAnnotation>(out var policy));
+        Assert.Equal(TimeSpan.FromSeconds(1), policy.Options.Timeout);
+        Assert.Equal(CrdWaitBehavior.Fail, policy.Options.FailureBehavior);
     }
 
     [Fact]
-    public void WithCrdWaitTimeoutRoundsSubSecondUpToOneSecond()
+    public void RepeatedWithCrdWaitCallsPreserveUnspecifiedValues()
     {
         using var builder = TestDistributedApplicationBuilder.Create();
+        var manifest = builder.AddKindCluster("test-cluster")
+            .AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"));
 
-        var cluster = builder.AddKindCluster("test-cluster");
-        cluster.AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"))
-            .WithCrdWaitTimeout(TimeSpan.FromMilliseconds(500));
+        manifest.WithCrdWait(options => options.Timeout = TimeSpan.FromSeconds(45));
+        manifest.WithCrdWait(options => options.FailureBehavior = CrdWaitBehavior.BestEffort);
 
-        using var app = builder.Build();
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-
-        var resource = Assert.Single(appModel.Resources.OfType<K8sManifestResource>());
-        Assert.True(resource.TryGetLastAnnotation<KindCrdWaitPolicyAnnotation>(out var policy));
-        Assert.Equal(TimeSpan.FromSeconds(1), policy.Timeout);
+        Assert.True(manifest.Resource.TryGetLastAnnotation<KindCrdWaitPolicyAnnotation>(out var policy));
+        Assert.Equal(TimeSpan.FromSeconds(45), policy.Options.Timeout);
+        Assert.Equal(CrdWaitBehavior.BestEffort, policy.Options.FailureBehavior);
     }
 
     [Fact]
-    public void WithCrdWaitTimeoutRejectsMoreThanOneHour()
+    public void WithCrdWaitCallbackFailureDoesNotChangeExistingPolicy()
     {
         using var builder = TestDistributedApplicationBuilder.Create();
-        var cluster = builder.AddKindCluster("test-cluster");
+        var manifest = builder.AddKindCluster("test-cluster")
+            .AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"))
+            .WithCrdWait(options =>
+            {
+                options.Timeout = TimeSpan.FromSeconds(45);
+                options.FailureBehavior = CrdWaitBehavior.BestEffort;
+            });
+        Assert.True(manifest.Resource.TryGetLastAnnotation<KindCrdWaitPolicyAnnotation>(out var originalPolicy));
+        var originalOptions = originalPolicy.Options;
 
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
-            cluster.AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"))
-                .WithCrdWaitTimeout(TimeSpan.MaxValue));
+        Assert.Throws<InvalidOperationException>(() => manifest.WithCrdWait(options =>
+        {
+            options.Timeout = TimeSpan.FromSeconds(30);
+            options.FailureBehavior = CrdWaitBehavior.Fail;
+            Assert.Equal(TimeSpan.FromSeconds(45), originalPolicy.Options.Timeout);
+            Assert.Equal(CrdWaitBehavior.BestEffort, originalPolicy.Options.FailureBehavior);
+            throw new InvalidOperationException("Configuration failed.");
+        }));
+
+        Assert.True(manifest.Resource.TryGetLastAnnotation<KindCrdWaitPolicyAnnotation>(out var currentPolicy));
+        Assert.Same(originalPolicy, currentPolicy);
+        Assert.Same(originalOptions, currentPolicy.Options);
+        Assert.Equal(TimeSpan.FromSeconds(45), currentPolicy.Options.Timeout);
+        Assert.Equal(CrdWaitBehavior.BestEffort, currentPolicy.Options.FailureBehavior);
     }
 
     [Fact]
-    public void WithCrdWaitBehaviorSetsCrdWaitPolicy()
+    public void WithCrdWaitValidationFailureDoesNotChangeExistingPolicy()
     {
         using var builder = TestDistributedApplicationBuilder.Create();
+        var manifest = builder.AddKindCluster("test-cluster")
+            .AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"))
+            .WithCrdWait(options =>
+            {
+                options.Timeout = TimeSpan.FromSeconds(45);
+                options.FailureBehavior = CrdWaitBehavior.BestEffort;
+            });
+        Assert.True(manifest.Resource.TryGetLastAnnotation<KindCrdWaitPolicyAnnotation>(out var originalPolicy));
+        var originalOptions = originalPolicy.Options;
 
-        var cluster = builder.AddKindCluster("test-cluster");
-        cluster.AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"))
-            .WithCrdWaitBehavior(CrdWaitBehavior.BestEffort);
+        Assert.Throws<ArgumentOutOfRangeException>(() => manifest.WithCrdWait(options =>
+        {
+            options.Timeout = TimeSpan.Zero;
+            options.FailureBehavior = CrdWaitBehavior.Fail;
+        }));
 
-        using var app = builder.Build();
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-
-        var resource = Assert.Single(appModel.Resources.OfType<K8sManifestResource>());
-        Assert.True(resource.TryGetLastAnnotation<KindCrdWaitPolicyAnnotation>(out var policy));
-        Assert.Equal(CrdWaitBehavior.BestEffort, policy.FailureBehavior);
-        Assert.Equal(TimeSpan.FromMinutes(5), policy.Timeout);
+        Assert.True(manifest.Resource.TryGetLastAnnotation<KindCrdWaitPolicyAnnotation>(out var currentPolicy));
+        Assert.Same(originalPolicy, currentPolicy);
+        Assert.Same(originalOptions, currentPolicy.Options);
+        Assert.Equal(TimeSpan.FromSeconds(45), currentPolicy.Options.Timeout);
+        Assert.Equal(CrdWaitBehavior.BestEffort, currentPolicy.Options.FailureBehavior);
     }
 
     [Fact]
@@ -919,10 +1086,55 @@ public class KindManifestTests
     }
 
     [Fact]
-    public void ManifestResourceDoesNotExposeCrdWaitSettings()
+    public void LegacyManifestCrdWaitPropertiesSharePolicy()
     {
-        Assert.Null(typeof(K8sManifestResource).GetProperty("CrdWaitTimeout"));
-        Assert.Null(typeof(K8sManifestResource).GetProperty("CrdWaitBehavior"));
+        var resource = new K8sManifestResource("crds", "./crds.yaml", new KindClusterResource("cluster"));
+
+#pragma warning disable CS0618 // Exercise the shipped manifest API.
+        Assert.Equal(TimeSpan.FromMinutes(5), resource.CrdWaitTimeout);
+        Assert.Equal(CrdWaitBehavior.Fail, resource.CrdWaitBehavior);
+        Assert.False(resource.TryGetLastAnnotation<KindCrdWaitPolicyAnnotation>(out _));
+        resource.CrdWaitTimeout = TimeSpan.FromMilliseconds(500);
+        resource.CrdWaitBehavior = (CrdWaitBehavior)42;
+        Assert.Throws<ArgumentOutOfRangeException>(() => resource.CrdWaitTimeout = TimeSpan.Zero);
+#pragma warning restore CS0618
+
+        Assert.True(resource.TryGetLastAnnotation<KindCrdWaitPolicyAnnotation>(out var policy));
+        Assert.Equal(TimeSpan.FromSeconds(1), policy.Options.Timeout);
+        Assert.Equal((CrdWaitBehavior)42, policy.Options.FailureBehavior);
+        var timeoutObsolete = typeof(K8sManifestResource).GetProperty("CrdWaitTimeout")?
+            .GetCustomAttributes(typeof(ObsoleteAttribute), false).SingleOrDefault() as ObsoleteAttribute;
+        var behaviorObsolete = typeof(K8sManifestResource).GetProperty("CrdWaitBehavior")?
+            .GetCustomAttributes(typeof(ObsoleteAttribute), false).SingleOrDefault() as ObsoleteAttribute;
+        Assert.Contains("WithCrdWait", Assert.IsType<ObsoleteAttribute>(timeoutObsolete).Message);
+        Assert.Contains("WithCrdWait", Assert.IsType<ObsoleteAttribute>(behaviorObsolete).Message);
+    }
+
+    [Fact]
+    public void LegacyManifestCrdWaitMethodsKeepClrSignaturesAndSharePolicy()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var manifest = builder.AddKindCluster("test-cluster")
+            .AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"));
+
+#pragma warning disable CS0618 // Exercise the shipped manifest overloads.
+        Assert.Same(manifest, KindManifestResourceBuilderExtensions.WithCrdWaitTimeout(manifest, TimeSpan.FromMilliseconds(500)));
+        Assert.Same(manifest, KindManifestResourceBuilderExtensions.WithCrdWaitBehavior(manifest, CrdWaitBehavior.BestEffort));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            KindManifestResourceBuilderExtensions.WithCrdWaitTimeout(manifest, TimeSpan.Zero));
+#pragma warning restore CS0618
+
+        Assert.True(manifest.Resource.TryGetLastAnnotation<KindCrdWaitPolicyAnnotation>(out var policy));
+        Assert.Equal(TimeSpan.FromSeconds(1), policy.Options.Timeout);
+        Assert.Equal(CrdWaitBehavior.BestEffort, policy.Options.FailureBehavior);
+        var timeoutObsolete = typeof(KindManifestResourceBuilderExtensions)
+            .GetMethod("WithCrdWaitTimeout", [typeof(IResourceBuilder<K8sManifestResource>), typeof(TimeSpan)])?
+            .GetCustomAttributes(typeof(ObsoleteAttribute), false).SingleOrDefault() as ObsoleteAttribute;
+        var behaviorObsolete = typeof(KindManifestResourceBuilderExtensions)
+            .GetMethod("WithCrdWaitBehavior", [typeof(IResourceBuilder<K8sManifestResource>), typeof(CrdWaitBehavior)])?
+            .GetCustomAttributes(typeof(ObsoleteAttribute), false).SingleOrDefault() as ObsoleteAttribute;
+        Assert.Contains("WithCrdWait", Assert.IsType<ObsoleteAttribute>(timeoutObsolete).Message);
+        Assert.Contains("WithCrdWait", Assert.IsType<ObsoleteAttribute>(behaviorObsolete).Message);
     }
 
     [Fact]
@@ -1201,8 +1413,11 @@ public class KindManifestTests
         using var builder = TestDistributedApplicationBuilder.Create();
         var resource = builder.AddKindCluster("test-cluster")
             .AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"))
-            .WithCrdWaitBehavior(CrdWaitBehavior.BestEffort)
-            .WithCrdWaitTimeout(TimeSpan.FromSeconds(1)).Resource;
+            .WithCrdWait(options =>
+            {
+                options.FailureBehavior = CrdWaitBehavior.BestEffort;
+                options.Timeout = TimeSpan.FromSeconds(1);
+            }).Resource;
         builder.Services.AddSingleton<IProcessRunner>(processRunner);
         builder.Services.AddSingleton<Func<string, IKubernetes>>(_ => _ => kubernetes.Client);
         using var app = builder.Build();
@@ -1224,7 +1439,7 @@ public class KindManifestTests
         using var builder = TestDistributedApplicationBuilder.Create();
         var resource = builder.AddKindCluster("test-cluster")
             .AddManifestFromContent("crds", "kind: CustomResourceDefinition")
-            .WithCrdWaitBehavior(behavior).Resource;
+            .WithCrdWait(options => options.FailureBehavior = behavior).Resource;
         KindDeploymentOutcomes.GetOrCreate(resource).CrdNames =
             ["customresourcedefinition.apiextensions.k8s.io/widgets.example.com"];
         var kubernetes = new FakeCrdClient((_, _) =>
@@ -1273,7 +1488,7 @@ public class KindManifestTests
         using var builder = TestDistributedApplicationBuilder.Create();
         var resource = builder.AddKindCluster("test-cluster")
             .AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"))
-            .WithCrdWaitTimeout(TimeSpan.FromSeconds(1)).Resource;
+            .WithCrdWait(options => options.Timeout = TimeSpan.FromSeconds(1)).Resource;
         builder.Services.AddSingleton<IProcessRunner>(processRunner);
         builder.Services.AddSingleton<Func<string, IKubernetes>>(_ => _ => kubernetes.Client);
         using var app = builder.Build();
@@ -1334,8 +1549,11 @@ public class KindManifestTests
         using var builder = TestDistributedApplicationBuilder.Create();
         var resource = builder.AddKindCluster("test-cluster")
             .AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"))
-            .WithCrdWaitTimeout(TimeSpan.FromSeconds(1))
-            .WithCrdWaitBehavior(behavior).Resource;
+            .WithCrdWait(options =>
+            {
+                options.Timeout = TimeSpan.FromSeconds(1);
+                options.FailureBehavior = behavior;
+            }).Resource;
         builder.Services.AddSingleton<IProcessRunner>(runner);
         builder.Services.AddSingleton<Func<string, IKubernetes>>(_ => _ => kubernetes.Client);
         using var app = builder.Build();
@@ -1363,7 +1581,7 @@ public class KindManifestTests
         using var builder = TestDistributedApplicationBuilder.Create();
         var resource = builder.AddKindCluster("test-cluster")
             .AddManifestFromContent("crds", "kind: CustomResourceDefinition")
-            .WithCrdWaitTimeout(TimeSpan.FromSeconds(1)).Resource;
+            .WithCrdWait(options => options.Timeout = TimeSpan.FromSeconds(1)).Resource;
         KindDeploymentOutcomes.GetOrCreate(resource).CrdNames =
             ["customresourcedefinition.apiextensions.k8s.io/widgets.example.com"];
         var kubernetes = new FakeCrdClient(async (name, _) =>
