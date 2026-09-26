@@ -9,5 +9,5 @@ internal static class LavinMQContainerImageSettings
     internal const string Image = "cloudamqp/lavinmq";
 
     /// <remarks>2.1.0</remarks>
-    internal const string Tag = "2.1.0";
+    internal const string Tag = "2.10.0";
 }
