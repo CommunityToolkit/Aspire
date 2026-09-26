@@ -10,5 +10,5 @@ internal sealed class UmamiContainerImageTags
     /// <summary>umamisoftware/umami</summary>
     public const string Image = "umamisoftware/umami";
     /// <summary>3.0</summary>
-    public const string Tag = "3.0";
+    public const string Tag = "3.4";
 }
