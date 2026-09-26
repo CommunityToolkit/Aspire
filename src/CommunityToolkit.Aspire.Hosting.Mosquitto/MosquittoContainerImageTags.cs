@@ -2,7 +2,6 @@ namespace CommunityToolkit.Aspire.Hosting.Mosquitto;
 
 internal static class MosquittoContainerImageTags
 {
-    /// <remarks>docker.io</remarks>
     internal const string Registry = "docker.io";
 
     /// <remarks>eclipse-mosquitto</remarks>
