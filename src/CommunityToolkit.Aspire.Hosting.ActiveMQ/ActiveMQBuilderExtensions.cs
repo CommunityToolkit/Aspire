@@ -103,12 +103,11 @@ public static class ActiveMQBuilderExtensions
 
         if (activeMq is ActiveMQServerResource)
         {
-            bool isRunMode = builder.ExecutionContext.IsRunMode;
             result.WithContainerFiles(
                 destinationPath: "/opt/apache-activemq/conf",
                 callback: (_, _) =>
                 {
-                    IEnumerable<ContainerFileSystemItem> files = isRunMode
+                    IEnumerable<ContainerFileSystemItem> files = result.ApplicationBuilder.ExecutionContext.IsRunMode
                         ? [
                             new ContainerFile
                             {
@@ -143,7 +142,7 @@ public static class ActiveMQBuilderExtensions
                 destinationPath: "/opt/apache-activemq/conf/jetty",
                 callback: (_, _) =>
                 {
-                    IEnumerable<ContainerFileSystemItem> files = isRunMode
+                    IEnumerable<ContainerFileSystemItem> files = result.ApplicationBuilder.ExecutionContext.IsRunMode
                         ? [new ContainerFile
                         {
                             Name = "aspire-allow-all-ips.xml",
