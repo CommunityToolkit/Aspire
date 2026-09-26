@@ -11,6 +11,6 @@ internal sealed class LogtoContainerImageTags
     /// <summary>svhd/logto</summary>
     public const string Image = "svhd/logto";
 
-    /// <summary>1.39</summary>
+    /// <summary>1.43</summary>
     public const string Tag = "1.43";
 }
