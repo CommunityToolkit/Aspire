@@ -5,16 +5,11 @@ namespace Aspire.Hosting;
 
 internal sealed class SurrealDbContainerImageTags
 {
-    /// <summary>docker.io</summary>
     public const string Registry = "docker.io";
-    /// <summary>surrealdb/surrealdb</summary>
     public const string Image = "surrealdb/surrealdb";
-    /// <summary>v3.3.0</summary>
     public const string Tag = "v3.3.0";
     
-    /// <summary>docker.io</summary>
     public const string SurrealistRegistry = "docker.io";
-    /// <summary>surrealdb/surrealist</summary>
     public const string SurrealistImage = "surrealdb/surrealist";
     /// <summary>3.8.3</summary>
     public const string SurrealistTag = "3.9.12";
