@@ -6,6 +6,6 @@ internal static class StripeContainerImageTags
     public const string Registry = "docker.io";
     /// <summary>stripe/stripe-cli</summary>
     public const string Image = "stripe/stripe-cli";
-    /// <summary>v1.33.0</summary>
+    /// <summary>v1.52.0</summary>
     public const string Tag = "v1.52.0";
 }
