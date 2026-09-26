@@ -7,5 +7,5 @@ internal static class StripeContainerImageTags
     /// <summary>stripe/stripe-cli</summary>
     public const string Image = "stripe/stripe-cli";
     /// <summary>v1.33.0</summary>
-    public const string Tag = "v1.33.0";
+    public const string Tag = "v1.52.0";
 }
