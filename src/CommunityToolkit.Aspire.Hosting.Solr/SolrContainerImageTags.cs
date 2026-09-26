@@ -7,5 +7,5 @@ internal static class SolrContainerImageTags
     /// <summary>library/solr</summary>
     public const string Image = "library/solr";
     /// <summary>9.7</summary>
-    public const string Tag = "9.7";
+    public const string Tag = "10.0.0";
 }
