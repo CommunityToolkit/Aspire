@@ -8,6 +8,6 @@ internal static class SeaweedFSContainerImageTags
     /// <summary>chrislusf/seaweedfs</summary>
     public const string Image = "chrislusf/seaweedfs";
 
-    /// <summary>4.27</summary>
+    /// <summary>4.46</summary>
     public const string Tag = "4.46";
 }
