@@ -597,6 +597,28 @@ public class AddDbGateTests
         var urls = dbgate.Resource.Annotations.OfType<ResourceUrlAnnotation>();
         Assert.Single(urls, u => u.DisplayText == "DbGate Dashboard");
 
+        using var client = app.CreateHttpClient(dbgate.Resource.Name);
+        using var readinessTimeout = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        readinessTimeout.CancelAfter(TimeSpan.FromMinutes(2));
+
+        while (true)
+        {
+            try
+            {
+                using var response = await client.GetAsync("/", readinessTimeout.Token);
+                if (response.IsSuccessStatusCode)
+                {
+                    break;
+                }
+            }
+            catch (HttpRequestException) when (!readinessTimeout.IsCancellationRequested)
+            {
+                // The endpoint is allocated before the container finishes starting.
+            }
+
+            await Task.Delay(TimeSpan.FromMilliseconds(250), readinessTimeout.Token);
+        }
+
         await app.StopAsync();
     }
 }
