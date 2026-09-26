@@ -10,5 +10,5 @@ internal static class GoFeatureFlagContainerImageTags
     /// <summary>gofeatureflag/go-feature-flag</summary>
     public const string Image = "gofeatureflag/go-feature-flag";
     /// <summary>v1.50</summary>
-    public const string Tag = "v1.50";
+    public const string Tag = "v1.55.3";
 }
