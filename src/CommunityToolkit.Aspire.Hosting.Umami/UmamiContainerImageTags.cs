@@ -5,10 +5,7 @@ namespace Aspire.Hosting;
 
 internal sealed class UmamiContainerImageTags
 {
-    /// <summary>docker.io</summary>
     public const string Registry = "docker.io";
-    /// <summary>umamisoftware/umami</summary>
     public const string Image = "umamisoftware/umami";
-    /// <summary>3.0</summary>
-    public const string Tag = "3.0";
+    public const string Tag = "3.4";
 }
