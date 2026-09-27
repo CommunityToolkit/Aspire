@@ -138,7 +138,7 @@ builder.AddAzureServiceBusClient("servicebus");
 |---|---|
 | `ConnectionStrings__{resourceName}` (default `servicebus`) | `Endpoint=sb://{host}:{amqpPort};SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;` — `{host}` is `localhost` for host processes and the container runtime's host gateway for containers |
 
-`WithServiceBus` sets `FLOCI_AZ_SERVICES_SERVICE_BUS_MOCKED=false` and `FLOCI_AZ_SERVICES_SERVICE_BUS_START_ON_BOOT=true`. Aspire models the sidecar's AMQP and AMQPS host ports as proxyless endpoints and allocates them by default; pass `amqpPort` / `amqpTlsPort` to use fixed ports. The management plane (for example, `ServiceBusAdministrationClient`) remains on the base endpoint from `WithReference(azure)`. Requires `WithDockerSocket()` and floci-az 0.12.0 or later.
+`WithServiceBus` sets `FLOCI_AZ_SERVICES_SERVICE_BUS_MOCKED=false` and `FLOCI_AZ_SERVICES_SERVICE_BUS_START_ON_BOOT=true`. The integration selects free AMQP and AMQPS host ports at startup, allocates the child's proxyless endpoints, and passes those same ports to Floci; pass `amqpPort` / `amqpTlsPort` to use fixed ports. The management plane (for example, `ServiceBusAdministrationClient`) remains on the base endpoint from `WithReference(azure)`. Requires `WithDockerSocket()` and floci-az 0.12.0 or later.
 
 AMQP and AMQPS must use different host ports. Repeated calls on the same emulator return the existing child only when the resource name and any specified ports match.
 

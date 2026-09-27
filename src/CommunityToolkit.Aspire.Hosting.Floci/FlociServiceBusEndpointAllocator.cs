@@ -52,13 +52,13 @@ internal sealed class FlociServiceBusEndpointAllocator : IDistributedApplication
                         continue;
                     }
 
-                    int port = endpoint.Port ?? SelectPort(listeners);
-                    endpoint.Port = port;
-                    endpoint.AllocatedEndpoint = new AllocatedEndpoint(endpoint, KnownHostNames.Localhost, port,
+                    endpoint.Port ??= SelectPort(listeners);
+                    endpoint.TargetPort = endpoint.Port;
+                    endpoint.AllocatedEndpoint = new AllocatedEndpoint(endpoint, KnownHostNames.Localhost, endpoint.Port.Value,
                         EndpointBindingMode.SingleAddress, null, KnownNetworkIdentifiers.LocalhostNetwork);
                     endpoint.AllAllocatedEndpoints.AddOrUpdateAllocatedEndpoint(
                         KnownNetworkIdentifiers.DefaultAspireContainerNetwork,
-                        new AllocatedEndpoint(endpoint, FlociAzureServiceBusConnectionString.ContainerHost, port,
+                        new AllocatedEndpoint(endpoint, FlociAzureServiceBusResource.ContainerHost, endpoint.Port.Value,
                             EndpointBindingMode.SingleAddress, null, KnownNetworkIdentifiers.DefaultAspireContainerNetwork));
                     allocated = true;
                 }

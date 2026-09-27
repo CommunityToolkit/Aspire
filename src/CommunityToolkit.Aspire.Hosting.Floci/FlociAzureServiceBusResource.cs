@@ -6,7 +6,7 @@ namespace Aspire.Hosting.ApplicationModel;
 /// <remarks>
 /// floci-az serves Service Bus AMQP from an Artemis sidecar container that publishes the
 /// configured ports directly on the Docker host. The resource models those host ports as
-/// proxyless Aspire endpoints so DCP can allocate them without trying to proxy traffic to the
+/// proxyless Aspire endpoints which the integration allocates without proxying traffic to the
 /// parent container. Container consumers reach those same ports through the container runtime's
 /// host gateway. This resource is only supported in run mode.
 /// </remarks>
@@ -23,6 +23,7 @@ public class FlociAzureServiceBusResource(
     internal const string DefaultName = "servicebus";
     internal const string AmqpEndpointName = "amqp";
     internal const string AmqpTlsEndpointName = "amqps";
+    internal const string ContainerHost = KnownHostNames.DockerDesktopHostBridge;
 
     private EndpointReference? _amqpEndpoint;
     private EndpointReference? _amqpTlsEndpoint;
@@ -55,13 +56,13 @@ public class FlociAzureServiceBusResource(
     /// </summary>
     public ReferenceExpression ConnectionStringExpression =>
         ReferenceExpression.Create(
-            $"Endpoint={AmqpEndpoint};SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey={DefaultSasKey};UseDevelopmentEmulator=true;");
+            $"Endpoint={AmqpEndpoint.Property(EndpointProperty.Url)};SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey={DefaultSasKey};UseDevelopmentEmulator=true;");
 
     IEnumerable<KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties() =>
         Parent.CombineProperties([
             new("Host", ReferenceExpression.Create($"{AmqpEndpoint.Property(EndpointProperty.Host)}")),
             new("Port", ReferenceExpression.Create($"{AmqpEndpoint.Property(EndpointProperty.Port)}")),
-            new("Uri", ReferenceExpression.Create($"{AmqpEndpoint}")),
-            new("Endpoint", ReferenceExpression.Create($"{AmqpEndpoint}"))
+            new("Uri", ReferenceExpression.Create($"{AmqpEndpoint.Property(EndpointProperty.Url)}")),
+            new("Endpoint", ReferenceExpression.Create($"{AmqpEndpoint.Property(EndpointProperty.Url)}"))
         ]);
 }
