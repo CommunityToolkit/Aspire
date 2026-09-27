@@ -18,4 +18,12 @@ updates:
   package-ecosystem: github-actions
   schedule:
     interval: weekly
+- directories:
+  - "**/*"
+  labels:
+  - dependencies
+  - skip-nuget-publish
+  package-ecosystem: npm
+  schedule:
+    interval: weekly
 version: 2
