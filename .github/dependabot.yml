@@ -9,7 +9,9 @@ updates:
   package-ecosystem: nuget
   schedule:
     interval: weekly
-- directory: /
+- directories:
+  - / # Includes .github/workflows.
+  - "/.github/actions/*" # Includes local composite actions.
   ignore:
   - dependency-name: "github/gh-aw-actions/**" # Managed by gh aw compile. Version-locked to the gh-aw compiler; do not bump.
   labels:
