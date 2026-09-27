@@ -13,6 +13,7 @@
 
     <AspireMajorVersion>13</AspireMajorVersion>
     <AspireVersion>$(AspireMajorVersion).6.0</AspireVersion>
+    <AspireUseCliBundle>true</AspireUseCliBundle>
     <AspirePreviewSuffix>-preview.1.26475.12</AspirePreviewSuffix> <!-- Used by Aspire packages that are still prerelease. -->
     <AspNetCoreVersion>9.0.0</AspNetCoreVersion>
     <DotNetExtensionsVersion>10.0.12</DotNetExtensionsVersion>

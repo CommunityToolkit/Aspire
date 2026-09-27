@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <IsAspireHost>true</IsAspireHost>
     <UserSecretsId>5a9c3d6b-1f1e-4f9e-a3ba-7d9e1f3a2b1a</UserSecretsId>
   </PropertyGroup>
 

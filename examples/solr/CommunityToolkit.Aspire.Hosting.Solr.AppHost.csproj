@@ -4,7 +4,6 @@
     <OutputType>Exe</OutputType>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <IsAspireHost>true</IsAspireHost>
     <UserSecretsId>bfe6b134-1a06-4449-a146-ba3cdb0d02a6</UserSecretsId>
   </PropertyGroup>
 
