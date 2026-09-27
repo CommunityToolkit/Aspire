@@ -164,7 +164,8 @@ Steps:
 
 1. Keep the repo root `global.json` unchanged.
 2. Check if a `global.json` already exists in the AppHost directory — if so, skip this.
-3. Create a `global.json` next to the AppHost `.csproj` that pins the Aspire-supported SDK:
+3. Create a `global.json` next to the AppHost `.csproj` that pins the Aspire-supported SDK.
+   The version below is an example; use the SDK required by the actual AppHost:
 
 ```json
 {

@@ -6,14 +6,13 @@ Use this reference when wiring JavaScript/TypeScript services into the AppHost o
 
 The `Aspire.Hosting.JavaScript` package provides three resource types. Pick the right one:
 
-| Signal                                                                                    | Use                                                                 | Example                                 |
-| ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | --------------------------------------- |
-| Vite app (has `vite.config.*`)                                                            | `AddViteApp(name, dir)`                                             | Frontend SPA, Vite + React/Vue/Svelte   |
-| App runs via package.json script only                                                     | `AddJavaScriptApp(name, dir, { runScriptName })`                    | CRA app, Next.js, monorepo root scripts |
-| App has a specific Node entry file (`.js`/`.ts`) and uses a dev script like `ts-node-dev` | `AddNodeApp(name, dir, "entry.js")` + `.WithRunScript("start:dev")` | Express/Fastify API, Socket.IO server   |
+| Signal | Use | Example |
+|--------|-----|---------|
+| Vite app (has `vite.config.*`) | `AddViteApp(name, dir)` | Frontend SPA, Vite + React/Vue/Svelte |
+| App runs via package.json script only | `AddJavaScriptApp(name, dir, { runScriptName })` | CRA app, Next.js, monorepo root scripts |
+| App has a specific Node entry file (`.js`/`.ts`) and uses a dev script like `ts-node-dev` | `AddNodeApp(name, dir, "entry.js")` + `.WithRunScript("start:dev")` | Express/Fastify API, Socket.IO server |
 
 **Key distinctions:**
-
 - `AddNodeApp` is for apps that run a **specific file** with Node (e.g., an Express server at `src/index.ts`). Use `.WithRunScript("start:dev")` to override the dev-time command (e.g., `ts-node-dev`).
 - `AddJavaScriptApp` runs a **package.json script** — simpler, good when the script handles everything.
 - `AddViteApp` is `AddJavaScriptApp` with Vite-specific defaults (auto-HTTPS config augmentation, `dev` as default script).
@@ -26,24 +25,26 @@ Use `.WithRunScript()` to control which package.json script runs during developm
 // Express API with TypeScript: uses ts-node-dev for hot reload in dev
 const api = await builder
     .addNodeApp("api", "./api", "src/index.ts")
-    .withRunScript("start:dev") // runs "yarn start:dev" (ts-node-dev)
+    .withRunScript("start:dev")                      // runs "yarn start:dev" (ts-node-dev)
     .withYarn()
     .withHttpEndpoint({ env: "PORT" });
 
 // Vite frontend: default "dev" script is fine, just add yarn
-const web = await builder.addViteApp("web", "./frontend").withYarn();
+const web = await builder
+    .addViteApp("web", "./frontend")
+    .withYarn();
 ```
 
 ## Framework-specific port binding
 
 Not all frameworks read ports from env vars the same way:
 
-| Framework       | Port mechanism                              | AppHost pattern                                                                             |
-| --------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| Express/Fastify | `process.env.PORT`                          | `.withHttpEndpoint({ env: "PORT" })`                                                        |
-| Vite            | `--port` CLI arg or `server.port` in config | `.withHttpEndpoint({ env: "PORT" })` — Aspire's Vite integration handles this automatically |
-| Next.js         | `PORT` env or `--port`                      | `.withHttpEndpoint({ env: "PORT" })`                                                        |
-| CRA             | `PORT` env                                  | `.withHttpEndpoint({ env: "PORT" })`                                                        |
+| Framework | Port mechanism | AppHost pattern |
+|-----------|---------------|-----------------|
+| Express/Fastify | `process.env.PORT` | `.withHttpEndpoint({ env: "PORT" })` |
+| Vite | `--port` CLI arg or `server.port` in config | `.withHttpEndpoint({ env: "PORT" })` — Aspire's Vite integration handles this automatically |
+| Next.js | `PORT` env or `--port` | `.withHttpEndpoint({ env: "PORT" })` |
+| CRA | `PORT` env | `.withHttpEndpoint({ env: "PORT" })` |
 
 When the framework supports reading the port from an env var or Aspire already handles it, **prefer that over pinning a fixed port**. Managed ports make repeated local runs more reliable and work better when multiple services or multiple Aspire apps are running.
 
@@ -61,21 +62,20 @@ In monorepos that use **yarn workspaces** or **pnpm workspaces**, all workspace 
 
 ```typescript
 // ❌ WRONG for workspace monorepos — concurrent installs cause file locking errors
-const app = await builder.addViteApp("app", "./packages/frontend").withYarn(); // triggers yarn install at startup → EPERM on Windows
+const app = await builder.addViteApp("app", "./packages/frontend")
+    .withYarn();  // triggers yarn install at startup → EPERM on Windows
 
-const api = await builder
-    .addNodeApp("api", "./packages/api", "src/index.ts")
-    .withYarn(); // second concurrent yarn install → file lock conflict
+const api = await builder.addNodeApp("api", "./packages/api", "src/index.ts")
+    .withYarn();  // second concurrent yarn install → file lock conflict
 
 // ✅ CORRECT for workspace monorepos — deps already installed at root
 const app = await builder.addViteApp("app", "./packages/frontend");
 
-const api = await builder
-    .addNodeApp("api", "./packages/api", "src/index.ts")
+const api = await builder.addNodeApp("api", "./packages/api", "src/index.ts")
     .withRunScript("start:dev");
 ```
 
-Tell the user: _"This is a yarn workspace monorepo — I'll skip `.withYarn()` on individual resources since dependencies are shared at the root. Make sure to run `yarn` at the root before `aspire start`."_
+Tell the user: *"This is a yarn workspace monorepo — I'll skip `.withYarn()` on individual resources since dependencies are shared at the root. Make sure to run `yarn` at the root before `aspire start`."*
 
 **This only applies to workspace monorepos with shared `node_modules`.** For standalone apps or apps with independent `node_modules` directories, `.withYarn()` / `.withPnpm()` is correct and should be used — it ensures deps are installed before the resource starts.
 
@@ -87,12 +87,12 @@ If one exists at the root, augment it (do not overwrite). Add/merge these script
 
 ```json
 {
-    "type": "module",
-    "scripts": {
-        "dev": "aspire run",
-        "build": "tsc",
-        "watch": "tsc --watch"
-    }
+  "type": "module",
+  "scripts": {
+    "dev": "aspire run",
+    "build": "tsc",
+    "watch": "tsc --watch"
+  }
 }
 ```
 
@@ -100,17 +100,17 @@ If no root `package.json` exists, create a minimal one matching the canonical As
 
 ```json
 {
-    "name": "<repo-name>",
-    "private": true,
-    "type": "module",
-    "scripts": {
-        "dev": "aspire run",
-        "build": "tsc",
-        "watch": "tsc --watch"
-    },
-    "engines": {
-        "node": "^20.19.0 || ^22.13.0 || >=24"
-    }
+  "name": "<repo-name>",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "aspire run",
+    "build": "tsc",
+    "watch": "tsc --watch"
+  },
+  "engines": {
+    "node": "^20.19.0 || ^22.13.0 || >=24"
+  }
 }
 ```
 
@@ -120,32 +120,41 @@ Never overwrite existing `scripts`, `dependencies`, or `devDependencies` — mer
 
 Run `aspire restore` to generate the `.aspire/modules/` directory with TypeScript SDK bindings, then install dependencies with the repo's package manager (`npm install`, `pnpm install`, or `yarn`).
 
-### tsconfig.json
+### `tsconfig.apphost.json`
 
-Augment if it exists:
+Use the AppHost-specific `tsconfig.apphost.json` scaffolded by `aspire init` or
+`aspire restore`. Do not add AppHost generated modules to the application's root
+`tsconfig.json`; doing so can pull generated code into the application build without
+changing AppHost compilation.
 
-- Ensure `".aspire/modules/**/*.ts"` and `"apphost.mts"` are in `include`
+- Ensure `"apphost.mts"` and the generated `.aspire/modules/*.mts` entry points are in `include`
 - Ensure `"module"` is `"nodenext"` or `"node16"` (ESM required)
 - Ensure `"moduleResolution"` matches
 
-If no `tsconfig.json` exists and `aspire restore` didn't create one, create a minimal one:
+If `tsconfig.apphost.json` is missing, run `aspire restore` and diagnose that restore if
+the file is still absent. Do not create or repurpose the application's root
+`tsconfig.json` as a fallback. A generated AppHost configuration has this shape:
 
 ```json
 {
-    "compilerOptions": {
-        "target": "ES2022",
-        "module": "nodenext",
-        "moduleResolution": "nodenext",
-        "esModuleInterop": true,
-        "strict": true,
-        "outDir": "./dist",
-        "rootDir": "."
-    },
-    "include": ["apphost.mts", ".aspire/modules/**/*.ts"]
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "esModuleInterop": true,
+    "strict": true,
+    "outDir": "./dist",
+    "rootDir": "."
+  },
+  "include": [
+    "apphost.mts",
+    ".aspire/modules/aspire.mts",
+    ".aspire/modules/base.mts",
+    ".aspire/modules/transport.mts"
+  ]
 }
 ```
 
 ### ESLint
 
 Only augment if config already exists. If it uses `parserOptions.project` or `parserOptions.projectService`, ensure the AppHost tsconfig is discoverable. Do not create ESLint configuration from scratch.
-

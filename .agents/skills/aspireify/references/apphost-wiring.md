@@ -54,14 +54,34 @@ aspire docs api search "AddRedis" --language csharp
 aspire docs api search "AddViteApp" --language typescript
 aspire docs api get "<id-from-api-search>"
 
-# List ALL available integrations (first-party and community toolkit)
-# Note: requires the Aspire MCP server to be connected. If this fails, use aspire docs search instead.
-aspire list integrations
+# List or search available integrations before mutating the AppHost
+aspire integration list --format Json
+aspire integration search postgres --format Json
 ```
 
-Use `aspire docs search` / `aspire docs get` to find the right builder methods, configuration options, and patterns. Use `aspire docs api search` / `aspire docs api get` when you need the exact reference entry (parameter shapes, return types, overloads) for the API you are about to call. Use `aspire list integrations` to discover packages you might not have known about.
+Use `aspire docs search` / `aspire docs get` to find the right builder methods, configuration options, and patterns. Use `aspire docs api search` / `aspire docs api get` when you need the exact reference entry (parameter shapes, return types, overloads) for the API you are about to call. Use `aspire integration list` and `aspire integration search <query>` to discover packages you might not have known about.
 
 **Don't invent APIs** — if docs search and integration list don't return it, it doesn't exist. Fall back to Tier 3 and note the limitation to the user. **API shapes differ between C# and TypeScript** — always check the correct language docs.
+
+## Package compatibility and interaction rules
+
+Before changing an existing AppHost, verify that its SDK and every `Aspire.Hosting.*`
+package use the same release family. Do not mix incompatible package versions.
+
+| Area | Current rule |
+|------|--------------|
+| Hosting callback services | Use `context.Services` in C#. In TypeScript, get the Interaction Service with `await context.services().getInteractionService()`. `ServiceProvider` is obsolete. |
+| External connection string | Use `AddConnectionString` / `addConnectionString`; do not generate obsolete `PublishAsConnectionString`. |
+| Command input | Prefer `CommandOptions.Arguments`; values become dashboard fields and CLI `--<name>` options. |
+| Direct interaction prompt | Check `IInteractionService.IsAvailable` (or TS equivalent) and provide a noninteractive path before prompting. |
+| File upload / progress | File inputs are stable; progress dialogs remain experimental under `ASPIREINTERACTION001`. |
+| Interactive terminal | `WithTerminal()` is experimental (`ASPIRETERMINAL001`); TypeScript uses parameterless defaults, and `TerminalOptions.Shell` no longer exists. |
+| AI integration | Migrate deprecated `Aspire.Hosting.GitHub.Models` usage to Azure AI Foundry. |
+| Existing .NET project by path | `AddDotnetProject` moved to experimental `Aspire.Hosting.Dotnet` (`ASPIREDOTNETPROJECT001`). |
+| Dev tunnel region | Use normalized names such as `DevTunnelRegion.UKSouth` and `SoutheastAsia`. |
+
+For all 13.5 breaking changes and patch caveats, see
+[aspire-13-5-breaking-changes.md](../../aspire/references/aspire-13-5-breaking-changes.md).
 
 ### Check what integrations auto-manage
 
