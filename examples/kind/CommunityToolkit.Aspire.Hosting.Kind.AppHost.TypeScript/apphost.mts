@@ -42,4 +42,11 @@ if (await manifest.crdWaitTimeout.get() !== 120_000 ||
     throw new Error('Manifest CRD-wait policy did not retain the configured options.');
 }
 
+await manifest.withCrdWaitTimeout(90_000);
+await manifest.withCrdWaitBehavior(CrdWaitBehavior.Fail);
+if (await manifest.crdWaitTimeout.get() !== 90_000 ||
+    await manifest.crdWaitBehavior.get() !== CrdWaitBehavior.Fail) {
+    throw new Error('Legacy manifest CRD-wait methods did not update the configured options.');
+}
+
 await builder.build().run();

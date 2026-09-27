@@ -7,7 +7,7 @@ namespace CommunityToolkit.Aspire.Hosting.Kind.Tests;
 public class TypeScriptAppHostTests
 {
     [Fact]
-    public async Task CrdWaitCallbacksWorkFromGeneratedTypeScriptSdk()
+    public async Task CrdWaitApisWorkFromGeneratedTypeScriptSdk()
     {
         await TypeScriptAppHostTest.Run(
             appHostProject: "CommunityToolkit.Aspire.Hosting.Kind.AppHost.TypeScript",

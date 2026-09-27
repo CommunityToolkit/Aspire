@@ -248,7 +248,7 @@ cluster.AddManifest("crds", Path.Combine(manifestsRoot, "crds.yaml"))
 
 `BestEffort` logs an explicit **unverified** warning and permits `Running` after a failed CRD wait (including Kubernetes client creation failure), **without verifying CRD readiness**. Dependents using `WaitFor` can then start; use the default strict policy when their startup requires those CRDs. Repeated `WithCrdWait` calls preserve options that the callback does not change. CRD waits are not recurring health probes: later health checks do not repeat the five-minute wait.
 
-The [TypeScript AppHost example](../../examples/kind/CommunityToolkit.Aspire.Hosting.Kind.AppHost.TypeScript/apphost.mts) exercises the generated `withCrdWait` callback for both manifests and Helm charts.
+The [TypeScript AppHost example](../../examples/kind/CommunityToolkit.Aspire.Hosting.Kind.AppHost.TypeScript/apphost.mts) exercises the generated `withCrdWait` callback for both manifests and Helm charts, and the retained manifest `withCrdWaitTimeout` and `withCrdWaitBehavior` methods.
 
 Existing manifest-specific `WithCrdWaitTimeout` and `WithCrdWaitBehavior` overloads and the `K8sManifestResource.CrdWaitTimeout` and `CrdWaitBehavior` properties remain available but are obsolete compatibility shims. New code should use `WithCrdWait`. The obsolete `CrdWaitTimeout` property now validates when assigned, matching `CrdWaitOptions.Timeout`: zero, negative, and values over one hour throw immediately, while fractional seconds round up. Migrate direct property assignments to `WithCrdWait(options => options.Timeout = value)`.
 

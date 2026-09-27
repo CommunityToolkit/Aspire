@@ -87,6 +87,7 @@ public static class KindManifestResourceBuilderExtensions
     /// <param name="builder">The manifest resource builder.</param>
     /// <param name="timeout">The CRD wait timeout.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{K8sManifestResource}"/>.</returns>
+    [AspireExport]
     [Obsolete("Use WithCrdWait instead.")]
     public static IResourceBuilder<K8sManifestResource> WithCrdWaitTimeout(
         this IResourceBuilder<K8sManifestResource> builder,
@@ -103,6 +104,7 @@ public static class KindManifestResourceBuilderExtensions
     /// <param name="builder">The manifest resource builder.</param>
     /// <param name="behavior">The CRD wait behavior.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{K8sManifestResource}"/>.</returns>
+    [AspireExport]
     [Obsolete("Use WithCrdWait instead.")]
     public static IResourceBuilder<K8sManifestResource> WithCrdWaitBehavior(
         this IResourceBuilder<K8sManifestResource> builder,
