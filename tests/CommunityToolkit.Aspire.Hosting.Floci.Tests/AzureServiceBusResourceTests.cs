@@ -78,6 +78,10 @@ public class AzureServiceBusResourceTests
             amqpPort: configuredAmqpPort,
             amqpTlsPort: configuredAmqpTlsPort);
 
+        var dependencies = await azure.Resource.GetResourceDependenciesAsync(builder.ExecutionContext,
+            new ResourceDependencyDiscoveryOptions { DiscoveryMode = ResourceDependencyDiscoveryMode.DirectOnly });
+        Assert.DoesNotContain(serviceBus.Resource, dependencies);
+
         await using var app = await builder.BuildAsync(TestContext.Current.CancellationToken);
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var allocator = Assert.Single(app.Services.GetServices<IDistributedApplicationEventingSubscriber>()
@@ -282,13 +286,13 @@ public class AzureServiceBusResourceTests
             : connectionString.ToString();
 
         Assert.Equal(
-            $"Endpoint=sb://{(useContainer ? "floci-servicebus-host.internal" : "localhost")}:5673;SharedAccessKeyName=RootManageSharedAccessKey;" +
+            $"Endpoint=sb://{(useContainer ? FlociAzureServiceBusResource.ContainerHost : KnownHostNames.Localhost)}:5673;SharedAccessKeyName=RootManageSharedAccessKey;" +
             "SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;",
             value);
     }
 
     [Fact]
-    public async Task ContainerReferencePreservesCustomConnectionNameAndEndpointDependency()
+    public async Task ContainerReferencePreservesCustomConnectionNameAndAvoidsChildTunnelDependency()
     {
         using var builder = TestDistributedApplicationBuilder.Create();
         var azure = builder.AddFlociAzure("floci-az");
@@ -296,16 +300,16 @@ public class AzureServiceBusResourceTests
         var consumer = builder.AddContainer("api", "my-api-image")
             .WithReference(serviceBus, connectionName: "messages");
 
-        // Standard connection-string references preserve the child dependency without resolving
-        // its endpoints during dependency discovery.
+        // The sidecar is configured by its owner and is already reachable through the host gateway.
         var dependencies = await consumer.Resource.GetResourceDependenciesAsync(builder.ExecutionContext,
             new ResourceDependencyDiscoveryOptions { DiscoveryMode = ResourceDependencyDiscoveryMode.DirectOnly });
-        Assert.Contains(serviceBus.Resource, dependencies);
+        Assert.Contains(azure.Resource, dependencies);
+        Assert.DoesNotContain(serviceBus.Resource, dependencies);
 
         AllocateEndpoints(serviceBus.Resource, 5673, 5674);
         await using var app = await builder.BuildAsync();
         var environment = await consumer.Resource.GetEnvironmentVariablesAsync(serviceProvider: app.Services);
-        Assert.Contains("Endpoint=sb://floci-servicebus-host.internal:5673;", environment["ConnectionStrings__messages"]);
+        Assert.Contains($"Endpoint=sb://{FlociAzureServiceBusResource.ContainerHost}:5673;", environment["ConnectionStrings__messages"]);
         Assert.DoesNotContain("ConnectionStrings__servicebus", environment);
 
     }
@@ -333,6 +337,7 @@ public class AzureServiceBusResourceTests
             (serviceBus.AmqpTlsEndpoint.EndpointAnnotation, amqpTlsPort)
         })
         {
+            endpoint.TargetPort = port;
             endpoint.AllocatedEndpoint = new AllocatedEndpoint(endpoint, KnownHostNames.Localhost, port);
             endpoint.AllAllocatedEndpoints.AddOrUpdateAllocatedEndpoint(
                 KnownNetworkIdentifiers.DefaultAspireContainerNetwork,
