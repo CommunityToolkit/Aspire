@@ -3,6 +3,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Aspire.Components.Common.TestUtilities;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace Aspire.Hosting.Utils;
@@ -48,11 +49,11 @@ public static class TestDistributedApplicationBuilder
     private static IDistributedApplicationTestingBuilder CreateCore(string[] args, Action<DistributedApplicationOptions>? configureOptions, ITestOutputHelper? testOutputHelper = null)
     {
         var builder = DistributedApplicationTestingBuilder.Create(args, (applicationOptions, hostBuilderOptions) => configureOptions?.Invoke(applicationOptions));
-
-        // TODO: consider centralizing this to DistributedApplicationFactory by default once consumers have a way to opt-out
-        // E.g., once https://github.com/dotnet/extensions/pull/5801 is released.
-        // Discussion: https://github.com/dotnet/aspire/pull/7335/files#r1936799460
-        builder.Services.ConfigureHttpClientDefaults(http => http.AddStandardResilienceHandler());
+        
+        builder.Services.Configure<HostOptions>(options =>
+        {
+            options.ShutdownTimeout = TimeSpan.FromSeconds(90);
+        });
 
         builder.Services.AddLogging(builder =>
             {
