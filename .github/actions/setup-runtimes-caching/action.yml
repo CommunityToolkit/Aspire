@@ -137,7 +137,7 @@ runs:
         npm install -g nx
 
     - name: Login to docker
-      uses: docker/login-action@v3
+      uses: docker/login-action@v4
       # only run if there was a docker-username and password provided
       # this is because builds from forks will not have access to secrets
       # and we don't want to fail the workflow if they don't have access to secrets
