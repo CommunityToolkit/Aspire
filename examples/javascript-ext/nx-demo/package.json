@@ -38,7 +38,7 @@
     "nx": "23.1.1",
     "prettier": "^2.6.2",
     "tslib": "^2.3.0",
-    "typescript": "~5.8.2",
+    "typescript": "~7.0.2",
     "typescript-eslint": "^8.29.0",
     "vite": "^8.1.5",
     "vitest": "^4.1.10"
