@@ -160,7 +160,7 @@ runs:
         dapr init --runtime-version=${{ env.DAPR_VERSION }}
         dapr --version
 
-    - uses: ai-action/setup-ollama@v1
+    - uses: ai-action/setup-ollama@v2
       name: Setup Ollama
       if: ${{ inputs.name == 'Full' || contains(inputs.name, 'Hosting.Ollama') }}
       with:
