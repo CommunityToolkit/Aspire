@@ -858,6 +858,9 @@ static class App
             $"- Reason: {payload.Reason}",
             $"- Selected tests: {payload.SelectedTests.Count}",
             string.Empty,
+            "<details>",
+            "<summary>Show selection details</summary>",
+            string.Empty,
             "### Changed files",
         };
 
@@ -890,6 +893,9 @@ static class App
             lines.Add("### Selection details");
             lines.AddRange(payload.Reasons.Select(entry => $"- {entry}"));
         }
+
+        lines.Add(string.Empty);
+        lines.Add("</details>");
 
         return string.Join('\n', lines) + "\n";
     }

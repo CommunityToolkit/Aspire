@@ -51,8 +51,12 @@ jobs:
           if [ "${TESTS_JSON}" = "[]" ]; then
             echo "No tests were selected." >> "${GITHUB_STEP_SUMMARY}"
           else
-            echo "### Tests" >> "${GITHUB_STEP_SUMMARY}"
+            echo "<details>" >> "${GITHUB_STEP_SUMMARY}"
+            echo "<summary>Show selected tests</summary>" >> "${GITHUB_STEP_SUMMARY}"
+            echo >> "${GITHUB_STEP_SUMMARY}"
             TESTS_JSON="${TESTS_JSON}" python -c 'import json, os; [print(f"- `{test}`") for test in json.loads(os.environ["TESTS_JSON"])]' >> "${GITHUB_STEP_SUMMARY}"
+            echo >> "${GITHUB_STEP_SUMMARY}"
+            echo "</details>" >> "${GITHUB_STEP_SUMMARY}"
           fi
 
   noop:
