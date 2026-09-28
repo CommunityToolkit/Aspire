@@ -157,12 +157,35 @@ jobs:
           name: npm-logs-${{ matrix.name }}-${{ matrix.os }}
           path: ${{ runner.os == 'Windows' && 'C:\\npm\\cache\\_logs\\**' || '~/.npm/cache/_logs/**' }}
 
+      - name: Resolve Aspire CLI log directory
+        # Aspire CLI logs live next to the resolved `aspire` executable, not always under $HOME.
+        if: failure() && steps.run-tests.outcome != 'skipped'
+        id: aspire-log-dir
+        shell: bash
+        run: |
+          aspire_bin="$(command -v aspire || true)"
+          if [ -n "$aspire_bin" ]; then
+            resolved_dir="$(cd "$(dirname "$aspire_bin")/.." && pwd)/logs"
+          else
+            resolved_dir="$HOME/.aspire/logs"
+          fi
+
+          if [ "${RUNNER_OS}" = "Windows" ] && command -v cygpath >/dev/null 2>&1; then
+            resolved_dir="$(cygpath -w "$resolved_dir")"
+          fi
+
+          echo "Resolved Aspire CLI log directory: ${resolved_dir}"
+          echo "dir=${resolved_dir}" >> "$GITHUB_OUTPUT"
+
       - name: Upload TypeScript app host logs if failed
         if: failure() && steps.run-tests.outcome != 'skipped'
         uses: actions/upload-artifact@v7
         with:
           name: ts-app-host-logs-${{ matrix.name }}-${{ matrix.os }}
-          path: ${{ runner.os == 'Windows' && 'C:\\Users\\runneradmin\\.aspire\\logs\\**' || '/home/runner/.aspire/logs/**' }}
+          path: |
+            ${{ steps.aspire-log-dir.outputs.dir }}/**
+            ${{ runner.os == 'Windows' && 'C:\\Users\\runneradmin\\.aspire\\logs\\**' || '/home/runner/.aspire/logs/**' }}
+          if-no-files-found: warn
 
       - name: Aspire doctor
         if: failure() && steps.run-tests.outcome != 'skipped'

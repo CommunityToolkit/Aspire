@@ -60,6 +60,24 @@ function Invoke-ExternalCommand {
     }
 }
 
+function Write-DiagnosticsSection {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Title,
+
+        [Parameter(Mandatory = $true)]
+        [scriptblock]$Action
+    )
+
+    Write-Host "::group::$Title"
+    try {
+        & $Action 2>&1 | Out-String | Write-Host
+    }
+    finally {
+        Write-Host "::endgroup::"
+    }
+}
+
 function Invoke-ExternalCommandWithRetry {
     param(
         [Parameter(Mandatory = $true)]
@@ -105,6 +123,7 @@ function Invoke-CleanupStep {
         & $Action
     }
     catch {
+        Write-Host ($_ | Out-String)
         $message = "Cleanup step '$Description' failed: $($_.Exception.Message)"
         if ($null -ne $Failures) {
             $Failures.Add($message)
@@ -204,14 +223,33 @@ try {
         $appStarted = $true
 
         foreach ($resource in $WaitForResources) {
-            Invoke-ExternalCommand "aspire" @(
-                "wait",
-                $resource,
-                "--status", $WaitStatus,
-                "--apphost", $resolvedAppHostPath,
-                "--timeout", $WaitTimeoutSeconds,
-                "--log-level", "debug"
-            )
+            try {
+                Invoke-ExternalCommand "aspire" @(
+                    "wait",
+                    $resource,
+                    "--status", $WaitStatus,
+                    "--apphost", $resolvedAppHostPath,
+                    "--timeout", $WaitTimeoutSeconds,
+                    "--log-level", "debug"
+                )
+            }
+            catch {
+                Write-DiagnosticsSection -Title "aspire describe" -Action {
+                    aspire @("describe", "--apphost", $resolvedAppHostPath, "--format", "Json", "--log-level", "debug")
+                }
+
+                foreach ($waitedResource in $WaitForResources) {
+                    Write-DiagnosticsSection -Title "aspire logs $waitedResource" -Action {
+                        aspire @("logs", $waitedResource, "--apphost", $resolvedAppHostPath, "--timestamps")
+                    }
+                }
+
+                Write-DiagnosticsSection -Title "aspire logs (all resources)" -Action {
+                    aspire @("logs", "--apphost", $resolvedAppHostPath, "--timestamps")
+                }
+
+                throw
+            }
         }
 
         Invoke-ExternalCommand "aspire" @(
@@ -231,6 +269,7 @@ catch {
 finally {
     Invoke-CleanupStep -Description "stop Aspire app" -Action {
         if ($appStarted) {
+            Write-Host "Shutting down Aspire app..."
             Push-Location $appHostDirectory
             try {
                 Invoke-ExternalCommand "aspire" @(
