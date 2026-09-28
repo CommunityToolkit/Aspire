@@ -10,7 +10,7 @@
     "dev": "tsc --watch"
   },
   "dependencies": {
-    "vscode-jsonrpc": "^8.2.0"
+    "vscode-jsonrpc": "^9.0.2"
   },
   "devDependencies": {
     "@types/node": "^26.6.2",
