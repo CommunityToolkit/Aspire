@@ -7,7 +7,7 @@ updates:
   - dependencies
   - nuget
   - skip-nuget-publish
-  open-pull-requests-limit: 20
+  open-pull-requests-limit: 10
   package-ecosystem: nuget
   schedule:
     interval: weekly
@@ -21,18 +21,21 @@ updates:
   - dependencies
   - github-actions
   - skip-nuget-publish
-  open-pull-requests-limit: 20
+  open-pull-requests-limit: 10
   package-ecosystem: github-actions
   schedule:
     interval: weekly
 
 - directories:
   - "**/*"
+  groups:
+    dependencies-by-name:
+      group-by: dependency-name
   labels:
   - dependencies
   - npm
   - skip-nuget-publish
-  open-pull-requests-limit: 20
+  open-pull-requests-limit: 10
   package-ecosystem: npm
   schedule:
     interval: weekly
