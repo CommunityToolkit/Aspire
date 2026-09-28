@@ -21,6 +21,10 @@ public class AddRustFsTests
         var resource = Assert.Single(appModel.Resources.OfType<RustFsResource>());
 
         Assert.Equal("rustfs", resource.Name);
+        var image = Assert.Single(resource.Annotations.OfType<ContainerImageAnnotation>());
+        Assert.Equal("docker.io", image.Registry);
+        Assert.Equal("rustfs/rustfs", image.Image);
+        Assert.Equal("1.0.0", image.Tag);
     }
 
     [Fact]
