@@ -16,6 +16,6 @@
     "@types/node": "^20.0.0",
     "nodemon": "^3.1.11",
     "tsx": "^4.23.1",
-    "typescript": "^5.3.0"
+    "typescript": "^7.0.2"
   }
 }
