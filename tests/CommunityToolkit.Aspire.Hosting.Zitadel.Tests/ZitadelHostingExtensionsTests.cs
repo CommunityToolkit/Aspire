@@ -39,6 +39,10 @@ public class ZitadelHostingExtensionsTests
         Assert.NotNull(zitadel);
         Assert.IsType<ZitadelResource>(zitadel.Resource);
         Assert.Equal("zitadel", zitadel.Resource.Name);
+        var image = Assert.Single(zitadel.Resource.Annotations.OfType<ContainerImageAnnotation>());
+        Assert.Equal("ghcr.io", image.Registry);
+        Assert.Equal("zitadel/zitadel", image.Image);
+        Assert.Equal("v4.16.2", image.Tag);
     }
 
     [Fact]
