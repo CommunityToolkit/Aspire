@@ -20,6 +20,10 @@ public class ResourceCreationTests
         var resource = Assert.Single(appModel.Resources.OfType<LogtoResource>());
 
         Assert.Equal("logto", resource.Name);
+        var image = Assert.Single(resource.Annotations.OfType<ContainerImageAnnotation>());
+        Assert.Equal("docker.io", image.Registry);
+        Assert.Equal("svhd/logto", image.Image);
+        Assert.Equal("1.43", image.Tag);
     }
 
     [Fact]
