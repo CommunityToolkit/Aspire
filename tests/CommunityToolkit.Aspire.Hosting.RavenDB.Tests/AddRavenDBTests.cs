@@ -15,6 +15,10 @@ public class AddRavenDBTests
 
         var serverResource = Assert.Single(appModel.Resources.OfType<RavenDBServerResource>());
         Assert.Equal("ravenServer", serverResource.Name);
+        var image = Assert.Single(serverResource.Annotations.OfType<ContainerImageAnnotation>());
+        Assert.Equal("docker.io", image.Registry);
+        Assert.Equal("ravendb/ravendb", image.Image);
+        Assert.Equal("7.2-latest", image.Tag);
     }
 
     [Fact]

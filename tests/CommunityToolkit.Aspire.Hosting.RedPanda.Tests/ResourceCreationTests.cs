@@ -34,7 +34,7 @@ public class ResourceCreationTests
 
         Assert.True(resource.TryGetLastAnnotation(out ContainerImageAnnotation? image));
         Assert.Equal("redpandadata/redpanda", image.Image);
-        Assert.Equal("v26.1.10", image.Tag);
+        Assert.Equal("v26.2.3", image.Tag);
         Assert.Equal("docker.redpanda.com", image.Registry);
     }
 
@@ -120,7 +120,7 @@ public class ResourceCreationTests
 
         Assert.True(console.TryGetLastAnnotation(out ContainerImageAnnotation? image));
         Assert.Equal("redpandadata/console", image.Image);
-        Assert.Equal("v3.7.4", image.Tag);
+        Assert.Equal("v3.12.0", image.Tag);
     }
 
     [Fact]

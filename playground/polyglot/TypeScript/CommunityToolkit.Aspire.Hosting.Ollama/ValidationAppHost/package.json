@@ -11,9 +11,9 @@
     "vscode-jsonrpc": "^8.2.0"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
+    "@types/node": "^26.6.2",
     "nodemon": "^3.1.11",
-    "tsx": "^4.23.1",
+    "tsx": "^4.23.15",
     "typescript": "^5.3.0"
   }
 }
