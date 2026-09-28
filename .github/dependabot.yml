@@ -15,6 +15,9 @@ updates:
 - directories:
   - / # Includes .github/workflows.
   - "/.github/actions/*" # Includes local composite actions.
+  groups:
+    actions-by-name:
+      group-by: dependency-name
   ignore:
   - dependency-name: "github/gh-aw-actions/**" # Managed by gh aw compile. Version-locked to the gh-aw compiler; do not bump.
   labels:
