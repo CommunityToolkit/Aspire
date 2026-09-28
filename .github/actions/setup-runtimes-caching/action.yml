@@ -61,7 +61,7 @@ runs:
         python -m pip install --upgrade pip
         pip install uvicorn
 
-    - uses: astral-sh/setup-uv@v5
+    - uses: astral-sh/setup-uv@v7
       name: Install uv
       with:
         enable-cache: false
