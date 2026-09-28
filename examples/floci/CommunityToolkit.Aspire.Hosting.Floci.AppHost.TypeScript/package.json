@@ -23,6 +23,6 @@
     "nodemon": "^3.1.14",
     "tsx": "^4.23.15",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.57.1"
+    "typescript-eslint": "^8.70.1"
   }
 }
