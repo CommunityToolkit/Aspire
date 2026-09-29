@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="canvas-token" content="__CANVAS_TOKEN__" />
+    <title>Dependabot triage</title>
+    <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+    <header class="topbar">
+        <div class="topbar-title">
+            <span class="logo" aria-hidden="true">⬡</span>
+            <a id="repo-link" target="_blank" rel="noopener">Dependabot triage</a>
+        </div>
+        <div id="stats" class="stats"></div>
+        <div class="topbar-right">
+            <span id="refresh-status" class="muted small"></span>
+            <button id="refresh-btn" class="btn" type="button" title="Reload from GitHub">⟳ Refresh</button>
+        </div>
+    </header>
+    <div id="banner" class="banner" hidden></div>
+
+    <nav class="tabs" role="tablist">
+        <button class="tab" data-tab="prs" role="tab" type="button">Pull requests <span class="count" id="tab-count-prs"></span></button>
+        <button class="tab" data-tab="alerts" role="tab" type="button">Security alerts <span class="count" id="tab-count-alerts"></span></button>
+        <button class="tab" data-tab="overlaps" role="tab" type="button">Overlaps <span class="count" id="tab-count-overlaps"></span></button>
+        <button class="tab" data-tab="agents" role="tab" type="button">Agents <span class="count" id="tab-count-agents"></span></button>
+    </nav>
+
+    <section id="view-prs" class="view">
+        <div class="filters">
+            <input id="f-q" type="search" placeholder="Filter by dependency, #number, directory…" />
+            <select id="f-status" title="Status">
+                <option value="">Any status</option>
+                <option value="ready">Ready</option>
+                <option value="needs-review">Needs review</option>
+                <option value="failing">Checks failing</option>
+                <option value="pending">Checks pending</option>
+                <option value="conflicts">Conflicts</option>
+                <option value="behind">Behind base</option>
+                <option value="unknown">Unknown</option>
+            </select>
+            <select id="f-ecosystem" title="Ecosystem"><option value="">All ecosystems</option></select>
+            <select id="f-update" title="Update type">
+                <option value="">Any update</option>
+                <option value="major">Major</option>
+                <option value="minor">Minor</option>
+                <option value="patch">Patch</option>
+            </select>
+            <label class="check"><input id="f-security" type="checkbox" /> Security</label>
+            <select id="f-group" title="Group by">
+                <option value="dependency">Group: dependency</option>
+                <option value="directory">Group: directory</option>
+                <option value="ecosystem">Group: ecosystem</option>
+                <option value="status">Group: status</option>
+                <option value="none">No grouping</option>
+            </select>
+            <button id="select-ready" class="btn btn-small" type="button" title="Tick every visible PR that is ready to merge">Select ready</button>
+        </div>
+        <div class="main">
+            <div id="list" class="list" role="list"></div>
+            <div id="detail" class="detail"></div>
+        </div>
+    </section>
+
+    <section id="view-alerts" class="view" hidden>
+        <div class="filters">
+            <label class="check"><input id="a-unaddressed" type="checkbox" /> Only alerts without a fixing PR</label>
+        </div>
+        <div id="alerts" class="scroll-pane"></div>
+    </section>
+
+    <section id="view-overlaps" class="view" hidden>
+        <div id="overlaps" class="scroll-pane"></div>
+    </section>
+
+    <section id="view-agents" class="view" hidden>
+        <div id="agents" class="scroll-pane"></div>
+    </section>
+
+    <div id="bulkbar" class="bulkbar" hidden></div>
+    <div id="toasts" class="toasts" aria-live="polite"></div>
+    <div id="modal" class="modal-backdrop" hidden></div>
+
+    <script src="/app.js" type="module"></script>
+</body>
+</html>
