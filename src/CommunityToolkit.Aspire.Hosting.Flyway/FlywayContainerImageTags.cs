@@ -1,4 +1,4 @@
-﻿namespace Aspire.Hosting.ApplicationModel;
+namespace Aspire.Hosting.ApplicationModel;
 
 internal static class FlywayContainerImageTags
 {
@@ -15,5 +15,5 @@ internal static class FlywayContainerImageTags
     /// <summary>
     /// Docker image tag.
     /// </summary>
-    public const string Tag = "11";
+    public const string Tag = "13";
 }

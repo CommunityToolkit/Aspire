@@ -135,4 +135,23 @@ public class ResourceCreationTests
         var containerImageAnnotation = azureStorageExplorerResource.Annotations.OfType<ContainerImageAnnotation>().Single();
         Assert.Equal("manualTag", containerImageAnnotation.Tag);
     }
+
+    [Fact]
+    public void WithAzureStorageExplorerUsesDefaultContainerImageTag()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var storage = builder.AddAzureStorage("storage").RunAsEmulator();
+        storage.AddBlobs("blobs").WithAzureStorageExplorer();
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(appModel.Resources.OfType<AzureStorageExplorerResource>());
+        var image = Assert.Single(resource.Annotations.OfType<ContainerImageAnnotation>());
+
+        Assert.Equal("4.0.0", image.Tag);
+        Assert.Equal("docker.io", image.Registry);
+        Assert.Equal("sebagomez/azurestorageexplorer", image.Image);
+    }
 }

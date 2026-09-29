@@ -52,6 +52,7 @@ public static partial class OllamaResourceBuilderExtensions
         var resourceBuilder = builder.ApplicationBuilder.AddResource(openWebUI)
                                                         .WithImage(OllamaContainerImageTags.OpenWebUIImage, OllamaContainerImageTags.OpenWebUITag)
                                                         .WithImageRegistry(OllamaContainerImageTags.OpenWebUIRegistry)
+                                                        .WithIconName("Chat")
                                                         .WithHttpEndpoint(targetPort: 8080, name: "http")
                                                         .WithEnvironment(context => ConfigureOpenWebUIContainer(context, openWebUI))
                                                         .WaitFor(builder)

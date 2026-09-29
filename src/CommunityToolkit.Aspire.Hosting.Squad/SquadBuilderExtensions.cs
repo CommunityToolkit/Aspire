@@ -68,6 +68,7 @@ public static class SquadBuilderExtensions
         builder.Services.TryAddEventingSubscriber<SquadLifecycleHook>();
 
         var resourceBuilder = builder.AddResource(resource)
+            .WithIconName("PeopleTeam")
             .WithInitialState(new CustomResourceSnapshot
             {
                 ResourceType = "Squad",

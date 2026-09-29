@@ -2,7 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.Diagnostics;
-using System.Text.Json.Nodes;
+using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
@@ -355,7 +355,7 @@ public abstract class ConformanceTests<TService, TOptions>
     public void ConfigurationSchemaValidJsonConfigTest()
     {
         var schema = JsonSchema.FromFile(JsonSchemaPath);
-        var config = JsonNode.Parse(ValidJsonConfig);
+        var config = JsonDocument.Parse(ValidJsonConfig).RootElement;
 
         var results = schema.Evaluate(config);
 
@@ -369,9 +369,9 @@ public abstract class ConformanceTests<TService, TOptions>
 
         foreach ((string json, string error) in InvalidJsonToErrorMessage)
         {
-            var config = JsonNode.Parse(json);
+            var config = JsonDocument.Parse(json).RootElement;
             var results = schema.Evaluate(config, DefaultEvaluationOptions);
-            var detail = results.Details.FirstOrDefault(x => x.HasErrors);
+            var detail = results.Details?.FirstOrDefault(x => x.Errors is not null && x.Errors.Any());
 
             Assert.NotNull(detail);
             Assert.Equal(error, detail.Errors!.First().Value);

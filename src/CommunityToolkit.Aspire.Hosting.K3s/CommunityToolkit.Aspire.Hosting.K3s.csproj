@@ -9,7 +9,6 @@
     <PackageReference Include="Aspire.Hosting" />
     <PackageReference Include="KubernetesClient" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" />
-    <PackageReference Include="MessagePack" />
   </ItemGroup>
 
   <ItemGroup>

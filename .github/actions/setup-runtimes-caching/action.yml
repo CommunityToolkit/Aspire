@@ -17,7 +17,7 @@ runs:
   using: "composite"
   steps:
     - name: Setup .NET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v6
       with:
         dotnet-version: |
           8.0.x
@@ -30,7 +30,6 @@ runs:
       run: |
         ASPIRE_VERSION="$(dotnet msbuild Directory.Build.props -nologo -v:q -getProperty:AspireVersion)"
         echo "version=${ASPIRE_VERSION}" >> "$GITHUB_OUTPUT"
-        echo "cli-version=${ASPIRE_VERSION%%-*}" >> "$GITHUB_OUTPUT"
 
     - name: Install Aspire CLI
       uses: timheuer/setup-aspire@v0.1.0
@@ -40,7 +39,7 @@ runs:
     - name: Verify Aspire CLI version
       shell: bash
       env:
-        EXPECTED_ASPIRE_CLI_VERSION: ${{ steps.aspire-version.outputs.cli-version }}
+        EXPECTED_ASPIRE_CLI_VERSION: ${{ steps.aspire-version.outputs.version }}
       run: |
         INSTALLED_ASPIRE_CLI_VERSION="$(aspire --version)"
         case "${INSTALLED_ASPIRE_CLI_VERSION}" in
@@ -52,7 +51,7 @@ runs:
         esac
 
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
         python-version: "3.11"
 
@@ -62,25 +61,25 @@ runs:
         python -m pip install --upgrade pip
         pip install uvicorn
 
-    - uses: astral-sh/setup-uv@v5
+    - uses: astral-sh/setup-uv@v7
       name: Install uv
       with:
         enable-cache: false
 
-    - uses: actions/setup-go@v6
+    - uses: actions/setup-go@v7
       name: Set up Go
       with:
         go-version: "^1.25.4"
         cache-dependency-path: |
           ./examples/golang/gin-api/go.sum
 
-    - uses: actions/setup-java@v4
+    - uses: actions/setup-java@v6
       name: Set up Java
       with:
         distribution: "microsoft"
         java-version: "21"
 
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@v7
       name: Set up Node.js
       with:
         node-version: "latest"
@@ -90,7 +89,7 @@ runs:
       with:
         deno-version: v2.5.4
 
-    - uses: pnpm/action-setup@v5
+    - uses: pnpm/action-setup@v6
       name: Setup pnpm
       with:
         version: 10
@@ -105,7 +104,7 @@ runs:
       shell: bash
       run: sudo apt-get install -y cpanminus
 
-    - uses: actions/cache@v4
+    - uses: actions/cache@v6
       name: Cache NuGet packages
       with:
         path: ~/.nuget/packages
@@ -138,7 +137,7 @@ runs:
         npm install -g nx
 
     - name: Login to docker
-      uses: docker/login-action@v3
+      uses: docker/login-action@v4
       # only run if there was a docker-username and password provided
       # this is because builds from forks will not have access to secrets
       # and we don't want to fail the workflow if they don't have access to secrets
@@ -161,7 +160,7 @@ runs:
         dapr init --runtime-version=${{ env.DAPR_VERSION }}
         dapr --version
 
-    - uses: ai-action/setup-ollama@v1
+    - uses: ai-action/setup-ollama@v2
       name: Setup Ollama
       if: ${{ inputs.name == 'Full' || contains(inputs.name, 'Hosting.Ollama') }}
       with:

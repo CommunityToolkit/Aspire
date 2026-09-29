@@ -31,6 +31,7 @@ public static partial class OllamaResourceBuilderExtensions
         var resource = new OllamaResource(name).AddOllamaDefaultCommands();
         return builder.AddResource(resource)
           .WithAnnotation(new ContainerImageAnnotation { Image = OllamaContainerImageTags.Image, Tag = OllamaContainerImageTags.Tag, Registry = OllamaContainerImageTags.Registry })
+          .WithIconName("BrainCircuit")
           .WithHttpEndpoint(port: port, targetPort: 11434, name: OllamaResource.OllamaEndpointName)
           .WithHttpHealthCheck("/");
     }
@@ -51,6 +52,7 @@ public static partial class OllamaResourceBuilderExtensions
 
         var resource = new OllamaExecutableResource(name).AddOllamaDefaultCommands();
         return builder.AddResource(resource)
+            .WithIconName("BrainCircuit")
             .ExcludeFromManifest()
             .WithArgs(["serve"])
             .WithHttpEndpoint(port: port, targetPort: targetPort ?? OllamaExecutableResource.DefaultHttpPort, name: OllamaExecutableResource.OllamaEndpointName)
@@ -197,8 +199,8 @@ public static partial class OllamaResourceBuilderExtensions
                 }
 
                 var ollamaClient = new OllamaApiClient(endpoint);
-                var logger = context.ServiceProvider.GetRequiredService<ResourceLoggerService>().GetLogger(ollamaResource);
-                var notificationService = context.ServiceProvider.GetRequiredService<ResourceNotificationService>();
+                var logger = context.Services.GetRequiredService<ResourceLoggerService>().GetLogger(ollamaResource);
+                var notificationService = context.Services.GetRequiredService<ResourceNotificationService>();
 
                 return await executeCommand(ollamaResource, ollamaClient, logger, notificationService, context.CancellationToken);
             },

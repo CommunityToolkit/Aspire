@@ -49,12 +49,41 @@ internal static class KindConfigGenerator
         // Apply Kubernetes version after all config callbacks so every node gets the image,
         // regardless of the order WithKubernetesVersion and WithWorkerNodes/WithKindConfig were called.
         if (resource.TryGetLastAnnotation<KindNodeImageAnnotation>(out var imageAnnotation) &&
-            imageAnnotation.Version is not null)
+            imageAnnotation.Image is not null)
+        {
+            foreach (var node in config.Nodes)
+            {
+                node.Image ??= imageAnnotation.Image;
+            }
+        }
+        else if (resource.TryGetLastAnnotation<KindNodeImageAnnotation>(out imageAnnotation) &&
+                 imageAnnotation.Version is not null)
         {
             var image = $"{imageAnnotation.Registry}:{imageAnnotation.Version}";
             foreach (var node in config.Nodes)
             {
                 node.Image ??= image;
+            }
+        }
+
+        if (resource.TryGetLastAnnotation<KindNodeMountsAnnotation>(out var mountsAnnotation) &&
+            mountsAnnotation.Mounts.Count > 0)
+        {
+            foreach (var node in config.Nodes)
+            {
+                node.ExtraMounts ??= [];
+
+                foreach (var mount in mountsAnnotation.Mounts)
+                {
+                    node.ExtraMounts.Add(new KindMountModel
+                    {
+                        HostPath = mount.HostPath,
+                        ContainerPath = mount.ContainerPath,
+                        ReadOnly = mount.ReadOnly,
+                        SelinuxRelabel = mount.SelinuxRelabel,
+                        Propagation = mount.Propagation,
+                    });
+                }
             }
         }
 

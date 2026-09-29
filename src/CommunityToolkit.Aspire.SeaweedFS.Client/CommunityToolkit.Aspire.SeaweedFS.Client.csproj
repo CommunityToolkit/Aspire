@@ -3,6 +3,7 @@
   <PropertyGroup>
     <AdditionalPackageTags>seaweedfs client cloud storage s3</AdditionalPackageTags>
     <Description>An Aspire client integration for SeaweedFS using the AWSSDK.S3 client.</Description>
+    <IsAspirePolyglotCompatible>false</IsAspirePolyglotCompatible>
   </PropertyGroup>
 
   <ItemGroup>

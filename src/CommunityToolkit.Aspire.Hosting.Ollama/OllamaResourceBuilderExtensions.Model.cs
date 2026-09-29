@@ -59,6 +59,7 @@ public static partial class OllamaResourceBuilderExtensions
 
         return builder.ApplicationBuilder
             .AddResource(modelResource)
+            .WithIconName("BrainCircuit")
             .WithHealthCheck(healthCheckKey)
             .WithModelCommands(modelName)
             .WithModelDownload();
@@ -166,8 +167,8 @@ public static partial class OllamaResourceBuilderExtensions
                     }
 
                     var ollamaClient = new OllamaApiClient(endpoint);
-                    var logger = context.ServiceProvider.GetRequiredService<ResourceLoggerService>().GetLogger(modelResource);
-                    var notificationService = context.ServiceProvider.GetRequiredService<ResourceNotificationService>();
+                    var logger = context.Services.GetRequiredService<ResourceLoggerService>().GetLogger(modelResource);
+                    var notificationService = context.Services.GetRequiredService<ResourceNotificationService>();
 
                     return await executeCommand(modelResource, ollamaClient, logger, notificationService, context.CancellationToken);
                 },

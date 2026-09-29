@@ -623,7 +623,7 @@ public static class BitwardenSecretManagerExtensions
             builder.AppHostDirectory);
         resource.CacheFile = BuildDefaultCachePath(resource, builder.Environment.EnvironmentName);
 
-        var resourceBuilder = ConfigureBitwardenSecretManager(builder.AddResource(resource));
+        var resourceBuilder = ConfigureBitwardenSecretManager(builder.AddResource(resource).WithIconName("Vault"));
 
         resourceBuilder.WithReferenceRelationship(accessToken.Resource);
         resourceBuilder.WithReferenceRelationship(projectNameOrId.Resource);
@@ -800,10 +800,10 @@ public static class BitwardenSecretManagerExtensions
                 "Reprovision",
                 async context =>
                 {
-                    ResourceNotificationService notifications = context.ServiceProvider.GetRequiredService<ResourceNotificationService>();
+                    ResourceNotificationService notifications = context.Services.GetRequiredService<ResourceNotificationService>();
                     try
                     {
-                        await SyncAsync(resource, notifications, context.ServiceProvider, context.Logger, context.CancellationToken).ConfigureAwait(false);
+                        await SyncAsync(resource, notifications, context.Services, context.Logger, context.CancellationToken).ConfigureAwait(false);
                         return new ExecuteCommandResult { Success = true };
                     }
                     catch (Exception ex)
@@ -831,7 +831,7 @@ public static class BitwardenSecretManagerExtensions
                 "Reset auth cache",
                 async context =>
                 {
-                    await BitwardenSecretManagerProvisioner.ResetAuthCacheAsync(resource, context.ServiceProvider, context.CancellationToken).ConfigureAwait(false);
+                    await BitwardenSecretManagerProvisioner.ResetAuthCacheAsync(resource, context.Services, context.CancellationToken).ConfigureAwait(false);
                     return new ExecuteCommandResult { Success = true };
                 },
                 new CommandOptions
@@ -870,6 +870,7 @@ public static class BitwardenSecretManagerExtensions
 
         return builder.ApplicationBuilder.AddResource(secret)
             .WithParentRelationship(builder)
+            .WithIconName("LockClosed")
             .WithInitialState(new CustomResourceSnapshot
             {
                 ResourceType = "Parameter",
@@ -900,6 +901,7 @@ public static class BitwardenSecretManagerExtensions
 
         return builder.ApplicationBuilder.AddResource(secret)
             .WithParentRelationship(builder)
+            .WithIconName("LockClosed")
             .WithInitialState(new CustomResourceSnapshot
             {
                 ResourceType = "Parameter",
@@ -934,6 +936,7 @@ public static class BitwardenSecretManagerExtensions
 
         return builder.ApplicationBuilder.AddResource(secret)
             .WithParentRelationship(builder)
+            .WithIconName("LockClosed")
             .WithInitialState(new CustomResourceSnapshot
             {
                 ResourceType = "Parameter",

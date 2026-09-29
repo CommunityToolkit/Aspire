@@ -1,0 +1,12 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.5.0">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <UserSecretsId>communitytoolkit-aspire-stable-diffusion-cpp</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.StableDiffusionCpp\CommunityToolkit.Aspire.Hosting.StableDiffusionCpp.csproj" IsAspireProjectResource="false" />
+  </ItemGroup>
+
+</Project>

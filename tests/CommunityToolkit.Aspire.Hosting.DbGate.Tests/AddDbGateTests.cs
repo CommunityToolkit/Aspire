@@ -40,6 +40,8 @@ public class AddDbGateTests
         Assert.Equal(DbGateContainerImageTags.Image, containerAnnotation.Image);
         Assert.Equal(DbGateContainerImageTags.Registry, containerAnnotation.Registry);
 
+        Assert.Single(containerResource.Annotations.OfType<HealthCheckAnnotation>());
+
         var annotations = dbgate.Resource.Annotations;
 
         Assert.Contains(ManifestPublishingCallbackAnnotation.Ignore, annotations);

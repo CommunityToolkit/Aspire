@@ -18,6 +18,9 @@
     <PackageReadmeFile>$(DocsPath)</PackageReadmeFile>
     <PackageOutputPath>../../nuget</PackageOutputPath>
     <PackageTags>aspire integration communitytoolkit dotnetcommunitytoolkit $(AdditionalPackageTags)</PackageTags>
+    <PackageTags Condition="'$(EnableAspireIntegrationAnalyzers)' == 'true'
+                            and '$(IsAspirePolyglotCompatible)' != 'false'
+                            and !$([System.String]::Concat(' ', '$(PackageTags)', ' ').Contains(' polyglot '))">$([System.String]::Concat('$(PackageTags)', ' polyglot').Trim())</PackageTags>
     
     <!-- If the project is packable, we generate its API surface in a separate file to be used by the API review process. -->
     <GenAPITargetPath Condition="'$(IsPackable)' == 'true'">$(MSBuildProjectDirectory)/api/$(AssemblyName).cs</GenAPITargetPath>

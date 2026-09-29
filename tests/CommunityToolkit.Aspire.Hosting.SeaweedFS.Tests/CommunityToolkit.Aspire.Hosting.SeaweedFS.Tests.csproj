@@ -8,7 +8,6 @@
 
   <ItemGroup>
     <PackageReference Include="AWSSDK.S3" />
-    <PackageReference Include="MessagePack" />
   </ItemGroup>
 
 </Project>

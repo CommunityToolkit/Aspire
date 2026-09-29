@@ -9,7 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MessagePack" />
     <PackageReference Include="Verify.XunitV3" />
   </ItemGroup>
 

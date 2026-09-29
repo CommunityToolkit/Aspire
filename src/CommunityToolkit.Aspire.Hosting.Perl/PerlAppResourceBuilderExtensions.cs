@@ -184,6 +184,7 @@ public static partial class PerlAppResourceBuilderExtensions
                 Entrypoint = entrypoint
             })
             .WithAnnotation(new PerlPackageManagerAnnotation(DefaultPackageManager))
+            .WithIconName("Code")
             .WithCommand(command);
 
         // Configure args per entrypoint type

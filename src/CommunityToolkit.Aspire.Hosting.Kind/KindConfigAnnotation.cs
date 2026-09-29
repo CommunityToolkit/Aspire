@@ -42,6 +42,12 @@ internal sealed class KindNodeImageAnnotation : IResourceAnnotation
     /// Defaults to "kindest/node".
     /// </summary>
     public string Registry { get; set; } = "kindest/node";
+
+    /// <summary>
+    /// Gets or sets the fully qualified node image.
+    /// When set, it takes precedence over <see cref="Version"/> + <see cref="Registry"/>.
+    /// </summary>
+    public string? Image { get; set; }
 }
 
 /// <summary>
@@ -62,4 +68,12 @@ internal sealed class WorkerNodesAnnotation : IResourceAnnotation
     /// Gets the desired number of worker nodes.
     /// </summary>
     public int Count { get; }
+}
+
+/// <summary>
+/// Represents annotations that add extra mounts to every Kind node.
+/// </summary>
+internal sealed class KindNodeMountsAnnotation : IResourceAnnotation
+{
+    public IList<KindMountModel> Mounts { get; } = [];
 }

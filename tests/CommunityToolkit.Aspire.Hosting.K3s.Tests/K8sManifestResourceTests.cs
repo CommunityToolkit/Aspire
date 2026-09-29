@@ -196,6 +196,18 @@ public class K8sManifestResourceTests
     }
 
     [Fact]
+    public void BuildManifestScriptUsesLfLineEndingsOnly()
+    {
+        // Regression: StringBuilder.AppendLine emits Environment.NewLine (CRLF on Windows).
+        // busybox ash in alpine/kubectl does not strip the CR, so `then\r` is not the
+        // `then` keyword and the script dies with
+        // "syntax error: unexpected end of file (expecting \"then\")".
+        var script = K3sManifestBuilderExtensions.BuildManifestScript();
+
+        Assert.DoesNotContain('\r', script);
+    }
+
+    [Fact]
     public void BuildManifestScriptAutoDetectsKustomize()
     {
         // The script checks for kustomization.yaml at runtime — no path argument needed.

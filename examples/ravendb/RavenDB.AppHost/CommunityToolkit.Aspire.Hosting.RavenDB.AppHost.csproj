@@ -1,4 +1,4 @@
-<Project Sdk="Aspire.AppHost.Sdk/13.4.3">
+<Project Sdk="Aspire.AppHost.Sdk/13.5.0">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -14,8 +14,5 @@
     <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.RavenDB.ApiService\CommunityToolkit.Aspire.Hosting.RavenDB.ApiService.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="MessagePack" />
-  </ItemGroup>
 
 </Project>

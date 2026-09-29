@@ -1,18 +1,17 @@
 name: Integration code owner automation
 
 on:
-  pull_request_target:
+  pull_request:
     types: [opened, ready_for_review, reopened]
   issue_comment:
     types: [created]
 
 jobs:
-  prompt-for-codeowner:
-    if: ${{ github.repository_owner == 'CommunityToolkit' && github.event_name == 'pull_request_target' && !github.event.pull_request.draft }}
+  prepare-codeowner-prompt:
+    if: ${{ github.repository_owner == 'CommunityToolkit' && github.event_name == 'pull_request' && !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
     permissions:
       pull-requests: read
-      issues: write
     steps:
       - name: Detect new integration paths
         id: metadata
@@ -41,50 +40,30 @@ jobs:
             core.setOutput('example_folders_json', JSON.stringify(exampleFolders));
             core.setOutput('is_new_integration', packageIds.length > 0 && exampleFolders.length > 0 ? 'true' : 'false');
 
-      - name: Prompt for code owner interest
-        if: ${{ steps.metadata.outputs.is_new_integration == 'true' }}
-        uses: actions/github-script@v9.0.0
+      - name: Write prompt result artifact
+        env:
+          IS_NEW_INTEGRATION: ${{ steps.metadata.outputs.is_new_integration }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/integration-codeowner-prompt"
+          jq -n \
+            --arg schema_version "integration-codeowner-prompt/v1" \
+            --arg event "pull_request" \
+            --argjson is_new_integration "$IS_NEW_INTEGRATION" \
+            --arg head_sha "$PR_HEAD_SHA" \
+            --argjson pr_number "$PR_NUMBER" \
+            --arg run_id "$GITHUB_RUN_ID" \
+            '{schema_version:$schema_version,event:$event,is_new_integration:$is_new_integration,head_sha:$head_sha,pr_number:$pr_number,run_id:$run_id}' \
+            > "$RUNNER_TEMP/integration-codeowner-prompt/result.json"
+
+      - name: Upload prompt result artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          script: |
-            const marker = '<!-- integration-codeowner-prompt -->';
-            const prNumber = context.payload.pull_request.number;
-            const owner = context.repo.owner;
-            const repo = context.repo.repo;
-            const author = context.payload.pull_request.user.login;
-            const body = `${marker}
-            Thanks for opening a new integration PR, @${author}.
-
-            If you want to become the code owner for this integration, reply with:
-            - \`/codeowner-accept\`
-            - \`/codeowner-reject\`
-
-            Only the PR author should use these commands.`;
-
-            const comments = await github.paginate(github.rest.issues.listComments, {
-              owner,
-              repo,
-              issue_number: prNumber,
-              per_page: 100,
-            });
-
-            const existingComment = comments.find((comment) => comment.body.includes(marker));
-
-            if (existingComment) {
-              await github.rest.issues.updateComment({
-                owner,
-                repo,
-                comment_id: existingComment.id,
-                body,
-              });
-              return;
-            }
-
-            await github.rest.issues.createComment({
-              owner,
-              repo,
-              issue_number: prNumber,
-              body,
-            });
+          name: integration-codeowner-prompt
+          path: ${{ runner.temp }}/integration-codeowner-prompt/result.json
+          if-no-files-found: error
+          retention-days: 3
 
   handle-codeowner-response:
     if: ${{ github.repository_owner == 'CommunityToolkit' && github.event_name == 'issue_comment' && github.event.issue.pull_request && (startsWith(github.event.comment.body, '/codeowner-accept') || startsWith(github.event.comment.body, '/codeowner-reject')) }}

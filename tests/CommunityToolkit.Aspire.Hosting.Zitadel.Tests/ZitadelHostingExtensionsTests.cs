@@ -39,6 +39,10 @@ public class ZitadelHostingExtensionsTests
         Assert.NotNull(zitadel);
         Assert.IsType<ZitadelResource>(zitadel.Resource);
         Assert.Equal("zitadel", zitadel.Resource.Name);
+        var image = Assert.Single(zitadel.Resource.Annotations.OfType<ContainerImageAnnotation>());
+        Assert.Equal("ghcr.io", image.Registry);
+        Assert.Equal("zitadel/zitadel", image.Image);
+        Assert.Equal("v4.16.2", image.Tag);
     }
 
     [Fact]
@@ -68,6 +72,28 @@ public class ZitadelHostingExtensionsTests
         Assert.NotNull(zitadel.Resource.AdminPasswordParameter);
         Assert.True(env.ContainsKey("ZITADEL_FIRSTINSTANCE_ORG_HUMAN_USERNAME"));
         Assert.True(env.ContainsKey("ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORD"));
+    }
+
+    [Fact]
+    public void AddZitadel_Default_Password_Meets_Complexity_Requirements()
+    {
+        // Publish mode exposes the generator without wrapping it in persisted user secrets.
+        var builder = DistributedApplication.CreateBuilder(["Publishing:Publisher=manifest"]);
+        var zitadel = builder.AddZitadel("zitadel");
+
+        // Check the guarantees so this test cannot pass by chance if a minimum is removed.
+        var generation = Assert.IsType<GenerateParameterDefault>(zitadel.Resource.AdminPasswordParameter.Default);
+        Assert.True(generation.MinLower >= 1);
+        Assert.True(generation.MinUpper >= 1);
+        Assert.True(generation.MinNumeric >= 1);
+        Assert.True(generation.MinSpecial >= 1);
+
+        var password = generation.GetDefaultValue();
+
+        Assert.Contains(password, char.IsLower);
+        Assert.Contains(password, char.IsUpper);
+        Assert.Contains(password, char.IsDigit);
+        Assert.Contains(password, c => !char.IsLetterOrDigit(c));
     }
 
     [Fact]

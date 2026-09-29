@@ -19,31 +19,45 @@ internal sealed class FakeProcessRunner : IProcessRunner
     public ProcessResult NextResult { get; set; } = new(0, "", "");
     public Queue<ProcessResult> Results { get; } = new();
     public Dictionary<string, ProcessResult> ResultsByFileName { get; } = [];
+    public TimeSpan Delay { get; set; }
+    public Queue<TimeSpan> Delays { get; } = new();
+    public Func<TimeSpan, CancellationToken, Task> DelayAsync { get; set; } = Task.Delay;
 
-    public Task<ProcessResult> RunAsync(
+    public async Task<ProcessResult> RunAsync(
         ILogger logger,
         string fileName,
         IReadOnlyList<string> arguments,
         string? workingDirectory = null,
         IReadOnlyDictionary<string, string>? environmentVariables = null,
+        string? standardInput = null,
         CancellationToken cancellationToken = default)
     {
+        ProcessResult result;
+        TimeSpan delay;
         lock (_lock)
         {
-            Commands.Add(new(fileName, string.Join(" ", arguments), workingDirectory, environmentVariables));
+            Commands.Add(new(fileName, string.Join(" ", arguments), workingDirectory, environmentVariables, standardInput));
 
-            return Task.FromResult(
-                ResultsByFileName.TryGetValue(fileName, out var result)
-                    ? result
+            result = ResultsByFileName.TryGetValue(fileName, out var fileResult)
+                    ? fileResult
                     : Results.Count > 0
                         ? Results.Dequeue()
-                        : NextResult);
+                        : NextResult;
+            delay = Delays.Count > 0 ? Delays.Dequeue() : Delay;
         }
+
+        if (delay > TimeSpan.Zero)
+        {
+            await DelayAsync(delay, cancellationToken);
+        }
+
+        return result;
     }
 
     internal sealed record ExecutedCommand(
         string FileName,
         string Arguments,
         string? WorkingDirectory,
-        IReadOnlyDictionary<string, string>? EnvironmentVariables);
+        IReadOnlyDictionary<string, string>? EnvironmentVariables,
+        string? StandardInput);
 }

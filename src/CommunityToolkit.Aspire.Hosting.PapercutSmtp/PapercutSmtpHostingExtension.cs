@@ -34,6 +34,7 @@ public static class PapercutSmtpHostingExtension
             .WithImage(PapercutSmtpContainerImageTags.Image)
             .WithImageTag(PapercutSmtpContainerImageTags.Tag)
             .WithImageRegistry(PapercutSmtpContainerImageTags.Registry)
+            .WithIconName("Mail")
             .WithEndpoint(
                 targetPort: PapercutSmtpContainerResource.SmtpEndpointPort,
                 port: smtpPort,

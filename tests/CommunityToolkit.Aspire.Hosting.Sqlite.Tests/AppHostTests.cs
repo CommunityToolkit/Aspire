@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 
 namespace CommunityToolkit.Aspire.Hosting.Sqlite;
 
+[RequiresDocker]
 public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Sqlite_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Sqlite_AppHost>>
 {
     [Fact]

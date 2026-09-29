@@ -1,0 +1,16 @@
+# This file demonstrates a multi-document manifest:
+# 1. A Namespace for grouping demo resources.
+# 2. A ConfigMap scoped to that namespace.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: aspire-demo
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: extra-config
+  namespace: aspire-demo
+data:
+  greeting: hello-kind
+  purpose: aspire-demo

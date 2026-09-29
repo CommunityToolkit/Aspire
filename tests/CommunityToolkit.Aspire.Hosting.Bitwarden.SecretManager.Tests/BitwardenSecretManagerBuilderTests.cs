@@ -526,7 +526,7 @@ public class BitwardenSecretManagerBuilderTests
         var actual = command.UpdateState(new UpdateCommandStateContext
         {
             ResourceSnapshot = new CustomResourceSnapshot { ResourceType = "BitwardenSecretManager", Properties = [], State = resourceState },
-            ServiceProvider = app.Services
+            Services = app.Services
         });
 
         Assert.Equal(expected, actual);
@@ -560,7 +560,7 @@ public class BitwardenSecretManagerBuilderTests
         var actual = command.UpdateState(new UpdateCommandStateContext
         {
             ResourceSnapshot = new CustomResourceSnapshot { ResourceType = "BitwardenSecretManager", Properties = [], State = resourceState },
-            ServiceProvider = app.Services
+            Services = app.Services
         });
 
         Assert.Equal(expected, actual);

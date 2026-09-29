@@ -5,12 +5,12 @@ using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Eventing;
 using Aspire.Hosting.Lifecycle;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-
 namespace CommunityToolkit.Aspire.Hosting.Kind;
 
 /// <summary>
-/// Handles cleanup of Kind clusters on application shutdown.
+/// Handles cleanup of Kind clusters during graceful host shutdown and disposal.
 /// Clusters with <see cref="ClusterLifetime.Session"/> lifetime are deleted;
 /// clusters with <see cref="ClusterLifetime.Persistent"/> lifetime are left running.
 /// </summary>
@@ -18,18 +18,48 @@ internal sealed class KindClusterLifecycleHook(
     DistributedApplicationModel appModel,
     ResourceLoggerService loggerService,
     IProcessRunner processRunner,
-    IKindContainerRuntimeResolver containerRuntimeResolver) : IDistributedApplicationEventingSubscriber, IAsyncDisposable
+    IKindContainerRuntimeResolver containerRuntimeResolver,
+    IHostApplicationLifetime hostApplicationLifetime) : IDistributedApplicationEventingSubscriber, IAsyncDisposable
 {
+    private readonly object _cleanupLock = new();
+    private Task? _cleanupTask;
+    private CancellationTokenRegistration _applicationStoppingRegistration;
+
     /// <inheritdoc />
     public Task SubscribeAsync(
         IDistributedApplicationEventing eventing,
         DistributedApplicationExecutionContext executionContext,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(eventing);
+
+        _applicationStoppingRegistration = hostApplicationLifetime.ApplicationStopping.Register(() => _ = EnsureCleanupStarted());
         return Task.CompletedTask;
     }
+
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            await EnsureCleanupStarted().ConfigureAwait(false);
+        }
+        finally
+        {
+            _applicationStoppingRegistration.Dispose();
+        }
+    }
+
+    private Task EnsureCleanupStarted()
+    {
+        lock (_cleanupLock)
+        {
+            _cleanupTask ??= CleanupClustersAsync();
+            return _cleanupTask;
+        }
+    }
+
+    private async Task CleanupClustersAsync()
     {
         var clusters = appModel.Resources.OfType<KindClusterResource>();
 

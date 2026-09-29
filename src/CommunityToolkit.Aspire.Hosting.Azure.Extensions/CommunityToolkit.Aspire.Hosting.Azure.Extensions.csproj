@@ -9,7 +9,6 @@
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting" />
     <PackageReference Include="Aspire.Hosting.Azure.Storage" />
-    <PackageReference Include="MessagePack" />
   </ItemGroup>
 
 </Project>

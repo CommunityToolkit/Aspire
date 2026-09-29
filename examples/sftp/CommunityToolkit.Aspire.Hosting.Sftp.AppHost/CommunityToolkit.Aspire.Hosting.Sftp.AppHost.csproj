@@ -1,4 +1,4 @@
-<Project Sdk="Aspire.AppHost.Sdk/13.4.3">
+<Project Sdk="Aspire.AppHost.Sdk/13.5.0">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -39,8 +39,5 @@
     </None>
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="MessagePack" />
-  </ItemGroup>
 
 </Project>
