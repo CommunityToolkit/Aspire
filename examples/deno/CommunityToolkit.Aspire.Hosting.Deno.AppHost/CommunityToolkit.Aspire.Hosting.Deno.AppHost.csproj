@@ -12,9 +12,6 @@
     <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Deno\CommunityToolkit.Aspire.Hosting.Deno.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="MessagePack" />
-  </ItemGroup>
 
   <Target Name="CleanNodeModules" AfterTargets="Build">
     <Delete Files="../vite-demo/node_modules/**" Condition="Exists('../vite-demo/node_modules')" />

@@ -12,7 +12,4 @@
     <ProjectReference Include="../../src/CommunityToolkit.Aspire.Hosting.Solr/CommunityToolkit.Aspire.Hosting.Solr.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="MessagePack" />
-  </ItemGroup>
 </Project>

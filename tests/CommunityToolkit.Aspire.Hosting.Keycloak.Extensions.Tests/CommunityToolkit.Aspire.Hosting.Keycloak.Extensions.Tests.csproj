@@ -9,7 +9,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="MessagePack" />
       <PackageReference Include="Moq" />
     </ItemGroup>
 </Project>

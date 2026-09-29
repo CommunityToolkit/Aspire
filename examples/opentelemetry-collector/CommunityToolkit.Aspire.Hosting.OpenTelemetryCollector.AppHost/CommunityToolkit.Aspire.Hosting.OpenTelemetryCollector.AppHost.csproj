@@ -12,8 +12,5 @@
     <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector\CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="MessagePack" />
-  </ItemGroup>
 
 </Project>

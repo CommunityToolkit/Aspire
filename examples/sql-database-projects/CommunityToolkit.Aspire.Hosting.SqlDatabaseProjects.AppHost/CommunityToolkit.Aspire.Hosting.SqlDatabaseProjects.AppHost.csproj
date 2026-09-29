@@ -7,7 +7,6 @@
 
   <ItemGroup>
     <PackageReference Include="ErikEJ.Dacpac.Chinook" IsAspirePackageResource="true" />
-    <PackageReference Include="MessagePack" />
   </ItemGroup>
 
   <ItemGroup>

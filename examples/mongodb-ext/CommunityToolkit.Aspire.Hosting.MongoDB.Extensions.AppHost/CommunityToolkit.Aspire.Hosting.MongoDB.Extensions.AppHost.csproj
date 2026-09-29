@@ -11,9 +11,6 @@
     <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.MongoDB.Extensions\CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="MessagePack" />
-  </ItemGroup>
 
 
 </Project>

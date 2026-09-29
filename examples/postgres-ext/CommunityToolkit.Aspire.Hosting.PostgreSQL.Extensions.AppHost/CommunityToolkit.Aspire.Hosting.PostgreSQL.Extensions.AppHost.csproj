@@ -11,9 +11,6 @@
     <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions\CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="MessagePack" />
-  </ItemGroup>
 
 
 </Project>
