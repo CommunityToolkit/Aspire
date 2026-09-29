@@ -44,7 +44,7 @@ jobs:
       matrix:
         include:
           - language: csharp
-            build-mode: autobuild
+            build-mode: ${{ github.event_name == 'pull_request' && 'none' || 'autobuild' }}
             cache-deps: true
         # CodeQL supports the following values keywords for 'language': 'c-cpp', 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'swift'
         # Use `c-cpp` to analyze code written in C, C++ or both

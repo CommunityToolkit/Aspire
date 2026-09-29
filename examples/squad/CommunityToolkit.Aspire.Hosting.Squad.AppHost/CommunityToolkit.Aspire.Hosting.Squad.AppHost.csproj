@@ -11,12 +11,6 @@
     <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Squad.ApiApp\CommunityToolkit.Aspire.Hosting.Squad.ApiApp.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <!-- Hard-reference MessagePack to pull the patched 2.5.301 (pinned in Directory.Packages.props)
-         instead of the vulnerable transitive version flowing through Aspire.Hosting. -->
-    <PackageReference Include="MessagePack" />
-  </ItemGroup>
-
   <!--
     The research-squad/ and dev-squad/ folders are Squad team scaffolding (.squad/,
     .github/, .copilot/, .mcp.json), not C# source. The Aspire AppHost SDK's

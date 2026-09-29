@@ -12,9 +12,6 @@
     <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.SqlServer.Extensions\CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="MessagePack" />
-  </ItemGroup>
 
 
 </Project>

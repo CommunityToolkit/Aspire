@@ -34,7 +34,7 @@ public class ResourceCreationTests
 
         Assert.True(resource.TryGetLastAnnotation(out ContainerImageAnnotation? image));
         Assert.Equal("library/eclipse-mosquitto", image.Image);
-        Assert.Equal("2.0.22", image.Tag);
+        Assert.Equal("2.1.2-alpine", image.Tag);
         Assert.Equal("docker.io", image.Registry);
     }
 

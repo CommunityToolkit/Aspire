@@ -5,6 +5,5 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting" />
-    <PackageReference Include="MessagePack" />
   </ItemGroup>
 </Project>

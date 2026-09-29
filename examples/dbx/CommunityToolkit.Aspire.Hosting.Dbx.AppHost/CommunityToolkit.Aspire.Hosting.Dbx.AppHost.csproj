@@ -16,7 +16,4 @@
     <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.MySql.Extensions\CommunityToolkit.Aspire.Hosting.MySql.Extensions.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="MessagePack" />
-  </ItemGroup>
 </Project>

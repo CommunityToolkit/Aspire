@@ -13,8 +13,5 @@
     <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.LavinMQ.MassTransit\CommunityToolkit.Aspire.Hosting.LavinMQ.MassTransit.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="MessagePack" />
-  </ItemGroup>
   
 </Project>

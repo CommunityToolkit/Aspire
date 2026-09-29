@@ -18,11 +18,11 @@
     "node": "^20.19.0 || ^22.13.0 || >=24"
   },
   "devDependencies": {
-    "@types/node": "^22.0.0",
-    "eslint": "^10.0.3",
+    "@types/node": "^26.6.3",
+    "eslint": "^10.11.0",
     "nodemon": "^3.1.14",
-    "tsx": "^4.21.0",
+    "tsx": "^4.23.15",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.57.1"
+    "typescript-eslint": "^8.70.1"
   }
 }
