@@ -22,7 +22,7 @@
     "@swc/cli": "~0.6.0",
     "@swc/core": "~1.15.8",
     "@swc/helpers": "~0.5.11",
-    "@types/node": "^26.6.2",
+    "@types/node": "^26.6.3",
     "@types/react": "19.0.0",
     "@types/react-dom": "19.0.0",
     "@vitejs/plugin-react": "^6.0.3",
