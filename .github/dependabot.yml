@@ -5,26 +5,40 @@ updates:
   - dependency-name: "Aspire.Hosting.*"
   labels:
   - dependencies
+  - nuget
   - skip-nuget-publish
+  open-pull-requests-limit: 10
   package-ecosystem: nuget
   schedule:
     interval: weekly
+
 - directories:
   - / # Includes .github/workflows.
   - "/.github/actions/*" # Includes local composite actions.
+  groups:
+    actions-by-name:
+      group-by: dependency-name
   ignore:
   - dependency-name: "github/gh-aw-actions/**" # Managed by gh aw compile. Version-locked to the gh-aw compiler; do not bump.
   labels:
   - dependencies
+  - github-actions
   - skip-nuget-publish
+  open-pull-requests-limit: 10
   package-ecosystem: github-actions
   schedule:
     interval: weekly
+
 - directories:
   - "**/*"
+  groups:
+    dependencies-by-name:
+      group-by: dependency-name
   labels:
   - dependencies
+  - npm
   - skip-nuget-publish
+  open-pull-requests-limit: 10
   package-ecosystem: npm
   schedule:
     interval: weekly
