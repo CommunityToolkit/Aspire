@@ -26,7 +26,7 @@
     "@types/react": "19.0.0",
     "@types/react-dom": "19.0.0",
     "@vitejs/plugin-react": "^6.0.3",
-    "@vitest/ui": "^4.1.10",
+    "@vitest/ui": "^4.1.11",
     "eslint": "^9.8.0",
     "eslint-config-prettier": "^10.0.0",
     "eslint-plugin-import": "2.31.0",
@@ -41,7 +41,7 @@
     "typescript": "~5.8.2",
     "typescript-eslint": "^8.70.1",
     "vite": "^8.1.5",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.11"
   },
   "workspaces": [
     "apps/*"
