@@ -130,7 +130,7 @@ const LIST_QUERY = `query($q:String!,$cursor:String){
             labels(first:15){ nodes{ name color } }
             autoMergeRequest{ mergeMethod }
             latestReviews(first:5){ nodes{ author{ login } state } }
-            files(first:40){ totalCount nodes{ path } }
+            files(first:100){ totalCount pageInfo{ hasNextPage endCursor } nodes{ path } }
             first: commits(first:1){ nodes{ commit{ message } } }
             head: commits(last:1){ nodes{ commit{ oid statusCheckRollup{ state } } } }
         } }
@@ -144,6 +144,7 @@ export async function listDependabotPrs(repo, onPage) {
     for (;;) {
         const data = await graphql(LIST_QUERY, { q, cursor });
         const page = (data.search.nodes ?? []).filter((n) => n && n.number);
+        await Promise.all(page.filter((pr) => pr.files?.pageInfo?.hasNextPage).map((pr) => completePrFiles(repo, pr)));
         all.push(...page);
         onPage?.(page, { loaded: all.length, total: data.search.issueCount });
         if (!data.search.pageInfo.hasNextPage) break;
@@ -167,7 +168,7 @@ export async function fetchPrDetails(repo, number) {
                 pullRequest(number:$number){
                     number state bodyHTML mergeable mergeStateStatus reviewDecision
                     autoMergeRequest{ mergeMethod }
-                    files(first:100){ totalCount nodes{ path additions deletions } }
+                    files(first:100){ totalCount pageInfo{ hasNextPage endCursor } nodes{ path additions deletions } }
                     head: commits(last:1){ nodes{ commit{ oid statusCheckRollup{ state
                         contexts(first:100){ totalCount nodes{
                             __typename
@@ -183,6 +184,7 @@ export async function fetchPrDetails(repo, number) {
         { ...splitRepo(repo), number },
     );
     const pr = data.repository.pullRequest;
+    const files = await fetchAllPrFiles(repo, number, pr.files);
     const commit = pr.head?.nodes?.[0]?.commit;
     const checks = (commit?.statusCheckRollup?.contexts?.nodes ?? []).map((c) =>
         c.__typename === "CheckRun"
@@ -206,11 +208,55 @@ export async function fetchPrDetails(repo, number) {
         headOid: commit?.oid ?? null,
         checksState: commit?.statusCheckRollup?.state ?? null,
         checks,
-        files: (pr.files?.nodes ?? []).map((f) => ({ path: f.path, additions: f.additions, deletions: f.deletions })),
+        files: files.nodes.map((f) => ({ path: f.path, additions: f.additions, deletions: f.deletions })),
+        filesTruncated: files.incomplete || files.totalCount > files.nodes.length,
         comments: (pr.comments?.nodes ?? []).map((c) => ({ author: c.author?.login ?? "ghost", body: c.bodyText, createdAt: c.createdAt, url: c.url })),
         reviews: (pr.reviews?.nodes ?? []).map((r) => ({ author: r.author?.login ?? "ghost", state: r.state, submittedAt: r.submittedAt })),
         fetchedAt: new Date().toISOString(),
     };
+}
+
+async function completePrFiles(repo, pr) {
+    const files = await fetchAllPrFiles(repo, pr.number, pr.files);
+    pr.files = {
+        ...pr.files,
+        totalCount: files.totalCount,
+        nodes: files.nodes,
+        pageInfo: { hasNextPage: files.incomplete, endCursor: null },
+        incomplete: files.incomplete,
+    };
+}
+
+async function fetchAllPrFiles(repo, number, firstPage) {
+    const nodes = [...(firstPage?.nodes ?? [])];
+    const totalCount = firstPage?.totalCount ?? nodes.length;
+    let pageInfo = firstPage?.pageInfo ?? null;
+    let incomplete = false;
+    while (pageInfo?.hasNextPage) {
+        try {
+            const data = await graphql(
+                `query($owner:String!,$name:String!,$number:Int!,$cursor:String){
+                    repository(owner:$owner,name:$name){
+                        pullRequest(number:$number){
+                            files(first:100, after:$cursor){
+                                totalCount
+                                pageInfo{ hasNextPage endCursor }
+                                nodes{ path additions deletions }
+                            }
+                        }
+                    }
+                }`,
+                { ...splitRepo(repo), number, cursor: pageInfo.endCursor },
+            );
+            const page = data.repository.pullRequest.files;
+            nodes.push(...(page.nodes ?? []));
+            pageInfo = page.pageInfo;
+        } catch {
+            incomplete = true;
+            break;
+        }
+    }
+    return { nodes, totalCount, incomplete: incomplete || totalCount > nodes.length };
 }
 
 export async function fetchPrDiff(repo, number) {

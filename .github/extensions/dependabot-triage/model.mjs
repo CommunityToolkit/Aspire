@@ -37,7 +37,7 @@ export function normalizeAlertEcosystem(eco) {
 function parseVersion(v) {
     if (!v) return null;
     const cleaned = String(v).trim().replace(/^[v=]/i, "");
-    const m = cleaned.match(/^(\d+(?:\.\d+)*)(?:-([0-9A-Za-z.-]+))?/);
+    const m = cleaned.match(/^(\d+(?:\.\d+)*)(?:-([0-9A-Za-z.-]+))?(?:\+[0-9A-Za-z.-]+)?$/);
     if (!m) return null;
     return { parts: m[1].split(".").map(Number), pre: m[2] ?? null };
 }
@@ -45,7 +45,7 @@ function parseVersion(v) {
 export function compareVersions(a, b) {
     const pa = parseVersion(a);
     const pb = parseVersion(b);
-    if (!pa || !pb) return 0;
+    if (!pa || !pb) return null;
     const len = Math.max(pa.parts.length, pb.parts.length);
     for (let i = 0; i < len; i++) {
         const x = pa.parts[i] ?? 0;
@@ -54,7 +54,27 @@ export function compareVersions(a, b) {
     }
     if (pa.pre && !pb.pre) return -1;
     if (!pa.pre && pb.pre) return 1;
-    if (pa.pre && pb.pre) return pa.pre.localeCompare(pb.pre, undefined, { numeric: true });
+    if (pa.pre && pb.pre) return comparePrerelease(pa.pre, pb.pre);
+    return 0;
+}
+
+function comparePrerelease(a, b) {
+    const left = a.split(".");
+    const right = b.split(".");
+    const len = Math.max(left.length, right.length);
+    for (let i = 0; i < len; i++) {
+        const x = left[i];
+        const y = right[i];
+        if (x === undefined) return -1;
+        if (y === undefined) return 1;
+        if (x === y) continue;
+        const xNumber = /^\d+$/.test(x);
+        const yNumber = /^\d+$/.test(y);
+        if (xNumber && yNumber) return Number(x) < Number(y) ? -1 : 1;
+        if (xNumber) return -1;
+        if (yNumber) return 1;
+        return x < y ? -1 : 1;
+    }
     return 0;
 }
 
@@ -218,7 +238,7 @@ export function normalizePr(node) {
         mergeStateStatus: node.mergeStateStatus ?? "UNKNOWN",
         autoMerge: node.autoMergeRequest ? { method: node.autoMergeRequest.mergeMethod } : null,
         files,
-        filesTruncated: (node.files?.totalCount ?? files.length) > files.length,
+        filesTruncated: !!node.files?.incomplete || !!node.files?.pageInfo?.hasNextPage || (node.files?.totalCount ?? files.length) > files.length,
         additions: node.additions ?? 0,
         deletions: node.deletions ?? 0,
         changedFiles: node.changedFiles ?? files.length,
@@ -267,11 +287,21 @@ export function prStatus(pr) {
     if (pr.checks === "PENDING" || pr.checks === "EXPECTED") return "pending";
     if (pr.mergeStateStatus === "BEHIND") return "behind";
     if (pr.isDraft) return "draft";
+    if (pr.mergeStateStatus === "BLOCKED") {
+        if (hasRequestedChanges(pr)) return "changes-requested";
+        if (pr.reviewDecision === "REVIEW_REQUIRED") return "needs-review";
+        return "blocked";
+    }
     if (pr.mergeable === "MERGEABLE") {
-        if (pr.mergeStateStatus === "BLOCKED" && pr.reviewDecision === "REVIEW_REQUIRED") return "needs-review";
         return "ready";
     }
     return "unknown";
+}
+
+function hasRequestedChanges(pr) {
+    if (pr.reviewDecision === "CHANGES_REQUESTED") return true;
+    if (pr.latestReviews?.some((r) => r.state === "CHANGES_REQUESTED")) return true;
+    return pr.labels?.some((l) => /changes\s+requested/i.test(l.name)) ?? false;
 }
 
 export function deriveState({ prs, alerts, reviews }) {
@@ -297,7 +327,8 @@ export function deriveState({ prs, alerts, reviews }) {
         const related = [];
         for (const pr of candidates) {
             const update = pr.updates.find((u) => u.name.toLowerCase() === alert.package.toLowerCase());
-            const versionFixes = alert.patched ? compareVersions(update?.to, alert.patched) >= 0 : true;
+            const versionComparison = alert.patched ? compareVersions(update?.to, alert.patched) : 0;
+            const versionFixes = versionComparison !== null && versionComparison >= 0;
             if (versionFixes && prCoversManifest(pr, alert)) {
                 fixedBy.push(pr.number);
                 prSecurity.get(pr.number).fixes.push(alert.number);
@@ -348,7 +379,7 @@ export function deriveState({ prs, alerts, reviews }) {
             key,
             name,
             ecosystem,
-            targets: targets.sort(compareVersions),
+            targets: targets.sort((a, b) => compareVersions(a, b) ?? a.localeCompare(b, undefined, { numeric: true })),
             divergent: targets.length > 1,
             prs: list.map((p) => p.number).sort((a, b) => a - b),
             statuses: countBy(list.map((p) => byNumber.get(p.number).status)),

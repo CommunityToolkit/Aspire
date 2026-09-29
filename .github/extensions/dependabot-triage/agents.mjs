@@ -12,6 +12,7 @@ const RESULT_BLOCK = /```dependabot-canvas[^\n]*\n([\s\S]*?)```/g;
 const POLL_ACTIVE_MS = 8_000;
 const MAX_TEXT = 4_000;
 const MAX_AGENTS = 50;
+const RESULT_RETRY_LIMIT = 5;
 
 function clip(text, max = MAX_TEXT) {
     if (typeof text !== "string") return null;
@@ -35,6 +36,14 @@ export function parseResultBlocks(text) {
     return out;
 }
 
+export class AgentResultValidationError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = "AgentResultValidationError";
+        this.permanent = true;
+    }
+}
+
 export class AgentTracker extends EventEmitter {
     constructor() {
         super();
@@ -44,6 +53,7 @@ export class AgentTracker extends EventEmitter {
         this._pollTimer = null;
         this._polling = null;
         this._loaded = Promise.resolve();
+        this._resultHandler = null;
     }
 
     /** Binds the tracker to the joined session; call once after joinSession. */
@@ -89,7 +99,14 @@ export class AgentTracker extends EventEmitter {
         return [...this.agents.values()]
             .filter((a) => !repo || a.repo?.toLowerCase() === repo.toLowerCase())
             .sort((a, b) => Date.parse(b.lastPromptAt) - Date.parse(a.lastPromptAt))
-            .map(({ applied, ...rest }) => rest);
+            .map(({ applied, resultFailures, ...rest }) => rest);
+    }
+
+    setResultHandler(handler) {
+        this._resultHandler = handler;
+        return () => {
+            if (this._resultHandler === handler) this._resultHandler = null;
+        };
     }
 
     isActive(agentId) {
@@ -208,6 +225,7 @@ export class AgentTracker extends EventEmitter {
         const { tasks } = await this._requireSession().rpc.tasks.list();
         const byId = new Map(tasks.filter((t) => t.type === "agent").map((t) => [t.id, t]));
         let dirty = false;
+        let retryResults = false;
         for (const rec of this.agents.values()) {
             const t = byId.get(rec.agentId);
             const before = JSON.stringify([rec.status, rec.latestIntent, rec.latestResponse, rec.error, rec.completedAt]);
@@ -241,16 +259,41 @@ export class AgentTracker extends EventEmitter {
                 } else if (resultText) {
                     for (const payload of parseResultBlocks(resultText)) {
                         if (rec.applied.includes(payload.raw)) continue;
-                        rec.applied.push(payload.raw);
+                        try {
+                            if (!this._resultHandler) throw new Error("No result handler is registered.");
+                            await this._resultHandler({ agent: rec, action: payload.action, input: payload.input });
+                            rec.applied.push(payload.raw);
+                            if (rec.resultFailures) delete rec.resultFailures[payload.raw];
+                            dirty = true;
+                        } catch (e) {
+                            const permanent = e instanceof AgentResultValidationError || e?.permanent === true;
+                            if (permanent) {
+                                process.stderr.write(`[dependabot-triage] ignored invalid result from agent ${rec.agentId}: ${e?.message ?? e}\n`);
+                                rec.applied.push(payload.raw);
+                                if (rec.resultFailures) delete rec.resultFailures[payload.raw];
+                                dirty = true;
+                            } else {
+                                rec.resultFailures ??= {};
+                                const attempts = (rec.resultFailures[payload.raw] ?? 0) + 1;
+                                rec.resultFailures[payload.raw] = attempts;
+                                dirty = true;
+                                if (attempts >= RESULT_RETRY_LIMIT) {
+                                    process.stderr.write(`[dependabot-triage] gave up applying result from agent ${rec.agentId} after ${attempts} attempts: ${e?.stack ?? e}\n`);
+                                    rec.applied.push(payload.raw);
+                                    delete rec.resultFailures[payload.raw];
+                                } else {
+                                    retryResults = true;
+                                    process.stderr.write(`[dependabot-triage] result from agent ${rec.agentId} failed, will retry (${attempts}/${RESULT_RETRY_LIMIT}): ${e?.stack ?? e}\n`);
+                                }
+                            }
+                        }
                         rec.applied = rec.applied.slice(-50);
-                        dirty = true;
-                        this.emit("result", { agent: rec, action: payload.action, input: payload.input });
                     }
                 }
             }
             if (JSON.stringify([rec.status, rec.latestIntent, rec.latestResponse, rec.error, rec.completedAt]) !== before) dirty = true;
         }
         if (dirty) await this._save();
-        if ([...this.agents.values()].some((a) => a.status === "running")) this.schedulePoll(POLL_ACTIVE_MS);
+        if (retryResults || [...this.agents.values()].some((a) => a.status === "running")) this.schedulePoll(POLL_ACTIVE_MS);
     }
 }
