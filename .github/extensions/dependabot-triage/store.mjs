@@ -235,9 +235,9 @@ export class RepoStore extends EventEmitter {
             pr.autoMerge = details.autoMerge;
             pr.checks = details.checksState;
             pr.headOid = details.headOid ?? pr.headOid;
-            if (details.files.length > pr.files.length) {
+            if (details.files.length > pr.files.length || pr.filesTruncated) {
                 pr.files = details.files.map((f) => f.path);
-                pr.filesTruncated = false;
+                pr.filesTruncated = !!details.filesTruncated;
             }
             this._changed();
         }

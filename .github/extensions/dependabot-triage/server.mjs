@@ -14,6 +14,8 @@ const STATIC = {
 };
 const MAX_BODY = 256 * 1024;
 const ACTION_TYPES = new Set(["approve", "merge", "approve-merge", "disable-auto", "dependabot", "close"]);
+const INVALID_BRANCH_CHARS_RE = /[\x00-\x20~^:?*\[\\]/;
+const SAFE_BRANCH_CHARS_RE = /^[A-Za-z0-9][A-Za-z0-9._/-]*$/;
 
 function safeEqual(a, b) {
     const x = Buffer.from(String(a ?? ""));
@@ -39,7 +41,30 @@ async function readJson(req) {
 }
 
 const MAX_COMBINE = 150;
-const BRANCH_RE = /^[A-Za-z0-9][A-Za-z0-9._/-]{0,99}$/;
+
+export function validateCombineBranchName(branch) {
+    if (!branch) return "Branch name is required.";
+    if (branch.length > 100) return "Branch name must be at most 100 characters.";
+    if (branch === "@") return "Branch name cannot be '@'.";
+    if (branch.startsWith("-")) return "Branch name cannot start with '-'.";
+    if (branch.startsWith("/") || branch.endsWith("/")) return "Branch name cannot start or end with '/'.";
+    if (branch.endsWith(".")) return "Branch name cannot end with '.'.";
+    if (branch.includes("..")) return "Branch name cannot contain '..'.";
+    if (branch.includes("//")) return "Branch name cannot contain empty path components ('//').";
+    if (branch.includes("@{")) return "Branch name cannot contain '@{'.";
+    if (INVALID_BRANCH_CHARS_RE.test(branch)) {
+        return "Branch name cannot contain spaces, ASCII control characters, or these characters: ~ ^ : ? * [ \\";
+    }
+    // Stricter than git: the branch is interpolated into the agent's shell commands.
+    if (!SAFE_BRANCH_CHARS_RE.test(branch)) return "Branch name must start with a letter or digit and use only letters, digits, '.', '_', '-' or '/'.";
+    if (branch.startsWith("dependabot/")) return "Branch name cannot be under dependabot/.";
+    const parts = branch.split("/");
+    const dotted = parts.find((part) => part.startsWith("."));
+    if (dotted) return `Branch path component '${dotted}' cannot start with '.'.`;
+    const locked = parts.find((part) => part.endsWith(".lock"));
+    if (locked) return `Branch path component '${locked}' cannot end with '.lock'.`;
+    return null;
+}
 
 function parseTarget(value, agents) {
     if (value === undefined || value === null || value === "" || value === "new") return "new";
@@ -164,9 +189,8 @@ export async function startInstanceServer({ instanceId, store, agents, onSendToS
                 if (numbers.length < 2) return sendJson(res, 400, { error: "Select at least two open Dependabot PRs to combine." });
                 if (numbers.length > MAX_COMBINE) return sendJson(res, 400, { error: `Combine at most ${MAX_COMBINE} PRs at a time.` });
                 const branch = typeof body.branch === "string" ? body.branch.trim() : "";
-                if (!BRANCH_RE.test(branch) || branch.includes("..") || branch.endsWith(".lock") || branch.endsWith("/") || branch.startsWith("dependabot/")) {
-                    return sendJson(res, 400, { error: "Branch name must be 1-100 characters of letters, digits, '.', '_', '-' or '/', and not under dependabot/." });
-                }
+                const branchError = validateCombineBranchName(branch);
+                if (branchError) return sendJson(res, 400, { error: branchError });
                 const title = typeof body.title === "string" ? body.title.trim().replace(/\s+/g, " ") : "";
                 if (!title || title.length > 200) return sendJson(res, 400, { error: "Title is required (max 200 characters)." });
                 const target = parseTarget(body.target, agents);

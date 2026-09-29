@@ -8,7 +8,7 @@ import { detectRepo } from "./github.mjs";
 import { startInstanceServer } from "./server.mjs";
 import { getStore } from "./store.mjs";
 import { formatDiff } from "./model.mjs";
-import { AgentTracker } from "./agents.mjs";
+import { AgentResultValidationError, AgentTracker } from "./agents.mjs";
 
 const CANVAS_ID = "dependabot-triage";
 const AUTO_REFRESH_MS = 5 * 60_000;
@@ -18,11 +18,7 @@ const instances = new Map(); // instanceId -> { server, store, uiState }
 let detectedRepo = null;
 let session;
 const agents = new AgentTracker();
-agents.on("result", ({ agent, action, input }) => {
-    applyAgentResult(agent, action, input).catch((e) => {
-        session?.log(`Dependabot triage: could not record ${action} from agent "${agent.name}": ${e.message}`, { level: "warning" });
-    });
-});
+agents.setResultHandler(({ agent, action, input }) => applyAgentResult(agent, action, input));
 
 /**
  * Sends work to a background agent (new, or an existing one as a follow-up) or
@@ -54,18 +50,23 @@ async function applyAgentResult(agent, action, input) {
     const ints = (v) => (Array.isArray(v) ? v.map(Number).filter((n) => Number.isInteger(n) && n > 0) : []);
     if (action === "record_review") {
         const numbers = ints(input.numbers).filter((n) => agent.numbers.includes(n));
-        if (!numbers.length || !["safe", "caution", "blocked"].includes(input.verdict)) throw new Error("invalid record_review payload");
+        if (!numbers.length || !["safe", "caution", "blocked"].includes(input.verdict)) throw new AgentResultValidationError("invalid record_review payload");
         await store.recordReview(numbers, { verdict: input.verdict, summary: String(input.summary ?? "").slice(0, 4000), reviewer: `agent: ${agent.name}` });
     } else if (action === "record_combined_pr") {
         const requestId = typeof input.requestId === "string" && agent.requestIds.includes(input.requestId) ? input.requestId : null;
-        if (!requestId) throw new Error("record_combined_pr payload has no requestId from this agent");
+        if (!requestId) throw new AgentResultValidationError("record_combined_pr payload has no requestId from this agent");
         const prNumber = Number.isInteger(input.prNumber) && input.prNumber > 0 ? input.prNumber : undefined;
         const excluded = Array.isArray(input.excluded)
             ? input.excluded.map((e) => (typeof e === "number" ? { number: e } : e)).filter((e) => Number.isInteger(e?.number)).map((e) => ({ number: e.number, reason: String(e.reason ?? "").slice(0, 500) }))
             : [];
-        await store.recordCombinedPr({ requestId, prNumber, included: ints(input.included), excluded, summary: input.summary ? String(input.summary).slice(0, 4000) : undefined });
+        try {
+            await store.recordCombinedPr({ requestId, prNumber, included: ints(input.included), excluded, summary: input.summary ? String(input.summary).slice(0, 4000) : undefined });
+        } catch (e) {
+            if (e.message?.startsWith("Unknown combine request ")) throw new AgentResultValidationError(e.message);
+            throw e;
+        }
     } else {
-        throw new Error(`unknown action ${action}`);
+        throw new AgentResultValidationError(`unknown action ${action}`);
     }
 }
 
@@ -202,8 +203,9 @@ function buildCombinePrompt(store, instanceId, request, note, { background = fal
         "3. If a cherry-pick conflicts on a lockfile (package-lock.json, yarn.lock, pnpm-lock.yaml, packages.lock.json, …), keep the base branch version of the lockfile, keep the manifest change, then regenerate the lockfile with the ecosystem's tool in that directory (e.g. `npm install --package-lock-only --ignore-scripts`). For conflicts in shared manifests (e.g. Directory.Packages.props), keep the highest version of each dependency.",
         "4. If a PR can't be applied cleanly or would make the result unsafe, leave it out and note why rather than forcing it.",
         "5. Where practical, verify the result (e.g. restore/build the affected projects, or `npm ci` in a few of the touched directories). Don't run the whole test suite unless it's quick.",
-        `6. Commit (keep the Dependabot commit messages or squash with a clear message), push the branch to origin, and open the PR against \`${base}\` with \`gh pr create${request.draft ? " --draft" : ""}\`, adding the \`dependencies\` label if it exists. The body should summarise the updates, list \`Supersedes #n\` for every PR included, list any excluded PRs with the reason, and mention verification done. (Closing keywords don't close PRs; Dependabot closes its own PRs on its next scheduled run after the base branch has the update, and the user can close them sooner from the canvas.)`,
-        "7. Do not approve, merge, close or comment on the original Dependabot PRs — the user does that from the canvas. Remove the temporary worktree and fetched refs when done.",
+        "6. Query the complete label set for each included PR with `gh pr view <n> --repo " + store.repo + " --json labels`, build the union of label names, add `dependencies` to that union, and pass every label to `gh pr create` with one `--label \"<name>\"` argument. Do not rely on any truncated label list in this prompt or in the canvas.",
+        `7. Commit (keep the Dependabot commit messages or squash with a clear message), push the branch to origin, and open the PR against \`${base}\` with \`gh pr create${request.draft ? " --draft" : ""}\`. The body should summarise the updates, list \`Supersedes #n\` for every PR included, list any excluded PRs with the reason, and mention verification done. (Closing keywords don't close PRs; Dependabot closes its own PRs on its next scheduled run after the base branch has the update, and the user can close them sooner from the canvas.)`,
+        "8. Do not approve, merge, close or comment on the original Dependabot PRs — the user does that from the canvas. Remove the temporary worktree and fetched refs when done.",
     );
     if (background) lines.push("", PARALLEL_NOTE);
     lines.push(

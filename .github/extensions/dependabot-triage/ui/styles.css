@@ -205,6 +205,18 @@ textarea { width: 100%; min-height: 60px; resize: vertical; }
 .row .main-text { min-width: 0; }
 .row .line1 { display: flex; gap: 6px; align-items: baseline; overflow: hidden; white-space: nowrap; }
 .row .line1 .dep { overflow: hidden; text-overflow: ellipsis; font-weight: var(--font-weight-semibold, 600); }
+.row-title {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: var(--fg);
+    font: inherit;
+    line-height: inherit;
+    padding: 0;
+    text-align: left;
+    cursor: pointer;
+}
+.row-title:hover { text-decoration: underline; }
 .row .line2 { font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .row .badges { display: flex; gap: 4px; align-items: center; }
 .num { color: var(--muted); font-size: 12px; }

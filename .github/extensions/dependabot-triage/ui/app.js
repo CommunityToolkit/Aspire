@@ -6,12 +6,14 @@ const token = document.querySelector('meta[name="canvas-token"]').content;
 const STATUS = {
     ready: { label: "Ready", order: 0 },
     "needs-review": { label: "Needs review", order: 1 },
-    failing: { label: "Checks failing", order: 2 },
-    conflicts: { label: "Conflicts", order: 3 },
-    pending: { label: "Checks pending", order: 4 },
-    behind: { label: "Behind base", order: 5 },
-    draft: { label: "Draft", order: 6 },
-    unknown: { label: "Computing…", order: 7 },
+    "changes-requested": { label: "Changes requested", order: 2 },
+    blocked: { label: "Blocked", order: 3 },
+    failing: { label: "Checks failing", order: 4 },
+    conflicts: { label: "Conflicts", order: 5 },
+    pending: { label: "Checks pending", order: 6 },
+    behind: { label: "Behind base", order: 7 },
+    draft: { label: "Draft", order: 8 },
+    unknown: { label: "Computing…", order: 9 },
 };
 const SEVERITY_ORDER = { critical: 0, high: 1, medium: 2, moderate: 2, low: 3, unknown: 4 };
 const JOB_LABELS = {
@@ -22,6 +24,8 @@ const JOB_LABELS = {
     dependabot: "Commenting",
     close: "Closing",
 };
+const STATUS_DOT_CLASS = { "changes-requested": "s-failing", blocked: "s-failing" };
+const STATUS_BADGE_CLASS = { "changes-requested": "b-blocked", blocked: "b-blocked" };
 
 const ui = {
     state: null,
@@ -122,7 +126,11 @@ function depSummary(pr) {
 }
 
 function statusDot(status) {
-    return h("span", { class: `status-dot s-${status}`, title: STATUS[status]?.label ?? status });
+    return h("span", { class: `status-dot ${STATUS_DOT_CLASS[status] ?? `s-${status}`}`, title: STATUS[status]?.label ?? status });
+}
+
+function statusBadgeClass(status) {
+    return STATUS_BADGE_CLASS[status] ?? `b-${status}`;
 }
 
 function badge(text, cls, title) {
@@ -239,6 +247,8 @@ function renderHeader() {
             chip("open", c.open, ""),
             chip("ready", c.ready, "ready"),
             chip("need review", c["needs-review"], "needs-review"),
+            chip("changes requested", c["changes-requested"], "changes-requested"),
+            chip("blocked", c.blocked, "blocked"),
             chip("failing", c.failing, "failing"),
             chip("conflicts", c.conflicts, "conflicts"),
             chip("pending", c.pending, "pending"),
@@ -408,7 +418,26 @@ function renderRow(pr) {
         h(
             "div",
             { class: "main-text" },
-            h("div", { class: "line1" }, h("span", { class: "num" }, `#${pr.number}`), h("span", { class: "dep", title: pr.title }, d.name), h("span", { class: "muted small" }, d.versions)),
+            h(
+                "div",
+                { class: "line1" },
+                h("span", { class: "num" }, `#${pr.number}`),
+                h(
+                    "button",
+                    {
+                        class: "dep row-title",
+                        type: "button",
+                        title: pr.title,
+                        "aria-label": `Open #${pr.number}: ${pr.title}`,
+                        onclick: (e) => {
+                            e.stopPropagation();
+                            focusPr(pr.number, { scroll: false });
+                        },
+                    },
+                    d.name,
+                ),
+                h("span", { class: "muted small" }, d.versions),
+            ),
             h("div", { class: "line2" }, `${pr.ecosystem} · ${pr.directory} · ${STATUS[pr.status]?.label ?? pr.status} · ${ago(pr.createdAt)}`),
         ),
         h(
@@ -486,7 +515,7 @@ function renderDetailInto(el, pr) {
         h(
             "div",
             { class: "meta" },
-            badge(STATUS[pr.status]?.label ?? pr.status, `b-${pr.status}`),
+            badge(STATUS[pr.status]?.label ?? pr.status, statusBadgeClass(pr.status)),
             badge(`checks: ${(pr.checks ?? "none").toLowerCase()}`, "b-outline"),
             badge(`${pr.mergeable.toLowerCase()} · ${pr.mergeStateStatus.toLowerCase()}`, "b-outline", "mergeable · merge state"),
             pr.reviewDecision ? badge(pr.reviewDecision.toLowerCase().replace("_", " "), pr.reviewDecision === "APPROVED" ? "b-approved" : "b-outline") : null,
@@ -1094,29 +1123,69 @@ function renderJobs() {
 // ---------------------------------------------------------------------------
 // Modals & actions
 
+const MODAL_FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+function modalFocusable(root) {
+    return [...root.querySelectorAll(MODAL_FOCUSABLE)].filter((el) => el.getClientRects().length > 0 || el === document.activeElement);
+}
+
 function openModal({ title, body, confirmLabel = "Confirm", confirmClass = "btn-primary", collect }) {
     return new Promise((resolve) => {
         const backdrop = $("modal");
+        const previousFocus = document.activeElement;
+        const inerted = [...document.body.children]
+            .filter((el) => el !== backdrop)
+            .map((el) => ({ el, inert: el.inert }));
+        let closed = false;
         const close = (value) => {
+            if (closed) return;
+            closed = true;
             backdrop.hidden = true;
             backdrop.replaceChildren();
             document.removeEventListener("keydown", onKey);
+            backdrop.onclick = null;
+            for (const item of inerted) item.el.inert = item.inert;
+            if (previousFocus?.isConnected && typeof previousFocus.focus === "function") {
+                previousFocus.focus({ preventScroll: true });
+            }
             resolve(value);
         };
-        const onKey = (e) => e.key === "Escape" && close(null);
+        const onKey = (e) => {
+            if (e.key === "Escape") {
+                e.preventDefault();
+                close(null);
+                return;
+            }
+            if (e.key !== "Tab") return;
+            const focusable = modalFocusable(dialog);
+            if (!focusable.length) {
+                e.preventDefault();
+                dialog.focus();
+                return;
+            }
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (e.shiftKey && (document.activeElement === first || !dialog.contains(document.activeElement))) {
+                e.preventDefault();
+                last.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+                e.preventDefault();
+                first.focus();
+            }
+        };
         document.addEventListener("keydown", onKey);
         const confirmBtn = h("button", { class: `btn ${confirmClass}`, type: "button", onclick: () => close(collect ? collect() : true) }, confirmLabel);
-        backdrop.replaceChildren(
-            h(
-                "div",
-                { class: "modal", role: "dialog", "aria-modal": "true", "aria-label": title },
-                h("h3", null, title),
-                h("div", { class: "body" }, body),
-                h("div", { class: "footer" }, h("button", { class: "btn", type: "button", onclick: () => close(null) }, "Cancel"), confirmBtn),
-            ),
+        const dialog = h(
+            "div",
+            { class: "modal", role: "dialog", "aria-modal": "true", "aria-label": title, tabindex: "-1" },
+            h("h3", null, title),
+            h("div", { class: "body" }, body),
+            h("div", { class: "footer" }, h("button", { class: "btn", type: "button", onclick: () => close(null) }, "Cancel"), confirmBtn),
         );
+        backdrop.replaceChildren(dialog);
         backdrop.onclick = (e) => e.target === backdrop && close(null);
         backdrop.hidden = false;
+        for (const item of inerted) item.el.inert = true;
         confirmBtn.focus();
     });
 }
@@ -1258,6 +1327,18 @@ function slug(text, max = 50) {
     return text.toLowerCase().replace(/^@/, "").replace(/[^a-z0-9.]+/g, "-").replace(/^[-.]+|[-.]+$/g, "").slice(0, max).replace(/[-.]+$/, "");
 }
 
+function randomBranchSuffix() {
+    const bytes = new Uint8Array(3);
+    crypto.getRandomValues(bytes);
+    return [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+function combineBranch(base, max = 100) {
+    const suffix = randomBranchSuffix();
+    const trimmed = base.slice(0, max - suffix.length - 1).replace(/[-./]+$/g, "") || "deps/combined";
+    return `${trimmed}-${suffix}`;
+}
+
 function combineSuggestion(nums) {
     const list = nums.map((n) => prMap().get(n)).filter(Boolean);
     const single = list.every((p) => p.updates.length === 1);
@@ -1274,15 +1355,15 @@ function combineSuggestion(nums) {
         const from = froms.size === 1 ? u.from : null;
         return {
             title: `Bump ${u.name}${from && to ? ` from ${from}` : ""}${to ? ` to ${to}` : ""}${where}`,
-            branch: `deps/combine-${slug(u.name)}${to ? `-${slug(to, 30)}` : ""}`,
+            branch: combineBranch(`deps/combine-${slug(u.name)}${to ? `-${slug(to, 30)}` : ""}`),
         };
     }
     const groups = new Set(list.map((p) => p.groupName));
     if (groups.size === 1 && list[0].groupName) {
-        return { title: `Bump the ${list[0].groupName} group${where}`, branch: `deps/combine-${slug(list[0].groupName)}` };
+        return { title: `Bump the ${list[0].groupName} group${where}`, branch: combineBranch(`deps/combine-${slug(list[0].groupName)}`) };
     }
     const date = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-    return { title: `Combined Dependabot updates (${list.length} PRs)`, branch: `deps/combined-${date}` };
+    return { title: `Combined Dependabot updates (${list.length} PRs)`, branch: combineBranch(`deps/combined-${date}`) };
 }
 
 function combineWarnings(nums) {
