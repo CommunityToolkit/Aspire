@@ -1,8 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-#pragma warning disable ASPIREATS001 // AspireExport APIs are experimental
-
 namespace Aspire.Hosting;
 
 /// <summary>
@@ -32,5 +30,3 @@ public sealed class CrdWaitOptions
     /// <remarks>Defaults to <see cref="CrdWaitBehavior.Fail"/>.</remarks>
     public CrdWaitBehavior FailureBehavior { get; set; } = CrdWaitBehavior.Fail;
 }
-
-#pragma warning restore ASPIREATS001

@@ -4,8 +4,6 @@
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Kind;
 
-#pragma warning disable ASPIREATS001 // AspireExport APIs are experimental
-
 namespace Aspire.Hosting;
 
 /// <summary>
@@ -53,5 +51,3 @@ public static class KindDeployedResourceBuilderExtensions
         return builder;
     }
 }
-
-#pragma warning restore ASPIREATS001

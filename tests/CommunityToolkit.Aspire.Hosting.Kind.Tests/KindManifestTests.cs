@@ -10,6 +10,7 @@ using k8s.Autorest;
 using k8s.Models;
 using System.Net;
 using System.ComponentModel;
+using System.Diagnostics;
 
 namespace CommunityToolkit.Aspire.Hosting.Kind.Tests;
 
@@ -1568,18 +1569,43 @@ public class KindManifestTests
         var resource = builder.AddKindCluster("test-cluster")
             .AddManifestFromContent("crds", "kind: CustomResourceDefinition")
             .WithCrdWait(options => options.Timeout = TimeSpan.FromSeconds(1)).Resource;
-        KindDeploymentOutcomes.GetOrCreate(resource).CrdNames =
+        var outcomes = KindDeploymentOutcomes.GetOrCreate(resource);
+        outcomes.CrdNames =
             ["customresourcedefinition.apiextensions.k8s.io/widgets.example.com"];
-        var kubernetes = new FakeCrdClient(async (name, _) =>
+        CancellationToken? waitCancellationToken = null;
+        var kubernetes = new FakeCrdClient(async (name, token) =>
         {
+            waitCancellationToken = token;
             await Task.Delay(TimeSpan.FromMilliseconds(1250), TestContext.Current.CancellationToken);
             return FakeCrdClient.Definition(name, established: true);
         });
         builder.Services.AddSingleton<Func<string, IKubernetes>>(_ => _ => kubernetes.Client);
         using var app = builder.Build();
 
-        await Assert.ThrowsAsync<TimeoutException>(() =>
+        var stopwatch = Stopwatch.StartNew();
+        var exception = await Record.ExceptionAsync(() =>
             app.Services.GetRequiredService<KindPostApplyChecks>().RunAsync(resource, TestContext.Current.CancellationToken));
+        var elapsed = stopwatch.Elapsed;
+
+        if (exception?.GetType() != typeof(TimeoutException))
+        {
+            resource.TryGetLastAnnotation<KindCrdWaitPolicyAnnotation>(out var policy);
+            var crdNames = outcomes.CrdNames ?? [];
+            var waitCancellationRequested = waitCancellationToken is { } token
+                ? token.IsCancellationRequested.ToString()
+                : "<not observed>";
+
+            Assert.Fail($"""
+                Expected TimeoutException, but the post-apply check returned a different result.
+                Effective CRD wait policy: Timeout={policy?.Options.Timeout.ToString() ?? "<none>"}, FailureBehavior={policy?.Options.FailureBehavior.ToString() ?? "<none>"}
+                CRD outcomes: Count={crdNames.Count}, Names=[{string.Join(", ", crdNames)}]
+                Fake CRD client reads: {kubernetes.ReadCount}
+                RunAsync elapsed: {elapsed}
+                Wait cancellation requested: {waitCancellationRequested}
+                Actual exception:
+                {exception?.ToString() ?? "<none>"}
+                """);
+        }
     }
 
     [Fact]
