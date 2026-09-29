@@ -111,7 +111,7 @@
     <PackageVersion Include="RavenDB.Client" Version="6.2.1" />
     <PackageVersion Include="RavenDB.TestDriver" Version="6.2.1" />
     <PackageVersion Include="YamlDotNet" Version="16.3.0" />
-    <PackageVersion Include="Microsoft.Agents.AI.GitHub.Copilot" Version="1.15.0-rc1" />
+    <PackageVersion Include="Microsoft.Agents.AI.GitHub.Copilot" Version="1.22.0" />
     <PackageVersion Include="Squad.Agents.AI" Version="0.5.6-preview.23" />
     <PackageVersion Include="SurrealDb.MinimalApis.Extensions" Version="1.0.0" />
     <PackageVersion Include="SurrealDb.Net" Version="1.0.0" />
