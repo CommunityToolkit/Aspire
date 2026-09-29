@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "CommunityToolkit.Aspire.Hosting.Posta.ApiService": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:55038;http://localhost:55039"
+    }
+  }
+}

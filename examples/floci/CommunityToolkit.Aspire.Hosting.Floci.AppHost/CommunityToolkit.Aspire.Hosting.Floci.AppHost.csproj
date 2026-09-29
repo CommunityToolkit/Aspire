@@ -17,8 +17,5 @@
     <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Floci.ApiService\CommunityToolkit.Aspire.Hosting.Floci.ApiService.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="MessagePack" />
-  </ItemGroup>
 
 </Project>

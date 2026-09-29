@@ -9,8 +9,5 @@
     <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.SurrealDb.ApiService\CommunityToolkit.Aspire.Hosting.SurrealDb.ApiService.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="MessagePack" />
-  </ItemGroup>
 
 </Project>

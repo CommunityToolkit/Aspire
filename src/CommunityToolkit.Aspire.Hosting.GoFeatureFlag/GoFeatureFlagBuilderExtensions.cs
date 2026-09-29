@@ -64,7 +64,8 @@ public static class GoFeatureFlagBuilderExtensions
             .WithHttpHealthCheck("/health")
             .WithEntrypoint("/go-feature-flag")
             .WithArgs(args)
-            .WithOtlpExporter();
+            .WithOtlpExporter()
+            .WithIconName("Flag");
     }
 
     /// <summary>

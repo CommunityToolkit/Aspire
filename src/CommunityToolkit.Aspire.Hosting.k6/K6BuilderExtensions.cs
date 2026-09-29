@@ -60,7 +60,8 @@ public static class K6BuilderExtensions
             .WithImageRegistry(K6ContainerImageTags.Registry)
             .WithHttpEndpoint(targetPort: K6Port, port: port, name: K6Resource.PrimaryEndpointName)
             .WithHttpHealthCheck("/health")
-            .WithOtlpExporter();
+            .WithOtlpExporter()
+            .WithIconName("TopSpeed");
 
     }
 

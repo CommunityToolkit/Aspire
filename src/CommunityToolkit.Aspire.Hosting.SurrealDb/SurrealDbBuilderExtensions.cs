@@ -98,6 +98,7 @@ public static class SurrealDbBuilderExtensions
                       .WithEntrypoint("/surreal")
                       .WithArgs([.. args])
                       .WithHealthCheck(serverHealthCheckKey)
+                      .WithIconName("DatabaseMultiple")
                       .OnResourceReady(async (_, @event, ct) =>
                       {
                           var connectionString = await surrealServer.GetConnectionStringAsync(ct).ConfigureAwait(false);
@@ -200,6 +201,7 @@ public static class SurrealDbBuilderExtensions
         );
 
         return builder.ApplicationBuilder.AddResource(surrealServerNamespace).WithHealthCheck(healthCheckKey)
+            .WithIconName("DatabaseMultiple")
             .OnConnectionStringAvailable(async (_, _, ct) =>
             {
                 var connectionString = await surrealServerNamespace.ConnectionStringExpression.GetValueAsync(ct).ConfigureAwait(false) ?? throw new DistributedApplicationException($"ConnectionStringAvailableEvent was published for the '{surrealServerNamespace}' resource but the connection string was null.");
@@ -284,6 +286,7 @@ public static class SurrealDbBuilderExtensions
 
         return builder.ApplicationBuilder.AddResource(surrealServerDatabase)
             .WithHealthCheck(healthCheckKey)
+            .WithIconName("Database")
             .OnConnectionStringAvailable(async (_, _, ct) =>
             {
                 var connectionString = await surrealServerDatabase.ConnectionStringExpression.GetValueAsync(ct).ConfigureAwait(false);
@@ -516,6 +519,7 @@ public static class SurrealDbBuilderExtensions
             .WithImageRegistry(SurrealDbContainerImageTags.SurrealistRegistry)
             .WithHttpEndpoint(targetPort: 8080, name: "http")
             .WithRelationship(builder.Resource, "Surrealist")
+            .WithIconName("WindowDatabase")
             .ExcludeFromManifest();
 
         surrealistContainerBuilder.WithContainerFiles(

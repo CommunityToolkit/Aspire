@@ -36,6 +36,9 @@ public class ContainerResourceCreationTests
         Assert.Equal("dab", resource.Name);
 
         Assert.True(resource.TryGetLastAnnotation(out ContainerImageAnnotation? imageAnnotations));
+        Assert.Equal("mcr.microsoft.com", imageAnnotations!.Registry);
+        Assert.Equal("azure-databases/data-api-builder", imageAnnotations.Image);
+        Assert.Equal("2.0.12", imageAnnotations.Tag);
 
         // verify ports
 

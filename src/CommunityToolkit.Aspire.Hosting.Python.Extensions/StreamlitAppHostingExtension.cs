@@ -100,7 +100,8 @@ public static class StreamlitAppHostingExtension
 
         // Replace the resource in the builder
         builder.Resources.Remove(pythonBuilder.Resource);
-        var streamlitBuilder = builder.AddResource(streamlitResource);
+        var streamlitBuilder = builder.AddResource(streamlitResource)
+            .WithIconName("CodePyRectangle");
 
         return streamlitBuilder;
     }

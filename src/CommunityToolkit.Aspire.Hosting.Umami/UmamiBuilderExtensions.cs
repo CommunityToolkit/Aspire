@@ -65,7 +65,8 @@ public static class UmamiBuilderExtensions
             {
                 context.EnvironmentVariables[SecretEnvVarName] = umami.SecretParameter;
             })
-            .WithHttpHealthCheck("/api/heartbeat");
+            .WithHttpHealthCheck("/api/heartbeat")
+            .WithIconName("ChartMultiple");
     }
 
     /// <summary>

@@ -41,7 +41,8 @@ public static class LogtoBuilderExtensions
         var builderWithResource = builder
             .AddResource(resource)
             .WithImage(LogtoContainerImageTags.Image, LogtoContainerImageTags.Tag)
-            .WithImageRegistry(LogtoContainerImageTags.Registry);
+            .WithImageRegistry(LogtoContainerImageTags.Registry)
+            .WithIconName("PersonLock");
 
         builderWithResource.WithResourcePort(port, adminPort);
         builderWithResource.WithDatabase(postgres, databaseName);

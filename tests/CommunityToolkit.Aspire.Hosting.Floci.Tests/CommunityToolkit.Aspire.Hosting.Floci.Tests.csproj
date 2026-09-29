@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="MessagePack" />
+    <PackageReference Include="Azure.Messaging.ServiceBus" />
   </ItemGroup>
 
 </Project>

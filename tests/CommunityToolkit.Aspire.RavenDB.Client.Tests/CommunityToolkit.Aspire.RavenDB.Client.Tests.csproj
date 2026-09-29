@@ -5,7 +5,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MessagePack" />
     <PackageReference Include="RavenDB.Client" />
     <PackageReference Include="RavenDB.TestDriver" />
   </ItemGroup>

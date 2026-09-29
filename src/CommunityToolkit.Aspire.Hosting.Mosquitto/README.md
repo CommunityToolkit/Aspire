@@ -58,4 +58,4 @@ var mqtt = builder.AddMosquitto("mqtt")
 
 ## Upstream Image
 
-This integration pins the `eclipse-mosquitto` image (from `docker.io`) to a specific version tag (`2.0.22`) rather than a floating tag. Mosquitto publishes immutable, fully-versioned tags; update the pinned tag to adopt newer releases.
+This integration pins the `eclipse-mosquitto` image (from `docker.io`) to a specific version tag (`2.1.2-alpine`) rather than a floating tag. Mosquitto publishes immutable, fully-versioned tags; update the pinned tag to adopt newer releases.

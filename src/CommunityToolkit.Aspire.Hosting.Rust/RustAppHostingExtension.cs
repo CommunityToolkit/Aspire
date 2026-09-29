@@ -77,6 +77,7 @@ public static class RustAppHostingExtension
         return builder.AddResource(resource)
                       .WithRustDefaults()
                       .WithArgs(args)
+                      .WithIconName("Code")
                       .PublishAsDockerFile();
     }
 

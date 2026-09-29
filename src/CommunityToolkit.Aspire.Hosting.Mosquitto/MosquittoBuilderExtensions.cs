@@ -78,7 +78,8 @@ public static class MosquittoBuilderExtensions
                 name: MosquittoServerResource.PrimaryEndpointName,
                 scheme: MosquittoServerResource.PrimaryEndpointScheme)
             .WithContainerFiles("/mosquitto/config", [new ContainerFile { Name = "mosquitto.conf", Contents = DefaultConfig }])
-            .WithHealthCheck(healthCheckKey);
+            .WithHealthCheck(healthCheckKey)
+            .WithIconName("MailMultiple");
     }
 
     /// <summary>

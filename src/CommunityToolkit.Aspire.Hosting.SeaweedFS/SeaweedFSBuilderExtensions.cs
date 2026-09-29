@@ -50,7 +50,8 @@ public static class SeaweedFSBuilderExtensions
             .WithImage(SeaweedFSContainerImageTags.Image, SeaweedFSContainerImageTags.Tag)
             .WithImageRegistry(SeaweedFSContainerImageTags.Registry)
             .WithHttpEndpoint(targetPort: DefaultMasterPort, name: SeaweedFSContainerResource.MasterEndpointName)
-            .WithHttpEndpoint(targetPort: DefaultVolumePort, name: SeaweedFSContainerResource.VolumeEndpointName);
+            .WithHttpEndpoint(targetPort: DefaultVolumePort, name: SeaweedFSContainerResource.VolumeEndpointName)
+            .WithIconName("HardDrive");
 
         // Configure strict, topology-aware readiness verification
         string healthCheckKey = $"{name}_check";

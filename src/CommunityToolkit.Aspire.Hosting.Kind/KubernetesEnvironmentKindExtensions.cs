@@ -43,11 +43,13 @@ public static class KubernetesEnvironmentKindExtensions
         {
             // In run mode, don't surface the Kind environment in the dashboard.
             // The KubernetesEnvironmentResource is also invisible in run mode.
-            kindBuilder = builder.ApplicationBuilder.CreateResourceBuilder(kindResource);
+            kindBuilder = builder.ApplicationBuilder.CreateResourceBuilder(kindResource)
+                .WithIconName("ServerMultiple");
         }
         else
         {
-            kindBuilder = builder.ApplicationBuilder.AddResource(kindResource);
+            kindBuilder = builder.ApplicationBuilder.AddResource(kindResource)
+                .WithIconName("ServerMultiple");
 
             kindBuilder.WithAnnotation(new PipelineStepAnnotation(ctx =>
                 KindDeployPipelineSteps.CreateSteps(

@@ -40,6 +40,7 @@ public static class StripeExtensions
             {
                 context.EnvironmentVariables.Add("STRIPE_API_KEY", ReferenceExpression.Create($"{apiKey}"));
             })
+            .WithIconName("Payment")
             .ExcludeFromManifest();
     }
 

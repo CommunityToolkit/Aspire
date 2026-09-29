@@ -126,6 +126,7 @@ public static class McpInspectorResourceBuilderExtensions
                 return Task.CompletedTask;
             })
             .ExcludeFromManifest()
+            .WithIconName("Wrench")
             .WithInspectorArgs()
             .WithDefaultArgs()
             .WithHttpEndpoint(isProxied: false, port: options.ClientPort, env: "CLIENT_PORT", name: McpInspectorResource.ClientEndpointName)

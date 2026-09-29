@@ -65,7 +65,8 @@ public static class KindClusterResourceBuilderExtensions
                 Properties = [
                     new("ClusterName", resource.Name),
                 ]
-            });
+            })
+            .WithIconName("ServerMultiple");
 
         resourceBuilder.OnInitializeResource(async (resource, e, ct) =>
         {

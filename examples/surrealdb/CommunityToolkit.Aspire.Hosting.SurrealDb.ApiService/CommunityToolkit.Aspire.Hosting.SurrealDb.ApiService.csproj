@@ -12,8 +12,7 @@
 
   <ItemGroup>
     <PackageReference Include="Bogus" />
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" VersionOverride="10.0.10" />
-    <PackageReference Include="Microsoft.OpenApi" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <PackageReference Include="SurrealDb.MinimalApis.Extensions" />
   </ItemGroup>
 

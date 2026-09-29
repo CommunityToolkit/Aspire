@@ -57,6 +57,7 @@ public static class AzureStorageExplorerBuilderExtensions
             )
             .WithImage(AzureStorageExplorerContainerImageTags.Image, AzureStorageExplorerContainerImageTags.Tag)
             .WithImageRegistry(AzureStorageExplorerContainerImageTags.Registry)
+            .WithIconName("HardDrive")
             .ExcludeFromManifest();
     }
     

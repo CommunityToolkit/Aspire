@@ -5,7 +5,7 @@ internal static class DbGateContainerImageTags
     public const string Registry = "docker.io";
     /// <remarks>dbgate/dbgate</remarks>
     public const string Image = "dbgate/dbgate";
-    /// <remarks>6.1.4</remarks>
-    public const string Tag = "6.1.4";
+    /// <remarks>7.3.1</remarks>
+    public const string Tag = "7.3.1";
 }
 

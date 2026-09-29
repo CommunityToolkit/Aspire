@@ -50,6 +50,7 @@ public static class DistributedApplicationBuilderExtensions
                     new ("MaxRunspaces", pool.MaxRunspaces.ToString())
                 ]
             })
+            .WithIconName("WindowConsole")
             .ExcludeFromManifest();
 
         poolBuilder.OnInitializeResource(async (res, e, ct) =>

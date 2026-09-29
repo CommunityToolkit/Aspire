@@ -56,6 +56,7 @@ public static class NgrokExtensions
         var resourceBuilder = builder.AddResource(new NgrokResource(name))
             .WithImage(NgrokContainerValues.Image, NgrokContainerValues.Tag)
             .WithImageRegistry(NgrokContainerValues.Registry)
+            .WithIconName("GlobeArrowForward")
             .WithBindMount(configurationFolder, "/var/tmp/ngrok")
             .WithHttpEndpoint(targetPort: 4040, port: endpointPort, name: endpointName)
             .WithArgs(context =>

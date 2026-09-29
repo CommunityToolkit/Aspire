@@ -4,9 +4,6 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="MessagePack" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Listmonk\CommunityToolkit.Aspire.Hosting.Listmonk.csproj" IsAspireProjectResource="false" />
