@@ -32,6 +32,10 @@ updates:
 - directories:
   - "**/*"
   groups:
+    vitest: # Must precede dependencies-by-name; Dependabot uses the first matching group.
+      patterns:
+      - "vitest"
+      - "@vitest/*"
     dependencies-by-name:
       group-by: dependency-name
   labels:
