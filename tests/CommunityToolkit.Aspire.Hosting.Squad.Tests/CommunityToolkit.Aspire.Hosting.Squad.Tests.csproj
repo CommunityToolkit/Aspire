@@ -6,9 +6,4 @@
     <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <!-- Hard-reference MessagePack to pull the patched 2.5.301 (pinned in Directory.Packages.props)
-         instead of the vulnerable transitive version flowing through Aspire.Hosting. -->
-  </ItemGroup>
-
 </Project>
