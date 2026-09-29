@@ -80,13 +80,9 @@
     <PackageVersion Include="AWSSDK.S3" Version="4.0.101.7" />
     <PackageVersion Include="Azure.Provisioning.AppContainers" Version="1.2.0" />
     <PackageVersion Include="Bitwarden.Secrets.Sdk" Version="1.0.0" />
-    <!-- Keep an explicit GitHub.Copilot.SDK pin for the Squad sample so the split
-         CopilotClient assembly and native CLI payload always resolve from the
-         same SDK version we validate locally/CI. This remains a temporary
-         workaround until Microsoft.Agents.AI.GitHub.Copilot ships the
-         buildTransitive bridge from microsoft/agent-framework#6457, so keep the
-         direct ref pinned until that preview lands. -->
-    <PackageVersion Include="GitHub.Copilot.SDK" Version="1.0.8" />
+    <!-- MAF 1.22.0 and Squad.Agents.AI 0.5.6-preview.32 both bridge to SDK 1.0.11.
+         Keep the Squad sample's direct SDK reference aligned with those build targets. -->
+    <PackageVersion Include="GitHub.Copilot.SDK" Version="1.0.11" />
     <PackageVersion Include="JsonSchema.Net" Version="7.4.0" />
     <PackageVersion Include="KubernetesClient" Version="19.0.2" />
     <PackageVersion Include="OllamaSharp" Version="5.4.12" />
@@ -109,8 +105,8 @@
     <PackageVersion Include="RavenDB.Client" Version="6.2.1" />
     <PackageVersion Include="RavenDB.TestDriver" Version="6.2.1" />
     <PackageVersion Include="YamlDotNet" Version="16.3.0" />
-    <PackageVersion Include="Microsoft.Agents.AI.GitHub.Copilot" Version="1.15.0-rc1" />
-    <PackageVersion Include="Squad.Agents.AI" Version="0.5.6-preview.23" />
+    <PackageVersion Include="Microsoft.Agents.AI.GitHub.Copilot" Version="1.22.0" />
+    <PackageVersion Include="Squad.Agents.AI" Version="0.5.6-preview.32" />
     <PackageVersion Include="SurrealDb.MinimalApis.Extensions" Version="1.0.0" />
     <PackageVersion Include="SurrealDb.Net" Version="1.0.0" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="7.3.1" />
