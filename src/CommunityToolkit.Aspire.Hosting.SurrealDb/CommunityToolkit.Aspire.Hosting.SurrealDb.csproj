@@ -14,7 +14,6 @@
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting" />
     <PackageReference Include="AspNetCore.HealthChecks.SurrealDb" />
-    <PackageReference Include="MessagePack" />
     <PackageReference Include="SurrealDb.Net" />
   </ItemGroup>
 

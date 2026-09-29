@@ -13,8 +13,5 @@
     <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.ActiveMQ.MassTransit\CommunityToolkit.Aspire.Hosting.ActiveMQ.MassTransit.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="MessagePack" />
-  </ItemGroup>
   
 </Project>

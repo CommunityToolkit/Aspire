@@ -13,7 +13,6 @@
 
   <ItemGroup>
     <PackageReference Include="Bogus" />
-    <PackageReference Include="MessagePack" />
   </ItemGroup>
 
 </Project>
