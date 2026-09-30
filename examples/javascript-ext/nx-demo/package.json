@@ -14,7 +14,7 @@
     "@nx/eslint": "23.1.1",
     "@nx/eslint-plugin": "23.1.1",
     "@nx/js": "23.1.1",
-    "@nx/react": "23.1.1",
+    "@nx/react": "23.2.1",
     "@nx/vite": "23.1.1",
     "@nx/web": "23.1.1",
     "@nx/workspace": "23.1.1",
