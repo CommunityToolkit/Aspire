@@ -20,6 +20,10 @@ public class SolrResourceTests
         Assert.Equal("solr", solr.Resource.Name);
         Assert.IsType<SolrResource>(solr.Resource);
         Assert.Equal("solr", solr.Resource.CoreName);
+        var image = Assert.Single(solr.Resource.Annotations.OfType<ContainerImageAnnotation>());
+        Assert.Equal("docker.io", image.Registry);
+        Assert.Equal("library/solr", image.Image);
+        Assert.Equal("10.0.0", image.Tag);
     }
 
     [Fact]

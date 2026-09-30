@@ -4,9 +4,4 @@
     <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Posta\CommunityToolkit.Aspire.Posta.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <!-- Pin the patched transitive version pulled in by the shared Aspire test infrastructure. -->
-    <PackageReference Include="MessagePack" PrivateAssets="all" />
-  </ItemGroup>
-
 </Project>

@@ -11,7 +11,6 @@
          the health check registered by the built-in Aspire Kafka hosting integration. Transitively
          brings in Confluent.Kafka for ProducerConfig. -->
     <PackageReference Include="AspNetCore.HealthChecks.Kafka" />
-    <PackageReference Include="MessagePack" />
   </ItemGroup>
 
   <ItemGroup>

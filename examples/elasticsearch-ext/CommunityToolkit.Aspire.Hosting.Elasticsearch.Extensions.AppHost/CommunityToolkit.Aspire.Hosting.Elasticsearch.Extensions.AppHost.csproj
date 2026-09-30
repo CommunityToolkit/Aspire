@@ -10,9 +10,6 @@
     <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions\CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="MessagePack" />
-  </ItemGroup>
 
 
 </Project>

@@ -11,7 +11,4 @@
     <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Rust\CommunityToolkit.Aspire.Hosting.Rust.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="MessagePack" />
-  </ItemGroup>
 </Project>

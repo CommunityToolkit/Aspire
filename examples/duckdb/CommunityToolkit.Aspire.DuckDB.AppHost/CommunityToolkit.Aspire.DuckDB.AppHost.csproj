@@ -10,8 +10,5 @@
     <ProjectReference Include="../CommunityToolkit.Aspire.DuckDB.Api/CommunityToolkit.Aspire.DuckDB.Api.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="MessagePack" />
-  </ItemGroup>
 
 </Project>

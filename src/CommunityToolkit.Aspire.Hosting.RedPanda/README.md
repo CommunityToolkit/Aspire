@@ -79,4 +79,4 @@ var redpanda = builder.AddRedPanda("redpanda")
 
 ## Upstream Image
 
-This integration pins the `redpandadata/redpanda` image (from `docker.redpanda.com`) to a specific version tag (`v26.1.10`) rather than a floating tag, and the optional console uses `redpandadata/console` pinned to `v3.7.4`. Redpanda publishes immutable, fully-versioned tags (`vYY.M.P`); update the pinned tags to adopt newer releases. The optional Kafka UI uses `kafbat/kafka-ui` (from `docker.io`) pinned to `v1.5.0`.
+This integration pins the `redpandadata/redpanda` image (from `docker.redpanda.com`) to a specific version tag (`v26.2.3`) rather than a floating tag, and the optional console uses `redpandadata/console` pinned to `v3.12.0`. Redpanda publishes immutable, fully-versioned tags (`vYY.M.P`); update the pinned tags to adopt newer releases. The optional Kafka UI uses `kafbat/kafka-ui` (from `docker.io`) pinned to `v1.5.0`.

@@ -11,8 +11,5 @@
     <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.JavaScript.Extensions\CommunityToolkit.Aspire.Hosting.JavaScript.Extensions.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="MessagePack" />
-  </ItemGroup>
 
 </Project>

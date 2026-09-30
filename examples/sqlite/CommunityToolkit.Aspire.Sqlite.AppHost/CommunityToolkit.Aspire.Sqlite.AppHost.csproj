@@ -10,8 +10,5 @@
     <ProjectReference Include="../CommunityToolkit.Aspire.Sqlite.Api/CommunityToolkit.Aspire.Sqlite.Api.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="MessagePack" />
-  </ItemGroup>
 
 </Project>

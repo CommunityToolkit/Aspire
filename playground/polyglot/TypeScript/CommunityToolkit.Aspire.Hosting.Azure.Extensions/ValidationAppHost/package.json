@@ -8,12 +8,12 @@
     "dev": "tsc --watch"
   },
   "dependencies": {
-    "vscode-jsonrpc": "^8.2.0"
+    "vscode-jsonrpc": "^9.0.3"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
+    "@types/node": "^26.6.3",
     "nodemon": "^3.1.11",
-    "tsx": "^4.23.1",
+    "tsx": "^4.23.15",
     "typescript": "^5.3.0"
   }
 }

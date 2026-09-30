@@ -12,8 +12,5 @@
     <ProjectReference Include="../CommunityToolkit.Aspire.Hosting.McpInspector.McpServer/CommunityToolkit.Aspire.Hosting.McpInspector.McpServer.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="MessagePack" />
-  </ItemGroup>
 
 </Project>

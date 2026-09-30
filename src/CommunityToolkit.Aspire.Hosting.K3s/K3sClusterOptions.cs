@@ -70,7 +70,7 @@ public sealed class K3sClusterOptions
     /// <summary>Gets or sets the Helm installer image name. Defaults to <c>alpine/helm</c>.</summary>
     public string HelmImage { get; set; } = HelmContainerImageTags.Image;
 
-    /// <summary>Gets or sets the Helm installer image tag. Defaults to <c>3.17.3</c>.</summary>
+    /// <summary>Gets or sets the Helm installer image tag. Defaults to <c>4.3.0</c>.</summary>
     public string HelmTag { get; set; } = HelmContainerImageTags.Tag;
 
     // ── kubectl image ─────────────────────────────────────────────────────────
@@ -81,6 +81,6 @@ public sealed class K3sClusterOptions
     /// <summary>Gets or sets the kubectl image name. Defaults to <c>alpine/kubectl</c>.</summary>
     public string KubectlImage { get; set; } = KubectlContainerImageTags.Image;
 
-    /// <summary>Gets or sets the kubectl image tag. Defaults to <c>1.36.0</c>.</summary>
+    /// <summary>Gets or sets the kubectl image tag. Defaults to <c>1.36.4</c>.</summary>
     public string KubectlTag { get; set; } = KubectlContainerImageTags.Tag;
 }

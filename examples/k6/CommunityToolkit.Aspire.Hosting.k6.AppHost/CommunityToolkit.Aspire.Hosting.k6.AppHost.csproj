@@ -10,8 +10,5 @@
     <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.k6.ApiService\CommunityToolkit.Aspire.Hosting.k6.ApiService.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="MessagePack" />
-  </ItemGroup>
 
 </Project>

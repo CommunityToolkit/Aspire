@@ -13,7 +13,6 @@
     <PackageReference Include="Microsoft.Build.Locator" />
     <PackageReference Include="Microsoft.Identity.Client" />
     <PackageReference Include="Microsoft.SqlServer.DacFx" />
-    <PackageReference Include="MessagePack" />
   </ItemGroup>
 
   <ItemGroup>

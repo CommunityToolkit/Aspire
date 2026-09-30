@@ -60,7 +60,7 @@ public class ContainerResourceCreationTests
     private static void ValidateLavinMqContainerImageAnnotations(LavinMQContainerResource resource)
     {
         Assert.True(resource.TryGetLastAnnotation(out ContainerImageAnnotation? imageAnnotations));
-        Assert.Equal("2.1.0", imageAnnotations.Tag);
+        Assert.Equal("2.10.0", imageAnnotations.Tag);
         Assert.Equal("cloudamqp/lavinmq", imageAnnotations.Image);
         Assert.Equal("docker.io", imageAnnotations.Registry);
     }
