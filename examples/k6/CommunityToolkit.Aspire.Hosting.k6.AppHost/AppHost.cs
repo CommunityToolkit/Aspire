@@ -1,3 +1,4 @@
+using CommunityToolkit.Aspire.Hosting.k6;
 using Projects;
 
 var builder = DistributedApplication.CreateBuilder(args);
@@ -8,7 +9,7 @@ var apiservice = builder
 
 var k6 = builder.AddK6("k6")
     .WithBindMount("scripts", "/scripts", true)
-    .WithScript("/scripts/main.js")
+    .WithScript("/scripts/main.js", summaryMode: K6SummaryMode.Full)
     .WithReference(apiservice)
     .WaitFor(apiservice);
 
