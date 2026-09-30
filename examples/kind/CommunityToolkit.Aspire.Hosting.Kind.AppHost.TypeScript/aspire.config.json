@@ -1,0 +1,12 @@
+{
+  "appHost": {
+    "path": "apphost.mts",
+    "language": "typescript/nodejs"
+  },
+  "sdk": {
+    "version": "13.5.0"
+  },
+  "packages": {
+    "CommunityToolkit.Aspire.Hosting.Kind": "../../../src/CommunityToolkit.Aspire.Hosting.Kind/CommunityToolkit.Aspire.Hosting.Kind.csproj"
+  }
+}

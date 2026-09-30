@@ -4,6 +4,8 @@
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Utils;
+using k8s;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 
 namespace CommunityToolkit.Aspire.Hosting.Kind.Tests;
@@ -159,72 +161,6 @@ public class KindHelmChartTests
     }
 
     [Fact]
-    public void WithCrdWaitRetrySetsRetryConfiguration()
-    {
-        using var builder = TestDistributedApplicationBuilder.Create();
-
-        var cluster = builder.AddKindCluster("test-cluster");
-        cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicharts/redis")
-            .WithCrdWaitRetry(maxAttempts: 3, backoff: TimeSpan.FromSeconds(7), crdWaitTimeout: TimeSpan.FromSeconds(42));
-
-        using var app = builder.Build();
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-
-        var resource = Assert.Single(appModel.Resources.OfType<KindHelmChartResource>());
-        Assert.Equal(3, resource.CrdWaitRetryMaxAttempts);
-        Assert.Equal(TimeSpan.FromSeconds(7), resource.CrdWaitRetryBackoff);
-        Assert.Equal(TimeSpan.FromSeconds(42), resource.CrdWaitRetryTimeout);
-    }
-
-    [Fact]
-    public void WithCrdWaitRetryUsesDefaultBackoff()
-    {
-        using var builder = TestDistributedApplicationBuilder.Create();
-
-        var cluster = builder.AddKindCluster("test-cluster");
-        cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicharts/redis")
-            .WithCrdWaitRetry();
-
-        using var app = builder.Build();
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-
-        var resource = Assert.Single(appModel.Resources.OfType<KindHelmChartResource>());
-        Assert.Equal(3, resource.CrdWaitRetryMaxAttempts);
-        Assert.Equal(KubectlTimeouts.DefaultCrdWaitRetryBackoff, resource.CrdWaitRetryBackoff);
-        Assert.Equal(KubectlTimeouts.DefaultCrdWaitTimeout, resource.CrdWaitRetryTimeout);
-    }
-
-    [Fact]
-    public void WithCrdWaitRetryRejectsLessThanTwoAttempts()
-    {
-        using var builder = TestDistributedApplicationBuilder.Create();
-        var cluster = builder.AddKindCluster("test-cluster");
-
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
-            cluster.AddHelmChart("redis", "chart/ref").WithCrdWaitRetry(1, TimeSpan.FromSeconds(5)));
-    }
-
-    [Fact]
-    public void WithCrdWaitRetryRejectsInvalidBackoff()
-    {
-        using var builder = TestDistributedApplicationBuilder.Create();
-        var cluster = builder.AddKindCluster("test-cluster");
-
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
-            cluster.AddHelmChart("redis", "chart/ref").WithCrdWaitRetry(3, TimeSpan.Zero));
-    }
-
-    [Fact]
-    public void WithCrdWaitRetryRejectsInvalidCrdWaitTimeout()
-    {
-        using var builder = TestDistributedApplicationBuilder.Create();
-        var cluster = builder.AddKindCluster("test-cluster");
-
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
-            cluster.AddHelmChart("redis", "chart/ref").WithCrdWaitRetry(3, TimeSpan.FromSeconds(5), TimeSpan.Zero));
-    }
-
-    [Fact]
     public void WithHelmValuesFileAddsPath()
     {
         using var builder = TestDistributedApplicationBuilder.Create();
@@ -368,129 +304,78 @@ public class KindHelmChartTests
     }
 
     [Fact]
-    public async Task InstallAsync_RetriesAfterWaitingForNewCrds()
+    public async Task InstallAsync_PublishesCrdsNewlyObservedAfterSuccessfulInstall()
     {
-        var cluster = new KindClusterResource("cluster");
-        var resource = new KindHelmChartResource("redis", "chart/ref", cluster)
-        {
-            CrdWaitRetryMaxAttempts = 3,
-            CrdWaitRetryBackoff = TimeSpan.FromSeconds(2),
-        };
-        var processRunner = new FakeProcessRunner();
-        processRunner.Results.Enqueue(new(0, "", "")); // kubectl get crd baseline
-        processRunner.Results.Enqueue(new(1, "", "no matches for kind \"Widget\" in version \"widgets.example.com/v1\"; ensure CRDs are installed first"));
-        processRunner.Results.Enqueue(new(0, "customresourcedefinition.apiextensions.k8s.io/widgets.example.com", "")); // kubectl get crd after failure
-        processRunner.Results.Enqueue(new(0, "", "")); // kubectl wait
-        processRunner.Results.Enqueue(new(0, "release installed", "")); // retry succeeds
-        var delays = new List<TimeSpan>();
-        var manager = new HelmManager(
-            processRunner,
-            (delay, _) =>
-            {
-                delays.Add(delay);
-                return Task.CompletedTask;
-            });
+        var resource = new KindHelmChartResource("redis", "chart/ref", new KindClusterResource("cluster"));
+        var runner = new FakeProcessRunner();
+        runner.Results.Enqueue(new(0, "customresourcedefinition.apiextensions.k8s.io/existing.example.com", ""));
+        runner.Results.Enqueue(new(0, "release installed", ""));
+        runner.Results.Enqueue(new(0, """
+            customresourcedefinition.apiextensions.k8s.io/existing.example.com
+            customresourcedefinition.apiextensions.k8s.io/widgets.example.com
+            """, ""));
         using var loggerFactory = LoggerFactory.Create(_ => { });
 
-        await manager.InstallAsync(resource, loggerFactory.CreateLogger("test"), CancellationToken.None);
+        await new HelmManager(runner).InstallAsync(resource, loggerFactory.CreateLogger("test"), TestContext.Current.CancellationToken);
 
-        Assert.Equal(5, processRunner.Commands.Count);
-        Assert.Equal("kubectl", processRunner.Commands[0].FileName);
-        Assert.Contains("get crd -o name", processRunner.Commands[0].Arguments);
-        Assert.Equal("helm", processRunner.Commands[1].FileName);
-        Assert.Equal("kubectl", processRunner.Commands[2].FileName);
-        Assert.Contains("get crd -o name", processRunner.Commands[2].Arguments);
-        Assert.Equal("kubectl", processRunner.Commands[3].FileName);
-        Assert.Contains("wait --for=condition=Established customresourcedefinition.apiextensions.k8s.io/widgets.example.com", processRunner.Commands[3].Arguments);
-        Assert.Equal("helm", processRunner.Commands[4].FileName);
-        Assert.Equal([TimeSpan.FromSeconds(2)], delays);
+        var crdNames = KindDeploymentOutcomes.GetOrCreate(resource).CrdNames;
+        Assert.Equal(
+            ["customresourcedefinition.apiextensions.k8s.io/widgets.example.com"],
+            crdNames);
+        Assert.Equal(["kubectl", "helm", "kubectl"], runner.Commands.Select(command => command.FileName));
     }
 
     [Fact]
-    public async Task InstallAsync_UsesConfiguredCrdWaitTimeoutBetweenRetries()
+    public async Task InstallAsync_FailsBeforeHelmWhenCrdBaselineCannotBeQueried()
     {
-        var cluster = new KindClusterResource("cluster");
-        var resource = new KindHelmChartResource("redis", "chart/ref", cluster)
-        {
-            CrdWaitRetryMaxAttempts = 2,
-            CrdWaitRetryBackoff = TimeSpan.FromSeconds(2),
-            CrdWaitRetryTimeout = TimeSpan.FromSeconds(42),
-        };
-        var processRunner = new FakeProcessRunner();
-        processRunner.Results.Enqueue(new(0, "", ""));
-        processRunner.Results.Enqueue(new(1, "", "no matches for kind \"Widget\" in version \"widgets.example.com/v1\"; ensure CRDs are installed first"));
-        processRunner.Results.Enqueue(new(0, "customresourcedefinition.apiextensions.k8s.io/widgets.example.com", ""));
-        processRunner.Results.Enqueue(new(0, "", ""));
-        processRunner.Results.Enqueue(new(0, "release installed", ""));
-        var manager = new HelmManager(processRunner, static (_, _) => Task.CompletedTask);
+        var resource = new KindHelmChartResource("redis", "chart/ref", new KindClusterResource("cluster"));
+        var runner = new FakeProcessRunner { NextResult = new(1, "", "forbidden") };
         using var loggerFactory = LoggerFactory.Create(_ => { });
 
-        await manager.InstallAsync(resource, loggerFactory.CreateLogger("test"), CancellationToken.None);
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            new HelmManager(runner).InstallAsync(resource, loggerFactory.CreateLogger("test"), TestContext.Current.CancellationToken));
 
-        Assert.Contains("--timeout=42s", processRunner.Commands[3].Arguments);
+        Assert.Contains("Failed to query custom resource definitions", error.Message);
+        Assert.DoesNotContain(runner.Commands, command => command.FileName == "helm");
+        Assert.False(resource.TryGetLastAnnotation<KindDeploymentOutcomeAnnotation>(out _));
     }
 
     [Fact]
-    public async Task InstallAsync_DoesNotRetryByDefault()
+    public async Task InstallAsync_DoesNotDiscoverCrdsAfterFailedHelmInstall()
     {
-        var cluster = new KindClusterResource("cluster");
-        var resource = new KindHelmChartResource("redis", "chart/ref", cluster);
-        var processRunner = new FakeProcessRunner();
-        processRunner.Results.Enqueue(new(1, "", "release failed"));
-        var manager = new HelmManager(processRunner, static (_, _) => Task.CompletedTask);
+        var resource = new KindHelmChartResource("redis", "chart/ref", new KindClusterResource("cluster"));
+        var runner = new FakeProcessRunner();
+        runner.Results.Enqueue(new(0, "", ""));
+        runner.Results.Enqueue(new(1, "", "release failed"));
         using var loggerFactory = LoggerFactory.Create(_ => { });
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => manager.InstallAsync(resource, loggerFactory.CreateLogger("test"), CancellationToken.None));
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            new HelmManager(runner).InstallAsync(resource, loggerFactory.CreateLogger("test"), TestContext.Current.CancellationToken));
 
-        Assert.Contains("Failed to install Helm chart", ex.Message);
-        Assert.Single(processRunner.Commands);
+        Assert.False(resource.TryGetLastAnnotation<KindDeploymentOutcomeAnnotation>(out _));
+        Assert.Equal(["kubectl", "helm"], runner.Commands.Select(command => command.FileName));
     }
 
     [Fact]
-    public async Task InstallAsync_RetriesExplicitlyConfiguredFailuresEvenWithoutNewCrds()
+    public async Task InstallAsync_FailedInstallRetainsLastSuccessfulOutcome()
     {
-        var cluster = new KindClusterResource("cluster");
-        var resource = new KindHelmChartResource("redis", "chart/ref", cluster)
-        {
-            CrdWaitRetryMaxAttempts = 3,
-            CrdWaitRetryBackoff = TimeSpan.FromSeconds(2),
-        };
-        var processRunner = new FakeProcessRunner();
-        processRunner.Results.Enqueue(new(0, "", ""));
-        processRunner.Results.Enqueue(new(1, "", "release failed"));
-        processRunner.Results.Enqueue(new(0, "", ""));
-        processRunner.Results.Enqueue(new(1, "", "release still failed"));
-        processRunner.Results.Enqueue(new(0, "", ""));
-        processRunner.Results.Enqueue(new(0, "release installed", ""));
-        var delays = new List<TimeSpan>();
-        var manager = new HelmManager(processRunner, (delay, _) =>
-        {
-            delays.Add(delay);
-            return Task.CompletedTask;
-        });
+        var resource = new KindHelmChartResource("redis", "chart/ref", new KindClusterResource("cluster"));
+        var runner = new FakeProcessRunner();
+        runner.Results.Enqueue(new(0, "", ""));
+        runner.Results.Enqueue(new(0, "release installed", ""));
+        runner.Results.Enqueue(new(0, "customresourcedefinition.apiextensions.k8s.io/widgets.example.com", ""));
+        runner.Results.Enqueue(new(0, "customresourcedefinition.apiextensions.k8s.io/widgets.example.com", ""));
+        runner.Results.Enqueue(new(1, "", "installation failed"));
         using var loggerFactory = LoggerFactory.Create(_ => { });
+        var manager = new HelmManager(runner);
 
-        await manager.InstallAsync(resource, loggerFactory.CreateLogger("test"), CancellationToken.None);
+        await manager.InstallAsync(resource, loggerFactory.CreateLogger("test"), TestContext.Current.CancellationToken);
+        var crdNames = KindDeploymentOutcomes.GetOrCreate(resource).CrdNames;
+        Assert.Equal(["customresourcedefinition.apiextensions.k8s.io/widgets.example.com"], crdNames);
 
-        Assert.Equal(6, processRunner.Commands.Count);
-        Assert.Equal(3, processRunner.Commands.Count(command => command.FileName == "helm"));
-        Assert.Equal(3, processRunner.Commands.Count(command => command.FileName == "kubectl"));
-        Assert.Equal([TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(4)], delays);
-    }
-
-    [Fact]
-    public void ComputeRetryBackoffDoublesPerFailure()
-    {
-        Assert.Equal(TimeSpan.FromSeconds(5), HelmManager.ComputeRetryBackoff(TimeSpan.FromSeconds(5), 1));
-        Assert.Equal(TimeSpan.FromSeconds(10), HelmManager.ComputeRetryBackoff(TimeSpan.FromSeconds(5), 2));
-        Assert.Equal(TimeSpan.FromSeconds(20), HelmManager.ComputeRetryBackoff(TimeSpan.FromSeconds(5), 3));
-    }
-
-    [Fact]
-    public void ComputeRetryBackoffSaturatesInsteadOfOverflowing()
-    {
-        Assert.Equal(TimeSpan.MaxValue, HelmManager.ComputeRetryBackoff(TimeSpan.FromSeconds(5), 64));
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            manager.InstallAsync(resource, loggerFactory.CreateLogger("test"), TestContext.Current.CancellationToken));
+        Assert.Same(crdNames, KindDeploymentOutcomes.GetOrCreate(resource).CrdNames);
     }
 
     // ── Null-check tests ─────────────────────────────────────────────────
@@ -577,17 +462,6 @@ public class KindHelmChartTests
     }
 
     [Fact]
-    public void WithCrdWaitRetryShouldThrowWhenBuilderIsNull()
-    {
-        IResourceBuilder<KindHelmChartResource> builder = null!;
-
-        var action = () => builder.WithCrdWaitRetry();
-
-        var exception = Assert.Throws<ArgumentNullException>(action);
-        Assert.Equal(nameof(builder), exception.ParamName);
-    }
-
-    [Fact]
     public void WithNamespaceShouldThrowWhenBuilderIsNull()
     {
         IResourceBuilder<KindHelmChartResource> builder = null!;
@@ -634,7 +508,132 @@ public class KindHelmChartTests
 
         var helmResource = Assert.Single(appModel.Resources.OfType<KindHelmChartResource>());
         var healthCheckAnnotations = helmResource.Annotations.OfType<HealthCheckAnnotation>();
-        Assert.NotEmpty(healthCheckAnnotations);
+        Assert.Contains(healthCheckAnnotations, annotation => annotation.Key == "helm_redis");
+    }
+
+    [Fact]
+    public void AddHelmChartKeepsOnlyWorkloadHealthCheck()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var resource = builder.AddKindCluster("test-cluster").AddHelmChart("redis", "chart/ref").Resource;
+
+        using var app = builder.Build();
+
+        Assert.Equal("helm_redis", Assert.Single(resource.Annotations.OfType<HealthCheckAnnotation>()).Key);
+    }
+
+    [Fact]
+    public async Task HelmPostApplyCheckWaitsForEveryNewCrd()
+    {
+        var runner = new FakeProcessRunner();
+        runner.Results.Enqueue(new(0, "customresourcedefinition.apiextensions.k8s.io/existing.example.com", ""));
+        runner.Results.Enqueue(new(0, "release installed", ""));
+        runner.Results.Enqueue(new(0, """
+            customresourcedefinition.apiextensions.k8s.io/existing.example.com
+            customresourcedefinition.apiextensions.k8s.io/widgets.example.com
+            customresourcedefinition.apiextensions.k8s.io/gadgets.example.com
+            """, ""));
+        var kubernetes = FakeCrdClient.Established("widgets.example.com", "gadgets.example.com");
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var resource = builder.AddKindCluster("test-cluster").AddHelmChart("redis", "chart/ref").Resource;
+        builder.Services.AddSingleton<IProcessRunner>(runner);
+        builder.Services.AddSingleton<Func<string, IKubernetes>>(_ => _ => kubernetes.Client);
+        using var app = builder.Build();
+        using var loggerFactory = LoggerFactory.Create(_ => { });
+
+        await new HelmManager(runner).InstallAsync(resource, loggerFactory.CreateLogger("test"), TestContext.Current.CancellationToken);
+        await app.Services.GetRequiredService<KindPostApplyChecks>().RunAsync(resource, TestContext.Current.CancellationToken);
+
+        Assert.Equal(3, runner.Commands.Count);
+        Assert.Equal(["gadgets.example.com", "widgets.example.com"], kubernetes.ReadNames.Order());
+        Assert.All(runner.Commands.Where(command => command.FileName == "kubectl"),
+            command => Assert.StartsWith("get crd ", command.Arguments));
+    }
+
+    [Fact]
+    public async Task HelmBestEffortCrdReadFailureAllowsPostApplyToComplete()
+    {
+        var runner = new FakeProcessRunner();
+        runner.Results.Enqueue(new(0, "", ""));
+        runner.Results.Enqueue(new(0, "release installed", ""));
+        runner.Results.Enqueue(new(0, "customresourcedefinition.apiextensions.k8s.io/widgets.example.com", ""));
+        var kubernetes = new FakeCrdClient((_, _) =>
+            Task.FromException<k8s.Models.V1CustomResourceDefinition>(new HttpRequestException("connection refused")));
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var chart = builder.AddKindCluster("test-cluster").AddHelmChart("redis", "chart/ref");
+        Assert.Same(chart, chart.WithCrdWait(options => options.FailureBehavior = CrdWaitBehavior.BestEffort));
+        builder.Services.AddSingleton<IProcessRunner>(runner);
+        builder.Services.AddSingleton<Func<string, IKubernetes>>(_ => _ => kubernetes.Client);
+        using var app = builder.Build();
+        using var loggerFactory = LoggerFactory.Create(_ => { });
+
+        await new HelmManager(runner).InstallAsync(chart.Resource, loggerFactory.CreateLogger("test"), TestContext.Current.CancellationToken);
+        await app.Services.GetRequiredService<KindPostApplyChecks>().RunAsync(chart.Resource, TestContext.Current.CancellationToken);
+
+        Assert.Equal(["widgets.example.com"], kubernetes.ReadNames);
+        Assert.Equal(3, runner.Commands.Count);
+    }
+
+    [Fact]
+    public void WithCrdWaitConfiguresHelmPolicyWithInferredResourceType()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var chart = builder.AddKindCluster("test-cluster").AddHelmChart("redis", "chart/ref");
+
+        Assert.Same(chart, chart.WithCrdWait(options => options.Timeout = TimeSpan.FromMilliseconds(500)));
+        Assert.True(chart.Resource.TryGetLastAnnotation<KindCrdWaitPolicyAnnotation>(out var policy));
+        Assert.Equal(TimeSpan.FromSeconds(1), policy.Options.Timeout);
+        Assert.Equal(CrdWaitBehavior.Fail, policy.Options.FailureBehavior);
+    }
+
+    [Fact]
+    public async Task GetCrdSnapshotStopsHungKubectlProbe()
+    {
+        var runner = new FakeProcessRunner();
+        runner.Delays.Enqueue(TimeSpan.FromHours(1));
+        var manager = new KubectlManager(runner, apiProbeTimeout: TimeSpan.FromMilliseconds(50));
+        using var loggerFactory = LoggerFactory.Create(_ => { });
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        cts.CancelAfter(TimeSpan.FromSeconds(3));
+
+        await Assert.ThrowsAsync<TimeoutException>(() =>
+            manager.GetCustomResourceDefinitionsAsync(
+                new KindClusterResource("cluster").KubeconfigPath, loggerFactory.CreateLogger("test"), cts.Token));
+    }
+
+    [Fact]
+    public async Task HelmCrdFailureFailsToStartWithoutRunning()
+    {
+        var runner = new FakeProcessRunner();
+        runner.Results.Enqueue(new(0, "", ""));
+        runner.Results.Enqueue(new(0, "release installed", ""));
+        runner.Results.Enqueue(new(0, "customresourcedefinition.apiextensions.k8s.io/widgets.example.com", ""));
+        var kubernetes = new FakeCrdClient((_, _) => Task.FromException<k8s.Models.V1CustomResourceDefinition>(
+            new InvalidOperationException("CRD read failed")));
+        using var builder = TestDistributedApplicationBuilder.Create();
+        builder.Services.AddSingleton<IProcessRunner>(runner);
+        builder.Services.AddSingleton<Func<string, IKubernetes>>(_ => _ => kubernetes.Client);
+        var cluster = builder.AddResource(new KindClusterResource("test-cluster"))
+            .WithInitialState(new CustomResourceSnapshot
+            {
+                ResourceType = "Kind Cluster",
+                State = KnownResourceStates.Running,
+                Properties = [],
+            });
+        cluster.AddHelmChart("redis", "chart/ref");
+        using var app = builder.Build();
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        cts.CancelAfter(TimeSpan.FromSeconds(8));
+
+        var startTask = app.StartAsync(cts.Token);
+        var notifications = app.Services.GetRequiredService<ResourceNotificationService>();
+        await notifications.WaitForResourceAsync("redis", KnownResourceStates.FailedToStart, cts.Token);
+        await startTask;
+
+        Assert.True(notifications.TryGetCurrentState("redis", out var current));
+        Assert.Equal(KnownResourceStates.FailedToStart, current.Snapshot.State?.Text);
+        Assert.Equal(3, runner.Commands.Count);
+        Assert.Equal(["widgets.example.com"], kubernetes.ReadNames);
     }
 
     [Fact]
@@ -658,4 +657,5 @@ public class KindHelmChartTests
             Assert.NotEmpty(healthCheckAnnotations);
         }
     }
+
 }

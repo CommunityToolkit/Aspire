@@ -7,7 +7,6 @@ internal static class KubectlTimeouts
 {
     internal static readonly TimeSpan DefaultApplyTimeout = TimeSpan.FromMinutes(5);
     internal static readonly TimeSpan DefaultCrdWaitTimeout = TimeSpan.FromMinutes(5);
-    internal static readonly TimeSpan DefaultCrdWaitRetryBackoff = TimeSpan.FromSeconds(5);
     internal static readonly TimeSpan MaximumTimeout = TimeSpan.FromHours(1);
 
     internal static TimeSpan Normalize(TimeSpan timeout, string parameterName)
@@ -23,10 +22,5 @@ internal static class KubectlTimeouts
         }
 
         return TimeSpan.FromSeconds(Math.Ceiling(timeout.TotalSeconds));
-    }
-
-    internal static int ToSeconds(TimeSpan timeout, string parameterName)
-    {
-        return (int)Normalize(timeout, parameterName).TotalSeconds;
     }
 }
