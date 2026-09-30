@@ -12,7 +12,7 @@ public class ResourceCreationTests
         var builder = DistributedApplication.CreateBuilder();
 
         var redisResourceBuilder = builder.AddRedis("redis")
-            .WithEndpoint("tcp", endpoint => AllocateEndpoint(endpoint, "redis.dev.internal", 27017, tlsEnabled: false))
+            .WithEndpoint("tcp", endpoint => AllocateEndpoint(endpoint, "redis.dev.internal", 27017, tlsEnabled: true))
             .WithDbGate();
 
         var redisResource = redisResourceBuilder.Resource;
@@ -47,7 +47,7 @@ public class ResourceCreationTests
             item =>
             {
                 Assert.Equal("URL_redis", item.Key);
-                Assert.Equal($"redis://:{password}@redis.dev.internal:6379", item.Value);
+                Assert.Equal($"rediss://:{password}@redis.dev.internal:6379", item.Value);
             },
             item =>
             {
@@ -136,13 +136,13 @@ public class ResourceCreationTests
         var builder = DistributedApplication.CreateBuilder();
 
         var redisResourceBuilder1 = builder.AddRedis("redis1")
-            .WithEndpoint("tcp", endpoint => AllocateEndpoint(endpoint, "redis1.dev.internal", 27017, tlsEnabled: false))
+            .WithEndpoint("tcp", endpoint => AllocateEndpoint(endpoint, "redis1.dev.internal", 27017, tlsEnabled: true))
             .WithDbGate();
 
         var redisResource1 = redisResourceBuilder1.Resource;
 
         var redisResourceBuilder2 = builder.AddRedis("redis2")
-            .WithEndpoint("tcp", endpoint => AllocateEndpoint(endpoint, "redis2.dev.internal", 27018, tlsEnabled: false))
+            .WithEndpoint("tcp", endpoint => AllocateEndpoint(endpoint, "redis2.dev.internal", 27018, tlsEnabled: true))
             .WithDbGate();
 
         var redisResource2 = redisResourceBuilder2.Resource;
@@ -178,7 +178,7 @@ public class ResourceCreationTests
             item =>
             {
                 Assert.Equal("URL_redis1", item.Key);
-                Assert.Equal($"redis://:{redis1Password}@redis1.dev.internal:6379", item.Value);
+                Assert.Equal($"rediss://:{redis1Password}@redis1.dev.internal:6379", item.Value);
             },
             item =>
             {
@@ -193,7 +193,7 @@ public class ResourceCreationTests
             item =>
             {
                 Assert.Equal("URL_redis2", item.Key);
-                Assert.Equal($"redis://:{redis2Password}@redis2.dev.internal:6379", item.Value);
+                Assert.Equal($"rediss://:{redis2Password}@redis2.dev.internal:6379", item.Value);
             },
             item =>
             {
@@ -218,6 +218,7 @@ public class ResourceCreationTests
                 EndpointBindingMode.SingleAddress,
                 targetPortExpression: null,
                 networkId: KnownNetworkIdentifiers.DefaultAspireContainerNetwork));
+        endpoint.UriScheme = tlsEnabled ? "rediss" : "redis";
         endpoint.TlsEnabled = tlsEnabled;
     }
 }
