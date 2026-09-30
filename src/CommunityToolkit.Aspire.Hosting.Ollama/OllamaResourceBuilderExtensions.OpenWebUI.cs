@@ -86,7 +86,7 @@ public static partial class OllamaResourceBuilderExtensions
     /// <param name="builder">The resource builder for Open WebUI.</param>
     /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
     /// <returns>The resource builder for Open WebUI.</returns>
-    [AspireExport]
+    [AspireExport("withOpenWebUIHostPort", MethodName = "withHostPort")]
     public static IResourceBuilder<OpenWebUIResource> WithHostPort(this IResourceBuilder<OpenWebUIResource> builder, int? port)
     {
         ArgumentNullException.ThrowIfNull(builder);

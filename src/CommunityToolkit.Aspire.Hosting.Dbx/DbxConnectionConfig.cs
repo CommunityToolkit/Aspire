@@ -26,11 +26,18 @@ public sealed class DbxConnectionConfig
 
     /// <summary>Gets or sets the host address.</summary>
     [JsonPropertyName("host")]
-    public required string Host { get; set; }
+    public string Host { get; set; } = string.Empty;
 
     /// <summary>Gets or sets the port number.</summary>
     [JsonPropertyName("port")]
-    public required ushort Port { get; set; }
+    public ushort Port { get; set; }
+
+    /// <summary>
+    /// Gets or sets the endpoint used to populate <see cref="Host"/> and <see cref="Port"/>
+    /// when their explicit values are not set.
+    /// </summary>
+    [JsonIgnore]
+    public EndpointReference? Endpoint { get; set; }
 
     /// <summary>Gets or sets the username for authentication.</summary>
     [JsonPropertyName("username")]
