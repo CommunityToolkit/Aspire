@@ -107,8 +107,8 @@ runs:
     - uses: actions/cache@v6
       name: Cache NuGet packages
       with:
-        path: ~/.nuget/packages
-        key: ${{ runner.os }}-nuget-${{ hashFiles('Directory.Packages.props') }}
+        path: .nugetpackages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('Directory.Build.props', 'Directory.Packages.props', 'nuget.config') }}
         restore-keys: |
           ${{ runner.os }}-nuget-
 

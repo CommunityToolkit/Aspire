@@ -1,6 +1,7 @@
-using System.Globalization;
 using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.Lifecycle;
 using CommunityToolkit.Aspire.Hosting.Floci;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Aspire.Hosting;
 
@@ -84,7 +85,7 @@ public static partial class FlociHostingExtension
     /// its Service Bus connection string (e.g. for <c>AddAzureServiceBusClient</c>). The Artemis
     /// sidecar is a separate container floci-az starts via Docker, so the emulator also needs
     /// <see cref="WithDockerSocket(IResourceBuilder{FlociAzureContainerResource}, string)"/>.
-    /// Aspire allocates proxyless AMQP host endpoints when ports are not specified. Requires
+    /// The integration allocates proxyless AMQP host endpoints when ports are not specified. Requires
     /// floci-az 0.12.0 or later. This API is run-only; call it inside an
     /// <c>ExecutionContext.IsRunMode</c> branch when publishing the AppHost.
     /// </remarks>
@@ -92,8 +93,8 @@ public static partial class FlociHostingExtension
     /// <param name="builder">The Floci Azure resource builder.</param>
     /// <param name="name">The globally unique name of the Service Bus resource (default: <c>servicebus</c>).
     /// Pass a distinct name for each additional emulator.</param>
-    /// <param name="amqpPort">Host port for plain AMQP (default: allocated by Aspire).</param>
-    /// <param name="amqpTlsPort">Host port for AMQPS/TLS (default: allocated by Aspire).</param>
+    /// <param name="amqpPort">Host port for plain AMQP (default: selected by the integration at startup).</param>
+    /// <param name="amqpTlsPort">Host port for AMQPS/TLS (default: selected by the integration at startup).</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{FlociAzureServiceBusResource}"/> for further configuration.</returns>
     [AspireExport]
     public static IResourceBuilder<FlociAzureServiceBusResource> WithServiceBus(
@@ -155,6 +156,12 @@ public static partial class FlociHostingExtension
             .WithParentRelationship(builder)
             .ExcludeFromManifest();
 
+        builder.ApplicationBuilder.Services.TryAddEventingSubscriber<FlociServiceBusEndpointAllocator>();
+
+        // The parent configures an externally managed sidecar. Use its owning container for
+        // dependency discovery because DCP cannot tunnel the custom child's endpoints.
+        var amqpEndpoint = new EndpointReference(builder.Resource, serviceBus.AmqpEndpoint.EndpointAnnotation);
+        var amqpTlsEndpoint = new EndpointReference(builder.Resource, serviceBus.AmqpTlsEndpoint.EndpointAnnotation);
         builder.WithEnvironment(context =>
         {
             if (context.ExecutionContext.IsPublishMode)
@@ -165,9 +172,9 @@ public static partial class FlociHostingExtension
             context.EnvironmentVariables["FLOCI_AZ_SERVICES_SERVICE_BUS_MOCKED"] = "false";
             context.EnvironmentVariables["FLOCI_AZ_SERVICES_SERVICE_BUS_START_ON_BOOT"] = "true";
             context.EnvironmentVariables["FLOCI_AZ_SERVICES_SERVICE_BUS_AMQP_PORT"] =
-                serviceBus.AmqpEndpoint.Port.ToString(CultureInfo.InvariantCulture);
+                amqpEndpoint.Property(EndpointProperty.TargetPort);
             context.EnvironmentVariables["FLOCI_AZ_SERVICES_SERVICE_BUS_AMQP_TLS_PORT"] =
-                serviceBus.AmqpTlsEndpoint.Port.ToString(CultureInfo.InvariantCulture);
+                amqpTlsEndpoint.Property(EndpointProperty.TargetPort);
         });
 
         return serviceBusBuilder;
@@ -197,21 +204,22 @@ public static partial class FlociHostingExtension
             throw new NotSupportedException("Floci Service Bus references are only supported in run mode.");
         }
 
-        if (builder.Resource is not ContainerResource container)
+        if (builder.Resource is ContainerResource container)
         {
-            return ResourceBuilderExtensions.WithReference(builder, serviceBus, connectionName);
+            builder.ApplicationBuilder.CreateResourceBuilder(container)
+                .WithContainerRuntimeArgs("--add-host", $"{FlociAzureServiceBusResource.ContainerHost}:host-gateway");
+
+            // Artemis publishes directly on the Docker host, outside Aspire's container network.
+            // Use the sidecar's host port and make dependency discovery follow its owner.
+            var endpoint = new EndpointReference(
+                serviceBus.Resource.Parent, serviceBus.Resource.AmqpEndpoint.EndpointAnnotation);
+            return builder.WithEnvironment($"ConnectionStrings__{connectionName ?? serviceBus.Resource.Name}",
+                ReferenceExpression.Create(
+                    $"Endpoint=sb://{FlociAzureServiceBusResource.ContainerHost}:{endpoint.Property(EndpointProperty.TargetPort)};SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey={FlociAzureServiceBusResource.DefaultSasKey};UseDevelopmentEmulator=true;"))
+                .WithRelationship(serviceBus.Resource, "Reference");
         }
 
-        builder.ApplicationBuilder.CreateResourceBuilder(container)
-            .WithContainerRuntimeArgs("--add-host", $"{FlociAzureServiceBusConnectionString.ContainerHost}:host-gateway");
-
-        return builder
-            .WithEnvironment(context =>
-            {
-                context.EnvironmentVariables[$"ConnectionStrings__{connectionName ?? serviceBus.Resource.Name}"] =
-                    new FlociAzureServiceBusConnectionString(serviceBus.Resource);
-            })
-            .WithRelationship(serviceBus.Resource, "Reference");
+        return ResourceBuilderExtensions.WithReference(builder, serviceBus, connectionName);
     }
 
     /// <summary>

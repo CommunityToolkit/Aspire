@@ -4,7 +4,7 @@
     "language": "typescript/nodejs"
   },
   "sdk": {
-    "version": "13.5.0"
+    "version": "13.6.0"
   },
   "profiles": {
     "https": {
@@ -17,6 +17,6 @@
   },
   "packages": {
     "CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder": "../../../src/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.csproj",
-    "Aspire.Hosting.SqlServer": "13.4.0"
+    "Aspire.Hosting.SqlServer": "13.6.0"
   }
 }

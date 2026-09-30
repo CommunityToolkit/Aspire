@@ -12,10 +12,11 @@
     <Nullable>enable</Nullable>
 
     <AspireMajorVersion>13</AspireMajorVersion>
-    <AspireVersion>$(AspireMajorVersion).5.0</AspireVersion>
-    <AspirePreviewSuffix>-preview.1.26417.10</AspirePreviewSuffix> <!-- Used for Aspire packages that still only ship as prerelease packages on nuget.org. -->
+    <AspireVersion>$(AspireMajorVersion).6.0</AspireVersion>
+    <AspireUseCliBundle>true</AspireUseCliBundle>
+    <AspirePreviewSuffix>-preview.1.26479.8</AspirePreviewSuffix> <!-- Used by Aspire packages that are still prerelease. -->
     <AspNetCoreVersion>9.0.0</AspNetCoreVersion>
-    <DotNetExtensionsVersion>10.0.11</DotNetExtensionsVersion>
+    <DotNetExtensionsVersion>10.0.12</DotNetExtensionsVersion>
     <TestContainersVersion>4.14.0</TestContainersVersion>
     <MEAIVersion>10.6.0</MEAIVersion>
     <ServiceDiscoveryVersion>10.0.0</ServiceDiscoveryVersion>
@@ -43,8 +44,8 @@
 
   <!-- Versioning -->
   <PropertyGroup>
-    <ToolkitMinorVersion>5</ToolkitMinorVersion>
-    <ToolkitPatchVersion>1</ToolkitPatchVersion>
+    <ToolkitMinorVersion>6</ToolkitMinorVersion>
+    <ToolkitPatchVersion>0</ToolkitPatchVersion>
     <ToolkitPreviewVersion>preview.1</ToolkitPreviewVersion>
 
     <VersionPrefix>$(AspireMajorVersion).$(ToolkitMinorVersion).$(ToolkitPatchVersion)</VersionPrefix>
