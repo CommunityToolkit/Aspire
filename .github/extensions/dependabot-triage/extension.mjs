@@ -188,7 +188,7 @@ function buildCombinePrompt(store, instanceId, request, note, { background = fal
     ];
     for (const pr of prs) {
         const files = pr.files.slice(0, 6).join(", ") + (pr.files.length > 6 || pr.filesTruncated ? ", …" : "");
-        lines.push(`| #${pr.number} | \`${pr.headRefName}\` | \`${pr.headOid?.slice(0, 12) ?? "?"}\` | ${pr.ecosystem} \`${pr.directory}\` | ${describeUpdates(pr).replace(/\|/g, "\\|")} | ${pr.checks ?? "none"}${pr.mergeable === "CONFLICTING" ? ", conflicts" : ""} | ${files} |`);
+        lines.push(`| #${pr.number} | \`${pr.headRefName}\` | \`${pr.headOid?.slice(0, 12) ?? "?"}\` | ${pr.ecosystem} \`${pr.directory}\` | ${describeUpdates(pr).replace(/\\/g, "\\\\").replace(/\|/g, "\\|")} | ${pr.checks ?? "none"}${pr.mergeable === "CONFLICTING" ? ", conflicts" : ""} | ${files} |`);
     }
     if (fixes.length) {
         lines.push("", `Security alerts fixed by these PRs: ${fixes.map((a) => `${a.ghsa ?? `#${a.number}`} (${a.severity}, ${a.package})`).join("; ")}. Make sure the combined PR still resolves them.`);
