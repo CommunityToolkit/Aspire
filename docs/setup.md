@@ -8,17 +8,17 @@ The easiest, and recommended way is to use [VS Code](https://code.visualstudio.c
 
 This will run the development environment in a container, install all the necessary tools and dependencies, add extensions to align with our contribution guidelines, and ensure that you have a consistent development environment.
 
-> Note: There is an issue with devcontainers in that the ports bound by the DCP (the thing the app host uses to orchestrate behind the scenes) are not exposed to the host machine, meaning that the HTTP endpoints fail to resolve. This can be fixed by manually [forwarding the port](https://code.visualstudio.com/docs/editor/port-forwarding). This is a known issue in Aspire and being tracked for a 9.1 fix 🤞.
+If an AppHost endpoint is not reachable from the host machine, use VS Code's [port forwarding](https://code.visualstudio.com/docs/editor/port-forwarding) for the relevant DCP or resource port.
 
 ### 🛠️ Manual Setup
 
 If you prefer not to use `devcontainer`, you can manually set up your development environment by installing the following tools:
 
--   [.NET 8](https://dotnet.microsoft.com/download/dotnet/8.0) and [.NET 9](https://dotnet.microsoft.com/download/dotnet/9.0)
+-   [.NET 8](https://dotnet.microsoft.com/download/dotnet/8.0), [.NET 9](https://dotnet.microsoft.com/download/dotnet/9.0), and [.NET 10](https://dotnet.microsoft.com/download/dotnet/10.0)
 -   [Node.js LTS](https://nodejs.org/en/)
     -   [Yarn 2](https://yarnpkg.com/getting-started/install)
     -   [pnpm](https://pnpm.io/)
--   [Java JDK 11](https://learn.microsoft.com/java/openjdk/download)
+-   [Java JDK 21](https://learn.microsoft.com/java/openjdk/download)
     -   You'll also need [Gradle](https://gradle.org/install/) and [Apache Maven](https://maven.apache.org/download.cgi)
 -   [Bun](https://bun.sh)
 -   [Deno 2](https://deno.land/)
