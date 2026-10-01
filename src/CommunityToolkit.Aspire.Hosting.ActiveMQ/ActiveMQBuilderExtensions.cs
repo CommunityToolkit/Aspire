@@ -20,7 +20,7 @@ public static class ActiveMQBuilderExtensions
     /// Adds a ActiveMQ container to the application model.
     /// </summary>
     /// <remarks>
-    /// The default image and tag are "apache/activemq-classic" and "6.1.7".
+    /// The default image and tag are "apache/activemq" and "6.3.2".
     /// </remarks>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
     /// <param name="name">The name of the resource. This name will be used as the connection string name when referenced in a dependency.</param>
@@ -48,14 +48,15 @@ public static class ActiveMQBuilderExtensions
                                               ?? ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder, $"{name}-password", special: false);
 
         ActiveMQServerResource activeMq = new(name, userName?.Resource, passwordParameter, scheme);
-        return builder.Build(port, scheme, webPort, activeMq);
+        return builder.Build(port, scheme, webPort, activeMq)
+            .WithRunModeJettyAllowAllIps();
     }
 
     /// <summary>
     /// Adds a ActiveMQ Artemis container to the application model.
     /// </summary>
     /// <remarks>
-    /// The default image and tag are "apache/activemq-artemis" and "2.42.0".
+    /// The default image and tag are "apache/artemis" and "2.57.0".
     /// </remarks>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
     /// <param name="name">The name of the resource. This name will be used as the connection string name when referenced in a dependency.</param>
@@ -100,7 +101,48 @@ public static class ActiveMQBuilderExtensions
                 context.EnvironmentVariables[activeMq.ActiveMqSettings.EnvironmentVariableUsername] = activeMq.UserNameReference;
                 context.EnvironmentVariables[activeMq.ActiveMqSettings.EnvironmentVariablePassword] = activeMq.PasswordParameter;
             });
+
         return result.WithJolokiaHealthCheck();
+    }
+
+    private static IResourceBuilder<ActiveMQServerResource> WithRunModeJettyAllowAllIps(this IResourceBuilder<ActiveMQServerResource> builder)
+    {
+        if (!builder.ApplicationBuilder.ExecutionContext.IsRunMode)
+        {
+            return builder;
+        }
+
+        return builder
+            .WithEnvironment(
+                "JAVA_TOOL_OPTIONS",
+                "-Dwebconsole.jettyExtraXmlFiles=/opt/apache-activemq/conf/jetty/aspire-allow-all-ips.xml")
+            .WithContainerFiles(
+                destinationPath: "/opt/apache-activemq/conf/jetty",
+                [new ContainerFile
+                {
+                    Name = "aspire-allow-all-ips.xml",
+                    Contents = """
+                        <?xml version="1.0"?>
+                        <!DOCTYPE Configure PUBLIC "-//Jetty//Configure//EN" "https://jetty.org/configure_10_0.dtd">
+                        <Configure id="Server" class="org.eclipse.jetty.server.Server">
+                          <Call name="getDescendant">
+                            <Arg>
+                              <Call class="java.lang.Class" name="forName">
+                                <Arg>org.eclipse.jetty.server.handler.InetAccessHandler</Arg>
+                              </Call>
+                            </Arg>
+                            <Call name="include">
+                              <Arg>
+                                <Array type="java.lang.String">
+                                  <Item>0.0.0.0/0</Item>
+                                  <Item>::/0</Item>
+                                </Array>
+                              </Arg>
+                            </Call>
+                          </Call>
+                        </Configure>
+                        """
+                }]);
     }
 
     /// <summary>
