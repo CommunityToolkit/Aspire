@@ -20,6 +20,14 @@ namespace Aspire.Hosting
         BestEffort = 1
     }
 
+    [AspireExport(ExposeProperties = true)]
+    public sealed partial class CrdWaitOptions
+    {
+        public CrdWaitBehavior FailureBehavior { get { throw null; } set { } }
+
+        public System.TimeSpan Timeout { get { throw null; } set { } }
+    }
+
     public static partial class KindClusterResourceBuilderExtensions
     {
         [AspireExport]
@@ -62,6 +70,13 @@ namespace Aspire.Hosting
         public static ApplicationModel.IResourceBuilder<ApplicationModel.ContainerResource> WithReference(this ApplicationModel.IResourceBuilder<ApplicationModel.ContainerResource> builder, ApplicationModel.IResourceBuilder<ApplicationModel.KindClusterResource> kind) { throw null; }
     }
 
+    public static partial class KindDeployedResourceBuilderExtensions
+    {
+        [AspireExport(RunSyncOnBackgroundThread = true)]
+        public static ApplicationModel.IResourceBuilder<T> WithCrdWait<T>(this ApplicationModel.IResourceBuilder<T> builder, System.Action<CrdWaitOptions> configure)
+            where T : ApplicationModel.KindDeployedResource { throw null; }
+    }
+
     public static partial class KindHelmChartResourceBuilderExtensions
     {
         [AspireExport]
@@ -69,9 +84,6 @@ namespace Aspire.Hosting
 
         [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.KindHelmChartResource> WithChartVersion(this ApplicationModel.IResourceBuilder<ApplicationModel.KindHelmChartResource> builder, string version) { throw null; }
-
-        [AspireExport]
-        public static ApplicationModel.IResourceBuilder<ApplicationModel.KindHelmChartResource> WithCrdWaitRetry(this ApplicationModel.IResourceBuilder<ApplicationModel.KindHelmChartResource> builder, int maxAttempts = 3, System.TimeSpan? backoff = null, System.TimeSpan? crdWaitTimeout = null) { throw null; }
 
         [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.KindHelmChartResource> WithHelmStringValue(this ApplicationModel.IResourceBuilder<ApplicationModel.KindHelmChartResource> builder, string key, string value) { throw null; }
@@ -102,9 +114,11 @@ namespace Aspire.Hosting
         public static ApplicationModel.IResourceBuilder<ApplicationModel.K8sManifestResource> WithClusterReadyTimeout(this ApplicationModel.IResourceBuilder<ApplicationModel.K8sManifestResource> builder, System.TimeSpan timeout) { throw null; }
 
         [AspireExport]
+        [System.Obsolete("Use WithCrdWait instead.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.K8sManifestResource> WithCrdWaitBehavior(this ApplicationModel.IResourceBuilder<ApplicationModel.K8sManifestResource> builder, CrdWaitBehavior behavior) { throw null; }
 
         [AspireExport]
+        [System.Obsolete("Use WithCrdWait instead.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.K8sManifestResource> WithCrdWaitTimeout(this ApplicationModel.IResourceBuilder<ApplicationModel.K8sManifestResource> builder, System.TimeSpan timeout) { throw null; }
 
         [AspireExport]
@@ -140,8 +154,10 @@ namespace Aspire.Hosting.ApplicationModel
 
         public System.TimeSpan ClusterReadyTimeout { get { throw null; } set { } }
 
+        [System.Obsolete("Use WithCrdWait on the resource builder instead.")]
         public CrdWaitBehavior CrdWaitBehavior { get { throw null; } set { } }
 
+        [System.Obsolete("Use WithCrdWait on the resource builder instead.")]
         public System.TimeSpan CrdWaitTimeout { get { throw null; } set { } }
 
         public string? FieldManager { get { throw null; } set { } }

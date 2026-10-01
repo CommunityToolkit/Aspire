@@ -868,6 +868,9 @@ namespace CommunityToolkit.Aspire.Posta.Models.Shared
         [System.Text.Json.Serialization.JsonPropertyName("id")]
         public int? Id { get { throw null; } set { } }
 
+        [System.Text.Json.Serialization.JsonPropertyName("languages")]
+        public System.Collections.Generic.IReadOnlyList<string>? Languages { get { throw null; } set { } }
+
         [System.Text.Json.Serialization.JsonPropertyName("last_edited_by")]
         public ListTemplatesResponseDataItemLastEditedBy? LastEditedBy { get { throw null; } set { } }
 
