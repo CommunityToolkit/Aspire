@@ -23,6 +23,9 @@ namespace Aspire.Hosting
         public static ApplicationModel.IResourceBuilder<ApplicationModel.FlociAwsContainerResource> WithConfigFile(this ApplicationModel.IResourceBuilder<ApplicationModel.FlociAwsContainerResource> builder, string hostPath) { throw null; }
 
         [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.FlociAzureCosmosResource> WithCosmos(this ApplicationModel.IResourceBuilder<ApplicationModel.FlociAzureContainerResource> builder, string name = "cosmos", string? accountName = null) { throw null; }
+
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.FlociAwsContainerResource> WithDataBindMount(this ApplicationModel.IResourceBuilder<ApplicationModel.FlociAwsContainerResource> builder, string source, bool isReadOnly = false) { throw null; }
 
         [AspireExport("withDataBindMountAzure", MethodName = "withDataBindMount")]
@@ -78,9 +81,16 @@ namespace Aspire.Hosting
         public static ApplicationModel.IResourceBuilder<TDestination> WithReference<TDestination>(this ApplicationModel.IResourceBuilder<TDestination> builder, ApplicationModel.IResourceBuilder<ApplicationModel.FlociAzureContainerResource> floci)
             where TDestination : ApplicationModel.IResourceWithEnvironment { throw null; }
 
+        [AspireExport("withFlociAzureServiceBusReference")]
+        public static ApplicationModel.IResourceBuilder<TDestination> WithReference<TDestination>(this ApplicationModel.IResourceBuilder<TDestination> builder, ApplicationModel.IResourceBuilder<ApplicationModel.FlociAzureServiceBusResource> serviceBus, string? connectionName = null)
+            where TDestination : ApplicationModel.IResourceWithEnvironment { throw null; }
+
         [AspireExport("withFlociGcpReference")]
         public static ApplicationModel.IResourceBuilder<TDestination> WithReference<TDestination>(this ApplicationModel.IResourceBuilder<TDestination> builder, ApplicationModel.IResourceBuilder<ApplicationModel.FlociGcpContainerResource> floci)
             where TDestination : ApplicationModel.IResourceWithEnvironment { throw null; }
+
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.FlociAzureServiceBusResource> WithServiceBus(this ApplicationModel.IResourceBuilder<ApplicationModel.FlociAzureContainerResource> builder, string name = "servicebus", int? amqpPort = null, int? amqpTlsPort = null) { throw null; }
     }
 }
 
@@ -96,6 +106,38 @@ namespace Aspire.Hosting.ApplicationModel
     public partial class FlociAzureContainerResource : FlociContainerResource
     {
         public FlociAzureContainerResource(string name) : base(default!, default!) { }
+    }
+
+    [AspireExport(ExposeProperties = true)]
+    public partial class FlociAzureCosmosResource : Resource, IResourceWithParent<FlociAzureContainerResource>, IResourceWithParent, IResource, IResourceWithConnectionString, IExpressionValue, IValueProvider, IManifestExpressionProvider, IValueWithReferences
+    {
+        public FlociAzureCosmosResource(string name, string accountName, FlociAzureContainerResource parent) : base(default!) { }
+
+        public ReferenceExpression AccountEndpoint { get { throw null; } }
+
+        public string AccountName { get { throw null; } }
+
+        public ReferenceExpression ConnectionStringExpression { get { throw null; } }
+
+        public FlociAzureContainerResource Parent { get { throw null; } }
+
+        System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties() { throw null; }
+    }
+
+    [AspireExport(ExposeProperties = true)]
+    public partial class FlociAzureServiceBusResource : Resource, IResourceWithParent<FlociAzureContainerResource>, IResourceWithParent, IResource, IResourceWithConnectionString, IExpressionValue, IValueProvider, IManifestExpressionProvider, IValueWithReferences, IResourceWithEndpoints
+    {
+        public FlociAzureServiceBusResource(string name, FlociAzureContainerResource parent) : base(default!) { }
+
+        public EndpointReference AmqpEndpoint { get { throw null; } }
+
+        public EndpointReference AmqpTlsEndpoint { get { throw null; } }
+
+        public ReferenceExpression ConnectionStringExpression { get { throw null; } }
+
+        public FlociAzureContainerResource Parent { get { throw null; } }
+
+        System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties() { throw null; }
     }
 
     public abstract partial class FlociContainerResource : ContainerResource, IResourceWithConnectionString, IResource, IExpressionValue, IValueProvider, IManifestExpressionProvider, IValueWithReferences

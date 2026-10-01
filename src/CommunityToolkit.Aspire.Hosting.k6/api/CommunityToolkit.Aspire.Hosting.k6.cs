@@ -17,7 +17,7 @@ namespace Aspire.Hosting
         public static ApplicationModel.IResourceBuilder<ApplicationModel.K6Resource> WithK6OtlpEnvironment(this ApplicationModel.IResourceBuilder<ApplicationModel.K6Resource> builder) { throw null; }
 
         [AspireExport]
-        public static ApplicationModel.IResourceBuilder<ApplicationModel.K6Resource> WithScript(this ApplicationModel.IResourceBuilder<ApplicationModel.K6Resource> builder, string scriptPath, int virtualUsers = 10, string duration = "30s") { throw null; }
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.K6Resource> WithScript(this ApplicationModel.IResourceBuilder<ApplicationModel.K6Resource> builder, string scriptPath, int? virtualUsers = null, string? duration = null, CommunityToolkit.Aspire.Hosting.k6.K6SummaryMode? summaryMode = null) { throw null; }
     }
 }
 
@@ -29,5 +29,15 @@ namespace Aspire.Hosting.ApplicationModel
         public K6Resource(string name) : base(default!, default) { }
 
         public EndpointReference PrimaryEndpoint { get { throw null; } }
+    }
+}
+
+namespace CommunityToolkit.Aspire.Hosting.k6
+{
+    public enum K6SummaryMode
+    {
+        Compact = 0,
+        Full = 1,
+        Disabled = 2
     }
 }
