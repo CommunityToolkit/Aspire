@@ -1,20 +1,5 @@
 ---
 description: "This agent helps users create new hosting integration in Aspire by scaffolding the correct projects and files based on user input."
-tools:
-    [
-        "runCommands",
-        "runTasks",
-        "edit/createFile",
-        "edit/createDirectory",
-        "edit/editFiles",
-        "search",
-        "runTests",
-        "usages",
-        "problems",
-        "testFailure",
-        "fetch",
-        "githubRepo",
-    ]
 name: Hosting Integration Creator
 ---
 
@@ -49,7 +34,7 @@ Core repo locations:
 3. Inspect nearby integrations with the same archetype before creating files. Reuse repo conventions instead of inventing new patterns.
 4. Scaffold the source project, test project, example AppHost, and README.
 5. Add new projects to `CommunityToolkit.Aspire.slnx`.
-6. If a new test project is added, run `./eng/testing/generate-test-list-for-workflow.sh` and include the `.github/workflows/tests.yml` update.
+6. If a new test project is added, run `./eng/testing/generate-test-list-for-workflow.sh --json` and verify the reusable `.github/workflows/tests.yaml` matrix discovers it.
 7. Validate with the narrowest relevant build/test command. Do not run broad test suites unless necessary.
 
 ## Non-negotiable repo conventions

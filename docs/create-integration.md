@@ -99,9 +99,7 @@ If the resource your integration exposes does not integrate into the Aspire heal
 
 ### Adding Tests to the CI pipeline
 
-To ensure parallel execution of tests in the CI pipeline, and that the tests run in isolation from each other, you will need to update the `tests.yml` file in the `.github/workflows` folder to include your new test project. Our design is that we run each test project in its own GitHub Action workflow run using a [matrix strategy](https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs), and combine that with the OS's that we test on. You'll find towards the top of the `tests.yml` file the list of all test projects that are run in the CI pipeline.
-
-The easiest way to update that list is to run the `./eng/testing/generate-test-list-for-workflow.sh` script which will output the formatted list of test projects to the console. You can then copy and paste that into the `tests.yml` file.
+The reusable `.github/workflows/tests.yaml` workflow generates its matrix from the test projects in the repository. Run `./eng/testing/generate-test-list-for-workflow.sh --json` to verify that a new test project is discovered before opening a pull request.
 
 ## 📃 Documentation
 

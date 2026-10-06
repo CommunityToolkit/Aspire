@@ -1,6 +1,6 @@
 name: "Copilot Setup Steps"
 
-# This workflow configures the environment for GitHub Copilot Agent with gh-aw MCP server
+# This workflow prepares the common .NET and gh-aw tooling used by Copilot cloud agent.
 on:
   workflow_dispatch:
   push:
@@ -20,6 +20,44 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
+
+      - name: Resolve Aspire version
+        id: aspire-version
+        shell: bash
+        run: |
+          ASPIRE_VERSION="$(dotnet msbuild Directory.Build.props -nologo -v:q -getProperty:AspireVersion)"
+          echo "version=${ASPIRE_VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Install Aspire CLI
+        uses: timheuer/setup-aspire@v0.1.0
+        with:
+          version: ${{ steps.aspire-version.outputs.version }}
+
+      - name: Verify Aspire CLI version
+        shell: bash
+        env:
+          EXPECTED_ASPIRE_CLI_VERSION: ${{ steps.aspire-version.outputs.version }}
+        run: |
+          INSTALLED_ASPIRE_CLI_VERSION="$(aspire --version)"
+          case "${INSTALLED_ASPIRE_CLI_VERSION}" in
+            "${EXPECTED_ASPIRE_CLI_VERSION}"|"${EXPECTED_ASPIRE_CLI_VERSION}"+*) ;;
+            *)
+              echo "Expected Aspire CLI version ${EXPECTED_ASPIRE_CLI_VERSION}, but found ${INSTALLED_ASPIRE_CLI_VERSION}."
+              exit 1
+              ;;
+          esac
+
+      - name: Restore .NET dependencies
+        run: dotnet restore
+
       - name: Install gh-aw extension
         uses: github/gh-aw-actions/setup-cli@efa55847f72aadb03490d955263ff911bf758700 # v0.74.8
         with:
