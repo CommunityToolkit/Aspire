@@ -36,7 +36,7 @@ Do not force every integration into one template. Read [patterns](references/pat
 - Public APIs require XML documentation.
 - Validate public inputs with the throw helpers used by nearby integrations.
 - Do not create or manually edit generated `*/api/*.cs` files.
-- Fail with a clear configuration error when a client cannot be constructed; do not silently create an invalid client.
+- Fail with a clear configuration error when a client cannot be constructed unless an established integration pattern intentionally defers missing-configuration handling; do not silently create an invalid client.
 - Keep health checks lightweight and cancellation-aware.
 - Avoid adding health-check, telemetry, or HTTP dependencies when the integration does not use them.
 
