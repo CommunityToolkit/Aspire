@@ -12,7 +12,7 @@ public class FlociAzureContainerResource(string name) : FlociContainerResource(n
 
     // Well-known Azurite-compatible dev credentials that floci-az accepts by default (no auth enforced).
     internal const string DefaultAccountName = "devstoreaccount1";
-    internal const string DefaultAccountKey = "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMh0==";
+    internal const string DefaultAccountKey = "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==";
 
     internal override void ApplyUIEnvironment(EnvironmentCallbackContext context)
     {
