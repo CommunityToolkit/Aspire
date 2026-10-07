@@ -11,17 +11,13 @@ var app = builder.Build();
 
 app.MapDefaultEndpoints();
 
-app.MapPost("/create", async (ChromaClient chroma, IConfiguration config, IHttpClientFactory factory) =>
+app.MapPost("/create", async (ChromaClient chroma) =>
 {
     var collectionName = $"movies_{Guid.NewGuid():N}";
-    var collection = await chroma.CreateCollection(collectionName);
-    
-    var endpoint = GetChromaEndpoint(config, "chroma");
-    var httpClient = factory.CreateClient("chroma");
-    var options = new ChromaConfigurationOptions(endpoint);
-    var collectionClient = new ChromaCollectionClient(collection, options, httpClient);
+    var collection = await chroma.CreateCollectionAsync(collectionName);
+    var collectionClient = chroma.GetCollectionClient(collection);
 
-    await collectionClient.Add(
+    await collectionClient.AddAsync(
         ids: ["1", "2"],
         embeddings: [new ReadOnlyMemory<float>([0.1f, 0.2f, 0.3f]), new ReadOnlyMemory<float>([0.4f, 0.5f, 0.6f])],
         metadatas: [
@@ -31,47 +27,20 @@ app.MapPost("/create", async (ChromaClient chroma, IConfiguration config, IHttpC
         documents: ["A thief who enters the dreams of others.", "A group of explorers travel through a wormhole."]
     );
 
-    return Results.Ok(new { Collection = collectionName, Count = 2 });
+    return Results.Ok(new { Collection = collectionName, Count = await collectionClient.CountAsync() });
 });
 
-app.MapGet("/query", async (ChromaClient chroma, IConfiguration config, IHttpClientFactory factory, string collectionName) =>
+app.MapGet("/query", async (ChromaClient chroma, string collectionName) =>
 {
-    var collection = await chroma.GetCollection(collectionName);
-    var endpoint = GetChromaEndpoint(config, "chroma");
-    var httpClient = factory.CreateClient("chroma");
-    var options = new ChromaConfigurationOptions(endpoint);
-    var collectionClient = new ChromaCollectionClient(collection, options, httpClient);
+    var collectionClient = chroma.GetCollectionClient(await chroma.GetCollectionAsync(collectionName));
 
-    var results = await collectionClient.Query(
+    var results = await collectionClient.QueryAsync(
         queryEmbeddings: new ReadOnlyMemory<float>([0.1f, 0.2f, 0.3f]),
-        nResults: 1
+        nResults: 1,
+        include: ChromaQueryInclude.Metadatas | ChromaQueryInclude.Documents | ChromaQueryInclude.Distances
     );
 
-    return Results.Ok(results);
+    return Results.Ok(results.Select(r => new { r.Id, r.Document, Title = r.Metadata?["title"], r.Distance }));
 });
-
-static string GetChromaEndpoint(IConfiguration config, string connectionName)
-{
-    var connectionString = config.GetConnectionString(connectionName);
-    if (!string.IsNullOrEmpty(connectionString))
-    {
-        if (Uri.TryCreate(connectionString, UriKind.Absolute, out var uri))
-        {
-            return uri.ToString();
-        }
-        
-        // Handle "Endpoint=..." format
-        var parts = connectionString.Split(';', StringSplitOptions.RemoveEmptyEntries);
-        foreach (var part in parts)
-        {
-            if (part.StartsWith("Endpoint=", StringComparison.OrdinalIgnoreCase))
-            {
-                return part.Substring("Endpoint=".Length);
-            }
-        }
-    }
-    
-    return config["Aspire:Chroma:Endpoint"] ?? throw new InvalidOperationException("ChromaDB endpoint not found.");
-}
 
 app.Run();

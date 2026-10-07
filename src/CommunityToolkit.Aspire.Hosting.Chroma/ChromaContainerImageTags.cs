@@ -1,5 +1,8 @@
 namespace CommunityToolkit.Aspire.Hosting.Chroma;
 
+/// <summary>
+/// The container image of ChromaDB.
+/// </summary>
 internal static class ChromaContainerImageTags
 {
     /// <summary>docker.io</summary>
@@ -8,6 +11,6 @@ internal static class ChromaContainerImageTags
     /// <summary>chromadb/chroma</summary>
     public const string Image = "chromadb/chroma";
 
-    /// <summary>0.5.0</summary>
-    public const string Tag = "0.5.0";
+    /// <summary>1.5.9</summary>
+    public const string Tag = "1.5.9";
 }

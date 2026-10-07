@@ -1,10 +1,9 @@
-using Aspire.Hosting.ApplicationModel;
-
-namespace CommunityToolkit.Aspire.Hosting.Chroma;
+namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
 /// A resource that represents a ChromaDB container.
 /// </summary>
+[AspireExport(ExposeProperties = true)]
 public class ChromaResource(string name) : ContainerResource(name), IResourceWithConnectionString
 {
     internal const string PrimaryEndpointName = "http";
@@ -30,15 +29,15 @@ public class ChromaResource(string name) : ContainerResource(name), IResourceWit
     /// Gets the connection string expression for the ChromaDB
     /// </summary>
     public ReferenceExpression ConnectionStringExpression =>
-        ReferenceExpression.Create($"Endpoint=http://{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}/api/v1/");
+        ReferenceExpression.Create($"Endpoint=http://{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}");
 
     /// <summary>
     /// Gets the connection URI expression for the ChromaDB server.
     /// </summary>
     /// <remarks>
-    /// Format: <c>http://{host}:{port}/api/v1/</c>.
+    /// Format: <c>http://{host}:{port}</c>.
     /// </remarks>
-    public ReferenceExpression UriExpression => ReferenceExpression.Create($"http://{Host}:{Port}/api/v1/");
+    public ReferenceExpression UriExpression => ReferenceExpression.Create($"http://{Host}:{Port}");
 
     IEnumerable<KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties()
     {

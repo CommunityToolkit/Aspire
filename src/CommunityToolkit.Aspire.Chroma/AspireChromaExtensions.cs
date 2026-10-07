@@ -1,10 +1,12 @@
 using Aspire;
-using System.Net.Http;
 using ChromaDB.Client;
+using ChromaDB.Client.DependencyInjection;
 using CommunityToolkit.Aspire.Chroma;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
 
 namespace Microsoft.Extensions.Hosting;
 
@@ -13,7 +15,7 @@ namespace Microsoft.Extensions.Hosting;
 /// </summary>
 public static class AspireChromaExtensions
 {
-    private const string DefaultConfigSectionName = "Aspire:Chroma";
+    private const string DefaultConfigSectionName = "Aspire:Chroma:Client";
 
     /// <summary>
     /// Registers <see cref="ChromaClient"/> as a singleton in the services collection.
@@ -68,6 +70,9 @@ public static class AspireChromaExtensions
 
         configureSettings?.Invoke(settings);
 
+        // The client sends each request with the current handler of the HttpClient of this name of IHttpClientFactory.
+        builder.Services.AddHttpClient(connectionName);
+
         if (serviceKey is null)
         {
             builder.Services.AddSingleton<ChromaClient>(sp => CreateClient(sp, settings, connectionName));
@@ -77,9 +82,21 @@ public static class AspireChromaExtensions
             builder.Services.AddKeyedSingleton<ChromaClient>(serviceKey, (sp, key) => CreateClient(sp, settings, connectionName));
         }
 
+        if (!settings.DisableTracing)
+        {
+            builder.Services.AddOpenTelemetry()
+                .WithTracing(tracing => tracing.AddSource(ChromaTelemetry.ActivitySourceName));
+        }
+
+        if (!settings.DisableMetrics)
+        {
+            builder.Services.AddOpenTelemetry()
+                .WithMetrics(metrics => metrics.AddMeter(ChromaTelemetry.MeterName));
+        }
+
         if (!settings.DisableHealthChecks)
         {
-            var healthCheckName = serviceKey is null ? connectionName : $"{connectionName}_check";
+            var healthCheckName = serviceKey is null ? "Chroma" : $"Chroma_{connectionName}";
 
             builder.TryAddHealthCheck(new HealthCheckRegistration(
                 healthCheckName,
@@ -99,14 +116,9 @@ public static class AspireChromaExtensions
             throw new InvalidOperationException($"ChromaDB endpoint is not configured for connection name '{connectionName}'.");
         }
 
-        var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient(connectionName);
-        var endpoint = settings.Endpoint.ToString();
+        // An endpoint with only the address of the server, like http://localhost:8000, gets the path of the v2 API.
+        var options = new ChromaConfigurationOptions(settings.Endpoint, tenant: settings.Tenant, database: settings.Database, chromaToken: settings.Token);
 
-        if (!endpoint.Contains("/api/v1", StringComparison.OrdinalIgnoreCase))
-        {
-            endpoint = endpoint.TrimEnd('/') + "/api/v1/";
-        }
-
-        return new ChromaClient(new ChromaConfigurationOptions(endpoint), httpClient);
+        return sp.CreateChromaClient(options, connectionName);
     }
 }

@@ -2,6 +2,7 @@ using System.Net.Sockets;
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Chroma;
+using CommunityToolkit.Aspire.Testing;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CommunityToolkit.Aspire.Hosting.Chroma.Tests;
@@ -60,7 +61,7 @@ public class AddChromaTests
     }
 
     [Fact]
-    public void WithDataVolumeAddsAnnotationMetadata()
+    public async Task WithDataVolumeAddsAnnotationMetadata()
     {
         var appBuilder = DistributedApplication.CreateBuilder();
 
@@ -74,12 +75,15 @@ public class AddChromaTests
         var containerResource = Assert.Single(appModel.Resources.OfType<ChromaResource>());
         var mountAnnotation = Assert.Single(containerResource.Annotations.OfType<ContainerMountAnnotation>());
         Assert.Equal("chroma-data", mountAnnotation.Source);
-        Assert.Equal("/chroma/chroma", mountAnnotation.Target);
+        Assert.Equal("/data", mountAnnotation.Target);
         Assert.Equal(ContainerMountType.Volume, mountAnnotation.Type);
+
+        var environment = await containerResource.GetEnvironmentVariablesAsync();
+        Assert.Equal("/data", environment["PERSIST_DIRECTORY"]);
     }
 
     [Fact]
-    public void WithDataBindMountAddsAnnotationMetadata()
+    public async Task WithDataBindMountAddsAnnotationMetadata()
     {
         var appBuilder = DistributedApplication.CreateBuilder();
 
@@ -94,7 +98,10 @@ public class AddChromaTests
         var mountAnnotation = Assert.Single(containerResource.Annotations.OfType<ContainerMountAnnotation>());
         Assert.NotNull(mountAnnotation.Source);
         Assert.Equal(Path.GetFullPath("./chroma-data").Replace('\\', '/'), mountAnnotation.Source.Replace('\\', '/'));
-        Assert.Equal("/chroma/chroma", mountAnnotation.Target);
+        Assert.Equal("/data", mountAnnotation.Target);
         Assert.Equal(ContainerMountType.BindMount, mountAnnotation.Type);
+
+        var environment = await containerResource.GetEnvironmentVariablesAsync();
+        Assert.Equal("/data", environment["PERSIST_DIRECTORY"]);
     }
 }

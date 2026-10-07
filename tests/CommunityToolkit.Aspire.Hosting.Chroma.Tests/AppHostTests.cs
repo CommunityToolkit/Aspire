@@ -22,7 +22,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         
         using var httpClient = fixture.CreateHttpClient(chromaResource.Name);
 
-        var response = await httpClient.GetAsync("/api/v1/heartbeat");
+        var response = await httpClient.GetAsync("/api/v2/heartbeat");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
@@ -44,10 +44,20 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         Assert.NotNull(result);
         Assert.NotEmpty(result.Collection);
 
+        Assert.Equal(2, result.Count);
+
         // Query
         var queryResponse = await httpClient.GetAsync($"/query?collectionName={result.Collection}");
         Assert.Equal(HttpStatusCode.OK, queryResponse.StatusCode);
+
+        var entries = await queryResponse.Content.ReadFromJsonAsync<QueryResult[]>();
+        Assert.NotNull(entries);
+        var entry = Assert.Single(entries);
+        Assert.Equal("1", entry.Id);
+        Assert.Equal("Inception", entry.Title);
     }
 
     private record CreateResult(string Collection, int Count);
+
+    private record QueryResult(string Id, string? Document, string? Title, float? Distance);
 }
