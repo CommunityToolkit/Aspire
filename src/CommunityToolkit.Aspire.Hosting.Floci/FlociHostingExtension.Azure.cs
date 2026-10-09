@@ -255,6 +255,33 @@ public static partial class FlociHostingExtension
     }
 
     /// <summary>
+    /// Adds a child resource representing the Blob, Queue and Table Storage APIs exposed by the
+    /// Floci Azure emulator.
+    /// </summary>
+    /// <remarks>
+    /// Reference the returned resource with Aspire's standard <c>WithReference</c> API to inject its
+    /// storage connection string (e.g. for <c>AddAzureBlobServiceClient</c>). The resource has no
+    /// health check of its own; it reports the parent emulator's health, so dependents can
+    /// <c>WaitFor</c> it directly.
+    /// </remarks>
+    /// <ats-summary>Adds a Storage child resource to the Floci Azure emulator</ats-summary>
+    /// <param name="builder">The Floci Azure resource builder.</param>
+    /// <param name="name">The name of the Storage resource (default: <c>storage</c>).</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{FlociAzureStorageResource}"/> for further configuration.</returns>
+    [AspireExport]
+    public static IResourceBuilder<FlociAzureStorageResource> WithStorage(
+        this IResourceBuilder<FlociAzureContainerResource> builder,
+        [ResourceName] string name = FlociAzureStorageResource.DefaultName)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+
+        return builder.ApplicationBuilder
+            .AddResource(new FlociAzureStorageResource(name, builder.Resource))
+            .WithParentRelationship(builder);
+    }
+
+    /// <summary>
     /// Mounts the Docker socket into the Floci Azure container so that Azure Functions and other
     /// container-backed services can launch sibling containers.
     /// Also sets <c>FLOCI_AZ_DOCKER_DOCKER_HOST</c> to <c>unix:///var/run/docker.sock</c> (the
