@@ -1,0 +1,14 @@
+<Project Sdk="Aspire.AppHost.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Chroma\CommunityToolkit.Aspire.Hosting.Chroma.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Chroma.ApiService\CommunityToolkit.Aspire.Hosting.Chroma.ApiService.csproj" />
+  </ItemGroup>
+
+</Project>
