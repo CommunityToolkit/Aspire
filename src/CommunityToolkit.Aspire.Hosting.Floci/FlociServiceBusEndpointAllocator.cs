@@ -15,7 +15,6 @@ internal sealed class FlociServiceBusEndpointAllocator : IDistributedApplication
     // shadows Docker's wildcard bind, and on Linux Docker's bind fails.
     private const int MinSelectedPort = 20000;
     private const int MaxSelectedPortExclusive = 32768;
-    private const int MaxSelectionAttempts = 100;
 
     public Task SubscribeAsync(
         IDistributedApplicationEventing eventing,
@@ -38,6 +37,12 @@ internal sealed class FlociServiceBusEndpointAllocator : IDistributedApplication
         // DCP does not allocate endpoints on these custom resources. Allocate before the
         // parent's environment is evaluated, otherwise resolving its child's ports blocks startup.
         var listeners = new List<TcpListener>();
+        // Ports configured anywhere in the app model are bound later, so probing cannot see them.
+        var reservedPorts = @event.Model.Resources
+            .SelectMany(resource => resource.Annotations.OfType<EndpointAnnotation>())
+            .Select(endpoint => endpoint.Port)
+            .OfType<int>()
+            .ToHashSet();
         var allocatedResources = new List<FlociAzureServiceBusResource>();
         try
         {
@@ -60,7 +65,7 @@ internal sealed class FlociServiceBusEndpointAllocator : IDistributedApplication
                         continue;
                     }
 
-                    endpoint.Port ??= SelectPort(listeners);
+                    endpoint.Port ??= SelectPort(listeners, reservedPorts);
                     endpoint.TargetPort = endpoint.Port;
                     endpoint.AllocatedEndpoint = new AllocatedEndpoint(endpoint, KnownHostNames.Localhost, endpoint.Port.Value,
                         EndpointBindingMode.SingleAddress, null, KnownNetworkIdentifiers.LocalhostNetwork);
@@ -94,11 +99,18 @@ internal sealed class FlociServiceBusEndpointAllocator : IDistributedApplication
         }
     }
 
-    private static int SelectPort(List<TcpListener> listeners)
+    internal static int SelectPort(List<TcpListener> listeners, HashSet<int> reservedPorts)
     {
-        for (int attempt = 0; attempt < MaxSelectionAttempts; attempt++)
+        // Start at a random offset so concurrent AppHosts spread out, then scan the whole range.
+        int rangeSize = MaxSelectedPortExclusive - MinSelectedPort;
+        int offset = Random.Shared.Next(rangeSize);
+        for (int i = 0; i < rangeSize; i++)
         {
-            int port = Random.Shared.Next(MinSelectedPort, MaxSelectedPortExclusive);
+            int port = MinSelectedPort + (offset + i) % rangeSize;
+            if (reservedPorts.Contains(port))
+            {
+                continue;
+            }
 
             // Match Docker's bind address, as in the k3s allocator, and also probe loopback, where
             // another process's listener would shadow Docker's wildcard bind. This probes availability;
@@ -120,6 +132,7 @@ internal sealed class FlociServiceBusEndpointAllocator : IDistributedApplication
             }
 
             listeners.Add(listener);
+            reservedPorts.Add(port);
             return port;
         }
 

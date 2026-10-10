@@ -145,6 +145,36 @@ public class AzureServiceBusResourceTests
     }
 
     [Fact]
+    public void SelectPortSkipsReservedPorts()
+    {
+        // Leave exactly one free, unreserved port in the selection range.
+        int freePort = Enumerable.Range(20000, 12768).First(port =>
+        {
+            using var probe = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Any, port);
+            try
+            {
+                probe.Start();
+                return true;
+            }
+            catch (System.Net.Sockets.SocketException)
+            {
+                return false;
+            }
+        });
+        var reserved = Enumerable.Range(20000, 12768).Where(port => port != freePort).ToHashSet();
+        var listeners = new List<System.Net.Sockets.TcpListener>();
+        try
+        {
+            Assert.Equal(freePort, FlociServiceBusEndpointAllocator.SelectPort(listeners, reserved));
+            Assert.Contains(freePort, reserved);
+        }
+        finally
+        {
+            listeners.ForEach(listener => listener.Stop());
+        }
+    }
+
+    [Fact]
     public async Task WithServiceBusDoesNotConfigureTheDataPlaneInPublishMode()
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
