@@ -95,8 +95,6 @@ public class AzureServiceBusResourceTests
             .GetValueAsync(TestContext.Current.CancellationToken);
         string? amqpTlsPort = await serviceBus.Resource.AmqpTlsEndpoint.Property(EndpointProperty.Port)
             .GetValueAsync(TestContext.Current.CancellationToken);
-        Assert.InRange(int.Parse(amqpPort!), 1, 65535);
-        Assert.InRange(int.Parse(amqpTlsPort!), 1, 65535);
         Assert.NotEqual(amqpPort, amqpTlsPort);
         foreach (var endpoint in new[] { serviceBus.Resource.AmqpEndpoint, serviceBus.Resource.AmqpTlsEndpoint })
         {
@@ -110,9 +108,18 @@ public class AzureServiceBusResourceTests
         {
             Assert.Equal(configuredAmqpPort.Value.ToString(), amqpPort);
         }
+        else
+        {
+            // Selected ports stay below every OS ephemeral range, where DCP allocates proxy ports.
+            Assert.InRange(int.Parse(amqpPort!), 20000, 32767);
+        }
         if (configuredAmqpTlsPort.HasValue)
         {
             Assert.Equal(configuredAmqpTlsPort.Value.ToString(), amqpTlsPort);
+        }
+        else
+        {
+            Assert.InRange(int.Parse(amqpTlsPort!), 20000, 32767);
         }
 
         var resource = Assert.Single(appModel.Resources.OfType<FlociAzureContainerResource>());

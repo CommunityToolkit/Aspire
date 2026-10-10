@@ -9,6 +9,14 @@ namespace CommunityToolkit.Aspire.Hosting.Floci;
 
 internal sealed class FlociServiceBusEndpointAllocator : IDistributedApplicationEventingSubscriber
 {
+    // Random host ports are taken from below every OS ephemeral range (Linux starts at 32768,
+    // Windows and macOS at 49152). An OS-assigned port is released before Docker binds it, and DCP
+    // can hand it to a project proxy in the meantime: on Windows the proxy's loopback listener then
+    // shadows Docker's wildcard bind, and on Linux Docker's bind fails.
+    private const int MinSelectedPort = 20000;
+    private const int MaxSelectedPortExclusive = 32768;
+    private const int MaxSelectionAttempts = 100;
+
     public Task SubscribeAsync(
         IDistributedApplicationEventing eventing,
         DistributedApplicationExecutionContext executionContext,
@@ -88,11 +96,48 @@ internal sealed class FlociServiceBusEndpointAllocator : IDistributedApplication
 
     private static int SelectPort(List<TcpListener> listeners)
     {
-        // Match Docker's bind address, as in the k3s allocator. This probes availability;
-        // it cannot reserve the port through Docker startup, which needs the socket released.
-        var listener = new TcpListener(IPAddress.Any, 0);
-        listeners.Add(listener);
-        listener.Start();
-        return ((IPEndPoint)listener.LocalEndpoint).Port;
+        for (int attempt = 0; attempt < MaxSelectionAttempts; attempt++)
+        {
+            int port = Random.Shared.Next(MinSelectedPort, MaxSelectedPortExclusive);
+
+            // Match Docker's bind address, as in the k3s allocator, and also probe loopback, where
+            // another process's listener would shadow Docker's wildcard bind. This probes availability;
+            // it cannot reserve the port through Docker startup, which needs the socket released.
+            if (!IsAvailable(IPAddress.Loopback, port))
+            {
+                continue;
+            }
+
+            var listener = new TcpListener(IPAddress.Any, port);
+            try
+            {
+                listener.Start();
+            }
+            catch (SocketException)
+            {
+                listener.Dispose();
+                continue;
+            }
+
+            listeners.Add(listener);
+            return port;
+        }
+
+        throw new DistributedApplicationException(
+            $"No free Service Bus host port was found in {MinSelectedPort}-{MaxSelectedPortExclusive - 1}.");
+    }
+
+    private static bool IsAvailable(IPAddress address, int port)
+    {
+        using var listener = new TcpListener(address, port);
+        try
+        {
+            listener.Start();
+            return true;
+        }
+        catch (SocketException)
+        {
+            return false;
+        }
     }
 }
