@@ -175,6 +175,44 @@ public class AzureServiceBusResourceTests
     }
 
     [Fact]
+    public void SelectPortSkipsPortsHeldOnIPv6Loopback()
+    {
+        Assert.SkipUnless(System.Net.Sockets.Socket.OSSupportsIPv6, "IPv6 is not available.");
+
+        // Hold one port on ::1 only, and leave it plus one other free port unreserved.
+        var free = Enumerable.Range(20000, 12768).Where(IsFreeEverywhere).Take(2).ToArray();
+        using var ipv6Holder = new System.Net.Sockets.TcpListener(System.Net.IPAddress.IPv6Loopback, free[0]);
+        ipv6Holder.Start();
+        var reserved = Enumerable.Range(20000, 12768).Where(port => !free.Contains(port)).ToHashSet();
+        var listeners = new List<System.Net.Sockets.TcpListener>();
+        try
+        {
+            Assert.Equal(free[1], FlociServiceBusEndpointAllocator.SelectPort(listeners, reserved));
+        }
+        finally
+        {
+            listeners.ForEach(listener => listener.Stop());
+        }
+    }
+
+    private static bool IsFreeEverywhere(int port)
+    {
+        foreach (var address in new[] { System.Net.IPAddress.Any, System.Net.IPAddress.IPv6Loopback })
+        {
+            using var probe = new System.Net.Sockets.TcpListener(address, port);
+            try
+            {
+                probe.Start();
+            }
+            catch (System.Net.Sockets.SocketException)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    [Fact]
     public async Task WithServiceBusDoesNotConfigureTheDataPlaneInPublishMode()
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();

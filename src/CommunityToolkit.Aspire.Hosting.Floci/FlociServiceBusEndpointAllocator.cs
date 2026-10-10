@@ -101,7 +101,8 @@ internal sealed class FlociServiceBusEndpointAllocator : IDistributedApplication
 
     internal static int SelectPort(List<TcpListener> listeners, HashSet<int> reservedPorts)
     {
-        // Start at a random offset so concurrent AppHosts spread out, then scan the whole range.
+        // Start at a random offset so concurrent AppHosts spread out, then scan the whole range so a
+        // free port is always found when one exists. Reserved ports are skipped without probing.
         int rangeSize = MaxSelectedPortExclusive - MinSelectedPort;
         int offset = Random.Shared.Next(rangeSize);
         for (int i = 0; i < rangeSize; i++)
@@ -112,10 +113,11 @@ internal sealed class FlociServiceBusEndpointAllocator : IDistributedApplication
                 continue;
             }
 
-            // Match Docker's bind address, as in the k3s allocator, and also probe loopback, where
+            // Match Docker's bind address, as in the k3s allocator, and also probe IPv4 and IPv6 loopback, where
             // another process's listener would shadow Docker's wildcard bind. This probes availability;
             // it cannot reserve the port through Docker startup, which needs the socket released.
-            if (!IsAvailable(IPAddress.Loopback, port))
+            if (!IsAvailable(IPAddress.Loopback, port)
+                || (Socket.OSSupportsIPv6 && !IsAvailable(IPAddress.IPv6Loopback, port)))
             {
                 continue;
             }
