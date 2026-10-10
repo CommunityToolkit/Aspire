@@ -95,8 +95,6 @@ public class AzureServiceBusResourceTests
             .GetValueAsync(TestContext.Current.CancellationToken);
         string? amqpTlsPort = await serviceBus.Resource.AmqpTlsEndpoint.Property(EndpointProperty.Port)
             .GetValueAsync(TestContext.Current.CancellationToken);
-        Assert.InRange(int.Parse(amqpPort!), 1, 65535);
-        Assert.InRange(int.Parse(amqpTlsPort!), 1, 65535);
         Assert.NotEqual(amqpPort, amqpTlsPort);
         foreach (var endpoint in new[] { serviceBus.Resource.AmqpEndpoint, serviceBus.Resource.AmqpTlsEndpoint })
         {
@@ -110,9 +108,18 @@ public class AzureServiceBusResourceTests
         {
             Assert.Equal(configuredAmqpPort.Value.ToString(), amqpPort);
         }
+        else
+        {
+            // Selected ports stay below every OS ephemeral range, where DCP allocates proxy ports.
+            Assert.InRange(int.Parse(amqpPort!), 20000, 32767);
+        }
         if (configuredAmqpTlsPort.HasValue)
         {
             Assert.Equal(configuredAmqpTlsPort.Value.ToString(), amqpTlsPort);
+        }
+        else
+        {
+            Assert.InRange(int.Parse(amqpTlsPort!), 20000, 32767);
         }
 
         var resource = Assert.Single(appModel.Resources.OfType<FlociAzureContainerResource>());
@@ -135,6 +142,74 @@ public class AzureServiceBusResourceTests
             .GetValueAsync(TestContext.Current.CancellationToken));
         Assert.Equal(amqpTlsPort, await ((IValueProvider)envVars["FLOCI_AZ_SERVICES_SERVICE_BUS_AMQP_TLS_PORT"])
             .GetValueAsync(TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public void SelectPortSkipsReservedPorts()
+    {
+        // Leave exactly one free, unreserved port in the selection range.
+        int freePort = Enumerable.Range(20000, 12768).First(port =>
+        {
+            using var probe = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Any, port);
+            try
+            {
+                probe.Start();
+                return true;
+            }
+            catch (System.Net.Sockets.SocketException)
+            {
+                return false;
+            }
+        });
+        var reserved = Enumerable.Range(20000, 12768).Where(port => port != freePort).ToHashSet();
+        var listeners = new List<System.Net.Sockets.TcpListener>();
+        try
+        {
+            Assert.Equal(freePort, FlociServiceBusEndpointAllocator.SelectPort(listeners, reserved));
+            Assert.Contains(freePort, reserved);
+        }
+        finally
+        {
+            listeners.ForEach(listener => listener.Stop());
+        }
+    }
+
+    [Fact]
+    public void SelectPortSkipsPortsHeldOnIPv6Loopback()
+    {
+        Assert.SkipUnless(System.Net.Sockets.Socket.OSSupportsIPv6, "IPv6 is not available.");
+
+        // Hold one port on ::1 only, and leave it plus one other free port unreserved.
+        var free = Enumerable.Range(20000, 12768).Where(IsFreeEverywhere).Take(2).ToArray();
+        using var ipv6Holder = new System.Net.Sockets.TcpListener(System.Net.IPAddress.IPv6Loopback, free[0]);
+        ipv6Holder.Start();
+        var reserved = Enumerable.Range(20000, 12768).Where(port => !free.Contains(port)).ToHashSet();
+        var listeners = new List<System.Net.Sockets.TcpListener>();
+        try
+        {
+            Assert.Equal(free[1], FlociServiceBusEndpointAllocator.SelectPort(listeners, reserved));
+        }
+        finally
+        {
+            listeners.ForEach(listener => listener.Stop());
+        }
+    }
+
+    private static bool IsFreeEverywhere(int port)
+    {
+        foreach (var address in new[] { System.Net.IPAddress.Any, System.Net.IPAddress.IPv6Loopback })
+        {
+            using var probe = new System.Net.Sockets.TcpListener(address, port);
+            try
+            {
+                probe.Start();
+            }
+            catch (System.Net.Sockets.SocketException)
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     [Fact]
