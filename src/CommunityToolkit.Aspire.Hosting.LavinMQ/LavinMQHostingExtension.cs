@@ -15,6 +15,34 @@ namespace Aspire.Hosting;
 public static class LavinMQHostingExtension
 {
     /// <summary>
+    /// Configures the host port that the LavinMQ AMQP endpoint is exposed on instead of using a randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for LavinMQ.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used a random port will be assigned.</param>
+    /// <returns>The resource builder for LavinMQ.</returns>
+    [AspireExport]
+    public static IResourceBuilder<LavinMQContainerResource> WithAmqpHostPort(this IResourceBuilder<LavinMQContainerResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(LavinMQContainerResource.PrimaryEndpointName, endpoint => endpoint.Port = port);
+    }
+
+    /// <summary>
+    /// Configures the host port that the LavinMQ management endpoint is exposed on instead of using a randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for LavinMQ.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used a random port will be assigned.</param>
+    /// <returns>The resource builder for LavinMQ.</returns>
+    [AspireExport]
+    public static IResourceBuilder<LavinMQContainerResource> WithManagementHostPort(this IResourceBuilder<LavinMQContainerResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(LavinMQContainerResource.ManagementEndpointName, endpoint => endpoint.Port = port);
+    }
+
+    /// <summary>
     /// Adds a LavinMQ container resource to the distributed application builder.
     /// Configures the resource with specified parameters and sets up health checks for the resource.
     /// </summary>
