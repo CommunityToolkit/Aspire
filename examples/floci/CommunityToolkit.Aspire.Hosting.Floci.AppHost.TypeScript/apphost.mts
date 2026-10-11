@@ -17,6 +17,10 @@ const serviceBus = await flociAzure.withServiceBus({ name: 'servicebus' });
 await serviceBus.amqpEndpoint();
 await serviceBus.amqpTlsEndpoint();
 await serviceBus.connectionStringExpression();
+const storage = await flociAzure.withStorage({ name: 'storage' });
+await storage.accountName();
+await storage.serviceEndpoint();
+await storage.connectionStringExpression();
 
 // A single Floci UI console browses all three clouds — flociAws.withFlociUI() creates the
 // console wired to AWS, then withCloudReference* attaches the Azure and GCP resources to it.
@@ -38,9 +42,11 @@ const apiService = await builder.addProject("floci-api", apiServiceProjectPath)
     .withFlociAzureReference(flociAzure)
     .withFlociGcpReference(flociGcp)
     .withFlociAzureServiceBusReference(serviceBus)
+    .withReference(storage)
     .waitFor(flociAws)
     .waitFor(flociAzure)
-    .waitFor(flociGcp);
+    .waitFor(flociGcp)
+    .waitFor(storage);
 
 // Resolve the returned child handle from a real container and require an AMQP response.
 await builder.addContainer('servicebus-probe', 'node:22-alpine')

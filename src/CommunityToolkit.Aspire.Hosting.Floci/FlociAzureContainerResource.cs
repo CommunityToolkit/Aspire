@@ -10,9 +10,10 @@ public class FlociAzureContainerResource(string name) : FlociContainerResource(n
     internal const int EndpointPort = 4577;
     internal const string HostnameEnvVar = "FLOCI_AZ_HOSTNAME";
 
-    // Well-known Azurite-compatible dev credentials that floci-az accepts by default (no auth enforced).
+    // Well-known Azurite-compatible dev credentials. floci-az validates SharedKey signatures against this
+    // exact key, so it must match the emulator's default byte for byte.
     internal const string DefaultAccountName = "devstoreaccount1";
-    internal const string DefaultAccountKey = "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMh0==";
+    internal const string DefaultAccountKey = "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==";
 
     internal override void ApplyUIEnvironment(EnvironmentCallbackContext context)
     {

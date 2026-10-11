@@ -186,6 +186,89 @@ public class WithReferenceTests
         Assert.Throws<ArgumentException>(() => floci.WithCosmos(GetInvalidResourceName()));
     }
 
+    [Fact]
+    public async Task WithStorageCreatesChildResourceUsedByStandardWithReference()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+
+        var floci = builder.AddFlociAzure("floci-az");
+        var storage = floci.WithStorage();
+        var worker = builder.AddExecutable("worker", "dotnet", ".").WithReference(storage);
+
+        var envVars = await ResolveEnvironmentAsync(builder, worker);
+
+        Assert.Equal("storage", storage.Resource.Name);
+        Assert.Same(floci.Resource, storage.Resource.Parent);
+        Assert.Contains(
+            storage.Resource.Annotations.OfType<ResourceRelationshipAnnotation>(),
+            annotation => annotation.Type == "Parent" && ReferenceEquals(annotation.Resource, floci.Resource));
+
+        var connectionStringReference = Assert.IsType<ConnectionStringReference>(envVars["ConnectionStrings__storage"]);
+        Assert.Same(storage.Resource, connectionStringReference.Resource);
+        var connectionString = storage.Resource.ConnectionStringExpression.ValueExpression;
+        Assert.Contains("DefaultEndpointsProtocol={floci-az.bindings.azure.scheme};", connectionString);
+        Assert.Contains($"AccountName={FlociAzureContainerResource.DefaultAccountName};", connectionString);
+        Assert.Contains($"AccountKey={FlociAzureContainerResource.DefaultAccountKey};", connectionString);
+
+        // The Storage SDKs only read the account name from the path when the host is an IP address.
+        var serviceEndpoint =
+            $"{{floci-az.bindings.azure.scheme}}://{{floci-az.bindings.azure.host}}:{{floci-az.bindings.azure.port}}/{FlociAzureContainerResource.DefaultAccountName}";
+        Assert.Equal(serviceEndpoint, storage.Resource.ServiceEndpoint.ValueExpression);
+        Assert.Contains(
+            storage.Resource.ServiceEndpoint.ValueProviders.OfType<EndpointReferenceExpression>(),
+            expression => expression.Property == EndpointProperty.IPV4Host);
+        Assert.Contains($"BlobEndpoint={serviceEndpoint};", connectionString);
+        Assert.Contains($"QueueEndpoint={serviceEndpoint};", connectionString);
+        Assert.Contains($"TableEndpoint={serviceEndpoint};", connectionString);
+    }
+
+    [Fact]
+    public void WithStorageReportsTheParentEmulatorHealth()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+
+        var floci = builder.AddFlociAzure("floci-az");
+        var storage = floci.WithStorage();
+
+        Assert.Empty(storage.Resource.Annotations.OfType<HealthCheckAnnotation>());
+        Assert.True(storage.Resource.TryGetAnnotationsIncludingAncestorsOfType<HealthCheckAnnotation>(out var healthChecks));
+        Assert.Equal(
+            floci.Resource.Annotations.OfType<HealthCheckAnnotation>().Select(annotation => annotation.Key),
+            healthChecks.Select(annotation => annotation.Key));
+    }
+
+    [Fact]
+    public async Task WithStorageHonorsCustomResourceName()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+
+        var floci = builder.AddFlociAzure("floci-az");
+        var storage = floci.WithStorage(name: "blobs");
+        var worker = builder.AddExecutable("worker", "dotnet", ".").WithReference(storage);
+
+        var envVars = await ResolveEnvironmentAsync(builder, worker);
+
+        var connectionStringReference = Assert.IsType<ConnectionStringReference>(envVars["ConnectionStrings__blobs"]);
+        Assert.Same(storage.Resource, connectionStringReference.Resource);
+    }
+
+    [Fact]
+    public void WithStorageBuilderShouldNotBeNull()
+    {
+        IResourceBuilder<FlociAzureContainerResource> builder = null!;
+
+        Assert.Throws<ArgumentNullException>(() => builder.WithStorage());
+    }
+
+    [Fact]
+    public void WithStorageResourceNameShouldNotBeEmpty()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+        var floci = builder.AddFlociAzure("floci-az");
+
+        Assert.Throws<ArgumentException>(() => floci.WithStorage(GetInvalidResourceName()));
+    }
+
     private static string GetInvalidResourceName() => string.Empty;
 
     private static async Task<Dictionary<string, object>> ResolveEnvironmentAsync<T>(

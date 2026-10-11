@@ -107,6 +107,40 @@ builder.AddAzureCosmosClient("cosmos");
 
 The Cosmos child resource is additive, so combine `WithReference(cosmos)` with `WithReference(azure)` when you also want the base endpoint / storage variables. (Talking to the floci Cosmos emulator over HTTP from the .NET SDK still needs the usual client-side settings — Gateway mode, and HTTP/1.1 — which are the app's concern, as with any local Cosmos emulator.)
 
+For **Storage** (Blob, Queue and Table), use `WithStorage()` / `withStorage()` to model the storage APIs as a child resource, then reference it through Aspire's standard connection-string flow:
+
+```csharp
+var azure = builder.AddFlociAzure("floci-az");
+var storage = azure.WithStorage();
+
+builder.AddProject<MyApi>("api")
+    .WithReference(storage)  // ConnectionStrings__storage
+    .WaitFor(storage);
+```
+
+```typescript
+const azure = await builder.addFlociAzure('floci-az');
+const storage = await azure.withStorage();
+
+await builder.addProject('api', '../MyApi/MyApi.csproj')
+    .withReference(storage)
+    .waitFor(storage);
+```
+
+App side, this is the standard Aspire flow:
+
+```csharp
+builder.AddAzureBlobServiceClient("storage");
+```
+
+| Variable | Value |
+|---|---|
+| `ConnectionStrings__{resourceName}` (default `storage`) | `DefaultEndpointsProtocol={scheme};AccountName=devstoreaccount1;AccountKey=…;BlobEndpoint={scheme}://{ip}:{port}/devstoreaccount1;QueueEndpoint=…;TableEndpoint=…;` |
+
+The endpoints use the emulator's IPv4 address (`127.0.0.1` for host processes) instead of `localhost`, because the Azure Storage SDKs only read the account name from the URL path when the host is an IP address. The storage resource has no health check of its own: it reports the Floci Azure container's health, so `WaitFor(storage)` waits until the emulator is ready.
+
+In an AppHost that also publishes, add Aspire's `AddAzureStorage` resource in the publish branch and reference the Floci storage child in the run branch. Pointing an `AzureStorageResource` at Floci with a connection-string redirect instead leaves Aspire's Azure Storage health checks waiting for a connection string that is never provisioned, so those resources stay `Unhealthy`.
+
 For **Service Bus**, use `WithServiceBus()` / `withServiceBus()` to model the AMQP data plane as a child resource, then reference it with `WithReference()` / `withFlociAzureServiceBusReference()`:
 
 ```csharp
