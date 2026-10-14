@@ -1,0 +1,19 @@
+<Project Sdk="Aspire.AppHost.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <UserSecretsId>e1c0f8c6-8b6b-4e42-84f3-59c0135a60ce</UserSecretsId>
+    <NoWarn>$(NoWarn);ASPIRECOMPUTE001;ASPIREPIPELINES001;ASPIREAZURE001;ASPIREPIPELINES003</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.Foundry" />
+    <PackageReference Include="Aspire.Hosting.JavaScript" />
+    <PackageReference Include="Aspire.Hosting.Python" />
+    <ProjectReference Include="../../../src/CommunityToolkit.Aspire.Hosting.Agents/CommunityToolkit.Aspire.Hosting.Agents.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="..\AgentEnvDump\AgentEnvDump.csproj" />
+    <ProjectReference Include="..\McpAgent\McpAgent.csproj" />
+    <ProjectReference Include="..\ResponsesAgent\ResponsesAgent.csproj" />
+  </ItemGroup>
+
+</Project>

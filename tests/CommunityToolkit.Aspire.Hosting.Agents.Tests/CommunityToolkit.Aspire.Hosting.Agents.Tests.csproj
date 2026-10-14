@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Sdk Name="Aspire.AppHost.Sdk" />
+  <PropertyGroup>
+    <IsAspireHost>true</IsAspireHost>
+    <!-- Resolve DCP from packages, but run xUnit directly instead of the SDK's Aspire CLI launch hook. -->
+    <AspireUseCliBundle>false</AspireUseCliBundle>
+    <NoWarn>$(NoWarn);ASPIRE010;ASPIREAGENTS001;ASPIREMCP001;ASPIREINTERACTION001</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Verify.XunitV3" />
+    <Using Include="Aspire.Hosting" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/CommunityToolkit.Aspire.Hosting.Agents/CommunityToolkit.Aspire.Hosting.Agents.csproj" IsAspireProjectResource="false" />
+  </ItemGroup>
+</Project>
