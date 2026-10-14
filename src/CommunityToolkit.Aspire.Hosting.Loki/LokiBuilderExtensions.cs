@@ -39,7 +39,8 @@ public static class LokiBuilderExtensions
 
         if (settings.EnableGrpcEndpoint)
         {
-            resourceBuilder.WithEndpoint(port: settings.GrpcPort, targetPort: 9096, name: LokiResource.GrpcEndpointName, scheme: "tcp");
+            resourceBuilder.WithEndpoint(port: settings.GrpcPort, targetPort: 9096, name: LokiResource.GrpcEndpointName, scheme: "http")
+                .WithEndpoint(LokiResource.GrpcEndpointName, endpoint => endpoint.Transport = "http2");
         }
 
         if (!settings.DisableHealthcheck)

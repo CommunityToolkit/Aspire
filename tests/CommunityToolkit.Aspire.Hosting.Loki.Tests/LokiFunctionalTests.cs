@@ -92,7 +92,14 @@ public class LokiFunctionalTests(ITestOutputHelper testOutputHelper)
             }
             if (bindMountPath is not null)
             {
-                Directory.Delete(bindMountPath, recursive: true);
+                try
+                {
+                    Directory.Delete(bindMountPath, recursive: true);
+                }
+                catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+                {
+                    testOutputHelper.WriteLine($"Could not clean up bind mount '{bindMountPath}': {exception.Message}");
+                }
             }
         }
     }

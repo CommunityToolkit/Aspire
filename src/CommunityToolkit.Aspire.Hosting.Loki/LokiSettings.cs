@@ -1,4 +1,5 @@
 using Aspire.Hosting.ApplicationModel;
+using CommunityToolkit.Aspire.Hosting.Loki;
 
 #pragma warning disable ASPIREATS001
 
@@ -13,17 +14,17 @@ public class LokiSettings
     /// <summary>
     /// Gets or sets the tag to use for the Loki image.
     /// </summary>
-    public string LokiTag { get; set; } = "3.6";
+    public string LokiTag { get; set; } = LokiContainerImageTags.Tag;
 
     /// <summary>
     /// Gets or sets the container registry for the image.
     /// </summary>
-    public string Registry { get; set; } = "docker.io";
+    public string Registry { get; set; } = LokiContainerImageTags.Registry;
 
     /// <summary>
     /// Gets or sets the Loki image path.
     /// </summary>
-    public string Image { get; set; } = "grafana/loki";
+    public string Image { get; set; } = LokiContainerImageTags.Image;
 
     /// <summary>
     /// Gets the full Loki image reference without the tag.

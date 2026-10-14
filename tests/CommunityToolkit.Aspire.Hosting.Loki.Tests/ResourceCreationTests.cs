@@ -40,9 +40,9 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
         Assert.Same(loki.Resource, Assert.Single(app.Services.GetRequiredService<DistributedApplicationModel>().Resources));
         Assert.Equal("loki", loki.Resource.Name);
         var image = Assert.Single(loki.Resource.Annotations.OfType<ContainerImageAnnotation>());
-        Assert.Equal("docker.io", image.Registry);
-        Assert.Equal("grafana/loki", image.Image);
-        Assert.Equal("3.6", image.Tag);
+        Assert.Equal(LokiContainerImageTags.Registry, image.Registry);
+        Assert.Equal(LokiContainerImageTags.Image, image.Image);
+        Assert.Equal(LokiContainerImageTags.Tag, image.Tag);
         Assert.Equal(2, loki.Resource.Annotations.OfType<EndpointAnnotation>().Count());
 
         var http = loki.Resource.Annotations.OfType<EndpointAnnotation>().Single(endpoint => endpoint.Name == "http");
@@ -52,7 +52,8 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
         Assert.True(http.IsProxied);
 
         var grpc = loki.Resource.Annotations.OfType<EndpointAnnotation>().Single(endpoint => endpoint.Name == "grpc");
-        Assert.Equal("tcp", grpc.UriScheme);
+        Assert.Equal("http", grpc.UriScheme);
+        Assert.Equal("http2", grpc.Transport);
         Assert.Equal(9096, grpc.TargetPort);
         Assert.Equal(grpcPort, grpc.Port);
         Assert.True(grpc.IsProxied);
@@ -92,11 +93,13 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
     {
         var builder = DistributedApplication.CreateBuilder();
         var loki = builder.AddLoki("loki")
-            .WithEndpoint("http", endpoint => endpoint.AllocatedEndpoint = new AllocatedEndpoint(endpoint, "localhost", 13100));
+            .WithEndpoint("http", endpoint => endpoint.AllocatedEndpoint = new AllocatedEndpoint(endpoint, "localhost", 13100))
+            .WithEndpoint("grpc", endpoint => endpoint.AllocatedEndpoint = new AllocatedEndpoint(endpoint, "localhost", 19096));
         using var app = builder.Build();
 
         Assert.Equal("http", loki.Resource.PrimaryEndpoint.EndpointName);
         Assert.Equal("grpc", loki.Resource.GrpcEndpoint.EndpointName);
+        Assert.Equal("http://localhost:19096", loki.Resource.GrpcEndpoint.Url);
         Assert.Equal("http://localhost:13100", await loki.Resource.ConnectionStringExpression.GetValueAsync(default));
         Assert.Equal("{loki.bindings.http.url}", loki.Resource.ConnectionStringExpression.ValueExpression);
 
@@ -215,13 +218,14 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
         using var manifest = JsonDocument.Parse(output.ToArray());
         var resource = manifest.RootElement;
         Assert.Equal("container.v0", resource.GetProperty("type").GetString());
-        Assert.Equal("docker.io/grafana/loki:3.6", resource.GetProperty("image").GetString());
+        Assert.Equal($"{LokiContainerImageTags.Registry}/{LokiContainerImageTags.Image}:{LokiContainerImageTags.Tag}", resource.GetProperty("image").GetString());
         Assert.Equal("{loki.bindings.http.url}", resource.GetProperty("connectionString").GetString());
         var bindings = resource.GetProperty("bindings");
         Assert.Equal(3100, bindings.GetProperty("http").GetProperty("targetPort").GetInt32());
         Assert.Equal("http", bindings.GetProperty("http").GetProperty("scheme").GetString());
         Assert.Equal(9096, bindings.GetProperty("grpc").GetProperty("targetPort").GetInt32());
-        Assert.Equal("tcp", bindings.GetProperty("grpc").GetProperty("scheme").GetString());
+        Assert.Equal("http", bindings.GetProperty("grpc").GetProperty("scheme").GetString());
+        Assert.Equal("http2", bindings.GetProperty("grpc").GetProperty("transport").GetString());
         if (persistData)
         {
             var volume = Assert.Single(resource.GetProperty("volumes").EnumerateArray());

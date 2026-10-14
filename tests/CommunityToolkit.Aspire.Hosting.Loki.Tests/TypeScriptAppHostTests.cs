@@ -12,7 +12,7 @@ public class TypeScriptAppHostTests
             appHostProject: "CommunityToolkit.Aspire.Hosting.Loki.AppHost.TypeScript",
             packageName: "CommunityToolkit.Aspire.Hosting.Loki",
             exampleName: "loki",
-            waitForResources: ["loki"],
+            waitForResources: ["loki", "loki-mounted"],
             cancellationToken: TestContext.Current.CancellationToken);
     }
 }
