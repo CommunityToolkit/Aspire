@@ -607,13 +607,14 @@ public class WithMcpToolCommandsTests
     public async Task WithMcpToolCommands_InvokeCommandRejectsMalformedResponseAndPreservesBody(string responseBody)
     {
         using var appBuilder = TestDistributedApplicationBuilder.Create();
-        var invalidResponse = new HttpResponseMessage(HttpStatusCode.OK)
-        {
-            Content = new StringContent(responseBody)
-        };
+        HttpResponseMessage? invalidResponse = null;
         var handler = new McpCommandHandler
         {
-            OverrideResponse = (method, _) => Task.FromResult(method == "tools/call" ? invalidResponse : null)
+            ToolResponse = payload =>
+            {
+                responseBody = responseBody.Replace("tool-call", payload["id"]!.GetValue<string>(), StringComparison.Ordinal);
+                return invalidResponse = new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(responseBody) };
+            }
         };
         appBuilder.Services.AddHttpClient(string.Empty).ConfigurePrimaryHttpMessageHandler(() => handler);
         var container = AddMcpContainer(appBuilder);
@@ -630,6 +631,7 @@ public class WithMcpToolCommandsTests
         Assert.Equal(responseBody, result.Data.Value);
         Assert.Equal(CommandResultFormat.Text, result.Data.Format);
         Assert.Equal(["session-1"], handler.TerminatedSessions);
+        Assert.NotNull(invalidResponse);
         await Assert.ThrowsAsync<ObjectDisposedException>(invalidResponse.Content.ReadAsStringAsync);
     }
 
@@ -639,15 +641,21 @@ public class WithMcpToolCommandsTests
     public async Task WithMcpToolCommands_InvokeCommandAcceptsEmptyContentArray(bool streaming)
     {
         using var appBuilder = TestDistributedApplicationBuilder.Create();
-        var payload = """{"jsonrpc":"2.0","id":"tool-call","result":{"content":[]}}""";
         var handler = new McpCommandHandler
         {
-            OverrideResponse = (method, _) => Task.FromResult(method == "tools/call"
-                ? new HttpResponseMessage(HttpStatusCode.OK)
+            ToolResponse = request =>
+            {
+                var payload = new JsonObject
+                {
+                    ["jsonrpc"] = "2.0",
+                    ["id"] = request["id"]!.DeepClone(),
+                    ["result"] = new JsonObject { ["content"] = new JsonArray() }
+                }.ToJsonString();
+                return new HttpResponseMessage(HttpStatusCode.OK)
                 {
                     Content = new StringContent(streaming ? $"data: {payload}\n\n" : payload)
-                }
-                : null)
+                };
+            }
         };
         appBuilder.Services.AddHttpClient(string.Empty).ConfigurePrimaryHttpMessageHandler(() => handler);
         var container = AddMcpContainer(appBuilder);
@@ -722,6 +730,164 @@ public class WithMcpToolCommandsTests
         var arguments = Assert.IsType<JsonObject>(handler.ToolCallRequest?["params"]?["arguments"]);
         Assert.Equal(["use_cache"], arguments.Select(argument => argument.Key));
         Assert.True(arguments["use_cache"]?.GetValue<bool>() is true);
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task WithMcpToolCommands_RejectsMissingOrMismatchedToolResponseId(bool streaming, bool missingId)
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var handler = new McpCommandHandler
+        {
+            ToolResponse = _ =>
+            {
+                var payload = new JsonObject
+                {
+                    ["jsonrpc"] = "2.0",
+                    ["result"] = new JsonObject { ["content"] = new JsonArray() }
+                };
+                if (!missingId)
+                {
+                    payload["id"] = "another-request";
+                }
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(streaming ? $"data: {payload.ToJsonString()}\n\n" : payload.ToJsonString())
+                };
+            }
+        };
+        builder.Services.AddHttpClient(string.Empty).ConfigurePrimaryHttpMessageHandler(() => handler);
+        var resource = AddMcpContainer(builder);
+        using var app = builder.Build();
+        await app.StartAsync().DefaultTimeout();
+        await MoveResourceToRunningStateAsync(app, resource.Resource);
+        var result = await app.ResourceCommands.ExecuteCommandAsync(
+            resource.Resource, "app-mcp-call-tool", CreateMcpArguments("get_weather", "{}")).DefaultTimeout();
+        Assert.False(result.Success);
+        Assert.Equal(streaming
+            ? "MCP server returned an empty or invalid JSON-RPC tool response."
+            : "MCP server returned a JSON-RPC tool response with a missing or unexpected id.", result.Message);
+        Assert.Equal(["session-1"], handler.TerminatedSessions);
+    }
+
+    [Fact]
+    public async Task WithMcpToolCommands_SseSelectsMatchingToolResponse()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var handler = new McpCommandHandler
+        {
+            ToolResponse = request =>
+            {
+                var response = new JsonObject
+                {
+                    ["jsonrpc"] = "2.0",
+                    ["id"] = request["id"]!.DeepClone(),
+                    ["result"] = new JsonObject { ["content"] = new JsonArray() }
+                };
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(
+                        $"data: {{\"jsonrpc\":\"2.0\",\"id\":\"another-request\",\"error\":{{\"message\":\"Unrelated error\"}}}}\n\n" +
+                        $"data: {response.ToJsonString()}\n\n")
+                };
+            }
+        };
+        builder.Services.AddHttpClient(string.Empty).ConfigurePrimaryHttpMessageHandler(() => handler);
+        var resource = AddMcpContainer(builder);
+        using var app = builder.Build();
+        await app.StartAsync().DefaultTimeout();
+        await MoveResourceToRunningStateAsync(app, resource.Resource);
+        var result = await app.ResourceCommands.ExecuteCommandAsync(
+            resource.Resource, "app-mcp-call-tool", CreateMcpArguments("get_weather", "{}")).DefaultTimeout();
+        Assert.True(result.Success);
+        Assert.DoesNotContain("Unrelated error", result.Data?.Value);
+        Assert.Equal(["session-1"], handler.TerminatedSessions);
+    }
+
+    [Theory]
+    [InlineData("tool")]
+    [InlineData("parameters")]
+    [InlineData("raw")]
+    public async Task WithMcpToolCommands_DialogCancellationReturnsCanceledAndTerminatesSession(string stage)
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var interactionService = new TestInteractionService();
+        builder.Services.AddSingleton<IInteractionService>(interactionService);
+        var handler = new McpCommandHandler
+        {
+            ToolSchema = stage == "raw" ? new JsonObject { ["type"] = "object" } : null
+        };
+        builder.Services.AddHttpClient(string.Empty).ConfigurePrimaryHttpMessageHandler(() => handler);
+        var resource = AddMcpContainer(builder);
+        using var app = builder.Build();
+        await app.StartAsync().DefaultTimeout();
+        await MoveResourceToRunningStateAsync(app, resource.Resource);
+        var commandTask = app.ResourceCommands.ExecuteCommandAsync(resource.Resource, "app-mcp-call-tool-interactive");
+        var interaction = await ReadInteractionAsync(interactionService, i => i.Title == "MCP Tool");
+        if (stage != "tool")
+        {
+            var tool = Assert.Single(interaction.Inputs);
+            tool.Value = "get_weather";
+            interaction.CompletionTcs.SetResult(InteractionResult.Ok(tool));
+            interaction = await ReadInteractionAsync(interactionService, i => i.Title == "Invoke get_weather");
+        }
+        Assert.False(interaction.CancellationToken.IsCancellationRequested);
+        interaction.CompletionTcs.SetResult(interaction.Type == InteractionType.Inputs
+            ? (object)InteractionResult.Cancel<InteractionInputCollection>()
+            : InteractionResult.Cancel<InteractionInput>());
+        var result = await commandTask.DefaultTimeout();
+        Assert.False(result.Success);
+        Assert.Equal(CommandResults.Canceled().Message, result.Message);
+        Assert.Null(handler.ToolCallRequest);
+        Assert.Equal(["session-1"], handler.TerminatedSessions);
+    }
+
+    [Theory]
+    [InlineData("""{"type":["integer","null"]}""", "42")]
+    [InlineData("""{"type":["integer","null"]}""", "null")]
+    [InlineData("""{"anyOf":[{"type":"integer"},{"type":"null"}]}""", "42")]
+    [InlineData("""{"type":"integer","anyOf":[{"minimum":0}]}""", "42")]
+    [InlineData("""{"$ref":"#/$defs/value"}""", "42")]
+    [InlineData("""{"oneOf":[{"type":"integer"},{"type":"null"}]}""", "null")]
+    [InlineData("""{"allOf":[{"type":"integer"}]}""", "42")]
+    public async Task WithMcpToolCommands_UnsupportedParameterSchemasUseRawJson(string parameterSchema, string value)
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var interactionService = new TestInteractionService();
+        builder.Services.AddSingleton<IInteractionService>(interactionService);
+        var handler = new McpCommandHandler
+        {
+            ToolSchema = new JsonObject
+            {
+                ["type"] = "object",
+                ["properties"] = new JsonObject { ["value"] = JsonNode.Parse(parameterSchema) },
+                ["required"] = new JsonArray("value"),
+                ["$defs"] = new JsonObject { ["value"] = new JsonObject { ["type"] = "integer" } }
+            }
+        };
+        builder.Services.AddHttpClient(string.Empty).ConfigurePrimaryHttpMessageHandler(() => handler);
+        var resource = AddMcpContainer(builder);
+        using var app = builder.Build();
+        await app.StartAsync().DefaultTimeout();
+        await MoveResourceToRunningStateAsync(app, resource.Resource);
+        var commandTask = app.ResourceCommands.ExecuteCommandAsync(resource.Resource, "app-mcp-call-tool-interactive");
+        var toolInteraction = await ReadInteractionAsync(interactionService, i => i.Title == "MCP Tool");
+        var tool = Assert.Single(toolInteraction.Inputs);
+        tool.Value = "get_weather";
+        toolInteraction.CompletionTcs.SetResult(InteractionResult.Ok(tool));
+        var argumentsInteraction = await ReadInteractionAsync(interactionService, i => i.Title == "Invoke get_weather");
+        Assert.Equal(InteractionType.Input, argumentsInteraction.Type);
+        var input = Assert.Single(argumentsInteraction.Inputs);
+        Assert.Equal("arguments", input.Name);
+        Assert.IsType<JsonObject>(JsonNode.Parse(input.Value!));
+        input.Value = $$"""{"value":{{value}}}""";
+        argumentsInteraction.CompletionTcs.SetResult(InteractionResult.Ok(input));
+        var result = await commandTask.DefaultTimeout();
+        Assert.True(result.Success);
+        Assert.True(JsonNode.DeepEquals(JsonNode.Parse(input.Value), handler.ToolCallRequest?["params"]?["arguments"]));
     }
 
     private static async Task<InteractionData> ReadInteractionAsync(
@@ -1113,6 +1279,10 @@ public class WithMcpToolCommandsTests
 
         public Func<string?, CancellationToken, Task<HttpResponseMessage?>>? OverrideResponse { get; init; }
 
+        public Func<JsonObject, HttpResponseMessage>? ToolResponse { get; init; }
+
+        public JsonObject? ToolSchema { get; init; }
+
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             Assert.Equal(ExpectedUrl, request.RequestUri?.ToString());
@@ -1146,7 +1316,7 @@ public class WithMcpToolCommandsTests
                 "DELETE" => new HttpResponseMessage(HttpStatusCode.NoContent),
                 "notifications/initialized" => new HttpResponseMessage(HttpStatusCode.Accepted),
                 "tools/list" => HandleToolsList(payload!),
-                "tools/call" => HandleToolCall(payload!, request),
+                "tools/call" => ToolResponse?.Invoke(payload!) ?? HandleToolCall(payload!, request),
                 _ => new HttpResponseMessage(HttpStatusCode.BadRequest)
                 {
                     Content = new StringContent($$"""{"error":"Unexpected method '{{method}}'."}""", Encoding.UTF8, "application/json")
@@ -1198,7 +1368,7 @@ public class WithMcpToolCommandsTests
             {
                 ["name"] = name,
                 ["description"] = $"Gets data from {name}.",
-                ["inputSchema"] = new JsonObject
+                ["inputSchema"] = ToolSchema?.DeepClone() ?? new JsonObject
                 {
                     ["type"] = "object",
                     ["properties"] = properties

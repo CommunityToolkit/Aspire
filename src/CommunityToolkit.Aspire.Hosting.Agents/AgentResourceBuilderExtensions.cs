@@ -3,6 +3,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Net.Http.Json;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -65,7 +66,8 @@ public static class AgentResourceBuilderExtensions
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/> for chaining.</returns>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="protocol"/> is not a defined <see cref="AgentProtocol"/> value.</exception>
     /// <remarks>
-    /// Call this method once for each protocol exposed by the resource. Responses and ACP agent names are protocol
+    /// Call this method once for each protocol/path pair exposed by the resource. Repeated pairs are ignored.
+    /// Responses and ACP agent names are protocol
     /// identifiers and do not need to match the Aspire resource name.
     /// <code>
     /// var agent = builder.AddProject&lt;Projects.Agent&gt;("agent-service")
@@ -74,7 +76,8 @@ public static class AgentResourceBuilderExtensions
     /// </code>
     /// </remarks>
     /// <ats-remarks>
-    /// Call this method once for each protocol exposed by the resource. Responses and ACP agent names are protocol
+    /// Call this method once for each protocol/path pair exposed by the resource. Repeated pairs are ignored.
+    /// Responses and ACP agent names are protocol
     /// identifiers and do not need to match the Aspire resource name.
     /// </ats-remarks>
     [AspireExport]
@@ -219,6 +222,18 @@ public static class AgentResourceBuilderExtensions
         }
 
         var normalizedPath = NormalizePath(agentCustomPath);
+        var effectivePath = normalizedPath ?? GetDefaultProtocolPath(protocol);
+        var existingAnnotations = builder.Resource.Annotations.OfType<AgentResourceAnnotation>().ToArray();
+        if (existingAnnotations.Any(a => a.Protocol == protocol &&
+            string.Equals(a.CustomPath ?? GetDefaultProtocolPath(protocol), effectivePath, StringComparison.Ordinal)))
+        {
+            return builder;
+        }
+
+        // Preserve the first command's identity; additional paths need distinct, stable identities.
+        var commandSuffix = existingAnnotations.Any(a => a.Protocol == protocol)
+            ? $"-{Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(effectivePath))).ToLowerInvariant()}"
+            : string.Empty;
         var annotation = new AgentResourceAnnotation(protocol, normalizedPath, invocationMode, agentName);
 
         builder.WithAnnotation(annotation);
@@ -230,22 +245,22 @@ public static class AgentResourceBuilderExtensions
 
         if (protocol is AgentProtocol.A2A)
         {
-            ConfigureA2A(builder, normalizedPath ?? DefaultA2AAgentCardPath, invocationMode, ShouldHighlightCommand);
+            ConfigureA2A(builder, effectivePath, invocationMode, commandSuffix, ShouldHighlightCommand);
         }
 
         if (protocol is AgentProtocol.Responses)
         {
-            ConfigureResponses(builder, normalizedPath ?? DefaultResponsesPath, agentName, ShouldHighlightCommand);
+            ConfigureResponses(builder, effectivePath, agentName, commandSuffix, ShouldHighlightCommand);
         }
 
         if (protocol is AgentProtocol.AgUi)
         {
-            ConfigureAgUi(builder, normalizedPath ?? DefaultAgUiPath, ShouldHighlightCommand);
+            ConfigureAgUi(builder, effectivePath, commandSuffix, ShouldHighlightCommand);
         }
 
         if (protocol is AgentProtocol.Acp)
         {
-            ConfigureAcp(builder, normalizedPath ?? DefaultAcpPath, agentName, ShouldHighlightCommand);
+            ConfigureAcp(builder, effectivePath, agentName, commandSuffix, ShouldHighlightCommand);
         }
 
         return builder;
@@ -261,6 +276,15 @@ public static class AgentResourceBuilderExtensions
             return true;
         }
     }
+
+    private static string GetDefaultProtocolPath(AgentProtocol protocol) => protocol switch
+    {
+        AgentProtocol.A2A => DefaultA2AAgentCardPath,
+        AgentProtocol.Responses => DefaultResponsesPath,
+        AgentProtocol.AgUi => DefaultAgUiPath,
+        AgentProtocol.Acp => DefaultAcpPath,
+        _ => throw new ArgumentOutOfRangeException(nameof(protocol))
+    };
 
     private static EndpointReference GetDefaultAgentEndpoint(IResourceWithEndpoints source, NetworkIdentifier network)
     {
@@ -280,6 +304,7 @@ public static class AgentResourceBuilderExtensions
         IResourceBuilder<T> builder,
         string agentCardPath,
         A2AInvocationMode invocationMode,
+        string commandSuffix,
         Func<bool> shouldHighlightCommand)
         where T : IResourceWithEndpoints, IResourceWithEnvironment, IComputeResource
     {
@@ -297,7 +322,7 @@ public static class AgentResourceBuilderExtensions
 
         AddHttpCommandIfMissing(
             builder,
-            commandName: $"{builder.Resource.Name}-a2a-send-message",
+            commandName: $"{builder.Resource.Name}-a2a-send-message{commandSuffix}",
             path: agentCardPath,
             displayName: "Invoke A2A",
             commandOptions: new()
@@ -316,6 +341,7 @@ public static class AgentResourceBuilderExtensions
         IResourceBuilder<T> builder,
         string responsesPath,
         string? agentName,
+        string commandSuffix,
         Func<bool> shouldHighlightCommand)
         where T : IResourceWithEndpoints, IResourceWithEnvironment, IComputeResource
     {
@@ -323,7 +349,7 @@ public static class AgentResourceBuilderExtensions
 
         AddHttpCommandIfMissing(
             builder,
-            commandName: $"{builder.Resource.Name}-responses-send-message",
+            commandName: $"{builder.Resource.Name}-responses-send-message{commandSuffix}",
             path: responsesPath,
             displayName: "Invoke Responses",
             commandOptions: new()
@@ -338,14 +364,14 @@ public static class AgentResourceBuilderExtensions
             });
     }
 
-    private static void ConfigureAgUi<T>(IResourceBuilder<T> builder, string agUiPath, Func<bool> shouldHighlightCommand)
+    private static void ConfigureAgUi<T>(IResourceBuilder<T> builder, string agUiPath, string commandSuffix, Func<bool> shouldHighlightCommand)
         where T : IResourceWithEndpoints
     {
         AddProtocolEndpointUrl(builder, agUiPath, "AG-UI Endpoint");
 
         AddHttpCommandIfMissing(
             builder,
-            commandName: $"{builder.Resource.Name}-ag-ui-send-message",
+            commandName: $"{builder.Resource.Name}-ag-ui-send-message{commandSuffix}",
             path: agUiPath,
             displayName: "Invoke AG-UI",
             commandOptions: new()
@@ -364,6 +390,7 @@ public static class AgentResourceBuilderExtensions
         IResourceBuilder<T> builder,
         string acpPath,
         string? agentName,
+        string commandSuffix,
         Func<bool> shouldHighlightCommand)
         where T : IResourceWithEndpoints
     {
@@ -371,7 +398,7 @@ public static class AgentResourceBuilderExtensions
 
         AddHttpCommandIfMissing(
             builder,
-            commandName: $"{builder.Resource.Name}-acp-run",
+            commandName: $"{builder.Resource.Name}-acp-run{commandSuffix}",
             path: acpPath,
             displayName: "Invoke ACP",
             commandOptions: new()
@@ -650,6 +677,10 @@ public static class AgentResourceBuilderExtensions
             {
                 ["threadId"] = Guid.NewGuid().ToString("N"),
                 ["runId"] = Guid.NewGuid().ToString("N"),
+                ["state"] = new JsonObject(),
+                ["tools"] = new JsonArray(),
+                ["context"] = new JsonArray(),
+                ["forwardedProps"] = new JsonObject(),
                 ["messages"] = new JsonArray
                 {
                     new JsonObject

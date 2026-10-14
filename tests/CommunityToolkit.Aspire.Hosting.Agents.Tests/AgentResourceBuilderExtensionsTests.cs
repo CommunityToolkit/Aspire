@@ -802,6 +802,60 @@ public class AgentResourceBuilderExtensionsTests
         var result = await app.ResourceCommands.ExecuteCommandAsync(agent.Resource, "agent-ag-ui-send-message", CreateMessageArgument("hello")).DefaultTimeout();
 
         Assert.True(result.Success);
+        var body = Assert.IsType<JsonObject>(JsonNode.Parse(handler.RequestBody!));
+        Assert.False(string.IsNullOrWhiteSpace(body["threadId"]?.GetValue<string>()));
+        Assert.False(string.IsNullOrWhiteSpace(body["runId"]?.GetValue<string>()));
+        Assert.Empty(Assert.IsType<JsonObject>(body["state"]));
+        Assert.Empty(Assert.IsType<JsonArray>(body["tools"]));
+        Assert.Empty(Assert.IsType<JsonArray>(body["context"]));
+        Assert.Empty(Assert.IsType<JsonObject>(body["forwardedProps"]));
+        var message = Assert.Single(Assert.IsType<JsonArray>(body["messages"]));
+        Assert.Equal("user", message?["role"]?.GetValue<string>());
+        Assert.Equal("hello", message?["content"]?.GetValue<string>());
+    }
+
+    [Fact]
+    public async Task AsAgent_InvokesDistinctPathsAndRepeatedPairsAreIdempotent()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var handler = new CaptureAgentCommandHandler();
+        builder.Services.AddHttpClient(string.Empty).ConfigurePrimaryHttpMessageHandler(() => handler);
+        var agent = CreateResourceWithAllocatedEndpoint(builder, "agent")
+            .AsAgent("/first", AgentProtocol.Responses, agentName: "weather")
+            .AsAgent("/second", AgentProtocol.Responses, agentName: "weather")
+            .AsAgent("second", AgentProtocol.Responses, agentName: "weather");
+        var commands = agent.Resource.Annotations.OfType<ResourceCommandAnnotation>().ToArray();
+        Assert.Equal(2, commands.Length);
+        Assert.Equal(2, agent.Resource.Annotations.OfType<AgentResourceAnnotation>().Count());
+        Assert.Equal(2, agent.Resource.Annotations.OfType<ResourceUrlsCallbackAnnotation>().Count());
+        Assert.Equal(2, commands.Select(c => c.Name).Distinct().Count());
+        Assert.Single(commands, c => c.IsHighlighted);
+        using var app = builder.Build();
+        await app.StartAsync().DefaultTimeout();
+        foreach (var command in commands)
+        {
+            await MoveResourceToRunningStateAsync(app, agent.Resource, command.Name);
+            var result = await app.ResourceCommands.ExecuteCommandAsync(
+                agent.Resource, command.Name, CreateMessageArgument("hello")).DefaultTimeout();
+            Assert.True(result.Success);
+        }
+        Assert.Equal(["/first", "/second"], handler.RequestPaths);
+    }
+
+    [Theory]
+    [InlineData(AgentProtocol.A2A, AgentResourceBuilderExtensions.DefaultA2AAgentCardPath)]
+    [InlineData(AgentProtocol.Responses, AgentResourceBuilderExtensions.DefaultResponsesPath)]
+    [InlineData(AgentProtocol.AgUi, AgentResourceBuilderExtensions.DefaultAgUiPath)]
+    [InlineData(AgentProtocol.Acp, AgentResourceBuilderExtensions.DefaultAcpPath)]
+    public void AsAgent_DefaultAndExplicitPathAreSamePair(AgentProtocol protocol, string path)
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var agent = builder.AddContainer("agent", "image").WithHttpEndpoint(targetPort: 8080)
+            .AsAgent(protocol)
+            .AsAgent(path, protocol);
+        Assert.Single(agent.Resource.Annotations.OfType<AgentResourceAnnotation>());
+        Assert.Single(agent.Resource.Annotations.OfType<ResourceCommandAnnotation>());
+        Assert.Single(agent.Resource.Annotations.OfType<ResourceUrlsCallbackAnnotation>());
     }
 
     [Theory]
@@ -1163,8 +1217,11 @@ public class AgentResourceBuilderExtensionsTests
     {
         public string? RequestBody { get; private set; }
 
+        public List<string> RequestPaths { get; } = [];
+
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
+            RequestPaths.Add(request.RequestUri!.AbsolutePath);
             RequestBody = request.Content is null
                 ? null
                 : await request.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(true);
@@ -1178,12 +1235,15 @@ public class AgentResourceBuilderExtensionsTests
 
     private sealed class SseAgentCommandHandler(string responseBody) : HttpMessageHandler
     {
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        public string? RequestBody { get; private set; }
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            RequestBody = request.Content is null ? null : await request.Content.ReadAsStringAsync(cancellationToken);
+            return new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new StringContent(responseBody, Encoding.UTF8, "text/event-stream")
-            });
+            };
         }
     }
 }
