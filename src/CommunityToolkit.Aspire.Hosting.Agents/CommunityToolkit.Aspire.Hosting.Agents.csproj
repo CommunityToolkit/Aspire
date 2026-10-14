@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AdditionalPackageTags>hosting agents a2a responses ag-ui acp mcp ai</AdditionalPackageTags>
+    <Description>An Aspire hosting integration for endpoint-backed AI agents with A2A, OpenAI Responses, AG-UI, ACP, and opt-in MCP tool invocation commands.</Description>
+    <IsPreview>true</IsPreview>
+    <DisablePackageBaselineValidation>true</DisablePackageBaselineValidation>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
+  </ItemGroup>
+
+</Project>
