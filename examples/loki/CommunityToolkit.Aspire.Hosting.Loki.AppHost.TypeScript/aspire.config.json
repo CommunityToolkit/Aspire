@@ -1,0 +1,21 @@
+{
+  "appHost": {
+    "path": "apphost.mts",
+    "language": "typescript/nodejs"
+  },
+  "sdk": {
+    "version": "13.6.1"
+  },
+  "profiles": {
+    "https": {
+      "applicationUrl": "https://localhost:29751;http://localhost:28932",
+      "environmentVariables": {
+        "ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL": "https://localhost:10976",
+        "ASPIRE_RESOURCE_SERVICE_ENDPOINT_URL": "https://localhost:13320"
+      }
+    }
+  },
+  "packages": {
+    "CommunityToolkit.Aspire.Hosting.Loki": "../../../src/CommunityToolkit.Aspire.Hosting.Loki/CommunityToolkit.Aspire.Hosting.Loki.csproj"
+  }
+}

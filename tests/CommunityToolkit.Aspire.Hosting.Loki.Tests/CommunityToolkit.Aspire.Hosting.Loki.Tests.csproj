@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../CommunityToolkit.Aspire.Testing/CommunityToolkit.Aspire.Testing.csproj" />
+    <ProjectReference Include="../../src/CommunityToolkit.Aspire.Hosting.Loki/CommunityToolkit.Aspire.Hosting.Loki.csproj" />
+  </ItemGroup>
+
+</Project>
