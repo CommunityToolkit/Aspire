@@ -65,6 +65,10 @@ Authentication used by an agent to call a model provider, such as Foundry, remai
 
 Call `AsAgent` once for each protocol/path pair exposed by a resource. Protocol paths default to `/.well-known/agent-card.json` for A2A, `/v1/responses` for Responses, `/ag-ui` for AG-UI, and `/runs` for ACP.
 
+Distinct paths for the same protocol receive separate invocation commands.
+Registering the same pair again is a no-op: the first configuration is retained.
+An explicitly specified default path and an omitted path identify the same pair.
+
 ### A2A
 
 A2A dashboard invocation is non-streaming by default. Enable streaming only when the agent card advertises streaming support:
@@ -131,6 +135,11 @@ var agent = builder.AddProject<Projects.WeatherAgent>("weather-agent")
 ```
 
 Use `.withMcpServer().withMcpToolCommands()` for the equivalent TypeScript configuration. `WithMcpToolCommands` is experimental (`ASPIREAGENTS001`).
+
+Simple tool parameter schemas use generated input controls. Union, composed, or
+referenced parameter schemas use a raw-JSON dialog so values retain their JSON
+types. Canceling either dialog cancels the invocation and still terminates the
+MCP session. Tool responses must match the invocation's JSON-RPC request ID.
 
 ## Additional documentation
 
