@@ -197,16 +197,16 @@ public static class McpToolCommandResourceBuilderExtensions
             // Own the entire invocation so preparation and transport failures also clean up the session.
             try
             {
-                await PrepareMcpToolCallRequestAsync(requestContext, session).ConfigureAwait(true);
+                var requestId = await PrepareMcpToolCallRequestAsync(requestContext, session).ConfigureAwait(true);
                 using var response = await httpClient.SendAsync(request, context.CancellationToken).ConfigureAwait(true);
-                return await GetMcpCommandResultAsync(requestContext, response).ConfigureAwait(true);
+                return await GetMcpCommandResultAsync(requestContext, response, requestId).ConfigureAwait(true);
             }
             finally
             {
                 await TerminateMcpSessionAsync(requestContext, session).ConfigureAwait(true);
             }
         }
-        catch (OperationCanceledException) when (context.CancellationToken.IsCancellationRequested)
+        catch (OperationCanceledException ex) when (ex is McpDialogCanceledException || context.CancellationToken.IsCancellationRequested)
         {
             return CommandResults.Canceled();
         }
@@ -250,7 +250,7 @@ public static class McpToolCommandResourceBuilderExtensions
         }
     }
 
-    private static async Task PrepareMcpToolCallRequestAsync(McpToolCommandContext ctx, McpSession session)
+    private static async Task<string> PrepareMcpToolCallRequestAsync(McpToolCommandContext ctx, McpSession session)
     {
         var initializeRequest = CreateMcpInitializeRequest();
         using var initializeMessage = new HttpRequestMessage(HttpMethod.Post, ctx.Request.RequestUri);
@@ -273,17 +273,15 @@ public static class McpToolCommandResourceBuilderExtensions
 
         var (selectedTool, arguments) = await GetMcpToolCallAsync(ctx, tools).ConfigureAwait(true);
 
-        ConfigureMcpRequest(
-            ctx.Request,
-            CreateMcpJsonRpcRequest(
-                "tools/call",
-                new JsonObject
-                {
-                    ["name"] = selectedTool.Name,
-                    ["arguments"] = arguments
-                }),
-            sessionId,
-            protocolVersion);
+        var request = CreateMcpJsonRpcRequest(
+            "tools/call",
+            new JsonObject
+            {
+                ["name"] = selectedTool.Name,
+                ["arguments"] = arguments
+            });
+        ConfigureMcpRequest(ctx.Request, request, sessionId, protocolVersion);
+        return request["id"]!.GetValue<string>();
     }
 
     private static async Task<IReadOnlyList<McpTool>> ReadAllMcpToolsAsync(
@@ -352,7 +350,7 @@ public static class McpToolCommandResourceBuilderExtensions
         };
     }
 
-    private static async Task<ExecuteCommandResult> GetMcpCommandResultAsync(McpToolCommandContext ctx, HttpResponseMessage response)
+    private static async Task<ExecuteCommandResult> GetMcpCommandResultAsync(McpToolCommandContext ctx, HttpResponseMessage response, string requestId)
     {
         ctx.CancellationToken.ThrowIfCancellationRequested();
 
@@ -365,11 +363,22 @@ public static class McpToolCommandResourceBuilderExtensions
                 CommandResultFormat.Text);
         }
 
-        var result = TryExtractServerSentEventResponseData(responseBody, expectedId: null, out var sseData) ? sseData : responseBody;
+        var expectedId = JsonValue.Create(requestId);
+        var result = TryExtractServerSentEventResponseData(responseBody, expectedId, out var sseData) ? sseData : responseBody;
         try
         {
             if (JsonNode.Parse(result) is JsonObject responseJson)
             {
+                if ((responseJson["error"] is not null ||
+                    responseJson["result"] is JsonObject resultObject && resultObject["content"] is JsonArray) &&
+                    !JsonNode.DeepEquals(responseJson["id"], expectedId))
+                {
+                    return CommandResults.Failure(
+                        "MCP server returned a JSON-RPC tool response with a missing or unexpected id.",
+                        responseBody,
+                        CommandResultFormat.Text);
+                }
+
                 if (responseJson["error"] is { } error)
                 {
                     return CommandResults.Failure(
@@ -620,8 +629,7 @@ public static class McpToolCommandResourceBuilderExtensions
 
         if (result.Canceled || string.IsNullOrWhiteSpace(result.Data.Value))
         {
-            ctx.HttpClient.CancelPendingRequests();
-            throw new OperationCanceledException("User canceled the MCP tool prompt.");
+            throw new McpDialogCanceledException("User canceled the MCP tool prompt.");
         }
 
         return tools.First(tool => string.Equals(tool.Name, result.Data.Value, StringComparison.Ordinal));
@@ -675,8 +683,7 @@ public static class McpToolCommandResourceBuilderExtensions
 
         if (result.Canceled)
         {
-            ctx.HttpClient.CancelPendingRequests();
-            throw new OperationCanceledException("User canceled the MCP arguments prompt.");
+            throw new McpDialogCanceledException("User canceled the MCP arguments prompt.");
         }
 
         var arguments = new JsonObject();
@@ -735,8 +742,7 @@ public static class McpToolCommandResourceBuilderExtensions
 
         if (result.Canceled || string.IsNullOrWhiteSpace(result.Data.Value))
         {
-            ctx.HttpClient.CancelPendingRequests();
-            throw new OperationCanceledException("User canceled the MCP arguments prompt.");
+            throw new McpDialogCanceledException("User canceled the MCP arguments prompt.");
         }
 
         return TryParseJsonObject(result.Data.Value, out var arguments)
@@ -765,6 +771,13 @@ public static class McpToolCommandResourceBuilderExtensions
                 GetMcpJsonSchemaType(propertySchema),
                 propertySchema,
                 requiredParameters.Contains(property.Key));
+
+            if (parameter.Type is not ("string" or "boolean" or "integer" or "number" or "array" or "object") ||
+                propertySchema.ContainsKey("anyOf") || propertySchema.ContainsKey("oneOf") ||
+                propertySchema.ContainsKey("allOf") || propertySchema.ContainsKey("$ref"))
+            {
+                return [];
+            }
 
             inputs.Add(new McpToolParameterInput(parameter, CreateMcpToolParameterInput(parameter)));
         }
@@ -985,7 +998,7 @@ public static class McpToolCommandResourceBuilderExtensions
 
     private static JsonNode? GetMcpDefaultArgumentValue(JsonObject? propertySchema)
     {
-        var type = propertySchema?["type"]?.GetValue<string>();
+        var type = propertySchema is null ? null : GetMcpJsonSchemaType(propertySchema);
         return type switch
         {
             "boolean" => false,
@@ -1126,6 +1139,8 @@ public static class McpToolCommandResourceBuilderExtensions
 
         public string? ProtocolVersion { get; set; }
     }
+
+    private sealed class McpDialogCanceledException(string message) : OperationCanceledException(message);
 
     private sealed record McpTool(string Name, string? Description, JsonObject? InputSchema);
 
