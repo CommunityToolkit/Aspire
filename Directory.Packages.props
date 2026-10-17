@@ -85,7 +85,7 @@
          Keep the Squad sample's direct SDK reference aligned with those build targets. -->
     <PackageVersion Include="GitHub.Copilot.SDK" Version="1.0.13" />
     <PackageVersion Include="JsonSchema.Net" Version="9.4.0" />
-    <PackageVersion Include="KubernetesClient" Version="19.0.2" />
+    <PackageVersion Include="KubernetesClient" Version="21.0.8" />
     <PackageVersion Include="OllamaSharp" Version="5.4.12" />
     <PackageVersion Include="OpenFeature.Providers.GOFeatureFlag" Version="1.0.0" />
     <!-- Keep MassTransit dependencies below 9.0.0: https://github.com/CommunityToolkit/Aspire/issues/1619 -->
