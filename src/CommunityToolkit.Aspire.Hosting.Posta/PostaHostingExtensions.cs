@@ -12,6 +12,48 @@ public static class PostaHostingExtensions
     private const string DataContainerPath = "/data";
 
     /// <summary>
+    /// Configures the host port that the Posta resource is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for Posta.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
+    /// <returns>The resource builder for Posta.</returns>
+    [AspireExport]
+    public static IResourceBuilder<PostaResource> WithHostPort(this IResourceBuilder<PostaResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(PostaResource.HttpEndpointName, endpoint => endpoint.Port = port);
+    }
+
+    /// <summary>
+    /// Configures the host port that the Posta SMTP endpoint is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for Posta.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
+    /// <returns>The resource builder for Posta.</returns>
+    [AspireExport]
+    public static IResourceBuilder<PostaResource> WithSmtpHostPort(this IResourceBuilder<PostaResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(PostaResource.SmtpEndpointName, endpoint => endpoint.Port = port);
+    }
+
+    /// <summary>
+    /// Configures the host port that the Posta SMTP relay endpoint is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for Posta.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
+    /// <returns>The resource builder for Posta.</returns>
+    [AspireExport]
+    public static IResourceBuilder<PostaResource> WithSmtpRelayHostPort(this IResourceBuilder<PostaResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(PostaResource.SmtpRelayEndpointName, endpoint => endpoint.Port = port);
+    }
+
+    /// <summary>
     /// Adds a Posta container resource to the <see cref="IDistributedApplicationBuilder"/> and configures PostgreSQL and Redis references.
     /// </summary>
     /// <ats-summary>Adds a Posta container resource with PostgreSQL and Redis references</ats-summary>

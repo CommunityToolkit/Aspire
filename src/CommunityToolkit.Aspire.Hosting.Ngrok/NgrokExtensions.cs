@@ -1,6 +1,5 @@
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Ngrok;
-using System.Runtime.InteropServices;
 using System.Text;
 
 #pragma warning disable ASPIREATS001 // AspireExport is experimental
@@ -12,8 +11,19 @@ namespace Aspire.Hosting;
 /// </summary>
 public static class NgrokExtensions
 {
-    private static readonly bool IsWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-    private static readonly bool IsOsx = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+    /// <summary>
+    /// Configures the host port that the ngrok resource is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for ngrok.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
+    /// <returns>The resource builder for ngrok.</returns>
+    [AspireExport]
+    public static IResourceBuilder<NgrokResource> WithHostPort(this IResourceBuilder<NgrokResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint("http", endpoint => endpoint.Port = port);
+    }
 
     /// <summary>
     /// Configures a container resource for grok which is pre-configured to connect to the resource that this method is used on.
@@ -75,7 +85,13 @@ public static class NgrokExtensions
                 .OfType<NgrokEndpointAnnotation>()
                 .SelectMany(annotation => annotation.Endpoints.Select(ngrokEndpoint => (endpointReference: annotation.Resource.GetEndpoint(ngrokEndpoint.EndpointName), ngrokEndpoint)))
                 .ToList();
-            await CreateNgrokConfigurationFileAsync(configurationFolder, name, endpointTuples, configurationVersion ?? 3);
+            await CreateNgrokConfigurationFileAsync(
+                configurationFolder,
+                name,
+                resource,
+                endpointTuples,
+                configurationVersion ?? 3,
+                ct).ConfigureAwait(false);
         });
         return resourceBuilder;
     }
@@ -186,8 +202,10 @@ public static class NgrokExtensions
     private static async Task CreateNgrokConfigurationFileAsync(
         string configurationFolder,
         string name,
+        NgrokResource ngrokResource,
         IList<(EndpointReference, NgrokEndpoint)> endpointTuples,
-        int configurationVersion)
+        int configurationVersion,
+        CancellationToken cancellationToken)
     {
         var ngrokConfig = new StringBuilder();
         ngrokConfig.AppendLine($"version: {configurationVersion}");
@@ -206,7 +224,8 @@ public static class NgrokExtensions
                     {
                         ngrokConfig.AppendLine($"      - {label.Key}={label.Value}");
                     }
-                    ngrokConfig.AppendLine($"    addr: {GetUpstreamUrl(endpointReference)}");
+                    ngrokConfig.AppendLine(
+                        $"    addr: {await GetUpstreamUrlAsync(endpointReference, ngrokResource, cancellationToken).ConfigureAwait(false)}");
                 }
                 break;
             case 3:
@@ -222,7 +241,8 @@ public static class NgrokExtensions
                         if (!string.IsNullOrWhiteSpace(ngrokEndpoint.Url))
                             ngrokConfig.AppendLine($"    url: {ngrokEndpoint.Url}");
                         ngrokConfig.AppendLine("    upstream:");
-                        ngrokConfig.AppendLine($"      url: {GetUpstreamUrl(endpointReference)}");
+                        ngrokConfig.AppendLine(
+                            $"      url: {await GetUpstreamUrlAsync(endpointReference, ngrokResource, cancellationToken).ConfigureAwait(false)}");
                     }
                 }
                 break;
@@ -233,11 +253,14 @@ public static class NgrokExtensions
         await File.WriteAllTextAsync(Path.Combine(configurationFolder, $"{name}.yml"), ngrokConfig.ToString());
     }
 
-    private static string GetUpstreamUrl(EndpointReference endpoint)
+    private static async Task<string> GetUpstreamUrlAsync(
+        EndpointReference endpoint,
+        NgrokResource ngrokResource,
+        CancellationToken cancellationToken)
     {
-        var isLocal = endpoint.Host.Equals("localhost", StringComparison.InvariantCultureIgnoreCase);
-        var host = (IsWindows || IsOsx) && isLocal ? "host.docker.internal" : endpoint.Host;
-        return $"{endpoint.Scheme}://{host}:{endpoint.Port}";
+        return (await endpoint.GetValueAsync(
+            new ValueProviderContext { Caller = ngrokResource },
+            cancellationToken).ConfigureAwait(false))!;
     }
 }
 
