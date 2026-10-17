@@ -139,3 +139,9 @@
 /src/CommunityToolkit.Aspire.Hosting.Squad/ @tamirdresher
 /tests/CommunityToolkit.Aspire.Hosting.Squad.Tests/ @tamirdresher
 /examples/squad/ @tamirdresher
+
+# CommunityToolkit.Aspire.Hosting.Agents
+
+/examples/agents/ @tommasodotNET
+/src/CommunityToolkit.Aspire.Hosting.Agents/ @tommasodotNET
+/tests/CommunityToolkit.Aspire.Hosting.Agents.Tests/ @tommasodotNET
