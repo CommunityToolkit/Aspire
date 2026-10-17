@@ -1,3 +1,15 @@
+# Feeds from nuget.config must be declared here (anonymous, no credentials)
+# or Dependabot blocks them and NuGet update jobs fail.
+registries:
+  nuget-org:
+    type: nuget-feed
+    url: https://api.nuget.org/v3/index.json
+  dotnet-eng:
+    type: nuget-feed
+    url: https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json
+  dotnet9-transport:
+    type: nuget-feed
+    url: https://dnceng.pkgs.visualstudio.com/public/_packaging/dotnet9-transport/nuget/v3/index.json
 updates:
 - directory: /
   ignore:
@@ -9,6 +21,10 @@ updates:
   - skip-nuget-publish
   open-pull-requests-limit: 10
   package-ecosystem: nuget
+  registries:
+  - nuget-org
+  - dotnet-eng
+  - dotnet9-transport
   schedule:
     interval: weekly
 
