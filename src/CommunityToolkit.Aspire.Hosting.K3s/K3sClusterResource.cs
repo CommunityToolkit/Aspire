@@ -93,6 +93,48 @@ public sealed class K3sClusterResource(string name)
     internal void AddHelmRelease(string resourceName, string releaseName) =>
         _helmReleases.TryAdd(resourceName, releaseName);
 
+    // ── Server command-line state ─────────────────────────────────────────────
+
+    /// <summary>
+    /// Built-in components passed as <c>--disable=&lt;component&gt;</c>, in the order they were
+    /// disabled. <c>servicelb</c> and <c>metrics-server</c> start disabled because they are the
+    /// slowest to become ready; <c>WithEnabledComponent</c> removes them.
+    /// </summary>
+    internal List<string> DisabledComponents { get; } = ["servicelb", "metrics-server"];
+
+    /// <summary>
+    /// Whether the server registers under the resource name (<c>--node-name</c>) rather than the
+    /// container's hostname. Set by <c>WithDataVolume</c>, because a recreated container gets a new
+    /// hostname and would otherwise register as a second node beside the one the data names.
+    /// </summary>
+    internal bool UsesStableNodeName { get; set; }
+
+    // ── Cluster DNS ───────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// The container that writes the <c>coredns-custom</c> ConfigMap. Created by the first
+    /// <c>WithHostAlias</c> or <c>WithCoreDnsCustomization</c> call.
+    /// </summary>
+    internal ContainerResource? DnsResource { get; set; }
+
+    /// <summary>Containers made resolvable from pods, keyed by the host name pods use.</summary>
+    internal Dictionary<string, ContainerResource> HostAliases { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>Extra CoreDNS files, keyed by their <c>coredns-custom</c> file name.</summary>
+    internal Dictionary<string, string> CoreDnsCustomizations { get; } = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// The container that stores the AppHost's developer certificate in the cluster. Created by
+    /// <c>WithIngressDeveloperCertificate</c>.
+    /// </summary>
+    internal ContainerResource? CertificateResource { get; set; }
+
+    /// <summary>
+    /// Containers that prepare the cluster for workloads — its DNS, its certificate. Every Helm release and
+    /// manifest of the cluster waits for each to complete.
+    /// </summary>
+    internal List<ContainerResource> SetupResources { get; } = [];
+
     private readonly List<string> _manifests = [];
 
     /// <summary>Names of registered <see cref="K8sManifestResource"/> children.</summary>
