@@ -42,6 +42,27 @@ public sealed class HelmReleaseResource(
     internal Dictionary<string, string> HelmValues { get; } = new(StringComparer.Ordinal);
 
     /// <summary>
+    /// Values resolved when the container starts — parameters, expressions, endpoints — keyed by
+    /// Helm value path, each naming the environment variable that carries it into the container.
+    /// Carried in the environment rather than written into the install script so a secret never
+    /// lands in a file. Populated by <c>WithHelmValue</c>; a key is in this or
+    /// <see cref="HelmValues"/>, never both.
+    /// </summary>
+    internal Dictionary<string, string> HelmValueVariables { get; } = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Variables handed out so far. Never decremented, so a key moved back to a literal value
+    /// cannot leave a later key reusing its variable.
+    /// </summary>
+    internal int HelmValueVariableCount { get; set; }
+
+    /// <summary>
+    /// The absolute host path of a chart directory, when the chart is local rather than in a
+    /// repository or an OCI registry. Bind-mounted read-only into the container.
+    /// </summary>
+    internal string? LocalChartDirectory { get; set; }
+
+    /// <summary>
     /// Absolute host paths of values files to inject into the helm container via
     /// <c>--values /helm-values/{filename}</c>.
     /// Populated by <c>WithHelmValuesFile</c>.
