@@ -10,7 +10,7 @@
     "react-router-dom": "7.18.4"
   },
   "devDependencies": {
-    "@eslint/js": "^9.8.0",
+    "@eslint/js": "^10.0.1",
     "@nx/eslint": "23.1.1",
     "@nx/eslint-plugin": "23.1.1",
     "@nx/js": "23.1.1",
