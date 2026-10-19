@@ -23,4 +23,13 @@ turbo.AddApp("turbo-docs", filter: "docs")
     .WithMappedEndpointPort()
     .WithHttpHealthCheck();
 
+var vp = builder.AddVitePlusApp("vp-demo")
+    .WithNpm(install: true)
+    .WithPackageManagerLaunch();
+
+vp.AddApp("vp-web", "apps/website")
+    .WithHttpEndpoint(env: "PORT")
+    .WithMappedEndpointPort()
+    .WithHttpHealthCheck();
+
 builder.Build().Run();

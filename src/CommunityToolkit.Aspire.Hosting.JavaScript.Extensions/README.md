@@ -1,6 +1,6 @@
 # CommunityToolkit.Aspire.Hosting.JavaScript.Extensions library
 
-This integration contains extensions for the [Node.js hosting package](https://nuget.org/packages/Aspire.Hosting.JavaScript) for Aspire, including support for frontend monorepos (Nx, Turborepo).
+This integration contains extensions for the [Node.js hosting package](https://nuget.org/packages/Aspire.Hosting.JavaScript) for Aspire, including support for frontend monorepos (Nx, Turborepo, Vite+).
 
 ## Getting Started
 
@@ -31,6 +31,14 @@ var turbo = builder.AddTurborepoApp("turbo", workingDirectory: "../frontend")
 
 var turboApp1 = turbo.AddApp("app1");
 var turboApp2 = turbo.AddApp("app2", filter: "custom-filter");
+
+// Vite+ workspace
+var vitePlus = builder.AddVitePlusApp("vp-demo")
+    .WithNpm(install: true)
+    .WithPackageManagerLaunch();
+
+vitePlus.AddApp("website"); // Runs: npx vp -C apps/website dev
+vitePlus.AddApp("docs", directory: "packages/docs");
 ```
 
 See [MONOREPO.md](./MONOREPO.md) for detailed documentation on monorepo support.
@@ -59,7 +67,10 @@ var bunRepo = builder.AddTurborepoApp("bun-repo", workingDirectory: "../frontend
 // Nx with yarn: yarn nx serve app1
 // Turborepo with pnpm: pnpm turbo run dev --filter app1
 // Turborepo with bun: bunx turbo run dev --filter app1
+// Vite+ with npm: npx vp -C apps/website dev
 ```
+
+> **Note**: Vite's dev server moves to the next free port if the assigned one is taken. When mapping an endpoint, consider adding `--strictPort` via `WithArgs` so the app fails fast instead of drifting away from the mapped port.
 
 ### Package installation with custom flags
 
