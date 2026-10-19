@@ -1,0 +1,14 @@
+namespace Aspire.Hosting.ApplicationModel;
+
+/// <summary>
+/// A resource that represents an Vite+ monorepo workspace.
+/// </summary>
+/// <param name="name">The name of the resource.</param>
+/// <param name="workingDirectory">The working directory of the Vite+ workspace.</param>
+public class VitePlusResource(string name, string workingDirectory) : Resource(name)
+{
+    /// <summary>
+    /// Gets the working directory of the Vite+ workspace.
+    /// </summary>
+    public string WorkingDirectory { get; } = workingDirectory;
+}

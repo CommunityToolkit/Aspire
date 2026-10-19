@@ -1,6 +1,6 @@
 # Frontend Monorepo Support
 
-This extension now provides built-in support for frontend monorepos using [Nx](https://nx.dev) and [Turborepo](https://turborepo.com).
+This extension now provides built-in support for frontend monorepos using [Nx](https://nx.dev), [Turborepo](https://turborepo.com), and [Vite+](https://viteplus.dev).
 
 ## The Problem
 
@@ -44,9 +44,21 @@ var app2 = turbo.AddApp("app2", filter: "custom-filter"); // Custom filter
 var app3 = turbo.AddApp("app3");
 ```
 
+### Vite+ Support
+
+```csharp
+var vitePlus = builder.AddVitePlusApp("vp-demo", workingDirectory: "../frontend")
+    .WithNpm(install: true); // Single shared installer
+
+var app1 = vitePlus.AddApp("website"); // Defaults to the apps/website directory
+var app2 = vitePlus.AddApp("docs", directory: "packages/docs"); // Custom directory
+```
+
+Vite+ targets packages with the global `-C` flag (`vp -C apps/web dev`), which runs the command as if you had `cd`'d into the package first. This is different from passing a directory as a positional argument (`vp dev apps/web`), which only sets Vite's `root` option without changing the working directory.
+
 ## Package Managers
 
-Both Nx and Turborepo support yarn, pnpm, and bun package managers:
+Nx, Turborepo, and Vite+ support yarn, pnpm, and bun package managers:
 
 - `.WithYarn(install: true)` - uses yarn
 - `.WithPnpm(install: true)` - uses pnpm
@@ -76,9 +88,9 @@ nxDefault.AddApp("app1"); // Runs: nx serve app1 (no package manager prefix)
 
 **Command Generation Examples:**
 
--   `WithPackageManagerLaunch("yarn")` → `yarn nx serve app1` or `yarn turbo run dev --filter app1`
--   `WithPackageManagerLaunch("pnpm")` → `pnpm nx serve app1` or `pnpm turbo run dev --filter app1`
--   No `WithPackageManagerLaunch()` → `nx serve app1` or `turbo run dev --filter app1`
+-   `WithPackageManagerLaunch("yarn")` → `yarn nx serve app1`, `yarn turbo run dev --filter app1`, or `yarn vp -C apps/web dev`
+-   `WithPackageManagerLaunch("pnpm")` → `pnpm nx serve app1`, `pnpm turbo run dev --filter app1`, or `pnpm vp -C apps/web dev`
+-   No `WithPackageManagerLaunch()` → `nx serve app1`, `turbo run dev --filter app1`, or `vp -C apps/web dev`
 
 ## How It Works
 
@@ -97,6 +109,11 @@ nxDefault.AddApp("app1"); // Runs: nx serve app1 (no package manager prefix)
 
 -   Command: `turbo run dev --filter {filter}`
 -   The `filter` parameter controls which packages Turborepo builds/serves
+
+### Vite+ Apps
+
+-   Command: `vp -C {directory} dev`
+-   The `directory` parameter is passed to the global `-C` flag so the built-in Vite dev server runs with the package as its working directory. It defaults to `apps/{name}` when not specified
 
 ## Migration
 
