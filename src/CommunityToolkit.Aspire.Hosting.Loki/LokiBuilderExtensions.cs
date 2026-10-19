@@ -1,6 +1,8 @@
 using Aspire.Hosting.ApplicationModel;
+using CommunityToolkit.Aspire.Hosting.Loki;
 
 #pragma warning disable ASPIREATS001
+#pragma warning disable ASPIRECERTIFICATES001
 
 namespace Aspire.Hosting;
 
@@ -13,46 +15,71 @@ public static class LokiBuilderExtensions
     /// Adds a Grafana Loki container to the application model.
     /// </summary>
     /// <param name="builder">The distributed application builder.</param>
-    /// <param name="name">The resource name and connection string name.</param>
-    /// <param name="configureSettings">An optional callback that configures the Loki settings.</param>
+    /// <param name="name">The resource name.</param>
     /// <returns>The Loki resource builder.</returns>
-    [AspireExport(RunSyncOnBackgroundThread = true)]
+    [AspireExport]
     public static IResourceBuilder<LokiResource> AddLoki(
         this IDistributedApplicationBuilder builder,
-        [ResourceName] string name,
-        Action<LokiSettings>? configureSettings = null)
+        [ResourceName] string name)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(name);
 
-        LokiSettings settings = new();
-        configureSettings?.Invoke(settings);
-        ArgumentException.ThrowIfNullOrEmpty(settings.LokiTag);
-        ArgumentException.ThrowIfNullOrEmpty(settings.Registry);
-        ArgumentException.ThrowIfNullOrEmpty(settings.Image);
-
         var resourceBuilder = builder.AddResource(new LokiResource(name))
-            .WithImage(settings.Image, settings.LokiTag)
-            .WithImageRegistry(settings.Registry)
-            .WithHttpEndpoint(port: settings.HttpPort, targetPort: 3100, name: LokiResource.HttpEndpointName)
+            .WithImage(LokiContainerImageTags.Image, LokiContainerImageTags.Tag)
+            .WithImageRegistry(LokiContainerImageTags.Registry)
+            .WithHttpEndpoint(targetPort: 3100, name: LokiResource.HttpEndpointName)
+            .WithEndpoint(targetPort: 9096, name: LokiResource.GrpcEndpointName, scheme: "http")
+            .WithEndpoint(LokiResource.GrpcEndpointName, endpoint => endpoint.Transport = "http2")
+            .WithHttpHealthCheck("/ready", endpointName: LokiResource.HttpEndpointName)
+            .WithArgs("-config.file=/etc/loki/local-config.yaml")
             .WithIconName("TextBulletListSquare");
 
-        if (settings.EnableGrpcEndpoint)
+        resourceBuilder.WithHttpsCertificateConfiguration(context =>
         {
-            resourceBuilder.WithEndpoint(port: settings.GrpcPort, targetPort: 9096, name: LokiResource.GrpcEndpointName, scheme: "http")
-                .WithEndpoint(LokiResource.GrpcEndpointName, endpoint => endpoint.Transport = "http2");
-        }
+            context.Arguments.Add(ReferenceExpression.Create($"-server.http-tls-cert-path={context.CertificatePath}"));
+            context.Arguments.Add(ReferenceExpression.Create($"-server.http-tls-key-path={context.KeyPath}"));
+            return Task.CompletedTask;
+        });
 
-        if (!settings.DisableHealthcheck)
+        resourceBuilder.SubscribeHttpsEndpointsUpdate(context =>
         {
-            resourceBuilder.WithHttpHealthCheck("/ready", endpointName: LokiResource.HttpEndpointName);
-        }
+            resourceBuilder.WithEndpoint(LokiResource.HttpEndpointName, endpoint => endpoint.UriScheme = "https");
+        });
 
         return resourceBuilder;
     }
 
     /// <summary>
-    /// Adds a named volume for the default Loki configuration's data directory, <c>/tmp/loki</c>.
+    /// Configures the HTTP endpoint's host port.
+    /// </summary>
+    /// <param name="builder">The Loki resource builder.</param>
+    /// <param name="port">The host port, or <see langword="null"/> to assign a random port.</param>
+    /// <returns>The Loki resource builder.</returns>
+    [AspireExport]
+    public static IResourceBuilder<LokiResource> WithHttpHostPort(this IResourceBuilder<LokiResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(LokiResource.HttpEndpointName, endpoint => endpoint.Port = port);
+    }
+
+    /// <summary>
+    /// Configures the gRPC endpoint's host port.
+    /// </summary>
+    /// <param name="builder">The Loki resource builder.</param>
+    /// <param name="port">The host port, or <see langword="null"/> to assign a random port.</param>
+    /// <returns>The Loki resource builder.</returns>
+    [AspireExport]
+    public static IResourceBuilder<LokiResource> WithGrpcHostPort(this IResourceBuilder<LokiResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(LokiResource.GrpcEndpointName, endpoint => endpoint.Port = port);
+    }
+
+    /// <summary>
+    /// Adds a named volume for the default Loki configuration's data directory, <c>/loki</c>.
     /// </summary>
     /// <param name="builder">The Loki resource builder.</param>
     /// <param name="name">The optional volume name. A name is generated when omitted.</param>
@@ -62,11 +89,11 @@ public static class LokiBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        return builder.WithVolume(name ?? VolumeNameGenerator.Generate(builder, "data"), "/tmp/loki");
+        return builder.WithVolume(name ?? VolumeNameGenerator.Generate(builder, "data"), "/loki");
     }
 
     /// <summary>
-    /// Adds a writable bind mount for the default Loki configuration's data directory, <c>/tmp/loki</c>.
+    /// Adds a writable bind mount for the default Loki configuration's data directory, <c>/loki</c>.
     /// </summary>
     /// <param name="builder">The Loki resource builder.</param>
     /// <param name="source">The host directory. Relative paths are resolved against the AppHost directory.</param>
@@ -78,25 +105,33 @@ public static class LokiBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(source);
 
-        return builder.WithBindMount(source, "/tmp/loki");
+        return builder.WithBindMount(source, "/loki");
     }
 
     /// <summary>
-    /// Mounts a Loki configuration file read-only at <c>/etc/loki/local-config.yaml</c>.
+    /// Copies a Loki configuration file to <c>/etc/loki/local-config.yaml</c> for local runs and publishing.
     /// </summary>
     /// <param name="builder">The Loki resource builder.</param>
     /// <param name="source">The host configuration file. Relative paths are resolved against the AppHost directory.</param>
     /// <returns>The Loki resource builder.</returns>
-    /// <remarks>Use <c>/tmp/loki</c> for storage paths when combining this method with the data mount helpers.</remarks>
+    /// <remarks>Use <c>/loki</c> for storage paths when combining this method with the data mount helpers.</remarks>
     [AspireExport]
-    public static IResourceBuilder<LokiResource> WithConfigBindMount(this IResourceBuilder<LokiResource> builder, string source)
+    public static IResourceBuilder<LokiResource> WithConfigFile(this IResourceBuilder<LokiResource> builder, string source)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(source);
 
-        return builder.WithBindMount(source, "/etc/loki/local-config.yaml", isReadOnly: true)
-            .WithArgs("-config.file=/etc/loki/local-config.yaml");
+        var path = Path.GetFullPath(source, builder.ApplicationBuilder.AppHostDirectory);
+        return builder.WithContainerFiles("/etc/loki",
+        [
+            new ContainerFile
+            {
+                Name = "local-config.yaml",
+                SourcePath = path
+            }
+        ]);
     }
 }
 
 #pragma warning restore ASPIREATS001
+#pragma warning restore ASPIRECERTIFICATES001

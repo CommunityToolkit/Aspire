@@ -49,8 +49,7 @@ public class LokiFunctionalTests(ITestOutputHelper testOutputHelper)
                 {
                     await app.Services.GetRequiredService<ResourceNotificationService>()
                         .WaitForResourceHealthyAsync("loki", cancellationToken);
-                    var connectionString = await loki.Resource.ConnectionStringExpression.GetValueAsync(cancellationToken);
-                    using var client = new HttpClient { BaseAddress = new Uri(connectionString!) };
+                    using var client = new HttpClient { BaseAddress = new Uri(loki.Resource.HttpEndpoint.Url) };
                     if (usage == 0)
                     {
                         var timestamp = (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() * 1_000_000).ToString(CultureInfo.InvariantCulture);

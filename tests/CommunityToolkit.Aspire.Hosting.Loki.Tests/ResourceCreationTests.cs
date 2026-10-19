@@ -30,11 +30,9 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
     public void AddLokiConfiguresContainerAndEndpoints(int? httpPort, int? grpcPort)
     {
         var builder = DistributedApplication.CreateBuilder();
-        var loki = builder.AddLoki("loki", settings =>
-        {
-            settings.HttpPort = httpPort;
-            settings.GrpcPort = grpcPort;
-        });
+        var loki = builder.AddLoki("loki")
+            .WithHttpHostPort(httpPort)
+            .WithGrpcHostPort(grpcPort);
         using var app = builder.Build();
 
         Assert.Same(loki.Resource, Assert.Single(app.Services.GetRequiredService<DistributedApplicationModel>().Resources));
@@ -65,49 +63,73 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
     }
 
     [Fact]
-    public void CanConfigureLokiSettings()
+    public void CanConfigureContainerAfterAddingLoki()
     {
         var builder = DistributedApplication.CreateBuilder();
-        var loki = builder.AddLoki("loki", settings =>
-        {
-            settings.Registry = "registry.example.com";
-            settings.Image = "custom/loki";
-            settings.LokiTag = "3.6.1";
-            settings.EnableGrpcEndpoint = false;
-            settings.DisableHealthcheck = true;
-            Assert.Equal("registry.example.com/custom/loki", settings.LokiImage);
-        });
+        var loki = builder.AddLoki("loki")
+            .WithImageRegistry("registry.example.com")
+            .WithImage("custom/loki")
+            .WithImageTag("3.6.1");
         using var app = builder.Build();
 
         var image = Assert.Single(loki.Resource.Annotations.OfType<ContainerImageAnnotation>());
         Assert.Equal("registry.example.com", image.Registry);
         Assert.Equal("custom/loki", image.Image);
         Assert.Equal("3.6.1", image.Tag);
-        var endpoint = Assert.Single(loki.Resource.Annotations.OfType<EndpointAnnotation>());
-        Assert.Equal("http", endpoint.Name);
-        Assert.Empty(loki.Resource.Annotations.OfType<HealthCheckAnnotation>());
+        Assert.Equal(2, loki.Resource.Annotations.OfType<EndpointAnnotation>().Count());
+        Assert.Single(loki.Resource.Annotations.OfType<HealthCheckAnnotation>());
     }
 
     [Fact]
-    public async Task ConnectionStringAndPropertiesResolveHttpEndpoint()
+    public void EndpointsResolveIndependently()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var loki = builder.AddLoki("loki")
+            .WithEndpoint("http", endpoint => endpoint.AllocatedEndpoint = new AllocatedEndpoint(endpoint, "localhost", 13100))
+            .WithEndpoint("grpc", endpoint => endpoint.AllocatedEndpoint = new AllocatedEndpoint(endpoint, "grpc.example.com", 19096));
+        using var app = builder.Build();
+
+        Assert.Equal("http", loki.Resource.HttpEndpoint.EndpointName);
+        Assert.Equal("grpc", loki.Resource.GrpcEndpoint.EndpointName);
+        Assert.Equal("http://grpc.example.com:19096", loki.Resource.GrpcEndpoint.Url);
+        Assert.Equal("http://localhost:13100", loki.Resource.HttpEndpoint.Url);
+        Assert.Same(loki.Resource.HttpEndpoint, loki.Resource.HttpEndpoint);
+        Assert.Same(loki.Resource.GrpcEndpoint, loki.Resource.GrpcEndpoint);
+        Assert.IsNotAssignableFrom<IResourceWithConnectionString>(loki.Resource);
+    }
+
+    [Fact]
+    public async Task WithReferenceSuppliesNamedServiceDiscoveryEndpoints()
     {
         var builder = DistributedApplication.CreateBuilder();
         var loki = builder.AddLoki("loki")
             .WithEndpoint("http", endpoint => endpoint.AllocatedEndpoint = new AllocatedEndpoint(endpoint, "localhost", 13100))
             .WithEndpoint("grpc", endpoint => endpoint.AllocatedEndpoint = new AllocatedEndpoint(endpoint, "localhost", 19096));
+        var consumer = builder.AddExecutable("consumer", "dotnet", ".").WithReference(loki);
         using var app = builder.Build();
 
-        Assert.Equal("http", loki.Resource.PrimaryEndpoint.EndpointName);
-        Assert.Equal("grpc", loki.Resource.GrpcEndpoint.EndpointName);
-        Assert.Equal("http://localhost:19096", loki.Resource.GrpcEndpoint.Url);
-        Assert.Equal("http://localhost:13100", await loki.Resource.ConnectionStringExpression.GetValueAsync(default));
-        Assert.Equal("{loki.bindings.http.url}", loki.Resource.ConnectionStringExpression.ValueExpression);
+        var environment = await consumer.Resource.GetEnvironmentVariablesAsync();
 
-        var properties = ((IResourceWithConnectionString)loki.Resource).GetConnectionProperties().ToDictionary();
-        Assert.Equal(3, properties.Count);
-        Assert.Equal("localhost", await properties["Host"].GetValueAsync(default));
-        Assert.Equal("13100", await properties["Port"].GetValueAsync(default));
-        Assert.Equal("http://localhost:13100", await properties["Uri"].GetValueAsync(default));
+        Assert.Equal("http://localhost:13100", environment["services__loki__http__0"]);
+        Assert.Equal("http://localhost:19096", environment["services__loki__grpc__0"]);
+        Assert.DoesNotContain("ConnectionStrings__loki", environment.Keys);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData(23100)]
+    public void HostPortConfigurationCanBeChangedOrCleared(int? port)
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var loki = builder.AddLoki("loki").WithHttpHostPort(13100).WithGrpcHostPort(19096);
+        using var app = builder.Build();
+
+        Assert.Same(loki, loki.WithHttpHostPort(port));
+        Assert.Same(loki, loki.WithGrpcHostPort(port + 1));
+
+        var endpoints = loki.Resource.Annotations.OfType<EndpointAnnotation>().ToDictionary(endpoint => endpoint.Name);
+        Assert.Equal(port, endpoints["http"].Port);
+        Assert.Equal(port + 1, endpoints["grpc"].Port);
     }
 
     [Theory]
@@ -123,7 +145,7 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
 
         var mount = Assert.Single(loki.Resource.Annotations.OfType<ContainerMountAnnotation>());
         Assert.Equal(ContainerMountType.Volume, mount.Type);
-        Assert.Equal("/tmp/loki", mount.Target);
+        Assert.Equal("/loki", mount.Target);
         Assert.False(mount.IsReadOnly);
         Assert.Equal(volumeName ?? VolumeNameGenerator.Generate(loki, "data"), mount.Source);
     }
@@ -153,25 +175,45 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
         var mount = Assert.Single(loki.Resource.Annotations.OfType<ContainerMountAnnotation>());
         Assert.Equal(ContainerMountType.BindMount, mount.Type);
         Assert.Equal(Path.GetFullPath("loki-data", builder.AppHostDirectory), mount.Source);
-        Assert.Equal("/tmp/loki", mount.Target);
+        Assert.Equal("/loki", mount.Target);
         Assert.False(mount.IsReadOnly);
     }
 
-    [Fact]
-    public async Task WithConfigBindMountIsReadOnly()
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task WithConfigFileCopiesConfigurationInRunAndPublishModes(bool publish, bool absolutePath)
     {
-        var builder = DistributedApplication.CreateBuilder();
+        var builder = DistributedApplication.CreateBuilder(publish ? ["--publisher", "manifest"] : []);
         var loki = builder.AddLoki("loki");
         using var app = builder.Build();
 
-        Assert.Same(loki, loki.WithConfigBindMount("loki.yaml"));
+        var path = Path.GetTempFileName();
+        try
+        {
+            await File.WriteAllTextAsync(path, "auth_enabled: false");
+            var source = absolutePath ? path : Path.GetRelativePath(builder.AppHostDirectory, path);
+            Assert.Same(loki, loki.WithConfigFile(source));
 
-        var mount = Assert.Single(loki.Resource.Annotations.OfType<ContainerMountAnnotation>());
-        Assert.Equal(ContainerMountType.BindMount, mount.Type);
-        Assert.Equal(Path.GetFullPath("loki.yaml", builder.AppHostDirectory), mount.Source);
-        Assert.Equal("/etc/loki/local-config.yaml", mount.Target);
-        Assert.True(mount.IsReadOnly);
-        Assert.Equal(["-config.file=/etc/loki/local-config.yaml"], await loki.Resource.GetArgumentListAsync());
+            Assert.Empty(loki.Resource.Annotations.OfType<ContainerMountAnnotation>());
+            var files = Assert.Single(loki.Resource.Annotations.OfType<ContainerFileSystemCallbackAnnotation>());
+            Assert.Equal("/etc/loki", files.DestinationPath);
+            var items = await files.Callback(new ContainerFileSystemCallbackContext
+            {
+                Services = app.Services,
+                Model = loki.Resource
+            }, TestContext.Current.CancellationToken);
+            var file = Assert.IsType<ContainerFile>(Assert.Single(items));
+            Assert.Equal(path, file.SourcePath);
+            Assert.Equal("local-config.yaml", file.Name);
+            Assert.Equal(["-config.file=/etc/loki/local-config.yaml"], await loki.Resource.GetArgumentListAsync());
+        }
+        finally
+        {
+            File.Delete(path);
+        }
     }
 
     [Fact]
@@ -180,15 +222,17 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
         IResourceBuilder<LokiResource> missing = null!;
         Assert.Throws<ArgumentNullException>(() => missing.WithDataVolume());
         Assert.Throws<ArgumentNullException>(() => missing.WithDataBindMount("data"));
-        Assert.Throws<ArgumentNullException>(() => missing.WithConfigBindMount("loki.yaml"));
+        Assert.Throws<ArgumentNullException>(() => missing.WithConfigFile("loki.yaml"));
+        Assert.Throws<ArgumentNullException>(() => missing.WithHttpHostPort(null));
+        Assert.Throws<ArgumentNullException>(() => missing.WithGrpcHostPort(null));
 
         var builder = DistributedApplication.CreateBuilder();
         var loki = builder.AddLoki("loki");
         using var app = builder.Build();
         Assert.Throws<ArgumentNullException>(() => loki.WithDataBindMount(null!));
         Assert.Throws<ArgumentException>(() => loki.WithDataBindMount(string.Empty));
-        Assert.Throws<ArgumentNullException>(() => loki.WithConfigBindMount(null!));
-        Assert.Throws<ArgumentException>(() => loki.WithConfigBindMount(string.Empty));
+        Assert.Throws<ArgumentNullException>(() => loki.WithConfigFile(null!));
+        Assert.Throws<ArgumentException>(() => loki.WithConfigFile(string.Empty));
     }
 
     [Theory]
@@ -219,7 +263,7 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
         var resource = manifest.RootElement;
         Assert.Equal("container.v0", resource.GetProperty("type").GetString());
         Assert.Equal($"{LokiContainerImageTags.Registry}/{LokiContainerImageTags.Image}:{LokiContainerImageTags.Tag}", resource.GetProperty("image").GetString());
-        Assert.Equal("{loki.bindings.http.url}", resource.GetProperty("connectionString").GetString());
+        Assert.False(resource.TryGetProperty("connectionString", out _));
         var bindings = resource.GetProperty("bindings");
         Assert.Equal(3100, bindings.GetProperty("http").GetProperty("targetPort").GetInt32());
         Assert.Equal("http", bindings.GetProperty("http").GetProperty("scheme").GetString());
@@ -229,7 +273,7 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
         if (persistData)
         {
             var volume = Assert.Single(resource.GetProperty("volumes").EnumerateArray());
-            Assert.Equal("/tmp/loki", volume.GetProperty("target").GetString());
+            Assert.Equal("/loki", volume.GetProperty("target").GetString());
             Assert.False(volume.GetProperty("readOnly").GetBoolean());
         }
         else
@@ -251,8 +295,7 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
         await app.StartAsync(cancellationToken);
         await app.Services.GetRequiredService<ResourceNotificationService>()
             .WaitForResourceHealthyAsync("loki", cancellationToken);
-        var connectionString = await loki.Resource.ConnectionStringExpression.GetValueAsync(cancellationToken);
-        using var client = new HttpClient { BaseAddress = new Uri(connectionString!) };
+        using var client = new HttpClient { BaseAddress = new Uri(loki.Resource.HttpEndpoint.Url) };
         using var ready = await client.GetAsync("/ready", cancellationToken);
         Assert.Equal(HttpStatusCode.OK, ready.StatusCode);
 
