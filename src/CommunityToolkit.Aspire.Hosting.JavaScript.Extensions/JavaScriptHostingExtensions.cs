@@ -59,6 +59,7 @@ public static class JavaScriptHostingExtensions
             {
                 NxResource nx => nx.WorkingDirectory,
                 TurborepoResource turbo => turbo.WorkingDirectory,
+                VitePlusResource vitePlus => vitePlus.WorkingDirectory,
                 _ => throw new InvalidOperationException($"Unsupported resource type: {builder.Resource.GetType().Name}")
             };
 
