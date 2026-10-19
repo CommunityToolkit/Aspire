@@ -102,6 +102,11 @@
     <Project Path="examples/logto/CommunityToolkit.Aspire.Logto.ClientJWT/CommunityToolkit.Aspire.Logto.ClientJWT.csproj" />
     <Project Path="examples/logto/CommunityToolkit.Aspire.Logto.ClientOIDC/CommunityToolkit.Aspire.Logto.ClientOIDC.csproj" />
   </Folder>
+  <Folder Name="/examples/loki/">
+    <Project Path="examples/loki/CommunityToolkit.Aspire.Hosting.Loki.Api/CommunityToolkit.Aspire.Hosting.Loki.Api.csproj" />
+    <Project Path="examples/loki/CommunityToolkit.Aspire.Hosting.Loki.AppHost/CommunityToolkit.Aspire.Hosting.Loki.AppHost.csproj" />
+    <Project Path="examples/loki/CommunityToolkit.Aspire.Hosting.Loki.ServiceDefaults/CommunityToolkit.Aspire.Hosting.Loki.ServiceDefaults.csproj" />
+  </Folder>
   <Folder Name="/examples/listmonk/">
     <Project Path="examples/listmonk/CommunityToolkit.Aspire.Hosting.Listmonk.AppHost/CommunityToolkit.Aspire.Hosting.Listmonk.AppHost.csproj" />
   </Folder>
@@ -276,6 +281,7 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.LavinMQ/CommunityToolkit.Aspire.Hosting.LavinMQ.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Listmonk/CommunityToolkit.Aspire.Hosting.Listmonk.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Logto/CommunityToolkit.Aspire.Hosting.Logto.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Loki/CommunityToolkit.Aspire.Hosting.Loki.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.MailPit/CommunityToolkit.Aspire.Hosting.MailPit.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.McpInspector/CommunityToolkit.Aspire.Hosting.McpInspector.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Meilisearch/CommunityToolkit.Aspire.Hosting.Meilisearch.csproj" />
@@ -357,6 +363,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.LavinMQ.Tests/CommunityToolkit.Aspire.Hosting.LavinMQ.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Listmonk.Tests/CommunityToolkit.Aspire.Hosting.Listmonk.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Logto.Tests/CommunityToolkit.Aspire.Hosting.Logto.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Loki.Tests/CommunityToolkit.Aspire.Hosting.Loki.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.MailPit.Tests/CommunityToolkit.Aspire.Hosting.MailPit.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.McpInspector.Tests/CommunityToolkit.Aspire.Hosting.McpInspector.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Meilisearch.Tests/CommunityToolkit.Aspire.Hosting.Meilisearch.Tests.csproj" />
