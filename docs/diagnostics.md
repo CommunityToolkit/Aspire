@@ -45,3 +45,15 @@ Suppress this diagnostic only when you intentionally opt into the experimental A
 Retired. This diagnostic applied only to internal Perl Dockerfile helpers and did not gate a
 consumer API. The ID is reserved and must not be reused. Generated Perl Dockerfile publishing
 remains preview; see the Perl integration README for its validation status.
+
+## CTASPIRERAVENDB001
+
+The RavenDB hosting integration's API for deployment packages, such as `CommunityToolkit.Aspire.Hosting.RavenDB.Cloud`, which publish a RavenDB server somewhere else than its container. It may change while those packages are previews.
+
+Current usage:
+
+- `WithPublishStrategy(...)` and `RavenDBPublishStrategy` - publish the server with a deployment package's URL instead of its container
+- `RavenDBServerResource.PublishStrategy` - the strategy in use, if any
+- `RavenDBServerResource.DatabasesToCreate` - the databases declared with `ensureCreated`, which a deployment package creates
+
+AppHosts do not call these: they call the deployment package's own method, such as `PublishAsRavenDBCloud(...)`.
