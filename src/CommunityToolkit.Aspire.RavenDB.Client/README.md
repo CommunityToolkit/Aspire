@@ -64,9 +64,21 @@ And then the connection string will be retrieved from the `ConnectionStrings` co
 }
 ```
 
+For a cluster, list its nodes separated by commas, for example `URL=https://a.example.com,https://b.example.com,https://c.example.com`: the client then reaches the cluster even while one node is down.
+
 ### Use configuration providers
 
-The Aspire RavenDB Client component supports [Microsoft.Extensions.Configuration](https://learn.microsoft.com/dotnet/api/microsoft.extensions.configuration). It loads the `RavenDBClientSettings` from configuration by using the `Aspire:RavenDB:Client` key.
+The Aspire RavenDB Client component supports [Microsoft.Extensions.Configuration](https://learn.microsoft.com/dotnet/api/microsoft.extensions.configuration). It loads the `RavenDBClientSettings` from configuration by using the `Aspire:RavenDB:Client` key, and then the `Aspire:RavenDB:Client:{connection name}` key.
+
+### Client certificate from configuration
+
+A secured server needs a client certificate. Configuration can give it as a file (`CertificatePath`, with `CertificatePassword` if the file has one) or as the base64-encoded content of a .pfx file (`CertificateBase64`), which suits a certificate delivered as a value, such as an environment variable:
+
+```
+Aspire__RavenDB__Client__ravendb__CertificateBase64=MIIK...
+```
+
+`Certificate` set in code is used first, then `CertificateBase64`, then `CertificatePath`. The [RavenDB Cloud hosting integration](https://www.nuget.org/packages/CommunityToolkit.Aspire.Hosting.RavenDB.Cloud) delivers every application its certificate this way.
 
 ### Use inline delegates
 
@@ -85,7 +97,7 @@ builder.AddRavenDBClient("ravendb", settings =>
 The RavenDBClientSettings class simplifies configuration by allowing you to specify:
 - URLs of your RavenDB nodes.
 - Database name to connect to or create.
-- Certificate details (via `CertificatePath` and `CertificatePassword` or `Certificate`).
+- Certificate details (via `Certificate`, `CertificateBase64` or `CertificatePath`, with `CertificatePassword`).
 - Optional actions to modify the `IDocumentStore`.
 
 Example for creating a new database on a local unsecured RavenDB server:

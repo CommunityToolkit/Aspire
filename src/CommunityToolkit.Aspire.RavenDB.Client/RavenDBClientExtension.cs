@@ -213,14 +213,11 @@ public static class RavenDBClientExtension
 
         documentStore.Initialize();
 
-        if (ravenDbClientSettings.CreateDatabase)
+        if (ravenDbClientSettings.CreateDatabase &&
+            !documentStore.Maintenance.Server.Send(new DatabaseExistsOperation(ravenDbClientSettings.DatabaseName!)))
         {
-            var databaseRecord = documentStore.Maintenance.Server.Send(new GetDatabaseRecordOperation(ravenDbClientSettings.DatabaseName));
-            if (databaseRecord == null)
-            {
-                var newDatabaseRecord = new DatabaseRecord(ravenDbClientSettings.DatabaseName);
-                documentStore.Maintenance.Server.Send(new CreateDatabaseOperation(newDatabaseRecord));
-            }
+            var newDatabaseRecord = new DatabaseRecord(ravenDbClientSettings.DatabaseName);
+            documentStore.Maintenance.Server.Send(new CreateDatabaseOperation(newDatabaseRecord));
         }
 
         return documentStore;
@@ -251,9 +248,10 @@ public static class RavenDBClientExtension
                 ConnectionString = connectionString
             };
 
+            // The nodes of a cluster, separated by commas: the client reaches the cluster through any of them.
             if (connectionBuilder.TryGetValue("URL", out var url) && url is string serverUrl)
             {
-                settings.Urls = new[] { serverUrl };
+                settings.Urls = serverUrl.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             }
 
             if (connectionBuilder.TryGetValue("Database", out var database) && database is string databaseName)
@@ -287,9 +285,10 @@ public static class RavenDBClientExtension
 
             if (uri!.Scheme == Uri.UriSchemeHttps)
             {
-                if (string.IsNullOrEmpty(settings.CertificatePath) && settings.Certificate == null)
-                    throw new ArgumentNullException(nameof(settings.Certificate), "A valid certificate must be provided in 'RavenDBClientSettings.Certificate' " +
-                        "or a certificate path in 'RavenDBClientSettings.CertificatePath' when using HTTPS.");
+                if (!settings.HasCertificate)
+                    throw new ArgumentNullException(nameof(settings.Certificate), "A valid certificate must be provided in 'RavenDBClientSettings.Certificate', " +
+                        "its base64-encoded .pfx content in 'RavenDBClientSettings.CertificateBase64' or a certificate path in " +
+                        "'RavenDBClientSettings.CertificatePath' when using HTTPS.");
             }
         }
 

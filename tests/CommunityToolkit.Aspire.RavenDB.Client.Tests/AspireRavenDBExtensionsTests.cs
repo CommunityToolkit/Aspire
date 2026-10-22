@@ -4,6 +4,9 @@ using Microsoft.Extensions.Hosting;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Session;
 using Raven.Client.Http;
+using Raven.Client.ServerWide;
+using Raven.Client.ServerWide.Operations;
+using Raven.Client.ServerWide.Sharding;
 
 namespace CommunityToolkit.Aspire.RavenDB.Client.Tests;
 
@@ -350,6 +353,65 @@ public class AspireRavenDBExtensionsTests(RavenDbServerFixture serverFixture) : 
         Assert.Equal(databaseName, documentStore.Database);
         Assert.Equal(ReadBalanceBehavior.RoundRobin, documentStore.Conventions.ReadBalanceBehavior);
         Assert.Equal(99, documentStore.Conventions.MaxNumberOfRequestsPerSession);
+    }
+
+    [Fact]
+    public void AddRavenDbClient_CreateDatabaseUsesAnExistingDatabase()
+    {
+        var databaseName = Guid.NewGuid().ToString("N");
+
+        using (var store = new DocumentStore { Urls = [DefaultConnectionString] }.Initialize())
+        {
+            store.Maintenance.Server.Send(new CreateDatabaseOperation(new DatabaseRecord(databaseName)));
+        }
+
+        var builder = CreateBuilder();
+
+        // Database names are case insensitive: the existing database is used, not created a second time.
+        builder.AddRavenDBClient(connectionName: DefaultConnectionName, configureSettings: clientSettings =>
+        {
+            clientSettings.CreateDatabase = true;
+            clientSettings.DatabaseName = databaseName.ToUpperInvariant();
+        });
+
+        using var host = builder.Build();
+
+        var documentStore = host.Services.GetRequiredService<IDocumentStore>();
+        Assert.Equal(databaseName.ToUpperInvariant(), documentStore.Database);
+    }
+
+    /// <summary>
+    /// The server lists a sharded database by its shards (<c>name$0</c>, <c>name$1</c>), so it is asked about by its own
+    /// name: CreateDatabase uses it instead of trying to create it a second time.
+    /// </summary>
+    [Fact]
+    public void AddRavenDbClient_CreateDatabaseUsesAnExistingShardedDatabase()
+    {
+        var databaseName = Guid.NewGuid().ToString("N");
+
+        using (var store = new DocumentStore { Urls = [DefaultConnectionString] }.Initialize())
+        {
+            var record = new DatabaseRecord(databaseName)
+            {
+                Sharding = new ShardingConfiguration
+                {
+                    Shards = new Dictionary<int, DatabaseTopology> { [0] = new(), [1] = new() },
+                },
+            };
+            store.Maintenance.Server.Send(new CreateDatabaseOperation(record));
+        }
+
+        var builder = CreateBuilder();
+        builder.AddRavenDBClient(connectionName: DefaultConnectionName, configureSettings: clientSettings =>
+        {
+            clientSettings.CreateDatabase = true;
+            clientSettings.DatabaseName = databaseName;
+        });
+
+        using var host = builder.Build();
+
+        var documentStore = host.Services.GetRequiredService<IDocumentStore>();
+        Assert.Equal(databaseName, documentStore.Database);
     }
 
     private HostApplicationBuilder CreateBuilder(IEnumerable<KeyValuePair<string, string?>>? config = null)
