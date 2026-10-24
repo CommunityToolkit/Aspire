@@ -6,24 +6,8 @@
     <IsPreview>true</IsPreview>
   </PropertyGroup>
 
-  <!-- .NET 8.0 dependencies -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" VersionOverride="8.0.23" />
-    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" VersionOverride="8.0.23" />
-    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" VersionOverride="8.0.23" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
-  </ItemGroup>
-
-  <!-- .NET 9.0 dependencies -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" VersionOverride="9.0.9" />
-    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" VersionOverride="9.0.9" />
-    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" VersionOverride="9.0.9" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
-  </ItemGroup>
-
   <!-- .NET 10.0 dependencies -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+  <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" VersionOverride="10.0.2" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" VersionOverride="10.0.2" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" VersionOverride="10.0.2" />
