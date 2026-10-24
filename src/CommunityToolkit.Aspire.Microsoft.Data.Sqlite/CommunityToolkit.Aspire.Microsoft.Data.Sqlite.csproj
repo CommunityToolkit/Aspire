@@ -5,18 +5,8 @@
     <Description>An Aspire client integration for the Microsoft.Data.Sqlite.Core package.</Description>
   </PropertyGroup>
 
-  <!-- .NET 8.0 dependencies -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
-    <PackageReference Include="Microsoft.Data.Sqlite" VersionOverride="8.0.23" />
-  </ItemGroup>
-
-  <!-- .NET 9.0 dependencies -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
-    <PackageReference Include="Microsoft.Data.Sqlite" VersionOverride="9.0.9" />
-  </ItemGroup>
-
   <!-- .NET 10.0 dependencies -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+  <ItemGroup>
     <PackageReference Include="Microsoft.Data.Sqlite" VersionOverride="10.0.2" />
   </ItemGroup>
 
