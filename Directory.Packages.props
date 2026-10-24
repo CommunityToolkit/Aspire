@@ -9,7 +9,6 @@
     <PackageVersion Include="Aspire.Hosting.Docker" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Kubernetes" Version="$(AspireVersion)$(AspirePreviewSuffix)" />
     <PackageVersion Include="Aspire.Hosting.Azure.Storage" Version="$(AspireVersion)" />
-    <PackageVersion Include="Aspire.Hosting.Dapr" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Azure.AppContainers" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Azure.Redis" Version="$(AspireVersion)" />
     <!-- Aspire.Hosting.Elasticsearch doesn't currently ship a 13.4 package. -->
@@ -26,7 +25,6 @@
     <PackageVersion Include="Aspire.Hosting.SqlServer" Version="$(AspireVersion)" />
     <PackageVersion Include="Logto.AspNetCore.Authentication" Version="0.2.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.Network" Version="9.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions" Version="10.0.8" />
   </ItemGroup>
   <ItemGroup Label="Core Packages">
     <!-- AspNetCore packages -->
@@ -34,60 +32,54 @@
     <PackageVersion Include="AspNetCore.HealthChecks.Rabbitmq" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.RavenDB" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.Sqlite" Version="9.0.0" />
-    <PackageVersion Include="AspNetCore.HealthChecks.SqlServer" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.SurrealDb" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.Uris" Version="9.0.0" />
-    <PackageVersion Include="Dapr.AspNetCore" Version="1.18.10" />
-    <PackageVersion Include="Dapr.Client" Version="1.18.10" />
-    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.31" />
-    <PackageVersion Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="8.0.31" />
-    <PackageVersion Include="Microsoft.AspNetCore.Components.QuickGrid" Version="$(AspNetCoreVersion)" />
-    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.11" />
-    <PackageVersion Include="Microsoft.DotNet.PlatformAbstractions" Version="3.1.6" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.8">
+    <PackageVersion Include="Dapr.AspNetCore" Version="1.19.0" />
+    <PackageVersion Include="Dapr.Client" Version="1.19.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.13">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageVersion>
-    <PackageVersion Include="Microsoft.Extensions.AI" Version="$(MEAIVersion)" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="$(DotNetExtensionsVersion)" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyModel" Version="$(DotNetExtensionsVersion)" />
-    <PackageVersion Include="Microsoft.Extensions.Http" Version="$(DotNetExtensionsVersion)" />
-    <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="$(DotNetExtensionsVersion)" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.AI" Version="10.11.0" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.13" />
     <!-- .NET packages -->
-    <PackageVersion Include="Microsoft.Extensions.Resilience" Version="9.9.0" />
-    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.9.0" />
-    <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="$(ServiceDiscoveryVersion)" />
-    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="$(DotNetExtensionsVersion)" />
-    <PackageVersion Include="Microsoft.Extensions.Options" Version="$(DotNetExtensionsVersion)" />
-    <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="$(DotNetExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Resilience" Version="10.11.0" />
+    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.11.0" />
+    <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="10.11.0" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="10.0.13" />
     <!-- OpenTelemetry packages -->
-    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.17.0" />
-    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.17.0" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.15.2" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" Version="1.15.1-beta.1" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.15.1" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.15.1" />
-    <PackageVersion Include="OpenTelemetry.Exporter.InMemory" Version="1.15.3" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.20.1" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.20.1" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.20.1" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" Version="1.20.1-beta.1" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.20.1" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.20.1" />
+    <PackageVersion Include="OpenTelemetry.Exporter.InMemory" Version="1.20.1" />
   </ItemGroup>
   <ItemGroup Label="Build Dependencies">
     <PackageVersion Include="Microsoft.DotNet.GenAPI.Task" Version="9.0.103-servicing.25071.13" />
   </ItemGroup>
   <ItemGroup Label="Integration Packages">
     <!-- External packages -->
-    <PackageVersion Include="AWSSDK.S3" Version="4.0.103.4" />
+    <PackageVersion Include="AWSSDK.S3" Version="4.0.104.6" />
     <PackageVersion Include="Azure.Messaging.ServiceBus" Version="7.21.0" />
     <PackageVersion Include="Azure.Provisioning.AppContainers" Version="1.2.0" />
-    <PackageVersion Include="Azure.Storage.Blobs" Version="12.29.2" />
+    <PackageVersion Include="Azure.Storage.Blobs" Version="12.30.1" />
     <PackageVersion Include="Google.Cloud.Storage.V1" Version="5.0.0" />
     <PackageVersion Include="Bitwarden.Secrets.Sdk" Version="1.0.0" />
     <!-- MAF 1.22.0 and Squad.Agents.AI 0.5.6-preview.33 bridge to SDK 1.0.13.
          Keep the Squad sample's direct SDK reference aligned with those build targets. -->
-    <PackageVersion Include="GitHub.Copilot.SDK" Version="1.0.13" />
+    <PackageVersion Include="GitHub.Copilot.SDK" Version="1.0.26" />
     <PackageVersion Include="JsonSchema.Net" Version="9.4.1" />
-    <PackageVersion Include="KubernetesClient" Version="19.0.2" />
-    <PackageVersion Include="OllamaSharp" Version="5.4.12" />
-    <PackageVersion Include="OpenFeature.Providers.GOFeatureFlag" Version="1.0.0" />
+    <PackageVersion Include="KubernetesClient" Version="21.0.8" />
+    <PackageVersion Include="OllamaSharp" Version="5.5.0" />
+    <PackageVersion Include="OpenFeature.Providers.GOFeatureFlag" Version="1.2.0" />
     <!-- Keep MassTransit dependencies below 9.0.0: https://github.com/CommunityToolkit/Aspire/issues/1619 -->
     <PackageVersion Include="MassTransit" Version="[8.5.10,9.0.0)" />
     <PackageVersion Include="MassTransit.ActiveMQ" Version="[8.5.10,9.0.0)" />
@@ -95,72 +87,59 @@
     <PackageVersion Include="MeiliSearch" Version="0.20.0" />
     <PackageVersion Include="MQTTnet" Version="5.2.0.1603" />
     <PackageVersion Include="DuckDB.NET.Data.Full" Version="1.5.6.1" />
-    <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.12" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.12" />
-    <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="$(DotNetExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.13" />
     <PackageVersion Include="Microsoft.SqlServer.DacFx" Version="170.5.96" />
-    <PackageVersion Include="Microsoft.Identity.Client" Version="4.80.0" />
+    <PackageVersion Include="Microsoft.Identity.Client" Version="4.91.1" />
     <PackageVersion Include="Microsoft.Build" Version="17.11.48" />
     <PackageVersion Include="Microsoft.Build.Framework" Version="17.11.48" />
     <PackageVersion Include="Microsoft.NET.StringTools" Version="18.4.0" />
     <PackageVersion Include="Microsoft.Build.Locator" Version="1.10.12" />
     <PackageVersion Include="ErikEJ.Dacpac.Chinook" Version="1.0.0" />
-    <PackageVersion Include="RavenDB.Client" Version="6.2.1" />
-    <PackageVersion Include="RavenDB.TestDriver" Version="6.2.1" />
+    <PackageVersion Include="RavenDB.Client" Version="7.2.7" />
+    <PackageVersion Include="RavenDB.TestDriver" Version="7.2.7" />
     <PackageVersion Include="YamlDotNet" Version="18.1.0" />
-    <PackageVersion Include="Microsoft.Agents.AI.GitHub.Copilot" Version="1.22.0" />
-    <PackageVersion Include="Squad.Agents.AI" Version="0.5.6-preview.33" />
+    <PackageVersion Include="Microsoft.Agents.AI.GitHub.Copilot" Version="1.26.0" />
+    <PackageVersion Include="Squad.Agents.AI" Version="1.0.0" />
     <PackageVersion Include="SurrealDb.MinimalApis.Extensions" Version="1.0.0" />
     <PackageVersion Include="SurrealDb.Net" Version="1.0.0" />
-    <PackageVersion Include="Swashbuckle.AspNetCore" Version="7.3.1" />
-    <PackageVersion Include="Microsoft.PowerShell.SDK" Version="7.4.10" />
-    <PackageVersion Include="ModelContextProtocol" Version="0.4.0-preview.3" />
-    <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="0.4.0-preview.3" />
+    <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.3.1" />
+    <PackageVersion Include="Microsoft.PowerShell.SDK" Version="7.6.8" />
+    <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="2.3.0" />
     <PackageVersion Include="KurrentDB.Client" Version="1.6.0" />
     <PackageVersion Include="SSH.NET" Version="2026.0.0" />
-    <PackageVersion Include="ChromaDotNet.Client.DependencyInjection" Version="2.11.0" />
+    <PackageVersion Include="ChromaDotNet.Client.DependencyInjection" Version="2.18.0" />
   </ItemGroup>
   <ItemGroup Label="Testing">
     <!-- Testing packages -->
     <PackageVersion Include="Aspire.Hosting.Testing" Version="$(AspireVersion)" />
-    <PackageVersion Include="Bogus" Version="35.6.3" />
+    <PackageVersion Include="Bogus" Version="35.6.5" />
     <PackageVersion Include="coverlet.collector" Version="10.1.0" />
-    <PackageVersion Include="OpenFeature.Providers.Flagd" Version="0.6.0" />
-    <PackageVersion Include="OpenFeature.Providers.Ofrep" Version="0.1.2" />
+    <PackageVersion Include="OpenFeature.Providers.Flagd" Version="0.8.0" />
+    <PackageVersion Include="OpenFeature.Providers.Ofrep" Version="0.1.7" />
     <PackageVersion Include="MartinCostello.Logging.XUnit.v3" Version="0.7.1" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
-    <PackageVersion Include="xunit.v3.mtp-v2" Version="3.2.0" />
-    <PackageVersion Include="xunit.v3.assert" Version="3.2.0" />
-    <PackageVersion Include="xunit.v3.extensibility.core" Version="3.2.0" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
+    <PackageVersion Include="xunit.v3.mtp-v2" Version="4.0.2" />
+    <PackageVersion Include="xunit.v3.assert" Version="4.0.2" />
+    <PackageVersion Include="xunit.v3.extensibility.core" Version="4.0.2" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.1" />
     <PackageVersion Include="Microsoft.DotNet.XUnitV3Extensions" Version="11.0.0-beta.25509.1" />
-    <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.11.0" />
-    <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="2.4.0" />
-    <PackageVersion Include="Microsoft.Testing.Extensions.CrashDump" Version="2.3.3" />
-    <PackageVersion Include="Microsoft.Testing.Extensions.HangDump" Version="2.3.3" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.12.0" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="2.5.1" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.CrashDump" Version="2.5.1" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.HangDump" Version="2.5.1" />
     <PackageVersion Include="GitHubActionsTestLogger" Version="3.0.5" />
-    <PackageVersion Include="Moq" Version="$(MoqVersion)" />
-    <!-- Build dependencies -->
-    <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4" />
+    <PackageVersion Include="Moq" Version="4.21.0" />
     <!-- Testcontainers packages -->
-    <PackageVersion Include="Testcontainers" Version="$(TestContainersVersion)" />
-    <PackageVersion Include="Testcontainers.MsSql" Version="$(TestContainersVersion)" />
-    <PackageVersion Include="Polly" Version="8.6.4" />
-    <PackageVersion Include="Verify.XunitV3" Version="31.13.5" />
+    <PackageVersion Include="Testcontainers" Version="4.16.0" />
+    <PackageVersion Include="Testcontainers.MsSql" Version="4.16.0" />
+    <PackageVersion Include="Polly" Version="8.8.0" />
+    <!-- Keep Verify on the MIT-licensed version until a new license is agreed. -->
+    <PackageVersion Include="Verify.XunitV3" Version="[32.0.1,32.0.1]" />
   </ItemGroup>
   <ItemGroup Label="System">
-    <PackageVersion Include="System.Linq.Async" Version="6.0.1" />
-    <PackageVersion Include="System.Linq.AsyncEnumerable" Version="$(DotNetExtensionsVersion)" />
-  </ItemGroup>
-  <ItemGroup Label="Overrides">
-    <PackageVersion Include="Microsoft.Bcl.Memory" Version="10.0.13" />
-    <PackageVersion Include="OpenTelemetry.Api" Version="1.17.0" />
     <!-- Overrides to address https://github.com/advisories/GHSA-2fmv-rv2c-59x7, https://github.com/advisories/GHSA-846f-f764-76mx, https://github.com/advisories/GHSA-7hqp-7c5m-4vq6, https://github.com/advisories/GHSA-c399-9853-6jmj, https://github.com/advisories/GHSA-r955-8q5j-3h83 and https://github.com/advisories/GHSA-vrv5-2jg9-4mmr -->
     <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
-    <PackageVersion Include="System.Security.Cryptography.Xml" Version="8.0.5" />
-     <!-- Override to address https://github.com/advisories/GHSA-pggp-6c3x-2xmx -->
-    <PackageVersion Include="MongoDB.Driver" Version="3.9.0" />
-    <!-- Override to address  https://github.com/advisories/GHSA-6c8g-7p36-r338 -->
-    <PackageVersion Include="SharpCompress" Version="1.0.0" />
   </ItemGroup>
 </Project>

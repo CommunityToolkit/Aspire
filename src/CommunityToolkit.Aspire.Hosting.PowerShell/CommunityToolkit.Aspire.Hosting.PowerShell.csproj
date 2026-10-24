@@ -7,10 +7,8 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting" />
-    <PackageReference Include="JsonSchema.Net" VersionOverride="9.4.1" />
+    <PackageReference Include="JsonSchema.Net" />
     <PackageReference Include="Microsoft.PowerShell.SDK" />
-    <PackageReference Include="System.Security.Cryptography.Pkcs" />
-    <PackageReference Include="System.Security.Cryptography.Xml" />
   </ItemGroup>
 
   <ItemGroup>

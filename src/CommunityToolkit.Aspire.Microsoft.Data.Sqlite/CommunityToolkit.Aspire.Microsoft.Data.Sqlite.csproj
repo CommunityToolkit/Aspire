@@ -5,17 +5,12 @@
     <Description>An Aspire client integration for the Microsoft.Data.Sqlite.Core package.</Description>
   </PropertyGroup>
 
-  <!-- .NET 10.0 dependencies -->
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Data.Sqlite" VersionOverride="10.0.2" />
-  </ItemGroup>
-
-  <!-- Common dependencies for all target frameworks -->
   <ItemGroup>
     <PackageReference Include="AspNetCore.HealthChecks.Sqlite" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
+    <PackageReference Include="Microsoft.Data.Sqlite"/>
   </ItemGroup>
 
   <ItemGroup>

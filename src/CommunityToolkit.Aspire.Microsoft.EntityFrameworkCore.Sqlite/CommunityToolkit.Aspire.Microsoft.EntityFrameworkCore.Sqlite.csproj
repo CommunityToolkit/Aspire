@@ -6,17 +6,12 @@
     <IsPreview>true</IsPreview>
   </PropertyGroup>
 
-  <!-- .NET 10.0 dependencies -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" VersionOverride="10.0.2" />
-    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" VersionOverride="10.0.2" />
-    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" VersionOverride="10.0.2" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" VersionOverride="10.0.2" />
-  </ItemGroup>
-
-  <!-- Common dependencies for all target frameworks -->
-  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
     <PackageReference Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" />
   </ItemGroup>
