@@ -47,7 +47,7 @@ public class K3sInProcessPortForwarderTests
             .Setup(c => c.ListNamespacedPodWithHttpMessagesAsync(
                 It.IsAny<string>(), It.IsAny<bool?>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<string>(), It.IsAny<int?>(), It.IsAny<string>(), It.IsAny<string>(),
-                It.IsAny<bool?>(), It.IsAny<int?>(), It.IsAny<bool?>(), It.IsAny<bool?>(),
+                It.IsAny<bool?>(), It.IsAny<string>(), It.IsAny<int?>(), It.IsAny<bool?>(), It.IsAny<bool?>(),
                 It.IsAny<IReadOnlyDictionary<string, IReadOnlyList<string>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(() =>
             {
