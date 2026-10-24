@@ -40,7 +40,7 @@
     "tslib": "^2.3.0",
     "typescript": "~5.8.2",
     "typescript-eslint": "^8.70.1",
-    "vite": "^8.1.5",
+    "vite": "^8.3.5",
     "vitest": "^4.1.11"
   },
   "workspaces": [
