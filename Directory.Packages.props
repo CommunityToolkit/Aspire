@@ -84,7 +84,7 @@
     <!-- MAF 1.22.0 and Squad.Agents.AI 0.5.6-preview.33 bridge to SDK 1.0.13.
          Keep the Squad sample's direct SDK reference aligned with those build targets. -->
     <PackageVersion Include="GitHub.Copilot.SDK" Version="1.0.13" />
-    <PackageVersion Include="JsonSchema.Net" Version="9.4.0" />
+    <PackageVersion Include="JsonSchema.Net" Version="9.4.1" />
     <PackageVersion Include="KubernetesClient" Version="19.0.2" />
     <PackageVersion Include="OllamaSharp" Version="5.4.12" />
     <PackageVersion Include="OpenFeature.Providers.GOFeatureFlag" Version="1.0.0" />
