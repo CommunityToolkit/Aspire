@@ -211,6 +211,9 @@ public static partial class PerlAppResourceBuilderExtensions
     /// installation is skipped. The installer uses the active package manager —
     /// <c>cpan</c> by default, or <c>cpanm</c> if <see cref="WithCpanMinus{TResource}"/>
     /// was called.
+    /// In run mode, repeated calls for the same module on the same resource reuse the
+    /// existing installer and its completion dependency. The installer retains the
+    /// <paramref name="force"/> and <paramref name="skipTest"/> values from the first call.
     /// </remarks>
     [AspireExport]
     public static IResourceBuilder<TResource> WithPackage<TResource>(
@@ -387,7 +390,7 @@ public static partial class PerlAppResourceBuilderExtensions
             return;
         }
 
-        var installerName = $"{resource.Resource.Name}-{packageName}-installer";
+        var installerName = SanitizeInstallerResourceName($"{resource.Resource.Name}-{packageName}-installer");
         resource.ApplicationBuilder.TryCreateResourceBuilder<PerlModuleInstallerResource>(
             installerName, out var existingResource);
 
@@ -398,7 +401,7 @@ public static partial class PerlAppResourceBuilderExtensions
         }
 
         var installer = new PerlModuleInstallerResource(
-            installerName.Replace(":", "8"), // replace colons with '8' for the installer resource name (Aspire resource names cannot contain ':')
+            installerName,
             packageName,
             resource.Resource.WorkingDirectory ?? throw new ArgumentNullException());
 
