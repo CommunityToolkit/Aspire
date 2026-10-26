@@ -1,0 +1,99 @@
+name: Bump toolkit version after release
+
+on:
+  release:
+    types: [created]
+  workflow_call:
+    inputs:
+      release_tag:
+        description: The tag of the release that was created.
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: release-version-bump
+  cancel-in-progress: false
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: Bump toolkit patch version
+        id: version
+        shell: pwsh
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag || github.event.release.tag_name }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ($env:RELEASE_TAG -notmatch '^v?(\d+)\.(\d+)\.(\d+)(?:[-+].+)?$') {
+            throw "Expected a semantic version release tag, got '$env:RELEASE_TAG'."
+          }
+
+          $releaseMajor = [int]$Matches[1]
+          $releaseMinor = [int]$Matches[2]
+          $nextPatch = [int]$Matches[3] + 1
+          $next = [version]::new($releaseMajor, $releaseMinor, $nextPatch)
+          $path = Join-Path $PWD 'Directory.Build.props'
+          $content = [System.IO.File]::ReadAllText($path)
+          [xml]$props = $content
+          foreach ($property in @('AspireMajorVersion', 'ToolkitMinorVersion', 'ToolkitPatchVersion')) {
+            if ([regex]::Matches($content, "<$property>\d+</$property>").Count -ne 1) {
+              throw "Expected exactly one numeric $property in Directory.Build.props."
+            }
+          }
+
+          $current = [version]::new(
+            [int]$props.SelectSingleNode('/Project/PropertyGroup/AspireMajorVersion').InnerText,
+            [int]$props.SelectSingleNode('/Project/PropertyGroup/ToolkitMinorVersion').InnerText,
+            [int]$props.SelectSingleNode('/Project/PropertyGroup/ToolkitPatchVersion').InnerText)
+
+          if ($current -ge $next) {
+            Write-Host "Toolkit version $current is already at or ahead of $next; no bump needed."
+            exit 0
+          }
+
+          if ($current.Major -ne $releaseMajor) {
+            throw "Release major version $releaseMajor is ahead of AspireMajorVersion $($current.Major); update the major version separately."
+          }
+
+          $content = $content -replace '<ToolkitMinorVersion>\d+</ToolkitMinorVersion>', "<ToolkitMinorVersion>$releaseMinor</ToolkitMinorVersion>"
+          $content = $content -replace '<ToolkitPatchVersion>\d+</ToolkitPatchVersion>', "<ToolkitPatchVersion>$nextPatch</ToolkitPatchVersion>"
+          [System.IO.File]::WriteAllText($path, $content)
+          "next=$next" >> $env:GITHUB_OUTPUT
+
+      - name: Prepare pull request body
+        if: steps.version.outputs.next != ''
+        shell: pwsh
+        env:
+          NEXT_VERSION: ${{ steps.version.outputs.next }}
+          RELEASE_TAG: ${{ inputs.release_tag || github.event.release.tag_name }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $body = Get-Content '.github/PULL_REQUEST_TEMPLATE.md' -Raw
+          $body = $body.Replace('**Closes #<ISSUE_NUMBER>**', '**Related issue:** N/A (automated release housekeeping).')
+          $body = $body.Replace('<!-- Add an overview of the changes here -->', "Bump the toolkit package version to $env:NEXT_VERSION after release $env:RELEASE_TAG by incrementing ToolkitPatchVersion.")
+          $body += "`n`nValidation: Only package version properties changed; builds and tests were not run by this workflow. The `skip-nuget-publish` label prevents publishing packages when this PR is merged.`n"
+          $bodyPath = Join-Path $env:RUNNER_TEMP 'release-version-bump-pr.md'
+          [System.IO.File]::WriteAllText($bodyPath, $body)
+          "PR_BODY_PATH=$bodyPath" >> $env:GITHUB_ENV
+
+      - name: Create or update pull request
+        if: steps.version.outputs.next != ''
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: automation/toolkit-version-${{ steps.version.outputs.next }}
+          base: ${{ github.event.repository.default_branch }}
+          add-paths: Directory.Build.props
+          commit-message: "Bump toolkit version to ${{ steps.version.outputs.next }}"
+          title: "Bump toolkit version to ${{ steps.version.outputs.next }}"
+          body-path: ${{ env.PR_BODY_PATH }}
+          labels: skip-nuget-publish
