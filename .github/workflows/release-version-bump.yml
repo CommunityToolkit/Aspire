@@ -2,7 +2,7 @@ name: Bump toolkit version after release
 
 on:
   release:
-    types: [created]
+    types: [published]
   workflow_call:
     inputs:
       release_tag:
