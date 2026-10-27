@@ -72,3 +72,5 @@ var chroma = builder.AddChroma("chroma")
 ## Known limitations
 
 The integration does not send the telemetry of the Chroma server to the dashboard. Chroma 1.5.9 sends its OTLP traces as gRPC without TLS, also to an `https://` endpoint like the default one of the dashboard.
+
+In Docker Compose, `WaitFor(chroma)` waits until the Chroma container has started, not until Chroma answers: the publisher of Aspire gives the waiting service `condition: service_started` and does not turn the HTTP health check into a Compose `healthcheck`.
