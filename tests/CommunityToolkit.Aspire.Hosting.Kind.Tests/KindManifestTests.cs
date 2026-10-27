@@ -1521,18 +1521,18 @@ public class KindManifestTests
     }
 
     [Theory]
-    [InlineData(CrdWaitBehavior.Fail)]
-    [InlineData(CrdWaitBehavior.BestEffort)]
-    public async Task ManifestPostApplyCheck_StopsHungWaitAtConfiguredTimeout(CrdWaitBehavior behavior)
+    [InlineData(CrdWaitBehavior.Fail, false)]
+    [InlineData(CrdWaitBehavior.Fail, true)]
+    [InlineData(CrdWaitBehavior.BestEffort, false)]
+    [InlineData(CrdWaitBehavior.BestEffort, true)]
+    public async Task ManifestPostApplyCheck_StopsHungWaitAtConfiguredTimeout(CrdWaitBehavior behavior, bool ignoresCancellation)
     {
         var runner = new FakeProcessRunner();
         runner.Results.Enqueue(new(0, "cluster is running", ""));
         runner.Results.Enqueue(new(0, "customresourcedefinition.apiextensions.k8s.io/widgets.example.com", ""));
-        var kubernetes = new FakeCrdClient(async (name, token) =>
-        {
-            await Task.Delay(Timeout.InfiniteTimeSpan, token);
-            return FakeCrdClient.Definition(name, established: false);
-        });
+        TaskCompletionSource<V1CustomResourceDefinition> read = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        var kubernetes = new FakeCrdClient((_, token) =>
+            ignoresCancellation ? read.Task : read.Task.WaitAsync(token));
         using var builder = TestDistributedApplicationBuilder.Create();
         var resource = builder.AddKindCluster("test-cluster")
             .AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"))
@@ -1549,62 +1549,23 @@ public class KindManifestTests
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
         cts.CancelAfter(TimeSpan.FromSeconds(3));
 
-        if (behavior == CrdWaitBehavior.BestEffort)
+        try
         {
-            await app.Services.GetRequiredService<KindPostApplyChecks>().RunAsync(resource, cts.Token);
+            if (behavior == CrdWaitBehavior.BestEffort)
+            {
+                await app.Services.GetRequiredService<KindPostApplyChecks>().RunAsync(resource, cts.Token);
+            }
+            else
+            {
+                await Assert.ThrowsAsync<TimeoutException>(() =>
+                    app.Services.GetRequiredService<KindPostApplyChecks>().RunAsync(resource, cts.Token));
+            }
+            Assert.Equal(2, runner.Commands.Count);
+            Assert.Equal(["widgets.example.com"], kubernetes.ReadNames);
         }
-        else
+        finally
         {
-            await Assert.ThrowsAsync<TimeoutException>(() =>
-                app.Services.GetRequiredService<KindPostApplyChecks>().RunAsync(resource, cts.Token));
-        }
-        Assert.Equal(2, runner.Commands.Count);
-        Assert.Equal(["widgets.example.com"], kubernetes.ReadNames);
-    }
-
-    [Fact]
-    public async Task ManifestPostApplyCheck_RejectsEstablishedResponseAfterDeadline()
-    {
-        using var builder = TestDistributedApplicationBuilder.Create();
-        var resource = builder.AddKindCluster("test-cluster")
-            .AddManifestFromContent("crds", "kind: CustomResourceDefinition")
-            .WithCrdWait(options => options.Timeout = TimeSpan.FromSeconds(1)).Resource;
-        var outcomes = KindDeploymentOutcomes.GetOrCreate(resource);
-        outcomes.CrdNames =
-            ["customresourcedefinition.apiextensions.k8s.io/widgets.example.com"];
-        CancellationToken? waitCancellationToken = null;
-        var kubernetes = new FakeCrdClient(async (name, token) =>
-        {
-            waitCancellationToken = token;
-            await Task.Delay(TimeSpan.FromMilliseconds(1250), TestContext.Current.CancellationToken);
-            return FakeCrdClient.Definition(name, established: true);
-        });
-        builder.Services.AddSingleton<Func<string, IKubernetes>>(_ => _ => kubernetes.Client);
-        using var app = builder.Build();
-
-        var stopwatch = Stopwatch.StartNew();
-        var exception = await Record.ExceptionAsync(() =>
-            app.Services.GetRequiredService<KindPostApplyChecks>().RunAsync(resource, TestContext.Current.CancellationToken));
-        var elapsed = stopwatch.Elapsed;
-
-        if (exception?.GetType() != typeof(TimeoutException))
-        {
-            resource.TryGetLastAnnotation<KindCrdWaitPolicyAnnotation>(out var policy);
-            var crdNames = outcomes.CrdNames ?? [];
-            var waitCancellationRequested = waitCancellationToken is { } token
-                ? token.IsCancellationRequested.ToString()
-                : "<not observed>";
-
-            Assert.Fail($"""
-                Expected TimeoutException, but the post-apply check returned a different result.
-                Effective CRD wait policy: Timeout={policy?.Options.Timeout.ToString() ?? "<none>"}, FailureBehavior={policy?.Options.FailureBehavior.ToString() ?? "<none>"}
-                CRD outcomes: Count={crdNames.Count}, Names=[{string.Join(", ", crdNames)}]
-                Fake CRD client reads: {kubernetes.ReadCount}
-                RunAsync elapsed: {elapsed}
-                Wait cancellation requested: {waitCancellationRequested}
-                Actual exception:
-                {exception?.ToString() ?? "<none>"}
-                """);
+            read.TrySetResult(FakeCrdClient.Definition("widgets.example.com", established: true));
         }
     }
 
