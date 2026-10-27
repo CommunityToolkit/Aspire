@@ -145,4 +145,19 @@ public class AddChromaTests
         Assert.Equal(8123, endpoint.Port);
         Assert.Equal(8000, endpoint.TargetPort);
     }
+
+    // The documentation of AddChroma writes the default image and tag as text, which the TypeScript AppHost shows too;
+    // this test fails when they no longer match the image of the resource.
+    [Fact]
+    public void AddChromaDocumentationNamesTheDefaultImageAndTag()
+    {
+        var documentationPath = Path.ChangeExtension(typeof(ChromaResource).Assembly.Location, ".xml");
+        var documentation = System.Xml.Linq.XDocument.Load(documentationPath);
+
+        var summary = documentation.Descendants("member")
+            .Single(member => ((string?)member.Attribute("name"))?.StartsWith("M:Aspire.Hosting.ChromaBuilderExtensions.AddChroma(", StringComparison.Ordinal) == true)
+            .Element("summary")!.Value;
+
+        Assert.Contains($"The default image is \"{ChromaContainerImageTags.Image}\" and the tag is \"{ChromaContainerImageTags.Tag}\".", summary);
+    }
 }

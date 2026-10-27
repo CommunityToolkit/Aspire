@@ -20,7 +20,7 @@ public static class ChromaBuilderExtensions
 
     /// <summary>
     /// Adds a ChromaDB container resource to the application model.
-    /// The default image is <inheritdoc cref="ChromaContainerImageTags.Image"/> and the tag is <inheritdoc cref="ChromaContainerImageTags.Tag"/>.
+    /// The default image is "chromadb/chroma" and the tag is "1.5.9".
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
     /// <param name="name">The name of the resource. This name will be used as the connection string name when referenced in a dependency.</param>
