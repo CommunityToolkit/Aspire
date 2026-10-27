@@ -13,6 +13,7 @@ public class TypeScriptAppHostTests
             packageName: "CommunityToolkit.Aspire.Hosting.Ollama",
             exampleName: "ollama",
             waitForResources: ["ollama", "ollama2"],
+            waitTimeoutSeconds: 600,
             cancellationToken: TestContext.Current.CancellationToken);
     }
 }
