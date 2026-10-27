@@ -215,6 +215,10 @@ public static partial class PerlAppResourceBuilderExtensions
     /// existing installer and its completion dependency. The installer retains the
     /// <paramref name="force"/> and <paramref name="skipTest"/> values from the first call.
     /// </remarks>
+    /// <exception cref="InvalidOperationException">
+    /// In run mode, the generated installer resource name is already in use by a different
+    /// module or resource. Module identities are compared using ordinal, case-sensitive matching.
+    /// </exception>
     [AspireExport]
     public static IResourceBuilder<TResource> WithPackage<TResource>(
         this IResourceBuilder<TResource> builder,
@@ -226,14 +230,14 @@ public static partial class PerlAppResourceBuilderExtensions
         ArgumentException.ThrowIfNullOrEmpty(packageName);
         EnsurePackageInstallIsSupported(builder);
 
+        AddPackageInstaller(builder, packageName, force, skipTest);
+
         builder.WithAnnotation(new PerlRequiredModuleAnnotation
         {
             Name = packageName,
             Force = force,
             SkipTest = skipTest
         });
-
-        AddPackageInstaller(builder, packageName, force, skipTest);
 
         return builder;
     }
@@ -396,8 +400,21 @@ public static partial class PerlAppResourceBuilderExtensions
 
         if (existingResource is not null)
         {
-            // Installer already exists for this package
-            return;
+            var existingInstaller = resource.Resource.Annotations
+                .OfType<PerlModuleInstallerAnnotation>()
+                .SingleOrDefault(annotation => ReferenceEquals(annotation.Resource, existingResource.Resource));
+
+            if (existingInstaller is not null &&
+                string.Equals(existingInstaller.PackageName, packageName, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            throw new InvalidOperationException(
+                $"Cannot install Perl module '{packageName}': installer resource name '{existingResource.Resource.Name}' is already used " +
+                (existingInstaller is not null
+                    ? $"by module '{existingInstaller.PackageName}'."
+                    : "by another resource."));
         }
 
         var installer = new PerlModuleInstallerResource(
@@ -451,7 +468,7 @@ public static partial class PerlAppResourceBuilderExtensions
         // Make the parent resource wait for the installer to complete
         resource.WaitForCompletion(installerBuilder);
 
-        resource.WithAnnotation(new PerlModuleInstallerAnnotation(installer));
+        resource.WithAnnotation(new PerlModuleInstallerAnnotation(installer, packageName));
 
         // Eagerly propagate local::lib env vars if the annotation already exists
         TryAttachLocalLibToInstallerResource(installer, resource.Resource);

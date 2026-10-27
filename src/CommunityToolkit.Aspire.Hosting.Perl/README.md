@@ -146,6 +146,13 @@ In run mode, calling `WithPackage()` repeatedly for the same module on the same 
 reuses one installer and one completion dependency, including for names such as `Foo::Bar`.
 The installer keeps the `force` and `skipTest` values from the first call.
 
+Module identities are case-sensitive. If different modules map to the same installer resource
+name, `WithPackage()` throws `InvalidOperationException` instead of silently skipping a module.
+For example, `Foo88Bar` and `Foo::Bar` both map to `app-Foo88Bar-installer` on a resource named
+`app`. Case-only differences also collide because Aspire resource names are case-insensitive.
+An installer belonging to another resource is never reused. These checks apply only in run mode;
+publish mode retains the module requests without creating local installers.
+
 ---
 
 ## Certificate trust
