@@ -314,4 +314,23 @@ public class ChromaClientExtensionsTests
         Assert.Contains(registrations, r => r.Name == "Chroma_first");
         Assert.Contains(registrations, r => r.Name == "Chroma_second");
     }
+
+    // The Endpoint of the settings takes the same URIs as the Endpoint of a connection string: absolute, http or https.
+    [Theory]
+    [InlineData("ftp://localhost:8000")]
+    [InlineData("localhost:8000")]
+    [InlineData("relative/path")]
+    public void AnEndpointSettingThatIsNotHttpThrowsWhenTheClientIsResolved(string endpoint)
+    {
+        var builder = Host.CreateApplicationBuilder();
+        builder.Configuration.AddInMemoryCollection([
+            new KeyValuePair<string, string?>("Aspire:Chroma:Client:Endpoint", endpoint)
+        ]);
+
+        builder.AddChromaClient(DefaultConnectionName);
+
+        using var host = builder.Build();
+        var exception = Assert.Throws<InvalidOperationException>(() => host.Services.GetRequiredService<ChromaClient>());
+        Assert.Contains("http or https", exception.Message);
+    }
 }
