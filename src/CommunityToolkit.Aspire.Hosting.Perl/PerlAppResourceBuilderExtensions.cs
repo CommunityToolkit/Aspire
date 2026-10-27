@@ -214,26 +214,41 @@ public static partial class PerlAppResourceBuilderExtensions
                 break;
         }
 
-        resourceBuilder.WithOtlpExporter();
+        resourceBuilder.WithOtlpExporterIfEndpointAvailable(OtlpProtocol.HttpJson);
         resourceBuilder.WithRequiredCommand("perl", "https://www.perl.org/get.html");
         resourceBuilder.WithRequiredCommand("cpan", "https://metacpan.org/pod/CPAN");
 
-        // Configure OpenTelemetry exporters using environment variables
-        // https://opentelemetry.io/docs/specs/otel/configuration/sdk-environment-variables/#exporter-selection
-        // The Perl OpenTelemetry SDK defaults to JSON encoding when Google::ProtocolBuffers::Dynamic
-        // is not available. Using http/json avoids a silent protocol mismatch where the SDK sends
-        // JSON-encoded data with a protobuf content-type that the OTLP collector rejects.
+        // OpenTelemetry::Exporter::OTLP supports HTTP/JSON and HTTP/protobuf, not gRPC.
+        // HTTP/JSON avoids requiring Google::ProtocolBuffers::Dynamic for protobuf encoding, which can be difficult (though not impossible)to get on windows, specifically.
         resourceBuilder.WithEnvironment(context =>
         {
+            if (context.ExecutionContext.IsRunMode &&
+                !context.EnvironmentVariables.ContainsKey("OTEL_EXPORTER_OTLP_ENDPOINT"))
+            {
+                return;
+            }
+
             context.EnvironmentVariables["OTEL_TRACES_EXPORTER"] = "otlp";
             context.EnvironmentVariables["OTEL_LOGS_EXPORTER"] = "otlp";
             context.EnvironmentVariables["OTEL_METRICS_EXPORTER"] = "otlp";
-            context.EnvironmentVariables["OTEL_EXPORTER_OTLP_PROTOCOL"] = "http/protobuf";
 
-            context.EnvironmentVariables["OTEL_PERL_TRACES_EXPORTER"] = "otlp";
-            context.EnvironmentVariables["OTEL_PERL_LOGS_EXPORTER"] = "otlp";
-            context.EnvironmentVariables["OTEL_PERL_METRICS_EXPORTER"] = "otlp";
-            context.EnvironmentVariables["OTEL_PERL_EXPORTER_OTLP_PROTOCOL"] = "http/protobuf";
+            if (!context.ExecutionContext.IsRunMode)
+            {
+                context.EnvironmentVariables["OTEL_PERL_TRACES_EXPORTER"] = "otlp";
+                context.EnvironmentVariables["OTEL_PERL_LOGS_EXPORTER"] = "otlp";
+                context.EnvironmentVariables["OTEL_PERL_METRICS_EXPORTER"] = "otlp";
+                return;
+            }
+
+            // OpenTelemetry::Common reads OTEL_PERL_* before OTEL_*.
+            // Resolve OTEL_PERL_* from final OTEL_* values so later standard overrides still apply.
+            // Explicit OTEL_PERL_* values added later replace these mirrors.
+            MirrorPerlOtelVariable(context, "OTEL_TRACES_EXPORTER", "OTEL_PERL_TRACES_EXPORTER");
+            MirrorPerlOtelVariable(context, "OTEL_LOGS_EXPORTER", "OTEL_PERL_LOGS_EXPORTER");
+            MirrorPerlOtelVariable(context, "OTEL_METRICS_EXPORTER", "OTEL_PERL_METRICS_EXPORTER");
+            MirrorPerlOtelVariable(context, "OTEL_EXPORTER_OTLP_ENDPOINT", "OTEL_PERL_EXPORTER_OTLP_ENDPOINT");
+            MirrorPerlOtelVariable(context, "OTEL_EXPORTER_OTLP_PROTOCOL", "OTEL_PERL_EXPORTER_OTLP_PROTOCOL");
+            MirrorPerlOtelVariable(context, "OTEL_EXPORTER_OTLP_HEADERS", "OTEL_PERL_EXPORTER_OTLP_HEADERS");
         });
 
         if (builder.ExecutionContext.IsRunMode)
@@ -537,6 +552,14 @@ public static partial class PerlAppResourceBuilderExtensions
         }
 
         return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Sets a Perl-specific OpenTelemetry variable to resolve from the final standard variable value.
+    /// </summary>
+    private static void MirrorPerlOtelVariable(EnvironmentCallbackContext context, string sourceName, string targetName)
+    {
+        context.EnvironmentVariables[targetName] = new PerlOtelEnvironmentVariableMirror(context.EnvironmentVariables, sourceName);
     }
 
     /// <summary>
