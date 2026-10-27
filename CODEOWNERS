@@ -139,3 +139,12 @@
 /src/CommunityToolkit.Aspire.Hosting.Squad/ @tamirdresher
 /tests/CommunityToolkit.Aspire.Hosting.Squad.Tests/ @tamirdresher
 /examples/squad/ @tamirdresher
+
+# CommunityToolkit.Aspire.Chroma, CommunityToolkit.Aspire.Hosting.Chroma
+
+/examples/chromadb/ @Laurianti
+/src/CommunityToolkit.Aspire.Chroma/ @Laurianti
+/tests/CommunityToolkit.Aspire.Chroma.Tests/ @Laurianti
+/src/CommunityToolkit.Aspire.Hosting.Chroma/ @Laurianti
+/tests/CommunityToolkit.Aspire.Hosting.Chroma.Tests/ @Laurianti
+
