@@ -221,6 +221,20 @@ public class ChromaClientExtensionsTests
         Assert.Throws<ArgumentException>(() => builder.AddChromaClient(DefaultConnectionName));
     }
 
+    // The Endpoint of a connection string needs its scheme: the error says so, instead of a missing endpoint.
+    [Fact]
+    public void ConnectionStringWithAnEndpointThatIsNotHttpThrows()
+    {
+        var builder = Host.CreateApplicationBuilder();
+        builder.Configuration.AddInMemoryCollection([
+            new KeyValuePair<string, string?>($"ConnectionStrings:{DefaultConnectionName}", "Endpoint=localhost:8000")
+        ]);
+
+        var exception = Assert.Throws<ArgumentException>(() => builder.AddChromaClient(DefaultConnectionName));
+        Assert.Contains("http", exception.Message);
+        Assert.DoesNotContain("missing", exception.Message);
+    }
+
     // The client is a singleton: its requests go through the current handler of IHttpClientFactory, which the factory renews.
     [Fact]
     public async Task RequestsUseTheCurrentHandlerOfTheFactory()
