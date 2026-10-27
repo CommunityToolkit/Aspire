@@ -60,6 +60,10 @@ The client can be configured using connection strings or settings. The connectio
 
 A keyed client reads `Aspire:Chroma:Client:{name}`.
 
+## Health checks
+
+The integration adds a health check that calls the heartbeat of the server: `Chroma` for `AddChromaClient`, and `Chroma_{connectionName}` for `AddKeyedChromaClient`. `DisableHealthChecks` removes it, and `HealthCheckTimeout`, in milliseconds, limits how long it waits.
+
 ## Chroma Cloud
 
 The connection string also takes the token, the tenant and the database, as Chroma Cloud needs them:

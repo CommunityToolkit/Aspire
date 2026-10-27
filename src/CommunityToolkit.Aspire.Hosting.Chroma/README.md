@@ -23,6 +23,23 @@ builder.AddProject<Projects.MyWebApp>("mywebapp")
 builder.Build().Run();
 ```
 
+`AddChroma("chroma")` adds a container resource named `chroma`, with the HTTP endpoint `http` on port 8000 of the container. The port on the host changes at each run; `AddChroma("chroma", port: 8000)` sets it. A resource that references it gets the connection string `ConnectionStrings__chroma`, `Endpoint=http://{host}:{port}`, and the variables `CHROMA_HOST`, `CHROMA_PORT` and `CHROMA_URI`: the values of the `Host`, `Port` and `UriExpression` properties of the resource.
+
+### TypeScript AppHost
+
+```ts
+import { createBuilder } from "./.aspire/modules/aspire.mjs";
+
+const builder = await createBuilder();
+
+const chroma = await builder.addChroma("chroma", { port: 8000 });
+await chroma.withDataVolume({ name: "chroma-data" });
+
+await builder.build().run();
+```
+
+`withDataBindMount(source)` adds a bind mount, and `host()`, `port()` and `uriExpression()` give the connection properties.
+
 ## Chroma versions
 
 The default image is `chromadb/chroma:1.5.9`. `WithImageTag` picks another one, from Chroma 0.5.16: the health check calls `/api/v2/heartbeat`, which older images answer with `404`, so their resource never becomes healthy.
