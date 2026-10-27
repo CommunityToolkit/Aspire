@@ -25,6 +25,46 @@ public class WithPackageTests
     }
 
     [Theory]
+    [InlineData("Mojolicious", "app-Mojolicious-installer")]
+    [InlineData("Foo::Bar", "app-Foo88Bar-installer")]
+    public void WithPackage_SameModuleTwice_CreatesSingleInstaller(string moduleName, string expectedInstallerName)
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddPerlScript("app", "scripts", "app.pl")
+            .WithCpanMinus()
+            .WithPackage(moduleName)
+            .WithPackage(moduleName);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var installerResource = Assert.Single(appModel.Resources.OfType<PerlModuleInstallerResource>());
+        Assert.Equal(expectedInstallerName, installerResource.Name);
+    }
+
+    [Theory]
+    [InlineData("Mojolicious")]
+    [InlineData("Foo::Bar")]
+    public void WithPackage_SameModuleTwice_AddsSingleWaitAnnotation(string moduleName)
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var resource = builder.AddPerlScript("app", "scripts", "app.pl")
+            .WithCpanMinus()
+            .WithPackage(moduleName)
+            .WithPackage(moduleName);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var installerResource = Assert.Single(appModel.Resources.OfType<PerlModuleInstallerResource>());
+        var waitAnnotation = Assert.Single(resource.Resource.Annotations.OfType<WaitAnnotation>());
+        Assert.Same(installerResource, waitAnnotation.Resource);
+        Assert.Equal(WaitType.WaitForCompletion, waitAnnotation.WaitType);
+    }
+
+    [Theory]
     [InlineData("DBI", false, false)]
     [InlineData("DBI", true, false)]
     [InlineData("DBI", false, true)]
