@@ -333,4 +333,28 @@ public class ChromaClientExtensionsTests
         var exception = Assert.Throws<InvalidOperationException>(() => host.Services.GetRequiredService<ChromaClient>());
         Assert.Contains("http or https", exception.Message);
     }
+
+    // The Endpoint of a connection string replaces the Endpoint of the settings, and the settings given in code win over both.
+    [Theory]
+    [InlineData(false, "from-string.example")]
+    [InlineData(true, "from-code.example")]
+    public void EndpointOfTheConnectionStringWinsOverTheSettings(bool setInCode, string expectedHost)
+    {
+        var builder = Host.CreateApplicationBuilder();
+        builder.Configuration.AddInMemoryCollection([
+            new KeyValuePair<string, string?>("Aspire:Chroma:Client:Endpoint", "http://from-settings.example:8000"),
+            new KeyValuePair<string, string?>($"ConnectionStrings:{DefaultConnectionName}", "Endpoint=http://from-string.example:8000")
+        ]);
+
+        builder.AddChromaClient(DefaultConnectionName, settings =>
+        {
+            if (setInCode)
+            {
+                settings.Endpoint = new Uri("http://from-code.example:8000");
+            }
+        });
+
+        using var host = builder.Build();
+        Assert.Equal(expectedHost, host.Services.GetRequiredService<ChromaClient>().Options.Uri.Host);
+    }
 }
