@@ -68,3 +68,7 @@ While the AppHost runs, the resource sets `CHROMA_STDOUT_TRACING` to `true`, so 
 var chroma = builder.AddChroma("chroma")
                     .WithEnvironment("CHROMA_STDOUT_TRACING", "false");
 ```
+
+## Known limitations
+
+The integration does not send the telemetry of the Chroma server to the dashboard. Chroma 1.5.9 sends its OTLP traces as gRPC without TLS, also to an `https://` endpoint like the default one of the dashboard.
