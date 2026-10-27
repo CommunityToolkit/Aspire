@@ -1,6 +1,7 @@
 using System.Net.Sockets;
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.Utils;
 using CommunityToolkit.Aspire.Hosting.Chroma;
 using CommunityToolkit.Aspire.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -103,5 +104,30 @@ public class AddChromaTests
 
         var environment = await containerResource.GetEnvironmentVariablesAsync();
         Assert.Equal("/data", environment["PERSIST_DIRECTORY"]);
+    }
+
+    // While the AppHost runs, Chroma 1.x writes the requests it serves to its log, which the dashboard shows. A published app does not get the variable.
+    [Theory]
+    [InlineData(DistributedApplicationOperation.Run, true)]
+    [InlineData(DistributedApplicationOperation.Publish, false)]
+    public async Task ChromaLogsItsRequestsOnlyWhileTheAppHostRuns(DistributedApplicationOperation operation, bool logsRequests)
+    {
+        using var builder = TestDistributedApplicationBuilder.Create(operation);
+        var chroma = builder.AddChroma("chroma");
+
+        var environment = await chroma.Resource.GetEnvironmentVariablesAsync(operation);
+
+        Assert.Equal(logsRequests, environment.TryGetValue("CHROMA_STDOUT_TRACING", out var value) && value == "true");
+    }
+
+    [Fact]
+    public async Task ChromaRequestLogsCanBeTurnedOff()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Run);
+        var chroma = builder.AddChroma("chroma").WithEnvironment("CHROMA_STDOUT_TRACING", "false");
+
+        var environment = await chroma.Resource.GetEnvironmentVariablesAsync();
+
+        Assert.Equal("false", environment["CHROMA_STDOUT_TRACING"]);
     }
 }

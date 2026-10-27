@@ -38,3 +38,12 @@ or a bind mount:
 var chroma = builder.AddChroma("chroma")
                     .WithDataBindMount("C:/chroma/data");
 ```
+
+## Logs
+
+While the AppHost runs, the resource sets `CHROMA_STDOUT_TRACING` to `true`, so Chroma writes the requests it serves to its log, which the dashboard shows. A published app does not get the variable. To turn the request logs off:
+
+```csharp
+var chroma = builder.AddChroma("chroma")
+                    .WithEnvironment("CHROMA_STDOUT_TRACING", "false");
+```
