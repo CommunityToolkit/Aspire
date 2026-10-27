@@ -23,6 +23,10 @@ builder.AddProject<Projects.MyWebApp>("mywebapp")
 builder.Build().Run();
 ```
 
+## Chroma versions
+
+The default image is `chromadb/chroma:1.5.9`. `WithImageTag` picks another one, from Chroma 0.5.16: the health check calls `/api/v2/heartbeat`, which older images answer with `404`, so their resource never becomes healthy.
+
 ## Persistence
 
 You can configure persistence using either a Docker volume:
