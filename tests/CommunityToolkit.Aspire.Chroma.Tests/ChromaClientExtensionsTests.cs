@@ -286,4 +286,32 @@ public class ChromaClientExtensionsTests
             });
         }
     }
+
+    [Fact]
+    public async Task KeyedClientsUseTheirOwnConnectionsAndHealthChecks()
+    {
+        var builder = Host.CreateApplicationBuilder();
+        builder.Configuration.AddInMemoryCollection([
+            new KeyValuePair<string, string?>("ConnectionStrings:first", "http://first.example:8000"),
+            new KeyValuePair<string, string?>("ConnectionStrings:second", "Endpoint=http://second.example:8001;Token=second-token")
+        ]);
+
+        builder.AddKeyedChromaClient("first");
+        builder.AddKeyedChromaClient("second");
+
+        using var host = builder.Build();
+        var first = host.Services.GetRequiredKeyedService<ChromaClient>("first");
+        var second = host.Services.GetRequiredKeyedService<ChromaClient>("second");
+
+        Assert.NotSame(first, second);
+        Assert.Equal("first.example", first.Options.Uri.Host);
+        Assert.Equal("second.example", second.Options.Uri.Host);
+        Assert.Equal(8001, second.Options.Uri.Port);
+        Assert.True(string.IsNullOrEmpty(first.Options.ChromaToken));
+        Assert.Equal("second-token", second.Options.ChromaToken);
+
+        var registrations = host.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<HealthCheckServiceOptions>>().Value.Registrations;
+        Assert.Contains(registrations, r => r.Name == "Chroma_first");
+        Assert.Contains(registrations, r => r.Name == "Chroma_second");
+    }
 }

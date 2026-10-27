@@ -130,4 +130,19 @@ public class AddChromaTests
 
         Assert.Equal("false", environment["CHROMA_STDOUT_TRACING"]);
     }
+
+    [Fact]
+    public void AddChromaWithAPortBindsThatHostPort()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        appBuilder.AddChroma("chroma", port: 8123);
+
+        using var app = appBuilder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(appModel.Resources.OfType<ChromaResource>());
+        var endpoint = Assert.Single(resource.Annotations.OfType<EndpointAnnotation>());
+        Assert.Equal(8123, endpoint.Port);
+        Assert.Equal(8000, endpoint.TargetPort);
+    }
 }
