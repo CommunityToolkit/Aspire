@@ -148,6 +148,19 @@ The installer keeps the `force` and `skipTest` values from the first call.
 
 ---
 
+## Certificate trust
+
+The experimental `WithPerlCertificateTrust()` API (`CTASPIREPERL001`) configures
+`SSL_CERT_FILE`, `PERL_LWP_SSL_CA_FILE`, and `MOJO_CA_FILE` for the Perl app and its
+package and project dependency installers. Each resource uses the certificate bundle
+provided by its own Aspire certificate trust context, not the AppHost process's
+`SSL_CERT_FILE` environment variable.
+
+Call it before or after `WithPackage()` or `WithProjectDependencies()`; both orders
+are supported. Certificate trust remains opt-in.
+
+---
+
 ## Additional Information
 
 For more info visit <https://aspire.dev/integrations/frameworks/perl/>.
