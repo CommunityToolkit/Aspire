@@ -118,10 +118,9 @@ public class WithPerlbrewExtensionTests
         var annotations = resource.Annotations.OfType<RequiredCommandAnnotation>().ToList();
 #pragma warning restore ASPIRECOMMAND001
 
-        // Should have "perl" (from AddPerlAppCore), "cpan" (from AddPerlAppCore), and "perlbrew" (from WithPerlbrewEnvironment)
-        Assert.Equal(3, annotations.Count);
+        Assert.Equal(2, annotations.Count);
         Assert.Contains(annotations, a => a.Command == "perl");
-        Assert.Contains(annotations, a => a.Command == "cpan");
+        Assert.DoesNotContain(annotations, a => a.Command == "cpan");
         Assert.Contains(annotations, a => a.Command == "perlbrew" && a.HelpLink == "https://perlbrew.pl/");
     }
 

@@ -306,8 +306,8 @@ public static partial class PerlAppResourceBuilderExtensions
     }
 
     /// <summary>
-    /// Resolves the installer command executable and applies perlbrew environment
-    /// variables to the installer when perlbrew is configured.
+    /// Resolves the installer executable, registers its required-command check,
+    /// and applies perlbrew environment variables when configured.
     /// </summary>
     /// <param name="parentResource">The parent Perl application resource.</param>
     /// <param name="packageManager">The selected package manager annotation.</param>
@@ -318,18 +318,28 @@ public static partial class PerlAppResourceBuilderExtensions
         PerlPackageManagerAnnotation packageManager,
         IResourceBuilder<PerlModuleInstallerResource> installerBuilder)
     {
-        if (!parentResource.TryGetLastAnnotation<PerlbrewEnvironmentAnnotation>(out var perlbrewAnnotation) ||
-            perlbrewAnnotation.Environment is not { } perlbrewEnvironment)
+        var command = packageManager.ExecutableName;
+        if (parentResource.TryGetLastAnnotation<PerlbrewEnvironmentAnnotation>(out var perlbrewAnnotation) &&
+            perlbrewAnnotation.Environment is { } perlbrewEnvironment)
         {
-            return packageManager.ExecutableName;
+            installerBuilder.WithEnvironment(context =>
+            {
+                ApplyPerlbrewEnvironment(context.EnvironmentVariables, perlbrewEnvironment);
+            });
+
+            command = perlbrewEnvironment.GetExecutable(command);
         }
 
-        installerBuilder.WithEnvironment(context =>
+        var helpLink = packageManager.PackageManager switch
         {
-            ApplyPerlbrewEnvironment(context.EnvironmentVariables, perlbrewEnvironment);
-        });
+            PerlPackageManager.Cpan => "https://metacpan.org/pod/CPAN",
+            PerlPackageManager.Cpanm => "https://cpanmin.us/",
+            PerlPackageManager.Carton => "https://metacpan.org/pod/Carton",
+            _ => throw new NotSupportedException($"Package manager '{packageManager.PackageManager}' is not supported.")
+        };
+        installerBuilder.WithRequiredCommand(command, helpLink);
 
-        return perlbrewEnvironment.GetExecutable(packageManager.ExecutableName);
+        return command;
     }
 
     /// <summary>

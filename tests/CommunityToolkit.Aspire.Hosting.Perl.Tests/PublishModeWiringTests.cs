@@ -40,6 +40,11 @@ public class PublishModeWiringTests
             resource.Resource.Annotations.OfType<PerlRequiredModuleAnnotation>(),
             annotation => Assert.Equal("Foo88Bar", annotation.Name),
             annotation => Assert.Equal("Foo::Bar", annotation.Name));
+#pragma warning disable ASPIRECOMMAND001
+        Assert.DoesNotContain(
+            resource.Resource.Annotations.OfType<RequiredCommandAnnotation>(),
+            annotation => annotation.Command == "cpan");
+#pragma warning restore ASPIRECOMMAND001
     }
 
     [Fact]
