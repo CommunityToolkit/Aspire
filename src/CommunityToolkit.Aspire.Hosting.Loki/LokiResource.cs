@@ -1,5 +1,3 @@
-#pragma warning disable ASPIREATS001
-
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
@@ -25,5 +23,3 @@ public class LokiResource(string name) : ContainerResource(name), IResourceWithS
     /// </summary>
     public EndpointReference GrpcEndpoint => _grpcEndpoint ??= new(this, GrpcEndpointName);
 }
-
-#pragma warning restore ASPIREATS001

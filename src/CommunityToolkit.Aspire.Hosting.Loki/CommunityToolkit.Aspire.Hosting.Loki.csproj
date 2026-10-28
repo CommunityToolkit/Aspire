@@ -3,8 +3,6 @@
   <PropertyGroup>
     <Description>An Aspire hosting integration for the Grafana Loki log aggregation server.</Description>
     <AdditionalPackageTags>loki grafana logging hosting</AdditionalPackageTags>
-    <IsPreview>true</IsPreview>
-    <DisablePackageBaselineValidation>true</DisablePackageBaselineValidation>
   </PropertyGroup>
 
   <ItemGroup>
