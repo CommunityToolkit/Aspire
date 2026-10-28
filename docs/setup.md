@@ -14,7 +14,7 @@ If an AppHost endpoint is not reachable from the host machine, use VS Code's [po
 
 If you prefer not to use `devcontainer`, you can manually set up your development environment by installing the following tools:
 
--   [.NET 8](https://dotnet.microsoft.com/download/dotnet/8.0), [.NET 9](https://dotnet.microsoft.com/download/dotnet/9.0), and [.NET 10](https://dotnet.microsoft.com/download/dotnet/10.0)
+-   [.NET 10](https://dotnet.microsoft.com/download/dotnet/10.0)
 -   [Node.js LTS](https://nodejs.org/en/)
     -   [Yarn 2](https://yarnpkg.com/getting-started/install)
     -   [pnpm](https://pnpm.io/)

@@ -15,11 +15,4 @@
   <ItemGroup>
     <Compile Include="$(SharedDir)\HealthChecksExtensions.cs" Link="Utils\HealthChecksExtensions.cs" />
   </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="System.Linq.Async">
-      <ExcludeAssets>all</ExcludeAssets>
-    </PackageReference>
-    <PackageReference Include="System.Linq.AsyncEnumerable" Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
-  </ItemGroup>
 </Project>

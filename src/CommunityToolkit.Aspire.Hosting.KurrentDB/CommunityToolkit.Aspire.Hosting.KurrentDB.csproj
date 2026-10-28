@@ -8,18 +8,10 @@
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting" />
     <PackageReference Include="KurrentDB.Client" />
-    <PackageReference Include="OpenTelemetry.Api" />
   </ItemGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.KurrentDB.Tests"></InternalsVisibleTo>
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="System.Linq.Async">
-      <ExcludeAssets>all</ExcludeAssets>
-    </PackageReference>
-    <PackageReference Include="System.Linq.AsyncEnumerable" Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
   </ItemGroup>
 
 </Project>

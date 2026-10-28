@@ -35,7 +35,7 @@ internal sealed class FakeCrdClient
     public int ReadCount => _operations.Invocations.Count;
 
     public IReadOnlyList<string> ReadNames => _operations.Invocations
-        .Select(invocation => (string)invocation.Arguments[0]).ToList();
+        .Select(invocation => Assert.IsType<string>(invocation.Arguments[0])).ToList();
 
     public int DisposeCount => _client.Invocations.Count(invocation => invocation.Method.Name == nameof(IDisposable.Dispose));
 
