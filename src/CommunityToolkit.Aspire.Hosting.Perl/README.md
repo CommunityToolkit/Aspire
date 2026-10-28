@@ -168,6 +168,23 @@ are supported. Certificate trust remains opt-in.
 
 ---
 
+## OpenTelemetry
+
+Perl resources use OTLP over HTTP with JSON encoding (`http/json`). Perl's OTLP exporter does not
+support OTLP over gRPC, and JSON avoids requiring `Google::ProtocolBuffers::Dynamic`.
+
+Configure the dashboard's HTTP OTLP endpoint in run mode, for example with
+`ASPIRE_DASHBOARD_OTLP_HTTP_ENDPOINT_URL` or `DOTNET_DASHBOARD_OTLP_HTTP_ENDPOINT_URL`.
+When only the gRPC endpoint is configured, Aspire omits Perl OTLP exporter settings rather than
+sending Perl telemetry to the gRPC listener.
+
+The Perl SDK reads `OTEL_PERL_*` variables before standard `OTEL_*` variables. In run mode, the
+integration resolves the Perl-specific exporter, endpoint, protocol, and header variables from the
+final standard values, so overrides such as `.WithEnvironment("OTEL_EXPORTER_OTLP_ENDPOINT", url)`
+apply to Perl. Set an `OTEL_PERL_*` variable explicitly to override only the Perl SDK.
+
+---
+
 ## Additional Information
 
 For more info visit <https://aspire.dev/integrations/frameworks/perl/>.
