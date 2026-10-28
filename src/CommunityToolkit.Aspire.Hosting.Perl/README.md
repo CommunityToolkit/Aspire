@@ -146,6 +146,26 @@ In run mode, calling `WithPackage()` repeatedly for the same module on the same 
 reuses one installer and one completion dependency, including for names such as `Foo::Bar`.
 The installer keeps the `force` and `skipTest` values from the first call.
 
+Module identities are case-sensitive. If different modules map to the same installer resource
+name, `WithPackage()` throws `InvalidOperationException` instead of silently skipping a module.
+For example, `Foo88Bar` and `Foo::Bar` both map to `app-Foo88Bar-installer` on a resource named
+`app`. Case-only differences also collide because Aspire resource names are case-insensitive.
+An installer belonging to another resource is never reused. These checks apply only in run mode;
+publish mode retains the module requests without creating local installers.
+
+---
+
+## Certificate trust
+
+The experimental `WithPerlCertificateTrust()` API (`CTASPIREPERL001`) configures
+`SSL_CERT_FILE`, `PERL_LWP_SSL_CA_FILE`, and `MOJO_CA_FILE` for the Perl app and its
+package and project dependency installers. Each resource uses the certificate bundle
+provided by its own Aspire certificate trust context, not the AppHost process's
+`SSL_CERT_FILE` environment variable.
+
+Call it before or after `WithPackage()` or `WithProjectDependencies()`; both orders
+are supported. Certificate trust remains opt-in.
+
 ---
 
 ## Additional Information

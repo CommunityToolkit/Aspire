@@ -497,6 +497,7 @@ public static partial class PerlAppResourceBuilderExtensions
     /// variables that common Perl HTTP libraries respect.
     /// Sets <c>SSL_CERT_FILE</c> (IO::Socket::SSL / LWP), <c>PERL_LWP_SSL_CA_FILE</c> (LWP::UserAgent),
     /// and <c>MOJO_CA_FILE</c> (Mojolicious) to the certificate bundle path provided by Aspire.
+    /// Also configures package and project dependency installers using each resource's own certificate trust context.
     /// </summary>
     /// <typeparam name="TResource">The type of the Perl application resource.</typeparam>
     /// <param name="builder">The resource builder.</param>
@@ -515,22 +516,27 @@ public static partial class PerlAppResourceBuilderExtensions
 
         builder.Resource.Annotations.Add(new PerlCertificateTrustAnnotation());
 
-        builder.WithCertificateTrustConfiguration(context =>
-        {
-            if (context.CertificateBundlePath is { } bundlePath)
-            {
-                context.EnvironmentVariables["SSL_CERT_FILE"] = bundlePath;
-                context.EnvironmentVariables["PERL_LWP_SSL_CA_FILE"] = bundlePath;
-                context.EnvironmentVariables["MOJO_CA_FILE"] = bundlePath;
-            }
-
-            return Task.CompletedTask;
-        });
+        builder.WithCertificateTrustConfiguration(ConfigurePerlCertificateTrust);
 
         // Propagate cert trust env vars to any existing installer child resources
         TryAttachCertificateTrustToExistingInstallers(builder);
 
         return builder;
+    }
+
+    /// <summary>
+    /// Configures Perl SSL/TLS environment variables from the resource's certificate bundle.
+    /// </summary>
+    private static Task ConfigurePerlCertificateTrust(CertificateTrustConfigurationCallbackAnnotationContext context)
+    {
+        if (context.CertificateBundlePath is { } bundlePath)
+        {
+            context.EnvironmentVariables["SSL_CERT_FILE"] = bundlePath;
+            context.EnvironmentVariables["PERL_LWP_SSL_CA_FILE"] = bundlePath;
+            context.EnvironmentVariables["MOJO_CA_FILE"] = bundlePath;
+        }
+
+        return Task.CompletedTask;
     }
 
     /// <summary>

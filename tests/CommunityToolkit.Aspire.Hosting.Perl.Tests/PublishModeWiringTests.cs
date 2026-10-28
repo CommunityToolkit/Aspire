@@ -1,6 +1,7 @@
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.ApplicationModel.Docker;
+using CommunityToolkit.Aspire.Hosting.Perl.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
@@ -18,6 +19,27 @@ public class PublishModeWiringTests
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         Assert.Contains(appModel.Resources, r => r.Name == "perl-app");
+    }
+
+    [Fact]
+    public void PublishMode_CollidingModuleNames_RetainsRequestsWithoutInstallers()
+    {
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
+        Assert.True(builder.ExecutionContext.IsPublishMode);
+
+        var resource = builder.AddPerlScript("app", "scripts", "app.pl")
+            .WithPackage("Foo88Bar")
+            .WithPackage("Foo::Bar");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        Assert.Empty(appModel.Resources.OfType<PerlModuleInstallerResource>());
+        Assert.Empty(resource.Resource.Annotations.OfType<WaitAnnotation>());
+        Assert.Collection(
+            resource.Resource.Annotations.OfType<PerlRequiredModuleAnnotation>(),
+            annotation => Assert.Equal("Foo88Bar", annotation.Name),
+            annotation => Assert.Equal("Foo::Bar", annotation.Name));
     }
 
     [Fact]
