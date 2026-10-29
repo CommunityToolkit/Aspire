@@ -13,7 +13,6 @@ namespace Aspire.Hosting;
 /// </summary>
 public static partial class PerlAppResourceBuilderExtensions
 {
-    private const string DefaultPerlEnvironment = "perl";
     private const PerlPackageManager DefaultPackageManager = PerlPackageManager.Cpan;
 
     /// <summary>
@@ -52,7 +51,7 @@ public static partial class PerlAppResourceBuilderExtensions
     [AspireExport]
     public static IResourceBuilder<PerlAppResource> AddPerlScript(
         this IDistributedApplicationBuilder builder, [ResourceName] string resourceName, string appDirectory, string scriptName)
-        => AddPerlAppCore(builder, resourceName, appDirectory, EntrypointType.Script, scriptName, DefaultPerlEnvironment);
+        => AddPerlAppCore(builder, resourceName, appDirectory, EntrypointType.Script, scriptName);
 
     /// <summary>
     /// Adds a Perl API server resource (e.g., Mojolicious, Dancer2) to the application model.
@@ -92,7 +91,7 @@ public static partial class PerlAppResourceBuilderExtensions
     [AspireExport]
     public static IResourceBuilder<PerlAppResource> AddPerlApi(
         this IDistributedApplicationBuilder builder, [ResourceName] string resourceName, string appDirectory, string scriptName)
-        => AddPerlAppCore(builder, resourceName, appDirectory, EntrypointType.API, scriptName, DefaultPerlEnvironment, "daemon");
+        => AddPerlAppCore(builder, resourceName, appDirectory, EntrypointType.API, scriptName, "daemon");
 
     /// <summary>
     /// Adds a Perl module to the application model. The module is executed using
@@ -113,7 +112,7 @@ public static partial class PerlAppResourceBuilderExtensions
     [AspireExport]
     public static IResourceBuilder<PerlAppResource> AddPerlModule(
         this IDistributedApplicationBuilder builder, [ResourceName] string resourceName, string appDirectory, string moduleName)
-        => AddPerlAppCore(builder, resourceName, appDirectory, EntrypointType.Module, moduleName, DefaultPerlEnvironment);
+        => AddPerlAppCore(builder, resourceName, appDirectory, EntrypointType.Module, moduleName);
 
     /// <summary>
     /// Adds a Perl executable (compiled binary or PAR-packed application) to the application model.
@@ -134,7 +133,7 @@ public static partial class PerlAppResourceBuilderExtensions
     [AspireExport]
     public static IResourceBuilder<PerlAppResource> AddPerlExecutable(
         this IDistributedApplicationBuilder builder, [ResourceName] string resourceName, string appDirectory, string executablePath)
-        => AddPerlAppCore(builder, resourceName, appDirectory, EntrypointType.Executable, executablePath, DefaultPerlEnvironment);
+        => AddPerlAppCore(builder, resourceName, appDirectory, EntrypointType.Executable, executablePath);
 
 
     /// <summary>
@@ -148,18 +147,16 @@ public static partial class PerlAppResourceBuilderExtensions
     /// <param name="appDirectory">The application working directory path.</param>
     /// <param name="entrypointType">How the entrypoint should be invoked.</param>
     /// <param name="entrypoint">The script/module/executable entrypoint.</param>
-    /// <param name="virtualEnvironmentPath">Reserved environment path argument for future compatibility.</param>
     /// <param name="typeOfApi">Optional API subcommand such as <c>daemon</c>.</param>
     /// <returns>The configured Perl application resource builder.</returns>
     private static IResourceBuilder<PerlAppResource> AddPerlAppCore(
         IDistributedApplicationBuilder builder, string resourceName, string appDirectory, EntrypointType entrypointType,
-        string entrypoint, string virtualEnvironmentPath, string? typeOfApi = null)
+        string entrypoint, string? typeOfApi = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(resourceName);
         ArgumentNullException.ThrowIfNull(appDirectory);
         ArgumentException.ThrowIfNullOrEmpty(entrypoint);
-        ArgumentNullException.ThrowIfNull(virtualEnvironmentPath);
 
         // Resolve the app directory against the AppHost directory so behavior is
         // consistent between aspire run and integration test fixtures.
@@ -257,13 +254,9 @@ public static partial class PerlAppResourceBuilderExtensions
                 resourceBuilder.WithProjectDependencies();
             }
 
-            /* 
-             * Subscribe to BeforeStartEvent for this specific resource to wire up dependencies dynamically
-             * This allows methods like WithPip, WithUv, and WithVirtualEnvironment to add/remove resources 
-             * and the dependencies will be established based on which resources actually exist 
-             * Only do this in run mode since the installer and venv creator only run in run mode        
-             * https://github.com/dotnet/aspire/pull/12663/commits/c60eb2189bde0ae9b3b0dd03ec37a591103c7b63
-             * */
+            // Wire installer ordering at BeforeStartEvent instead of here so it reflects the installers that
+            // WithProjectDependencies, WithPackage, WithCpanMinus/WithCarton, and WithLocalLib end up creating,
+            // regardless of call order. Installers only exist in run mode.
             var resourceToSetup = resourceBuilder.Resource;
             builder.Eventing.Subscribe<BeforeStartEvent>((evt, ct) =>
             {
