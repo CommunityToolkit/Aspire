@@ -191,6 +191,22 @@ apply to Perl. Set an `OTEL_PERL_*` variable explicitly to override only the Per
 
 ---
 
+## Publishing
+
+When publishing, Perl resources are built as container images.
+
+- If the app directory contains a `Dockerfile`, it is used as-is.
+- Otherwise, a Dockerfile is generated: cpanm (single-stage) by default, or Carton (multi-stage)
+  when `WithCarton()` is used. Base images can be changed with `WithDockerfileBaseImage`.
+
+Generated Dockerfiles install dependencies inside the image and then copy the app with `COPY . .`.
+To keep host-built modules out of the image, a `<name>.Dockerfile.dockerignore` is emitted next
+to the generated Dockerfile. It excludes `local`, any relative `WithLocalLib` path, `blib`, `_build`,
+`.git`, `.env` files, and Dockerfiles. If the app directory contains an authored `.dockerignore`, no
+ignore file is generated and yours applies. Keep `local` (or your local::lib path) in it.
+
+---
+
 ## Additional Information
 
 For more info visit <https://aspire.dev/integrations/frameworks/perl/>.
