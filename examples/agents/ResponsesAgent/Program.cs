@@ -9,14 +9,14 @@ using Microsoft.Agents.AI.Hosting;
 using Microsoft.Extensions.AI;
 using ModelContextProtocol.Server;
 
-var chatConnectionString = Environment.GetEnvironmentVariable("ConnectionStrings__chat")
-    ?? throw new InvalidOperationException("ConnectionStrings__chat is not set.");
+var builder = WebApplication.CreateBuilder(args);
+var chatConnectionString = builder.Configuration.GetConnectionString("chat")
+    ?? throw new InvalidOperationException("Connection string 'chat' is not configured.");
 
 DbConnectionStringBuilder chatConnectionBuilder = new() { ConnectionString = chatConnectionString };
 var endpoint = GetRequiredConnectionValue(chatConnectionBuilder, "Endpoint");
 var deploymentName = GetRequiredConnectionValue(chatConnectionBuilder, "Deployment");
 
-var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseUrls($"http://+:{Environment.GetEnvironmentVariable("PORT") ?? "8080"}");
 
 const string AgentName = "responses-agent";

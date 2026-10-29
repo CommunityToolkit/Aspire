@@ -14,9 +14,9 @@ This example keeps all six extracted multi-protocol samples:
 The AppHost references the local `src/CommunityToolkit.Aspire.Hosting.Agents`
 project and public Aspire packages. SDK and Aspire versions follow the Toolkit's
 central configuration. Foundry uses the repository's Aspire preview suffix
-because no stable `Aspire.Hosting.Foundry` 13.6.1 package exists. Sample-specific
-dependencies are centrally managed in `Directory.Packages.props` in this folder;
-the newer MCP sample dependency does not upgrade unrelated Toolkit examples.
+because the integration is still a preview. All NuGet dependency versions are
+managed in the repository-root `Directory.Packages.props`, including the shared
+MCP SDK version.
 
 ## Prerequisites
 
@@ -64,6 +64,8 @@ The original AppHost `UserSecretsId`
 `ConnectionStrings__agentsproject` and `ConnectionStrings__chat` are alternatives
 to user secrets. Do not commit credentials or resource-specific configuration.
 Aspire injects these same connection-string variables into the relevant agents.
+The .NET agents read `GetConnectionString("chat")` from application configuration,
+so standard .NET configuration providers also work when running them independently.
 
 The upstream managed Foundry graph is retained behind
 `UseExistingFoundry=false`. **Do not select that mode unless you explicitly intend

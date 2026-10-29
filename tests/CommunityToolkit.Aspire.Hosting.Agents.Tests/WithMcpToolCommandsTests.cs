@@ -2,7 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 #pragma warning disable ASPIREMCP001
-#pragma warning disable ASPIREAGENTS001
+#pragma warning disable CTASPIREAGENTS001
 #pragma warning disable EXTEXP0001 // Disable HTTP retries to test individual MCP failure responses deterministically.
 
 using Aspire.Hosting.ApplicationModel;
@@ -22,7 +22,7 @@ public class WithMcpToolCommandsTests
     [Fact]
     public void WithMcpServer_OnlyAddsMetadata()
     {
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
         var container = builder.AddContainer("app", "image").WithHttpEndpoint();
         var initialAnnotations = container.Resource.Annotations.ToArray();
 
@@ -35,7 +35,7 @@ public class WithMcpToolCommandsTests
     [Fact]
     public void WithMcpToolCommands_RequiresConfiguredServer()
     {
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
         var container = builder.AddContainer("app", "image").WithHttpEndpoint();
 
         var exception = Assert.Throws<InvalidOperationException>(() => container.WithMcpToolCommands());
@@ -46,7 +46,7 @@ public class WithMcpToolCommandsTests
     [Fact]
     public void WithMcpToolCommands_DoesNotDuplicateCommandsOrUrls()
     {
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
         var container = builder.AddContainer("app", "image").WithHttpEndpoint().WithMcpServer().WithMcpToolCommands();
         var initialAnnotations = container.Resource.Annotations.ToArray();
 
@@ -58,7 +58,7 @@ public class WithMcpToolCommandsTests
     [Fact]
     public void WithMcpToolCommands_DoesNotAddCommandsOrUrlsDuringPublish()
     {
-        using var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false, args: ["AppHost:Operation=publish"]);
         var container = builder.AddContainer("app", "image")
             .WithMcpServer();
         var initialAnnotations = container.Resource.Annotations.ToArray();
@@ -77,7 +77,7 @@ public class WithMcpToolCommandsTests
     [InlineData(null, "http://localhost:8080/")]
     public async Task WithMcpToolCommands_UsesConfiguredUrlForEveryRequest(string? path, string expectedUrl)
     {
-        using var appBuilder = TestDistributedApplicationBuilder.Create();
+        using var appBuilder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
         var handler = new McpCommandHandler { ExpectedUrl = expectedUrl };
         appBuilder.Services.AddHttpClient(string.Empty).ConfigurePrimaryHttpMessageHandler(() => handler);
         appBuilder.Services.AddHttpClient(string.Empty).RemoveAllResilienceHandlers();
@@ -101,7 +101,7 @@ public class WithMcpToolCommandsTests
     [Fact]
     public async Task WithMcpToolCommands_InvokesCustomResolverOnEachCommand()
     {
-        using var appBuilder = TestDistributedApplicationBuilder.Create();
+        using var appBuilder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
         var handler = new McpCommandHandler { ExpectedUrl = "http://mcp.example.test/custom?key=value" };
         appBuilder.Services.AddHttpClient(string.Empty).ConfigurePrimaryHttpMessageHandler(() => handler);
         appBuilder.Services.AddHttpClient(string.Empty).RemoveAllResilienceHandlers();
@@ -130,7 +130,7 @@ public class WithMcpToolCommandsTests
     [Fact]
     public async Task WithMcpToolCommands_ReportsUnavailableUrl()
     {
-        using var appBuilder = TestDistributedApplicationBuilder.Create();
+        using var appBuilder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
         var container = appBuilder.AddResource(new McpTestResource("app"))
             .WithAnnotation(new McpServerEndpointAnnotation((_, _) => Task.FromResult<Uri?>(null)))
             .WithMcpToolCommands();
@@ -158,7 +158,7 @@ public class WithMcpToolCommandsTests
     [Fact]
     public async Task WithMcpToolCommands_AddsCommands()
     {
-        using var appBuilder = TestDistributedApplicationBuilder.Create();
+        using var appBuilder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         appBuilder.AddContainer("app", "image")
             .WithHttpEndpoint(name: "http")
@@ -214,7 +214,7 @@ public class WithMcpToolCommandsTests
     [Fact]
     public async Task WithMcpToolCommands_DoesNotHighlightCommandWhenResourceAlreadyHasHighlightedCommand()
     {
-        using var appBuilder = TestDistributedApplicationBuilder.Create();
+        using var appBuilder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         appBuilder.AddContainer("app", "image")
             .WithHttpEndpoint(name: "http")
@@ -238,7 +238,7 @@ public class WithMcpToolCommandsTests
     [Fact]
     public async Task WithMcpToolCommands_DefaultsToHttpsEndpoint()
     {
-        using var appBuilder = TestDistributedApplicationBuilder.Create();
+        using var appBuilder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         appBuilder.AddContainer("app", "image")
             .WithEndpoint("https", e =>
@@ -265,7 +265,7 @@ public class WithMcpToolCommandsTests
     [Fact]
     public async Task WithMcpToolCommands_FallsBackToHttpEndpoint()
     {
-        using var appBuilder = TestDistributedApplicationBuilder.Create();
+        using var appBuilder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         appBuilder.AddContainer("app", "image")
             .WithEndpoint("http", e =>
@@ -291,7 +291,7 @@ public class WithMcpToolCommandsTests
     [Fact]
     public async Task WithMcpToolCommands_UsesExplicitEndpointName()
     {
-        using var appBuilder = TestDistributedApplicationBuilder.Create();
+        using var appBuilder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         appBuilder.AddContainer("app", "image")
             .WithHttpEndpoint(name: "api", targetPort: 8080)
@@ -313,7 +313,7 @@ public class WithMcpToolCommandsTests
     [Fact]
     public async Task WithMcpToolCommands_UsesCustomEndpointResolver()
     {
-        using var appBuilder = TestDistributedApplicationBuilder.Create();
+        using var appBuilder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         appBuilder.AddContainer("app", "image")
             .WithAnnotation(new McpServerEndpointAnnotation((_, _) => Task.FromResult<Uri?>(new Uri("https://mcp.example.test/custom?key=value"))))
@@ -333,7 +333,7 @@ public class WithMcpToolCommandsTests
     [Fact]
     public async Task WithMcpToolCommands_ExplicitEndpointSelectionAllowsExcludedEndpoint()
     {
-        using var appBuilder = TestDistributedApplicationBuilder.Create();
+        using var appBuilder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         appBuilder.AddContainer("app", "image")
             .WithHttpsEndpoint(name: "management")
@@ -359,7 +359,7 @@ public class WithMcpToolCommandsTests
     [Fact]
     public async Task WithMcpToolCommands_ResolvesDefaultMcpPath()
     {
-        using var appBuilder = TestDistributedApplicationBuilder.Create();
+        using var appBuilder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         appBuilder.AddContainer("app", "image")
             .WithEndpoint("http", e =>
@@ -385,7 +385,7 @@ public class WithMcpToolCommandsTests
     [Fact]
     public async Task WithMcpToolCommands_ResolvesCustomPath()
     {
-        using var appBuilder = TestDistributedApplicationBuilder.Create();
+        using var appBuilder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         appBuilder.AddContainer("app", "image")
             .WithEndpoint("http", e =>
@@ -411,7 +411,7 @@ public class WithMcpToolCommandsTests
     [Fact]
     public async Task WithMcpToolCommands_ResolvesNullPath()
     {
-        using var appBuilder = TestDistributedApplicationBuilder.Create();
+        using var appBuilder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         appBuilder.AddContainer("app", "image")
             .WithEndpoint("http", e =>
@@ -438,7 +438,7 @@ public class WithMcpToolCommandsTests
     [Fact]
     public void WithMcpToolCommands_ReturnsBuilderForChaining()
     {
-        using var appBuilder = TestDistributedApplicationBuilder.Create();
+        using var appBuilder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         var container = appBuilder.AddContainer("app", "image")
             .WithHttpEndpoint(name: "http");
@@ -452,7 +452,7 @@ public class WithMcpToolCommandsTests
     [Fact]
     public async Task WithMcpToolCommands_InvokeCommandUsesToolAndArguments()
     {
-        using var appBuilder = TestDistributedApplicationBuilder.Create();
+        using var appBuilder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         var handler = new McpCommandHandler();
         appBuilder.Services.AddHttpClient(string.Empty)
@@ -486,7 +486,7 @@ public class WithMcpToolCommandsTests
     [InlineData("app-mcp-call-tool-interactive")]
     public async Task WithMcpToolCommands_InvokeCommandRejectsNonHttpEndpoint(string commandName)
     {
-        using var appBuilder = TestDistributedApplicationBuilder.Create();
+        using var appBuilder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
         var handler = new McpCommandHandler();
         appBuilder.Services.AddHttpClient(string.Empty).ConfigurePrimaryHttpMessageHandler(() => handler);
         var container = appBuilder.AddResource(new McpTestResource("app"))
@@ -512,7 +512,7 @@ public class WithMcpToolCommandsTests
     [Fact]
     public async Task WithMcpToolCommands_InvokeCommandFindsToolOnLaterPage()
     {
-        using var appBuilder = TestDistributedApplicationBuilder.Create();
+        using var appBuilder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         var handler = new McpCommandHandler(paginateTools: true);
         appBuilder.Services.AddHttpClient(string.Empty)
@@ -538,7 +538,7 @@ public class WithMcpToolCommandsTests
     [InlineData(McpToolCallResponse.ToolError, "MCP tool reported an error.")]
     public async Task WithMcpToolCommands_InvokeCommandReportsProtocolErrors(McpToolCallResponse toolCallResponse, string expectedMessage)
     {
-        using var appBuilder = TestDistributedApplicationBuilder.Create();
+        using var appBuilder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         var handler = new McpCommandHandler(toolCallResponse: toolCallResponse);
         appBuilder.Services.AddHttpClient(string.Empty)
@@ -563,7 +563,7 @@ public class WithMcpToolCommandsTests
     [Fact]
     public async Task WithMcpToolCommands_InvokeCommandSkipsSseRequestsAndNotificationsBeforeResponse()
     {
-        using var appBuilder = TestDistributedApplicationBuilder.Create();
+        using var appBuilder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         var handler = new McpCommandHandler(useSseResponses: true);
         appBuilder.Services.AddHttpClient(string.Empty)
@@ -606,7 +606,7 @@ public class WithMcpToolCommandsTests
     [InlineData("event: message\ndata: {\"jsonrpc\":\"2.0\",\"id\":\"tool-call\",\"result\":{}}\n\n")]
     public async Task WithMcpToolCommands_InvokeCommandRejectsMalformedResponseAndPreservesBody(string responseBody)
     {
-        using var appBuilder = TestDistributedApplicationBuilder.Create();
+        using var appBuilder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
         HttpResponseMessage? invalidResponse = null;
         var handler = new McpCommandHandler
         {
@@ -640,7 +640,7 @@ public class WithMcpToolCommandsTests
     [InlineData(true)]
     public async Task WithMcpToolCommands_InvokeCommandAcceptsEmptyContentArray(bool streaming)
     {
-        using var appBuilder = TestDistributedApplicationBuilder.Create();
+        using var appBuilder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
         var handler = new McpCommandHandler
         {
             ToolResponse = request =>
@@ -674,7 +674,7 @@ public class WithMcpToolCommandsTests
     [Fact]
     public async Task WithMcpToolCommands_InteractiveCommandOmitsOptionalParametersWithoutDefaults()
     {
-        using var appBuilder = TestDistributedApplicationBuilder.Create();
+        using var appBuilder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         var interactionService = new TestInteractionService();
         appBuilder.Services.AddSingleton<IInteractionService>(interactionService);
@@ -739,7 +739,7 @@ public class WithMcpToolCommandsTests
     [InlineData(true, true)]
     public async Task WithMcpToolCommands_RejectsMissingOrMismatchedToolResponseId(bool streaming, bool missingId)
     {
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
         var handler = new McpCommandHandler
         {
             ToolResponse = _ =>
@@ -776,7 +776,7 @@ public class WithMcpToolCommandsTests
     [Fact]
     public async Task WithMcpToolCommands_SseSelectsMatchingToolResponse()
     {
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
         var handler = new McpCommandHandler
         {
             ToolResponse = request =>
@@ -813,7 +813,7 @@ public class WithMcpToolCommandsTests
     [InlineData("raw")]
     public async Task WithMcpToolCommands_DialogCancellationReturnsCanceledAndTerminatesSession(string stage)
     {
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
         var interactionService = new TestInteractionService();
         builder.Services.AddSingleton<IInteractionService>(interactionService);
         var handler = new McpCommandHandler
@@ -855,7 +855,7 @@ public class WithMcpToolCommandsTests
     [InlineData("""{"allOf":[{"type":"integer"}]}""", "42")]
     public async Task WithMcpToolCommands_UnsupportedParameterSchemasUseRawJson(string parameterSchema, string value)
     {
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
         var interactionService = new TestInteractionService();
         builder.Services.AddSingleton<IInteractionService>(interactionService);
         var handler = new McpCommandHandler
@@ -907,7 +907,7 @@ public class WithMcpToolCommandsTests
     [Fact]
     public async Task WithMcpToolCommands_InvokeInteractiveCommandWithoutArgumentsPromptsForTool()
     {
-        using var appBuilder = TestDistributedApplicationBuilder.Create();
+        using var appBuilder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         appBuilder.Services.AddHttpClient(string.Empty)
             .ConfigurePrimaryHttpMessageHandler(() => new McpCommandHandler());
@@ -927,7 +927,7 @@ public class WithMcpToolCommandsTests
     [Fact]
     public async Task WithMcpToolCommands_InvokeCommandRequiresToolArgument()
     {
-        using var appBuilder = TestDistributedApplicationBuilder.Create();
+        using var appBuilder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         appBuilder.Services.AddHttpClient(string.Empty)
             .ConfigurePrimaryHttpMessageHandler(() => new McpCommandHandler());
@@ -947,7 +947,7 @@ public class WithMcpToolCommandsTests
     [Fact]
     public async Task WithMcpToolCommands_InvokeCommandRejectsUnknownTool()
     {
-        using var appBuilder = TestDistributedApplicationBuilder.Create();
+        using var appBuilder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         var handler = new McpCommandHandler();
         appBuilder.Services.AddHttpClient(string.Empty)
@@ -972,7 +972,7 @@ public class WithMcpToolCommandsTests
     [Fact]
     public async Task WithMcpToolCommands_InvokeCommandRejectsInvalidArgumentsJson()
     {
-        using var appBuilder = TestDistributedApplicationBuilder.Create();
+        using var appBuilder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         var handler = new McpCommandHandler();
         appBuilder.Services.AddHttpClient(string.Empty)
@@ -1002,7 +1002,7 @@ public class WithMcpToolCommandsTests
     [InlineData(HttpStatusCode.InternalServerError, McpToolCallResponse.ToolError)]
     public async Task WithMcpToolCommands_SessionTerminationPreservesToolResult(HttpStatusCode statusCode, McpToolCallResponse toolCallResponse)
     {
-        using var appBuilder = TestDistributedApplicationBuilder.Create();
+        using var appBuilder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
         var handler = new McpCommandHandler(toolCallResponse: toolCallResponse)
         {
             OverrideResponse = (method, _) => Task.FromResult<HttpResponseMessage?>(
@@ -1035,7 +1035,7 @@ public class WithMcpToolCommandsTests
     [InlineData("tools/call")]
     public async Task WithMcpToolCommands_TerminatesSessionAfterTransportFailure(string failingMethod)
     {
-        using var appBuilder = TestDistributedApplicationBuilder.Create();
+        using var appBuilder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
         var handler = new McpCommandHandler
         {
             OverrideResponse = (method, _) => method == failingMethod
@@ -1061,7 +1061,7 @@ public class WithMcpToolCommandsTests
     [InlineData("tools/call")]
     public async Task WithMcpToolCommands_TerminatesSessionAfterCancellation(string canceledMethod)
     {
-        using var appBuilder = TestDistributedApplicationBuilder.Create();
+        using var appBuilder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
         using var cancellation = new CancellationTokenSource();
         var cleanupCanBeCanceled = false;
         var cleanupWasCanceled = true;
@@ -1104,7 +1104,7 @@ public class WithMcpToolCommandsTests
     [InlineData(true)]
     public async Task WithMcpToolCommands_SessionTerminationFailureDoesNotReplacePreparationFailure(bool timeout)
     {
-        using var appBuilder = TestDistributedApplicationBuilder.Create();
+        using var appBuilder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
         var handler = new McpCommandHandler
         {
             OverrideResponse = async (method, token) =>
@@ -1143,7 +1143,7 @@ public class WithMcpToolCommandsTests
     [InlineData("tools/list", "http-error")]
     public async Task WithMcpToolCommands_DisposesInvalidResponseAndTerminatesSession(string failingMethod, string responseBody)
     {
-        using var appBuilder = TestDistributedApplicationBuilder.Create();
+        using var appBuilder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
         var invalidResponse = new HttpResponseMessage(
             responseBody == "http-error" ? HttpStatusCode.InternalServerError : HttpStatusCode.OK)
         {
@@ -1175,7 +1175,7 @@ public class WithMcpToolCommandsTests
     [Fact]
     public async Task WithMcpToolCommands_DoesNotTerminateStatelessSession()
     {
-        using var appBuilder = TestDistributedApplicationBuilder.Create();
+        using var appBuilder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
         var handler = new McpCommandHandler { SessionId = null };
         appBuilder.Services.AddHttpClient(string.Empty).ConfigurePrimaryHttpMessageHandler(() => handler);
         var container = AddMcpContainer(appBuilder);

@@ -38,9 +38,9 @@ public static class TestDistributedApplicationBuilder
         return CreateCore(args, (_) => { }, testOutputHelper);
     }
 
-    public static IDistributedApplicationTestingBuilder Create(Action<DistributedApplicationOptions>? configureOptions, ITestOutputHelper? testOutputHelper = null)
+    public static IDistributedApplicationTestingBuilder Create(Action<DistributedApplicationOptions>? configureOptions, ITestOutputHelper? testOutputHelper = null, params string[] args)
     {
-        return CreateCore([], configureOptions, testOutputHelper);
+        return CreateCore(args, configureOptions, testOutputHelper);
     }
 
     public static IDistributedApplicationTestingBuilder CreateWithTestContainerRegistry(ITestOutputHelper testOutputHelper) =>

@@ -10,6 +10,7 @@ using System.Text.Json.Nodes;
 namespace CommunityToolkit.Aspire.Hosting.Agents.Tests;
 
 #pragma warning disable ASPIREINTERACTION001 // InteractionInput is used to test dashboard command arguments.
+#pragma warning disable EXTEXP0001 // Disable retries when checking individual HTTP error diagnostics.
 
 [Trait("Partition", "5")]
 public class AgentResourceBuilderExtensionsTests
@@ -17,7 +18,7 @@ public class AgentResourceBuilderExtensionsTests
     [Fact]
     public void AsAgent_AddsAgentAnnotationAndCommands()
     {
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         var agent = builder.AddContainer("agent", "image")
             .WithHttpEndpoint(targetPort: 8080)
@@ -43,7 +44,7 @@ public class AgentResourceBuilderExtensionsTests
     [Fact]
     public void AsAgent_CanBeCalledMultipleTimesForMultipleProtocolPaths()
     {
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         var agent = builder.AddContainer("agent", "image")
             .WithHttpEndpoint(targetPort: 8080)
@@ -67,7 +68,7 @@ public class AgentResourceBuilderExtensionsTests
     [Fact]
     public void AsAgent_CanBeCalledMultipleTimesForMultipleAgentAnnotations()
     {
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         var agent = builder.AddContainer("agent", "image")
             .WithHttpEndpoint(targetPort: 8080)
@@ -91,7 +92,7 @@ public class AgentResourceBuilderExtensionsTests
     [Fact]
     public void AsAgent_AgUiAndAcpAddInvocationCommands()
     {
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         var agent = builder.AddContainer("agent", "image")
             .WithHttpEndpoint(targetPort: 8080)
@@ -124,7 +125,7 @@ public class AgentResourceBuilderExtensionsTests
     [Fact]
     public void AsAgent_WithoutConfiguredProtocolNameAddsAgentNameArgument()
     {
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         var agent = builder.AddContainer("agent-service", "image")
             .WithHttpEndpoint(targetPort: 8080)
@@ -147,7 +148,7 @@ public class AgentResourceBuilderExtensionsTests
     [InlineData(AgentProtocol.Acp, "agent-service-acp-run")]
     public async Task InvokeAgentUsesConfiguredProtocolAgentName(AgentProtocol protocol, string commandName)
     {
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         var handler = new CaptureAgentCommandHandler();
         builder.Services.AddHttpClient(string.Empty)
@@ -174,7 +175,7 @@ public class AgentResourceBuilderExtensionsTests
     [Fact]
     public void AsAgent_RejectsA2AInvocationModeForOtherProtocols()
     {
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         var agent = builder.AddContainer("agent", "image")
             .WithHttpEndpoint(targetPort: 8080);
@@ -189,7 +190,7 @@ public class AgentResourceBuilderExtensionsTests
     [InlineData(int.MaxValue)]
     public void AsAgent_RejectsUndefinedProtocolWithoutMutatingResource(int value)
     {
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
         var agent = builder.AddContainer("agent", "image");
         var annotations = agent.Resource.Annotations.ToArray();
         var services = builder.Services.ToArray();
@@ -223,7 +224,7 @@ public class AgentResourceBuilderExtensionsTests
     [InlineData(AgentProtocol.Acp, int.MaxValue)]
     public void AsAgent_RejectsUndefinedInvocationModeWithoutMutatingResource(AgentProtocol protocol, int value)
     {
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
         var agent = builder.AddContainer("agent", "image");
         var annotations = agent.Resource.Annotations.ToArray();
         var services = builder.Services.ToArray();
@@ -251,7 +252,7 @@ public class AgentResourceBuilderExtensionsTests
     [InlineData("\t\r\n")]
     public void AsAgent_RejectsInvalidCustomPath(string? path)
     {
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
         var agent = builder.AddContainer("agent", "image");
 
         var exception = Assert.ThrowsAny<ArgumentException>(() => agent.AsAgent(path!, AgentProtocol.A2A));
@@ -271,7 +272,7 @@ public class AgentResourceBuilderExtensionsTests
     [Fact]
     public void AsAgent_CustomPathWithInvocationModePreservesConfiguration()
     {
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
         var agent = builder.AddContainer("agent", "image")
             .AsAgent("agent-card.json", AgentProtocol.A2A, A2AInvocationMode.Streaming);
 
@@ -283,7 +284,7 @@ public class AgentResourceBuilderExtensionsTests
     [Fact]
     public async Task AsAgent_A2AInjectsBaseUrlIntoAgent()
     {
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         var agent = builder.AddContainer("agent", "image")
             .WithHttpEndpoint(targetPort: 8080)
@@ -298,7 +299,7 @@ public class AgentResourceBuilderExtensionsTests
     [Fact]
     public async Task AsAgent_CanBeConfiguredBeforeEndpoint()
     {
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         var handler = new A2ACommandHandler("JSONRPC", "1.0", supportsStreaming: false, "http://localhost:8080/a2a");
         builder.Services.AddHttpClient(string.Empty)
@@ -342,7 +343,7 @@ public class AgentResourceBuilderExtensionsTests
         string expectedRole,
         string expectedPartsPropertyName)
     {
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         var handler = new A2ACommandHandler(protocolBinding, protocolVersion, supportsStreaming, interfaceUrl);
         builder.Services.AddHttpClient(string.Empty)
@@ -388,10 +389,54 @@ public class AgentResourceBuilderExtensionsTests
         Assert.Equal(expectedConfiguration, requestBody?["configuration"] is not null);
     }
 
+    [Theory]
+    [InlineData(HttpStatusCode.Unauthorized)]
+    [InlineData(HttpStatusCode.Forbidden)]
+    [InlineData(HttpStatusCode.NotFound)]
+    [InlineData(HttpStatusCode.BadGateway)]
+    public async Task InvokeA2AReportsCardHttpFailureWithoutSensitiveResponseData(HttpStatusCode status)
+    {
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
+        const string sensitiveBody = "sensitive-upstream-error";
+        var cardResponse = new HttpResponseMessage(status)
+        {
+            Content = new StringContent(sensitiveBody, Encoding.UTF8, "text/plain")
+        };
+        cardResponse.Headers.Add("Set-Cookie", "session=private-cookie");
+        cardResponse.Headers.Add("WWW-Authenticate", "Bearer error_description=\"private-auth-detail\"");
+        var handler = new A2ACommandHandler("JSONRPC", "1.0", false, "http://localhost:8080/a2a")
+        {
+            CardResponse = cardResponse
+        };
+        builder.Services.AddHttpClient(string.Empty)
+            .ConfigurePrimaryHttpMessageHandler(() => handler)
+            .RemoveAllResilienceHandlers();
+
+        var agent = CreateResourceWithAllocatedEndpoint(builder, "agent").AsAgent(AgentProtocol.A2A);
+        using var app = builder.Build();
+        await app.StartAsync().DefaultTimeout();
+        await MoveResourceToRunningStateAsync(app, agent.Resource, "agent-a2a-send-message");
+
+        var result = await app.ResourceCommands.ExecuteCommandAsync(
+            agent.Resource, "agent-a2a-send-message", CreateMessageArgument("hello")).DefaultTimeout();
+
+        Assert.False(result.Success);
+        Assert.Contains("GET 'http://localhost:8080/.well-known/agent-card.json'", result.Message);
+        Assert.Contains($"status code {(int)status} ({status})", result.Message);
+        Assert.Contains("content type: text/plain", result.Message);
+        Assert.Contains($"content length: {Encoding.UTF8.GetByteCount(sensitiveBody)}", result.Message);
+        Assert.Contains("endpoint authentication", result.Message);
+        Assert.DoesNotContain(sensitiveBody, result.Message);
+        Assert.DoesNotContain("private-cookie", result.Message);
+        Assert.DoesNotContain("private-auth-detail", result.Message);
+        Assert.Null(result.Data);
+        Assert.Null(handler.InvocationRequest);
+    }
+
     [Fact]
     public async Task InvokeA2AStreamingRequiresAgentSupport()
     {
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         var handler = new A2ACommandHandler("JSONRPC", "1.0", supportsStreaming: false, "http://localhost:8080/a2a");
         builder.Services.AddHttpClient(string.Empty)
@@ -414,7 +459,7 @@ public class AgentResourceBuilderExtensionsTests
     [Fact]
     public async Task InvokeA2ARequiresMessageArgument()
     {
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         var handler = new A2ACommandHandler("JSONRPC", "1.0", supportsStreaming: false, "http://localhost:8080/a2a");
         builder.Services.AddHttpClient(string.Empty)
@@ -437,7 +482,7 @@ public class AgentResourceBuilderExtensionsTests
     [Fact]
     public async Task InvokeA2AReportsJsonRpcError()
     {
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         var handler = new A2ACommandHandler(
             "JSONRPC",
@@ -465,7 +510,7 @@ public class AgentResourceBuilderExtensionsTests
     [MemberData(nameof(A2ATaskResponseCases))]
     public async Task InvokeA2ARecognizesTaskStates(string protocolBinding, string protocolVersion, bool streaming, bool statusUpdate, string taskState, bool success)
     {
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         var invocationResponse = CreateA2ATaskResponse(protocolBinding, protocolVersion, statusUpdate, taskState);
         var handler = new A2ACommandHandler(
@@ -700,7 +745,7 @@ public class AgentResourceBuilderExtensionsTests
     [Fact]
     public async Task InvokeStreamingA2AReportsJsonRpcError()
     {
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         var handler = new A2ACommandHandler(
             "JSONRPC",
@@ -727,7 +772,7 @@ public class AgentResourceBuilderExtensionsTests
     [Fact]
     public async Task InvokeAgUiReportsRunError()
     {
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         var handler = new SseAgentCommandHandler(
             """
@@ -754,7 +799,7 @@ public class AgentResourceBuilderExtensionsTests
     [Fact]
     public async Task InvokeAgUiReportsMissingTerminalEvent()
     {
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         var handler = new SseAgentCommandHandler(
             """
@@ -781,7 +826,7 @@ public class AgentResourceBuilderExtensionsTests
     [Fact]
     public async Task InvokeAgUiSucceedsOnRunFinished()
     {
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         var handler = new SseAgentCommandHandler(
             """
@@ -817,7 +862,7 @@ public class AgentResourceBuilderExtensionsTests
     [Fact]
     public async Task AsAgent_InvokesDistinctPathsAndRepeatedPairsAreIdempotent()
     {
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
         var handler = new CaptureAgentCommandHandler();
         builder.Services.AddHttpClient(string.Empty).ConfigurePrimaryHttpMessageHandler(() => handler);
         var agent = CreateResourceWithAllocatedEndpoint(builder, "agent")
@@ -849,7 +894,7 @@ public class AgentResourceBuilderExtensionsTests
     [InlineData(AgentProtocol.Acp, AgentResourceBuilderExtensions.DefaultAcpPath)]
     public void AsAgent_DefaultAndExplicitPathAreSamePair(AgentProtocol protocol, string path)
     {
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
         var agent = builder.AddContainer("agent", "image").WithHttpEndpoint(targetPort: 8080)
             .AsAgent(protocol)
             .AsAgent(path, protocol);
@@ -863,7 +908,7 @@ public class AgentResourceBuilderExtensionsTests
     [InlineData("cancelled")]
     public async Task InvokeAcpReportsTerminalRunFailure(string runStatus)
     {
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         var response = new JsonObject
         {
@@ -896,7 +941,7 @@ public class AgentResourceBuilderExtensionsTests
     [Fact]
     public async Task AsAgent_PublishPreservesEndpointExpressionsWithoutCommands()
     {
-        using var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false, args: ["AppHost:Operation=publish"]);
         var agent = builder.AddContainer("weather-agent", "image")
             .WithHttpEndpoint(targetPort: 8080)
             .AsAgent(AgentProtocol.A2A)
@@ -915,13 +960,18 @@ public class AgentResourceBuilderExtensionsTests
         var consumerEnvironment = await EnvironmentVariableEvaluator.GetEnvironmentVariablesAsync(
             consumer.Resource, DistributedApplicationOperation.Publish, TestServiceProvider.Instance).DefaultTimeout();
 
-        await VerifyXunit.Verifier.Verify(new { Agent = agentEnvironment, Consumer = consumerEnvironment }).UseDirectory("Snapshots");
+        Assert.Equal(
+            new KeyValuePair<string, string>("A2A_AGENT_BASE_URL", "{weather-agent.bindings.http.url}"),
+            Assert.Single(agentEnvironment));
+        Assert.Equal(
+            new KeyValuePair<string, string>("WEATHER_AGENT_AGENTCARD_URL", "{weather-agent.bindings.http.url}/.well-known/agent-card.json"),
+            Assert.Single(consumerEnvironment));
     }
 
     [Fact]
     public async Task WithEnvironment_A2AAgentCardUrlUsesConsumerNetwork()
     {
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         var agent = builder.AddContainer("weather-agent", "image")
             .WithHttpEndpoint(targetPort: 8080)
@@ -940,7 +990,7 @@ public class AgentResourceBuilderExtensionsTests
     [Fact]
     public async Task WithEnvironment_A2AAgentCardUrlUsesExplicitPathAndName()
     {
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         var agent = builder.AddContainer("weather-agent", "image")
             .WithHttpEndpoint(targetPort: 8080)
@@ -959,7 +1009,7 @@ public class AgentResourceBuilderExtensionsTests
     [Fact]
     public async Task WithReference_ProjectA2AAgentKeepsStandardServiceDiscovery()
     {
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         var agent = builder.AddProject<ProjectA>("weather-agent")
             .WithHttpEndpoint(targetPort: 8080)
@@ -984,7 +1034,7 @@ public class AgentResourceBuilderExtensionsTests
     [Fact]
     public async Task AsAgent_ImplicitEndpointSelectionSkipsExcludedEndpoints()
     {
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         var agent = builder.AddContainer("weather-agent", "image")
             .WithHttpsEndpoint(name: "management", targetPort: 8443)
@@ -1005,7 +1055,7 @@ public class AgentResourceBuilderExtensionsTests
     [Fact]
     public async Task AsAgent_OnlyExcludedEndpointDoesNotFallbackToIt()
     {
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
         var agent = builder.AddContainer("agent", "image")
             .WithHttpEndpoint()
@@ -1136,7 +1186,7 @@ public class AgentResourceBuilderExtensionsTests
 
     private static async Task<ExecuteCommandResult> InvokeA2AResponseAsync(string protocolBinding, string protocolVersion, bool streaming, string response, string mediaType)
     {
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
         var handler = new A2ACommandHandler(protocolBinding, protocolVersion, supportsStreaming: streaming, "http://localhost:8080/a2a",
             invocationResponse: response, streamingResponse: response)
         {
@@ -1168,11 +1218,13 @@ public class AgentResourceBuilderExtensionsTests
 
         public string? ResponseMediaType { get; init; }
 
+        public HttpResponseMessage? CardResponse { get; init; }
+
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             if (request.Method == HttpMethod.Get && request.RequestUri?.AbsolutePath == AgentResourceBuilderExtensions.DefaultA2AAgentCardPath)
             {
-                return new HttpResponseMessage(HttpStatusCode.OK)
+                return CardResponse ?? new HttpResponseMessage(HttpStatusCode.OK)
                 {
                     Content = new StringContent(
                         $$"""

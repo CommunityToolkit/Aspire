@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
@@ -243,24 +244,20 @@ public static class AgentResourceBuilderExtensions
             .OfType<ResourceCommandAnnotation>()
             .Any(command => command.IsHighlighted);
 
-        if (protocol is AgentProtocol.A2A)
+        switch (protocol)
         {
-            ConfigureA2A(builder, effectivePath, invocationMode, commandSuffix, ShouldHighlightCommand);
-        }
-
-        if (protocol is AgentProtocol.Responses)
-        {
-            ConfigureResponses(builder, effectivePath, agentName, commandSuffix, ShouldHighlightCommand);
-        }
-
-        if (protocol is AgentProtocol.AgUi)
-        {
-            ConfigureAgUi(builder, effectivePath, commandSuffix, ShouldHighlightCommand);
-        }
-
-        if (protocol is AgentProtocol.Acp)
-        {
-            ConfigureAcp(builder, effectivePath, agentName, commandSuffix, ShouldHighlightCommand);
+            case AgentProtocol.A2A:
+                ConfigureA2A(builder, effectivePath, invocationMode, commandSuffix, ShouldHighlightCommand);
+                break;
+            case AgentProtocol.Responses:
+                ConfigureResponses(builder, effectivePath, agentName, commandSuffix, ShouldHighlightCommand);
+                break;
+            case AgentProtocol.AgUi:
+                ConfigureAgUi(builder, effectivePath, commandSuffix, ShouldHighlightCommand);
+                break;
+            case AgentProtocol.Acp:
+                ConfigureAcp(builder, effectivePath, agentName, commandSuffix, ShouldHighlightCommand);
+                break;
         }
 
         return builder;
@@ -513,7 +510,13 @@ public static class AgentResourceBuilderExtensions
         using var response = await ctx.HttpClient.GetAsync(cardUri, ctx.CancellationToken).ConfigureAwait(true);
         if (!response.IsSuccessStatusCode)
         {
-            throw new InvalidOperationException($"Could not read the A2A agent card at '{cardUri}'. The request failed with status code {(int)response.StatusCode} ({response.StatusCode}).");
+            var contentType = response.Content.Headers.ContentType?.MediaType ?? "unspecified";
+            var contentLength = response.Content.Headers.ContentLength?.ToString(CultureInfo.InvariantCulture) ?? "unspecified";
+            throw new InvalidOperationException(
+                $"Could not read the A2A agent card. GET '{cardUri.GetLeftPart(UriPartial.Path)}' failed with status code {(int)response.StatusCode} ({response.StatusCode}). " +
+                $"Response content type: {contentType}; content length: {contentLength}. " +
+                "Check the agent-card route, endpoint authentication, and resource or proxy logs. " +
+                "Response bodies and authentication headers are omitted because they may contain sensitive data.");
         }
 
         var card = await response.Content.ReadFromJsonAsync<JsonObject>(cancellationToken: ctx.CancellationToken).ConfigureAwait(true)
@@ -525,7 +528,7 @@ public static class AgentResourceBuilderExtensions
         {
             throw new InvalidOperationException($"The A2A agent card at '{cardUri}' does not advertise streaming support.");
         }
-        var interfaces = GetA2AInterfaces(card, cardUri).ToArray();
+        A2AAgentInterface[] interfaces = [.. GetA2AInterfaces(card, cardUri)];
 
         foreach (var agentInterface in interfaces)
         {
