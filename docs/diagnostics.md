@@ -18,6 +18,18 @@ This API is marked as experimental as it does not have a stable implementation, 
 
 The API is marked for deprecation and will be removed in a future release.
 
+## CTASPIREAGENTS001
+
+Dashboard MCP tool commands in the Agents hosting integration are experimental and may change or be removed in future updates.
+
+Current usage:
+
+- `WithMcpToolCommands(...)`
+
+These commands implement a limited MCP Streamable HTTP client for local development, not a general-purpose MCP client. They do not acquire credentials or forward dashboard-user identity.
+
+Suppress this diagnostic only when you intentionally opt into the experimental API surface.
+
 ## CTASPIREPERL001
 
 This API is marked as experimental for the Perl hosting integration and may change or be removed in future updates.

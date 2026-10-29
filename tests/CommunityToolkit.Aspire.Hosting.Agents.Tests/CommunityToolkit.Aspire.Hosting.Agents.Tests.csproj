@@ -4,13 +4,15 @@
     <IsAspireHost>true</IsAspireHost>
     <!-- Resolve DCP from packages, but run xUnit directly instead of the SDK's Aspire CLI launch hook. -->
     <AspireUseCliBundle>false</AspireUseCliBundle>
-    <NoWarn>$(NoWarn);ASPIRE010;ASPIREAGENTS001;ASPIREMCP001;ASPIREINTERACTION001</NoWarn>
+    <NoWarn>$(NoWarn);ASPIRE010;CTASPIREAGENTS001;ASPIREMCP001;ASPIREINTERACTION001</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Verify.XunitV3" />
     <Using Include="Aspire.Hosting" />
+    <Using Include="Aspire.Hosting.Utils" />
+    <Using Include="CommunityToolkit.Aspire.Testing" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../../src/CommunityToolkit.Aspire.Hosting.Agents/CommunityToolkit.Aspire.Hosting.Agents.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="../CommunityToolkit.Aspire.Testing/CommunityToolkit.Aspire.Testing.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 </Project>

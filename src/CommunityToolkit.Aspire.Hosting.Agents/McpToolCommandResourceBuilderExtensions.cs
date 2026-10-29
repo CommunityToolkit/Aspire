@@ -48,7 +48,7 @@ public static class McpToolCommandResourceBuilderExtensions
     /// </example>
     /// <exception cref="ArgumentNullException"><paramref name="builder"/> is <see langword="null"/>.</exception>
     /// <exception cref="InvalidOperationException">The resource has no configured MCP server endpoint.</exception>
-    [Experimental("ASPIREAGENTS001", UrlFormat = "https://aka.ms/aspire/diagnostics/{0}")]
+    [Experimental("CTASPIREAGENTS001", UrlFormat = "https://aka.ms/communitytoolkit/aspire/diagnostics#{0}")]
     [AspireExport]
     public static IResourceBuilder<T> WithMcpToolCommands<T>(this IResourceBuilder<T> builder)
         where T : IResourceWithEndpoints

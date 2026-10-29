@@ -13,7 +13,7 @@ aspire add CommunityToolkit.Aspire.Hosting.Agents
 ```
 
 The extension methods use `Aspire.Hosting`; import `Aspire.Hosting.ApplicationModel`
-for `AgentProtocol` and `A2AInvocationMode`. Suppress `ASPIREAGENTS001` for the
+for `AgentProtocol` and `A2AInvocationMode`. Suppress `CTASPIREAGENTS001` for the
 experimental MCP invocation API and `ASPIREMCP001` for Aspire's MCP metadata API.
 See the [multi-protocol example](../../examples/agents/README.md) for a
 complete AppHost using published Aspire packages.
@@ -60,6 +60,18 @@ The invocation commands are developer-productivity tools for sending a message o
 This integration is not a general-purpose agent client or an authentication framework. It does not implement interactive sign-in, acquire or refresh access tokens, or forward the dashboard user's identity. For endpoints requiring those capabilities or application-specific authentication, use a driver application that manages the interaction and authentication; Aspire can orchestrate and observe that application. Do not disable endpoint authentication to use these commands.
 
 Authentication used by an agent to call a model provider, such as Foundry, remains the agent application's responsibility and is separate from authentication on the agent endpoint itself.
+
+## Dashboard workflow
+
+1. Start an AppHost with an existing agent endpoint marked with `AsAgent`, or an MCP endpoint configured with `WithMcpServer().WithMcpToolCommands()`.
+2. Open the resource's dashboard commands. Choose **Invoke A2A**, **Invoke Responses**, **Invoke AG-UI**, or **Invoke ACP**, enter a message, and inspect the command result.
+3. For MCP, choose **Invoke MCP**, select a discovered tool, fill in its arguments, and inspect its response. Cancel a dialog to abandon the invocation; the MCP session is still cleaned up.
+
+These APIs do not create an agent, host a model, or implement an agent endpoint.
+They add a local invocation UI to endpoints the application already exposes.
+Agent-card HTTP failures report the request method, URL path, status, content type,
+and content length. Response bodies and authentication headers are not included
+in those diagnostics; check resource or proxy logs for further detail.
 
 ## Agent protocols
 
@@ -134,12 +146,18 @@ var agent = builder.AddProject<Projects.WeatherAgent>("weather-agent")
     .WithMcpToolCommands();
 ```
 
-Use `.withMcpServer().withMcpToolCommands()` for the equivalent TypeScript configuration. `WithMcpToolCommands` is experimental (`ASPIREAGENTS001`).
+Use `.withMcpServer().withMcpToolCommands()` for the equivalent TypeScript configuration. `WithMcpToolCommands` is experimental (`CTASPIREAGENTS001`).
 
 Simple tool parameter schemas use generated input controls. Union, composed, or
 referenced parameter schemas use a raw-JSON dialog so values retain their JSON
 types. Canceling either dialog cancels the invocation and still terminates the
 MCP session. Tool responses must match the invocation's JSON-RPC request ID.
+
+The commands contain a limited MCP Streamable HTTP client: initialization,
+paginated tool discovery, JSON/SSE tool responses, and session termination, plus
+dashboard input controls. This is not a general-purpose MCP SDK: transports such
+as stdio, authentication flows, and other MCP client capabilities are outside its
+scope. See [CTASPIREAGENTS001](../../docs/diagnostics.md#ctaspireagents001).
 
 ## Additional documentation
 

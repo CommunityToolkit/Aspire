@@ -7,7 +7,7 @@ using Aspire.Hosting.Foundry;
 using Microsoft.Extensions.Configuration;
 
 #pragma warning disable ASPIREMCP001
-#pragma warning disable ASPIREAGENTS001
+#pragma warning disable CTASPIREAGENTS001
 
 var builder = DistributedApplication.CreateBuilder(args);
 
