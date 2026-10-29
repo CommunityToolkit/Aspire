@@ -11,12 +11,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
-    <AspireMajorVersion>13</AspireMajorVersion>
-    <AspireVersion>$(AspireMajorVersion).6.4</AspireVersion>
+    <AspireMajorVersion>17</AspireMajorVersion>
+    <AspireVersion>$(AspireMajorVersion).0.0-preview.1.26528.13</AspireVersion>
     <AspireUseCliBundle>true</AspireUseCliBundle>
-    <AspirePreviewSuffix>-preview.1.26523.11</AspirePreviewSuffix> <!-- Used by Aspire packages that are still prerelease. -->
+    <AspirePreviewSuffix></AspirePreviewSuffix> <!-- The nightly AspireVersion already includes its prerelease suffix. -->
     <AspNetCoreVersion>9.0.0</AspNetCoreVersion>
-    <DotNetExtensionsVersion>10.0.12</DotNetExtensionsVersion>
+    <DotNetExtensionsVersion>10.0.13</DotNetExtensionsVersion>
     <TestContainersVersion>4.14.0</TestContainersVersion>
     <MEAIVersion>10.6.0</MEAIVersion>
     <ServiceDiscoveryVersion>10.0.0</ServiceDiscoveryVersion>
@@ -44,8 +44,8 @@
 
   <!-- Versioning -->
   <PropertyGroup>
-    <ToolkitMinorVersion>6</ToolkitMinorVersion>
-    <ToolkitPatchVersion>2</ToolkitPatchVersion>
+    <ToolkitMinorVersion>0</ToolkitMinorVersion>
+    <ToolkitPatchVersion>0</ToolkitPatchVersion>
     <ToolkitPreviewVersion>preview.1</ToolkitPreviewVersion>
 
     <VersionPrefix>$(AspireMajorVersion).$(ToolkitMinorVersion).$(ToolkitPatchVersion)</VersionPrefix>

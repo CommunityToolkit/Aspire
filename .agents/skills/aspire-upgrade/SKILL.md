@@ -5,7 +5,7 @@ description: Update the Aspire version in the repository to the latest nightly b
 
 # aspire-upgrade
 
-The target version prefix is **13.6**.
+The target version prefix is **17.0**.
 
 # aspire-upgrade
 
@@ -56,7 +56,7 @@ Search the repository for all `.csproj` files that reference `Aspire.AppHost.Sdk
 
 Search the entire repository for all `aspire.config.json` files (typically under `examples/` in directories ending with `.AppHost.TypeScript`). Each file has an `sdk.version` field that must be updated to the new version.
 
-The `sdk.version` value should be the full version string (e.g., `13.6.0-preview.1.26475.12`).
+The `sdk.version` value should be the full version string (e.g., `17.0.0-preview.1.26528.13`).
 
 Use a command like `find . -name "aspire.config.json"` to locate all files, then update the `"version"` value inside the `"sdk"` object in each one.
 
@@ -67,4 +67,3 @@ Run `dotnet restore` at the repository root to verify the new version resolves c
 ## Step 5: Create a pull request
 
 After all changes are made and validated, create a pull request with the title "Update Aspire version to X.Y.Z" where X.Y.Z is the full version you updated to.
-
