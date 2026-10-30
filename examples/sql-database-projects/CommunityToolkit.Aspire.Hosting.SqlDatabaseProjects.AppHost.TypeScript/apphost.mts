@@ -21,15 +21,18 @@ const sqlServer = await builder.addSqlServer("sql");
 const database = await sqlServer.addDatabase("TargetDatabase");
 const existingConnection = await builder.addConnectionString("Aspire");
 
-const databaseProject = await builder.addSqlProject("database-project");
-await databaseProject.withDacpac(projectPath);
+const databaseProject = await builder.addSqlProjectFromPath("database-project", projectPath);
 await databaseProject.withDacDeployOptions(publishProfilePath);
 await databaseProject.withSkipWhenDeployed();
 await databaseProject.withReference(database);
 
-const connectionProject = await builder.addSqlProject("connection-project");
-await connectionProject.withDacpac(projectPath);
+const connectionProject = await builder.addSqlProjectFromPath("connection-project", projectPath);
 await connectionProject.withConnectionReference(existingConnection);
+await connectionProject.withExplicitStart();
+
+const packageDatabase = await sqlServer.addDatabase("PackageDatabase");
+const packageProject = await builder.addSqlPackage("package-project", "ErikEJ.Dacpac.Chinook", "1.0.0");
+await packageProject.withReference(packageDatabase);
 
 const _databaseProjectDacpacPath: string | null =
     await databaseProject.dacpacPath();

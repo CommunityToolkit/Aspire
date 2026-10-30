@@ -8,22 +8,23 @@ var chinookDatabase = server.AddDatabase("Database2");
 
 var otherDatabase = server.AddDatabase("Database3");
 
-var sdkProject = builder.AddSqlProject<Projects.SdkProject>("sdk-project")
+var sdkProject = builder.AddSqlProject("sdk-project", "../SdkProject/SdkProject.csproj")
        .WithReference(database);
 
-var otherProject = builder.AddSqlProject<Projects.SdkProject>("other-sdk-project")
+var otherProject = builder.AddSqlProject("other-sdk-project", "../SdkProject/SdkProject.csproj")
        .WithReference(otherDatabase)
        .WaitForCompletion(sdkProject);
 
-builder.AddSqlPackage<Packages.ErikEJ_Dacpac_Chinook>("chinook")
+builder.AddSqlPackage("chinook", "ErikEJ.Dacpac.Chinook", "1.0.0")
        .WithReference(chinookDatabase);
 
 var connection = builder.AddConnectionString("Aspire");
 
-builder.AddSqlProject<Projects.SdkProject>("existing-db")
-        .WithReference(connection);
+builder.AddSqlProject("existing-db", "../SdkProject/SdkProject.csproj")
+       .WithReference(connection)
+       .WithExplicitStart();
 
-var delayedProject = builder.AddSqlProject<Projects.SdkProject>("sdk-project-delayed")
+var delayedProject = builder.AddSqlProject("sdk-project-delayed", "../SdkProject/SdkProject.csproj")
        .WithReference(database)
        .WithExplicitStart();
 

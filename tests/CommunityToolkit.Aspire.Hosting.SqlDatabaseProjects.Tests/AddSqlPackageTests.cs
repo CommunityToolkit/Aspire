@@ -287,7 +287,7 @@ public class AddSqlPackageTests
         Assert.True(sqlProjectResource.HasAnnotationOfType<DacpacSkipWhenDeployedAnnotation>());
     }
 
-    private static void CreateNuGetPackage(string feedDirectory, string packageId, string version, string dacpacRelativePath)
+    internal static void CreateNuGetPackage(string feedDirectory, string packageId, string version, string dacpacRelativePath, string? dacpacSourcePath = null)
     {
         Directory.CreateDirectory(feedDirectory);
         var packagePath = Path.Combine(feedDirectory, $"{packageId}.{version}.nupkg");
@@ -307,12 +307,18 @@ public class AddSqlPackageTests
             writer.Write(nuspec.ToString(SaveOptions.DisableFormatting));
         }
 
+        if (dacpacSourcePath is not null)
+        {
+            archive.CreateEntryFromFile(dacpacSourcePath, dacpacRelativePath.Replace(Path.DirectorySeparatorChar, '/'));
+            return;
+        }
+
         var dacpacEntry = archive.CreateEntry(dacpacRelativePath.Replace(Path.DirectorySeparatorChar, '/'));
         using var dacpacStream = dacpacEntry.Open();
         dacpacStream.Write([1, 2, 3]);
     }
 
-    private static void CreateNuGetConfig(string appHostDirectory, string feedDirectory, string packagesDirectory)
+    internal static void CreateNuGetConfig(string appHostDirectory, string feedDirectory, string packagesDirectory)
     {
         var configuration = new XDocument(
             new XElement("configuration",
