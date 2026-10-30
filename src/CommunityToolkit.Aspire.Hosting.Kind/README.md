@@ -338,7 +338,7 @@ When you run `aspire deploy`, the pipeline executes these steps in order:
 2. **kind-create-cluster** - Creates the Kind cluster (reuses existing if persistent)
 3. **build** - Builds container images for project resources (`dotnet publish /t:PublishContainer`)
 4. **kind-load-images** - Loads all container images into Kind (`kind load docker-image`)
-5. **kind-helm-install** - Installs the generated Helm chart (`helm install`)
+5. **helm-deploy-{environment}** - Installs the generated Helm chart using Aspire's built-in Kubernetes deployment step
 
 ## Advanced usage
 
