@@ -59,7 +59,7 @@ public static class SqlProjectBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentNullException.ThrowIfNull(name, nameof(name));
 
-        return builder.AddDacPacResource(name, new SqlProjectResource(name), []);
+        return AddSqlProjectResource(builder, name, []);
     }
 
     /// <summary>
@@ -91,6 +91,43 @@ public static class SqlProjectBuilderExtensions
                 [new(CustomResourceKnownProperties.Source, normalizedProjectPath)])
             .WithAnnotation(projectMetadata)
             .WithAnnotation(new SqlProjectBuildAnnotation(configuration));
+    }
+
+    /// <summary>
+    /// Adds a SQL Server Database Project resource from a NuGet package.
+    /// </summary>
+    /// <param name="builder">An <see cref="IDistributedApplicationBuilder"/> instance to add the SQL Server Database project to.</param>
+    /// <param name="name">Name of the resource.</param>
+    /// <param name="packageId">ID of the NuGet package containing the DACPAC.</param>
+    /// <param name="version">Exact NuGet package version, including any prerelease label.</param>
+    /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
+    [AspireExport]
+    public static IResourceBuilder<SqlProjectResource> AddSqlPackage(
+        this IDistributedApplicationBuilder builder,
+        [ResourceName] string name,
+        string packageId,
+        string version)
+    {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentException.ThrowIfNullOrWhiteSpace(packageId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(version);
+        ValidateNuGetPackageId(packageId);
+        if (!NuGet.Versioning.NuGetVersion.TryParse(version, out var packageVersion))
+        {
+            throw new ArgumentException("The package version must be an exact NuGet version without a version range.", nameof(version));
+        }
+
+        version = packageVersion.ToNormalizedString();
+
+        var properties = ImmutableArray.Create<ResourcePropertySnapshot>(
+            new(CustomResourceKnownProperties.Source, $"{packageId}@{version}"),
+            new("package.id", packageId),
+            new("package.version", version),
+            new("package.path", packageId));
+
+        return AddSqlProjectResource(builder, name, properties)
+            .WithAnnotation(new SqlPackageRestoreAnnotation(packageId, version, Path.GetFullPath(builder.AppHostDirectory)));
     }
 
     /// <summary>
@@ -134,11 +171,28 @@ public static class SqlProjectBuilderExtensions
                       .ExcludeFromManifest();
     }
 
+    private static IResourceBuilder<SqlProjectResource> AddSqlProjectResource(
+        IDistributedApplicationBuilder builder,
+        string name,
+        ImmutableArray<ResourcePropertySnapshot> properties)
+        => builder.AddDacPacResource(name, new SqlProjectResource(name), properties);
+
+    private static void ValidateNuGetPackageId(string packageId)
+    {
+        if (packageId.Length > 100
+            || !char.IsAsciiLetterOrDigit(packageId[0])
+            || !char.IsAsciiLetterOrDigit(packageId[^1])
+            || packageId.Any(character => !char.IsAsciiLetterOrDigit(character) && character is not '.' and not '-' and not '_'))
+        {
+            throw new ArgumentException("The package ID must be a valid NuGet package ID.", nameof(packageId));
+        }
+    }
+
     /// <summary>
     /// Specifies the path to the .dacpac file.
     /// </summary>
     /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project.</param>
-    /// <param name="dacpacPath">Path to the .dacpac file.</param>
+    /// <param name="dacpacPath">Path to the .dacpac file, or a path relative to a NuGet package for a resource created by <see cref="AddSqlPackage(IDistributedApplicationBuilder, string, string, string)"/>.</param>
     /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
     [AspireExport]
     public static IResourceBuilder<SqlProjectResource> WithDacpac(this IResourceBuilder<SqlProjectResource> builder, string dacpacPath)
@@ -159,6 +213,19 @@ public static class SqlProjectBuilderExtensions
     internal static IResourceBuilder<TResource> InternalWithDacpac<TResource>(this IResourceBuilder<TResource> builder, string dacpacPath)
         where TResource : IResourceWithDacpac
     {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+
+        if (builder.Resource.TryGetLastAnnotation<SqlPackageRestoreAnnotation>(out var packageAnnotation))
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(dacpacPath);
+            if (Path.IsPathRooted(dacpacPath))
+            {
+                throw new ArgumentException("The DACPAC path for a NuGet package must be relative to the package root.", nameof(dacpacPath));
+            }
+
+            return builder.WithAnnotation(packageAnnotation with { DacpacRelativePath = dacpacPath }, ResourceAnnotationMutationBehavior.Replace);
+        }
+
         return builder.WithAnnotation(new DacpacMetadataAnnotation(dacpacPath));
     }
 
