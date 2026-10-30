@@ -148,3 +148,8 @@
 /src/CommunityToolkit.Aspire.Hosting.Chroma/ @Laurianti
 /tests/CommunityToolkit.Aspire.Hosting.Chroma.Tests/ @Laurianti
 
+# CommunityToolkit.Aspire.Hosting.Agents
+
+/examples/agents/ @tommasodotNET
+/src/CommunityToolkit.Aspire.Hosting.Agents/ @tommasodotNET
+/tests/CommunityToolkit.Aspire.Hosting.Agents.Tests/ @tommasodotNET

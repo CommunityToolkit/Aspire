@@ -8,6 +8,12 @@
   <Folder Name="/examples/adminer/">
     <Project Path="examples/adminer/CommunityToolkit.Aspire.Hosting.Adminer.AppHost/CommunityToolkit.Aspire.Hosting.Adminer.AppHost.csproj" />
   </Folder>
+  <Folder Name="/examples/agents/">
+    <Project Path="examples/agents/AgentEnvDump/AgentEnvDump.csproj" />
+    <Project Path="examples/agents/CommunityToolkit.Aspire.Hosting.Agents.AppHost/CommunityToolkit.Aspire.Hosting.Agents.AppHost.csproj" />
+    <Project Path="examples/agents/McpAgent/McpAgent.csproj" />
+    <Project Path="examples/agents/ResponsesAgent/ResponsesAgent.csproj" />
+  </Folder>
   <Folder Name="/examples/azure-ext/">
     <Project Path="examples/azure-ext/CommunityToolkit.Aspire.Azure.Extensions.AppHost/CommunityToolkit.Aspire.Azure.Extensions.AppHost.csproj" />
   </Folder>
@@ -253,6 +259,7 @@
     <Project Path="src/CommunityToolkit.Aspire.GoFeatureFlag/CommunityToolkit.Aspire.GoFeatureFlag.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.ActiveMQ/CommunityToolkit.Aspire.Hosting.ActiveMQ.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Adminer/CommunityToolkit.Aspire.Hosting.Adminer.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Agents/CommunityToolkit.Aspire.Hosting.Agents.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Azure.Extensions/CommunityToolkit.Aspire.Hosting.Azure.Extensions.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager/CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager.csproj" />
@@ -334,6 +341,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.GoFeatureFlag.Tests/CommunityToolkit.Aspire.GoFeatureFlag.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.ActiveMQ.Tests/CommunityToolkit.Aspire.Hosting.ActiveMQ.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Adminer.Tests/CommunityToolkit.Aspire.Hosting.Adminer.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Agents.Tests/CommunityToolkit.Aspire.Hosting.Agents.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.Tests/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Azure.Extensions.Tests/CommunityToolkit.Aspire.Hosting.Azure.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager.Tests/CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager.Tests.csproj" />
