@@ -24,6 +24,9 @@ public class KindPipelineStepTests
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
 
         var kindResource = Assert.Single(model.Resources.OfType<KindEnvironmentResource>());
+        var kubernetesEnvironment = Assert.Single(model.Resources.OfType<KubernetesEnvironmentResource>());
+
+        Assert.Equal(kindResource.KubeconfigPath, kubernetesEnvironment.KubeConfigPath);
         Assert.True(kindResource.TryGetAnnotationsOfType<PipelineStepAnnotation>(out var annotations));
         Assert.Single(annotations);
     }
@@ -38,8 +41,7 @@ public class KindPipelineStepTests
 
         Assert.Contains(steps, s => s.Name == "kind-create-cluster-k8s-kind");
         Assert.Contains(steps, s => s.Name == "kind-load-images-k8s-kind");
-        Assert.Contains(steps, s => s.Name == "kind-helm-install-k8s-kind");
-        Assert.Equal(3, steps.Count);
+        Assert.Equal(2, steps.Count);
     }
 
     [Fact]
@@ -55,29 +57,15 @@ public class KindPipelineStepTests
     }
 
     [Fact]
-    public void HelmInstallStepDependsOnCreateClusterAndPublishAndLoadImages()
+    public void LoadImagesStepIsRequiredByKubernetesHelmDeploy()
     {
         var k8sEnv = new KubernetesEnvironmentResource("k8s");
         var kindResource = new KindEnvironmentResource("k8s-kind", k8sEnv);
 
         var steps = KindDeployPipelineSteps.CreateSteps(kindResource).ToList();
-        var helmStep = steps.Single(s => s.Name == "kind-helm-install-k8s-kind");
+        var loadStep = steps.Single(s => s.Name == "kind-load-images-k8s-kind");
 
-        Assert.Contains("kind-create-cluster-k8s-kind", helmStep.DependsOnSteps);
-        Assert.Contains("kind-load-images-k8s-kind", helmStep.DependsOnSteps);
-        Assert.Contains(WellKnownPipelineSteps.Publish, helmStep.DependsOnSteps);
-    }
-
-    [Fact]
-    public void HelmInstallStepIsRequiredByDeploy()
-    {
-        var k8sEnv = new KubernetesEnvironmentResource("k8s");
-        var kindResource = new KindEnvironmentResource("k8s-kind", k8sEnv);
-
-        var steps = KindDeployPipelineSteps.CreateSteps(kindResource).ToList();
-        var helmStep = steps.Single(s => s.Name == "kind-helm-install-k8s-kind");
-
-        Assert.Contains(WellKnownPipelineSteps.Deploy, helmStep.RequiredBySteps);
+        Assert.Contains("helm-deploy-k8s", loadStep.RequiredBySteps);
     }
 
     [Fact]
