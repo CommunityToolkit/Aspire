@@ -57,6 +57,17 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         Assert.Equal("Inception", entry.Title);
     }
 
+    [Fact]
+    public async Task ApiServiceAnswersNotFoundForACollectionThatDoesNotExist()
+    {
+        await fixture.ResourceNotificationService.WaitForResourceHealthyAsync("apiservice").WaitAsync(TimeSpan.FromMinutes(5));
+
+        using var httpClient = fixture.CreateHttpClient("apiservice");
+
+        var queryResponse = await httpClient.GetAsync($"/query?collectionName=missing_{Guid.NewGuid():N}");
+        Assert.Equal(HttpStatusCode.NotFound, queryResponse.StatusCode);
+    }
+
     private record CreateResult(string Collection, int Count);
 
     private record QueryResult(string Id, string? Document, string? Title, float? Distance);

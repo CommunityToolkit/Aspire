@@ -116,6 +116,12 @@ public static class AspireChromaExtensions
             throw new InvalidOperationException($"ChromaDB endpoint is not configured for connection name '{connectionName}'.");
         }
 
+        // As the Endpoint of a connection string: an absolute http or https URI, like http://localhost:8000.
+        if (!settings.Endpoint.IsAbsoluteUri || settings.Endpoint.Scheme is not ("http" or "https"))
+        {
+            throw new InvalidOperationException($"ChromaDB endpoint for connection name '{connectionName}' is not an http or https URI: it takes the address of the server, like http://localhost:8000.");
+        }
+
         // An endpoint with only the address of the server, like http://localhost:8000, gets the path of the v2 API.
         var options = new ChromaConfigurationOptions(settings.Endpoint, tenant: settings.Tenant, database: settings.Database, chromaToken: settings.Token);
 
