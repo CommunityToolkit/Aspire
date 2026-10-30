@@ -1,3 +1,4 @@
+using CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects;
 using Microsoft.Build.Evaluation;
 using Microsoft.SqlServer.Dac;
 using System.Reflection;
@@ -37,9 +38,16 @@ public sealed class SqlProjectResource(string name) : Resource(name), IResourceW
             var projectPath = projectMetadata.ProjectPath;
             using var projectCollection = new ProjectCollection();
 
-            var attr = projectMetadata.GetType().Assembly.GetCustomAttribute<AssemblyConfigurationAttribute>();
-            if (attr is not null)
-                projectCollection.SetGlobalProperty("Configuration", attr.Configuration);
+            if (this.TryGetLastAnnotation<SqlProjectBuildAnnotation>(out var buildAnnotation))
+            {
+                projectCollection.SetGlobalProperty("Configuration", buildAnnotation.Configuration);
+            }
+            else
+            {
+                var attr = projectMetadata.GetType().Assembly.GetCustomAttribute<AssemblyConfigurationAttribute>();
+                if (attr is not null)
+                    projectCollection.SetGlobalProperty("Configuration", attr.Configuration);
+            }
 
             var project = projectCollection.LoadProject(projectPath);
 

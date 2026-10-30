@@ -43,7 +43,7 @@ public static class SqlProjectBuilderExtensions
 
         var projectAnnotation = new TProject();
 
-        return builder.AddDacPacResource(name, new SqlProjectResource(name), [ new(CustomResourceKnownProperties.Source, projectAnnotation.ProjectPath) ])
+        return builder.AddDacPacResource(name, new SqlProjectResource(name), [new(CustomResourceKnownProperties.Source, projectAnnotation.ProjectPath)])
             .WithAnnotation(projectAnnotation);
     }
 
@@ -60,6 +60,37 @@ public static class SqlProjectBuilderExtensions
         ArgumentNullException.ThrowIfNull(name, nameof(name));
 
         return builder.AddDacPacResource(name, new SqlProjectResource(name), []);
+    }
+
+    /// <summary>
+    /// Adds a SQL Server Database Project resource from a project file path.
+    /// </summary>
+    /// <param name="builder">An <see cref="IDistributedApplicationBuilder"/> instance to add the SQL Server Database project to.</param>
+    /// <param name="name">Name of the resource.</param>
+    /// <param name="projectPath">Path to the SQL Server Database project, relative to the AppHost directory or absolute.</param>
+    /// <param name="configuration">MSBuild configuration used to build the project and resolve its output. Defaults to <c>Debug</c>.</param>
+    /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
+    [AspireExport("addSqlProjectFromPath")]
+    public static IResourceBuilder<SqlProjectResource> AddSqlProject(
+        this IDistributedApplicationBuilder builder,
+        [ResourceName] string name,
+        string projectPath,
+        string configuration = "Debug")
+    {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectPath);
+        ArgumentException.ThrowIfNullOrWhiteSpace(configuration);
+
+        var normalizedProjectPath = Path.GetFullPath(projectPath, builder.AppHostDirectory);
+        var projectMetadata = new SqlProjectPathMetadata(normalizedProjectPath);
+
+        return builder.AddDacPacResource(
+                name,
+                new SqlProjectResource(name),
+                [new(CustomResourceKnownProperties.Source, normalizedProjectPath)])
+            .WithAnnotation(projectMetadata)
+            .WithAnnotation(new SqlProjectBuildAnnotation(configuration));
     }
 
     /// <summary>

@@ -1,4 +1,5 @@
 using Aspire.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.SqlServer.Dac;
 
 namespace CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.Tests;
@@ -46,6 +47,29 @@ public class AddSqlProjectTests
         var dacpacPath = ((IResourceWithDacpac)sqlProjectResource).GetDacpacPath();
         Assert.NotNull(dacpacPath);
         Assert.True(File.Exists(dacpacPath));
+    }
+
+    [Fact]
+    public async Task AddSqlProject_FromPathBuildsBeforeDeploying()
+    {
+        var projectPath = Path.GetFullPath(TestProject.RelativePath, AppContext.BaseDirectory);
+        var deployer = new RecordingDacpacDeployer();
+        var appBuilder = DistributedApplication.CreateBuilder();
+        appBuilder.Configuration["ConnectionStrings:Target"] = "Server=localhost;Database=Target;Integrated Security=True;TrustServerCertificate=True";
+        appBuilder.Services.AddSingleton<IDacpacDeployer>(deployer);
+
+        var project = appBuilder.AddSqlProject("MySqlProject", projectPath, "Release");
+        var target = appBuilder.AddConnectionString("Target");
+        project.WithReference(target);
+
+        using var app = appBuilder.Build();
+        var publishService = app.Services.GetRequiredService<SqlProjectPublishService>();
+
+        await publishService.PublishSqlProject(project.Resource, target.Resource, null, CancellationToken.None);
+
+        Assert.NotNull(deployer.DacpacPath);
+        Assert.True(File.Exists(deployer.DacpacPath));
+        Assert.Contains("Release", deployer.DacpacPath, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -201,5 +225,15 @@ public class AddSqlProjectTests
         Assert.Equal("MySqlProject", sqlProjectResource.Name);
 
         Assert.True(sqlProjectResource.HasAnnotationOfType<DacpacSkipWhenDeployedAnnotation>());
+    }
+
+    private sealed class RecordingDacpacDeployer : IDacpacDeployer
+    {
+        public string? DacpacPath { get; private set; }
+
+        public void Deploy(string dacpacPath, DacDeployOptions options, string targetConnectionString, string? targetDatabaseName, ILogger deploymentLogger, CancellationToken cancellationToken)
+        {
+            DacpacPath = dacpacPath;
+        }
     }
 }
