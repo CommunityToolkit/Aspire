@@ -85,16 +85,18 @@ public static partial class FlociHostingExtension
     /// its Service Bus connection string (e.g. for <c>AddAzureServiceBusClient</c>). The Artemis
     /// sidecar is a separate container floci-az starts via Docker, so the emulator also needs
     /// <see cref="WithDockerSocket(IResourceBuilder{FlociAzureContainerResource}, string)"/>.
-    /// The integration allocates proxyless AMQP host endpoints when ports are not specified. Requires
-    /// floci-az 0.12.0 or later. This API is run-only; call it inside an
+    /// When ports are not specified, Docker assigns them as it starts the sidecar, and the integration
+    /// allocates the child's proxyless AMQP endpoints from the ports floci-az reports once it is ready.
+    /// The resource becomes <c>Running</c> at that point, so dependents can <c>WaitFor</c> it directly.
+    /// Requires floci-az 0.12.0 or later. This API is run-only; call it inside an
     /// <c>ExecutionContext.IsRunMode</c> branch when publishing the AppHost.
     /// </remarks>
     /// <ats-summary>Adds a Service Bus child resource to the Floci Azure emulator</ats-summary>
     /// <param name="builder">The Floci Azure resource builder.</param>
     /// <param name="name">The globally unique name of the Service Bus resource (default: <c>servicebus</c>).
     /// Pass a distinct name for each additional emulator.</param>
-    /// <param name="amqpPort">Host port for plain AMQP (default: selected by the integration at startup).</param>
-    /// <param name="amqpTlsPort">Host port for AMQPS/TLS (default: selected by the integration at startup).</param>
+    /// <param name="amqpPort">Host port for plain AMQP (default: assigned by Docker at startup).</param>
+    /// <param name="amqpTlsPort">Host port for AMQPS/TLS (default: assigned by Docker at startup).</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{FlociAzureServiceBusResource}"/> for further configuration.</returns>
     [AspireExport]
     public static IResourceBuilder<FlociAzureServiceBusResource> WithServiceBus(
@@ -158,10 +160,6 @@ public static partial class FlociHostingExtension
 
         builder.ApplicationBuilder.Services.TryAddEventingSubscriber<FlociServiceBusEndpointAllocator>();
 
-        // The parent configures an externally managed sidecar. Use its owning container for
-        // dependency discovery because DCP cannot tunnel the custom child's endpoints.
-        var amqpEndpoint = new EndpointReference(builder.Resource, serviceBus.AmqpEndpoint.EndpointAnnotation);
-        var amqpTlsEndpoint = new EndpointReference(builder.Resource, serviceBus.AmqpTlsEndpoint.EndpointAnnotation);
         builder.WithEnvironment(context =>
         {
             if (context.ExecutionContext.IsPublishMode)
@@ -171,10 +169,11 @@ public static partial class FlociHostingExtension
 
             context.EnvironmentVariables["FLOCI_AZ_SERVICES_SERVICE_BUS_MOCKED"] = "false";
             context.EnvironmentVariables["FLOCI_AZ_SERVICES_SERVICE_BUS_START_ON_BOOT"] = "true";
+            // 0 lets Docker assign the port atomically when floci-az starts the sidecar.
             context.EnvironmentVariables["FLOCI_AZ_SERVICES_SERVICE_BUS_AMQP_PORT"] =
-                amqpEndpoint.Property(EndpointProperty.TargetPort);
+                FlociServiceBusEndpointAllocator.GetFlociPortSetting(serviceBus.AmqpEndpoint.EndpointAnnotation);
             context.EnvironmentVariables["FLOCI_AZ_SERVICES_SERVICE_BUS_AMQP_TLS_PORT"] =
-                amqpTlsEndpoint.Property(EndpointProperty.TargetPort);
+                FlociServiceBusEndpointAllocator.GetFlociPortSetting(serviceBus.AmqpTlsEndpoint.EndpointAnnotation);
         });
 
         return serviceBusBuilder;
@@ -215,7 +214,7 @@ public static partial class FlociHostingExtension
                 serviceBus.Resource.Parent, serviceBus.Resource.AmqpEndpoint.EndpointAnnotation);
             return builder.WithEnvironment($"ConnectionStrings__{connectionName ?? serviceBus.Resource.Name}",
                 ReferenceExpression.Create(
-                    $"Endpoint=sb://{FlociAzureServiceBusResource.ContainerHost}:{endpoint.Property(EndpointProperty.TargetPort)};SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey={FlociAzureServiceBusResource.DefaultSasKey};UseDevelopmentEmulator=true;"))
+                    $"Endpoint=sb://{FlociAzureServiceBusResource.ContainerHost}:{endpoint.Property(EndpointProperty.Port)};SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey={FlociAzureServiceBusResource.DefaultSasKey};UseDevelopmentEmulator=true;"))
                 .WithRelationship(serviceBus.Resource, "Reference");
         }
 
