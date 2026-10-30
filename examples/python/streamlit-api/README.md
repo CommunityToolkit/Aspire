@@ -5,7 +5,7 @@ This is a simple Streamlit application that demonstrates how to run Streamlit ap
 ## Prerequisites
 
 - Python 3.12 or later
-- .NET 8.0 or later
+- .NET 10.0 or later
 - Streamlit package
 
 ## Setup

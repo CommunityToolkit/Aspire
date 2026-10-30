@@ -14,7 +14,7 @@ If an AppHost endpoint is not reachable from the host machine, use VS Code's [po
 
 If you prefer not to use `devcontainer`, you can manually set up your development environment by installing the following tools:
 
--   [.NET 8](https://dotnet.microsoft.com/download/dotnet/8.0), [.NET 9](https://dotnet.microsoft.com/download/dotnet/9.0), and [.NET 10](https://dotnet.microsoft.com/download/dotnet/10.0)
+-   [.NET 10](https://dotnet.microsoft.com/download/dotnet/10.0)
 -   [Node.js LTS](https://nodejs.org/en/)
     -   [Yarn 2](https://yarnpkg.com/getting-started/install)
     -   [pnpm](https://pnpm.io/)
@@ -30,3 +30,13 @@ If you prefer not to use `devcontainer`, you can manually set up your developmen
     -   Podman is also supported, but Docker is recommended for consistency.
 
 And of course, an editor such as Visual Studio, JetBrains Rider or emacs.
+
+### Aspire nightly builds
+
+The repository currently targets Aspire **17.0.0-preview.1.26530.5**, an unsupported nightly build from the public `dotnet9` feed. `nuget.config` maps `Aspire.*` packages to that feed; Elasticsearch remains on its last stable package because no Aspire 17 nightly is published for it.
+
+`Directory.Build.props` pins hosting and testing packages, `global.json` pins the AppHost SDK, and example `aspire.config.json` files pin the polyglot SDK. Keep these versions aligned when upgrading. The nightly version already contains its prerelease suffix, so `AspirePreviewSuffix` is empty.
+
+The existing C# AppHosts still use `Aspire.AppHost.Sdk` for staged compatibility. Aspire 17 emits `ASPIRE012` for that obsolete SDK; migration to explicit `Aspire.Hosting.AppHost`/`Aspire.Hosting.Dotnet` references and `AddDotnetProject` is separate from the dependency upgrade.
+
+Install the matching CLI with `aspire.dev`'s installer and its explicit version option (`-Version 17.0.0-preview.1.26530.5` on Windows or `--version 17.0.0-preview.1.26530.5` on Linux/macOS), rather than selecting a moving daily channel. See the [upstream daily-build guide](https://github.com/microsoft/aspire/blob/main/docs/using-latest-daily.md) for installer instructions.

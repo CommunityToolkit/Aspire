@@ -181,7 +181,7 @@ public class KindImageLoadingTests
     [Fact]
     public async Task UsesCorrectClusterName()
     {
-        var (fakeRunner, builder) = CreateBuilderWithFakeRunner();
+        var (fakeRunner, builder) = CreateBuilderWithFakeRunner("my-env");
 
         builder.AddKubernetesEnvironment("my-env").WithKind();
 
@@ -205,10 +205,9 @@ public class KindImageLoadingTests
     }
 
     [Fact]
-    [RequiresLinux(Reason = "The current Windows runner for GitHub Actions only has Helm 4.1.4, which is below the Aspire requirement of Helm 4.2.0. This test is skipped on Windows to avoid failures in CI.")]
     public async Task UsesPodmanProviderWhenLoadingImagesWithPodmanRuntime()
     {
-        var (fakeRunner, builder) = CreateBuilderWithFakeRunner("ASPIRE_CONTAINER_RUNTIME=podman");
+        var (fakeRunner, builder) = CreateBuilderWithFakeRunner(args: ["ASPIRE_CONTAINER_RUNTIME=podman"]);
 
         builder.AddKubernetesEnvironment("k8s").WithKind();
 
@@ -230,14 +229,16 @@ public class KindImageLoadingTests
         Assert.Equal("podman", kindLoadCommand.EnvironmentVariables["KIND_EXPERIMENTAL_PROVIDER"]);
     }
 
-    private static (FakeProcessRunner runner, IDistributedApplicationTestingBuilder builder) CreateBuilderWithFakeRunner(params string[] args)
+    private static (FakeProcessRunner runner, IDistributedApplicationTestingBuilder builder) CreateBuilderWithFakeRunner(
+        string environmentName = "k8s",
+        params string[] args)
     {
         var fakeRunner = new FakeProcessRunner();
         var builderArgs = new List<string>
         {
             "AppHost:Operation=publish",
             $"Pipeline:OutputPath={Directory.CreateTempSubdirectory(".kind-test").FullName}",
-            "Pipeline:Deploy=true",
+            $"Pipeline:Step=kind-load-images-{environmentName}-kind",
         };
         builderArgs.AddRange(args);
 

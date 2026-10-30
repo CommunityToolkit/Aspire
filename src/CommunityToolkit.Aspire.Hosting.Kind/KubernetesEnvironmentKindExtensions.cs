@@ -36,6 +36,7 @@ public static class KubernetesEnvironmentKindExtensions
         builder.ApplicationBuilder.Services.AddKindInfrastructure();
 
         var kindResource = new KindEnvironmentResource($"{builder.Resource.Name}-kind", builder.Resource);
+        builder.Resource.KubeConfigPath = kindResource.KubeconfigPath;
 
         IResourceBuilder<KindEnvironmentResource> kindBuilder;
 

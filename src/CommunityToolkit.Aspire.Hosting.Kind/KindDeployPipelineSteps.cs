@@ -3,7 +3,6 @@
 
 #pragma warning disable ASPIREPIPELINES001 // Pipeline APIs are experimental
 #pragma warning disable ASPIREPIPELINES003 // ContainerBuildOptionsCallbackAnnotation is experimental
-#pragma warning disable ASPIREPIPELINES004 // IPipelineOutputService is experimental
 
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Pipelines;
@@ -14,8 +13,7 @@ using Microsoft.Extensions.Logging;
 namespace Aspire.Hosting;
 
 /// <summary>
-/// Creates Kind-specific deploy pipeline steps for cluster creation,
-/// image loading, and Helm chart installation.
+/// Creates Kind-specific deploy pipeline steps for cluster creation and image loading.
 /// </summary>
 internal static class KindDeployPipelineSteps
 {
@@ -53,23 +51,9 @@ internal static class KindDeployPipelineSteps
         };
         loadImages.DependsOn(createCluster);
         loadImages.DependsOn(WellKnownPipelineSteps.Build);
+        loadImages.RequiredBy($"helm-deploy-{kindResource.Parent.Name}");
 
-        var helmInstall = new PipelineStep
-        {
-            Name = $"kind-helm-install-{clusterName}",
-            Description = $"Deploys Helm chart to Kind cluster '{clusterName}'",
-            Resource = kindResource,
-            Action = async ctx =>
-            {
-                await HelmInstallAsync(kindResource, ctx);
-            }
-        };
-        helmInstall.DependsOn(createCluster);
-        helmInstall.DependsOn(loadImages);
-        helmInstall.DependsOn(WellKnownPipelineSteps.Publish);
-        helmInstall.RequiredBy(WellKnownPipelineSteps.Deploy);
-
-        return [createCluster, loadImages, helmInstall];
+        return [createCluster, loadImages];
     }
 
     private static async Task PreloadImagesAsync(KindEnvironmentResource kindResource, PipelineStepContext ctx)
@@ -134,38 +118,4 @@ internal static class KindDeployPipelineSteps
         return null;
     }
 
-    private static async Task HelmInstallAsync(KindEnvironmentResource kindResource, PipelineStepContext ctx)
-    {
-        var processRunner = ctx.Services.GetRequiredService<IProcessRunner>();
-
-        ctx.Logger.LogInformation("Deploying Helm chart to Kind cluster '{Cluster}'", kindResource.Name);
-
-        var releaseName = kindResource.Name;
-        var kubeconfigPath = kindResource.KubeconfigPath;
-
-        var outputService = ctx.Services.GetRequiredService<IPipelineOutputService>();
-
-        // Use the same logic as PublishingContextUtils.GetEnvironmentOutputPath:
-        // root output path when there's one compute environment, resource-specific when multiple.
-        var computeEnvironments = ctx.Model.Resources.OfType<IComputeEnvironmentResource>().Count();
-        var chartPath = computeEnvironments > 1
-            ? outputService.GetOutputDirectory(kindResource.Parent)
-            : outputService.GetOutputDirectory();
-
-        ctx.Logger.LogInformation("Using Helm chart from '{ChartPath}'", chartPath);
-
-        var result = await processRunner.RunAsync(
-            ctx.Logger,
-            "helm",
-            ["upgrade", "--install", releaseName, chartPath, "--kubeconfig", kubeconfigPath, "--wait", "--timeout", "5m"],
-            cancellationToken: ctx.CancellationToken);
-
-        if (result.ExitCode != 0)
-        {
-            throw new InvalidOperationException(
-                $"Helm install failed for Kind cluster '{kindResource.Name}': {result.Error}");
-        }
-
-        ctx.Logger.LogInformation("Helm chart deployed to Kind cluster '{Cluster}'", kindResource.Name);
-    }
 }

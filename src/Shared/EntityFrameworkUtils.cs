@@ -35,8 +35,8 @@ internal static class EntityFrameworkUtils
         where TContext : DbContext
     {
         // Resolving DbContext<TContextService> will resolve DbContextOptions<TContextImplementation>.
-        // We need to replace the DbContextOptions service descriptor to inject more logic. This won't be necessary once
-        // Aspire targets .NET 9 as EF will respect the calls to services.ConfigureDbContext<TContext>(). c.f. https://github.com/dotnet/efcore/pull/32518
+        // We need to replace the DbContextOptions service descriptor to inject more logic. EF Core 9 and later respects
+        // calls to services.ConfigureDbContext<TContext>(). c.f. https://github.com/dotnet/efcore/pull/32518
 
         var oldDbContextOptionsDescriptor = builder.Services.FirstOrDefault(sd => sd.ServiceType == typeof(DbContextOptions<TContext>));
 
