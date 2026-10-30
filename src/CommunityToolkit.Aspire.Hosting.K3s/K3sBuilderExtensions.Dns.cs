@@ -3,8 +3,6 @@ using System.Text.RegularExpressions;
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting;
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
-
 namespace Aspire.Hosting;
 
 /// <summary>
@@ -287,5 +285,3 @@ public static partial class K3sDnsBuilderExtensions
     [GeneratedRegex(@"^[A-Za-z0-9][A-Za-z0-9._-]*\.(override|server)$")]
     private static partial Regex CoreDnsFileName();
 }
-
-#pragma warning restore ASPIREATS001

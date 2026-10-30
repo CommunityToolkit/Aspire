@@ -55,8 +55,9 @@ public static class K3sHelmBuilderExtensions
     /// A chart directory is mounted read-only and copied inside the container, where its
     /// dependencies are fetched with <c>helm dependency build</c> — so the chart's
     /// <c>charts/</c> directory does not have to be built on the host. Every HTTP repository
-    /// its <c>Chart.yaml</c> lists is added first, because Helm resolves a dependency only from
-    /// a repository it knows.
+    /// its dependencies come from is added first, because Helm resolves a dependency only from
+    /// a repository it knows. A dependency on another chart directory (<c>file://</c>) is
+    /// mounted beside it, at the same relative path, and its own dependencies are built first.
     /// </para>
     /// </remarks>
     /// <exception cref="ArgumentNullException">
@@ -65,6 +66,10 @@ public static class K3sHelmBuilderExtensions
     /// </exception>
     /// <exception cref="ArgumentException">
     /// <paramref name="version"/> is given for a chart directory.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    /// A <c>file://</c> dependency of the chart directory shares no directory with it, such as one
+    /// on another drive.
     /// </exception>
     [AspireExport]
     public static IResourceBuilder<HelmReleaseResource> AddHelmRelease(
@@ -97,7 +102,7 @@ public static class K3sHelmBuilderExtensions
             Chart = chart,
             RepoUrl = repo,
             Version = version,
-            LocalChartDirectory = localChartDirectory,
+            LocalChart = localChartDirectory is not null ? HelmLocalChart.Load(localChartDirectory) : null,
         };
 
         cluster.AddHelmRelease(release.Name, release.ReleaseName);
@@ -152,6 +157,14 @@ public static class K3sHelmBuilderExtensions
             // (cache/, http-cache/) and cause concurrent-container cache corruption.
             .WithBindMount(containerKubeconfigFile, K3sFileHelpers.ContainerKubeconfigPath, isReadOnly: true)
             .WithEnvironment("KUBECONFIG", K3sFileHelpers.ContainerKubeconfigPath)
+            // Values resolved at start, read when the container starts rather than added by each
+            // WithHelmValue call, so a key set again or moved back to a literal value leaves no
+            // variable behind.
+            .WithEnvironment(context =>
+            {
+                foreach (var variable in release.HelmValueVariables.Values)
+                    context.EnvironmentVariables[variable.Name] = variable.Value;
+            })
             .WithIconName("Rocket")
             .ExcludeFromManifest()
             .WithInitialState(new CustomResourceSnapshot
@@ -167,10 +180,10 @@ public static class K3sHelmBuilderExtensions
                 ],
             });
 
-        // Read-only: the script copies the chart before building its dependencies, so nothing
+        // Read-only: the script copies the charts before building their dependencies, so nothing
         // is written into the source tree.
-        if (localChartDirectory is not null)
-            releaseBuilder.WithBindMount(localChartDirectory, LocalChartMountPath, isReadOnly: true);
+        foreach (var (source, target) in release.LocalChart?.Mounts ?? [])
+            releaseBuilder.WithBindMount(source, target, isReadOnly: true);
 
         // A workload must not start before the cluster's DNS knows its aliases, nor before the
         // certificate it serves or trusts is there.
@@ -178,9 +191,6 @@ public static class K3sHelmBuilderExtensions
 
         return releaseBuilder;
     }
-
-    private const string LocalChartMountPath = "/helm-chart-source";
-    private const string LocalChartWorkPath = "/tmp/helm-chart";
 
     /// <summary>
     /// The absolute path of <paramref name="chart"/> when it names a chart directory, or
@@ -264,6 +274,7 @@ public static class K3sHelmBuilderExtensions
         ArgumentNullException.ThrowIfNull(key);
         ArgumentNullException.ThrowIfNull(value);
 
+        // Removing the key's variable also keeps its value out of the container's environment.
         builder.Resource.HelmValueVariables.Remove(key);
         builder.Resource.HelmValues[key] = value;
         return builder;
@@ -416,15 +427,14 @@ public static class K3sHelmBuilderExtensions
         var release = builder.Resource;
         release.HelmValues.Remove(key);
 
-        // One variable per key for the release's lifetime: setting the key again adds a later
-        // environment callback under the same name, and the last one wins.
-        if (!release.HelmValueVariables.TryGetValue(key, out var variable))
-        {
-            variable = $"ASPIRE_HELM_VALUE_{release.HelmValueVariableCount++}";
-            release.HelmValueVariables[key] = variable;
-        }
+        // One variable per key for the release's lifetime: setting the key again replaces the
+        // value the variable carries.
+        var name = release.HelmValueVariables.TryGetValue(key, out var existing)
+            ? existing.Name
+            : $"ASPIRE_HELM_VALUE_{release.HelmValueVariableCount++}";
+        release.HelmValueVariables[key] = new HelmValueVariable(name, value);
 
-        return builder.WithEnvironment(variable, value);
+        return builder.WithReferenceRelationship(value);
     }
 
     // ── Script generation ─────────────────────────────────────────────────────
@@ -457,37 +467,40 @@ public static class K3sHelmBuilderExtensions
             sb.AppendShellLine($"helm repo update {ShellEscape(alias)}");
         }
 
-        if (release.LocalChartDirectory is not null)
+        if (release.LocalChart is { } localChart)
         {
-            // Copied out of the read-only mount: helm dependency build writes charts/ beside
-            // Chart.yaml. Helm refuses a chart whose dependencies are missing even when its values
-            // switch them all off, so they are built every time.
-            sb.AppendShellLine($"rm -rf {LocalChartWorkPath} && cp -R {LocalChartMountPath} {LocalChartWorkPath}");
+            // Copied out of the read-only mounts: helm dependency build writes charts/ beside
+            // Chart.yaml.
+            sb.AppendShellLine($"rm -rf {HelmLocalChart.WorkPath} && cp -R {HelmLocalChart.MountPath} {HelmLocalChart.WorkPath}");
 
-            // helm dependency build resolves an HTTP repository only once it has been added, so
-            // every one Chart.yaml lists is added first. OCI and file:// dependencies need nothing.
-            sb.AppendShellLine("_dependency_repo=0");
-            sb.AppendShellLine($"for _repo in $(grep -E \"^[[:space:]]*repository:[[:space:]]*[\\\"']?https?://\" {LocalChartWorkPath}/Chart.yaml | sed -e 's/^[[:space:]]*repository:[[:space:]]*//' | tr -d \"\\\"'\" | awk '{{ print $1 }}' | sort -u); do");
-            sb.AppendShellLine("  helm repo add --force-update \"aspire-k3s-dependency-$_dependency_repo\" \"$_repo\" > /dev/null");
-            sb.AppendShellLine("  _dependency_repo=$((_dependency_repo + 1))");
-            sb.AppendShellLine("done");
-            sb.AppendShellLine($"if grep -q '^dependencies:' {LocalChartWorkPath}/Chart.yaml; then");
-            sb.AppendShellLine($"  helm dependency build {LocalChartWorkPath}");
-            sb.AppendShellLine("fi");
+            // helm dependency build resolves an HTTP repository only once it has been added. The
+            // repositories were read from the charts on the host.
+            var repositoryIndex = 0;
+            foreach (var repository in localChart.Repositories)
+                sb.AppendShellLine($"helm repo add --force-update {ShellEscape($"aspire-k3s-dependency-{repositoryIndex++}")} {ShellEscape(repository)} > /dev/null");
+
+            // Helm refuses a chart whose dependencies are missing even when its values switch them
+            // all off, so they are built every time; Helm itself decides whether a chart has any,
+            // whatever form its Chart.yaml or requirements.yaml takes.
+            foreach (var path in localChart.BuildPaths)
+                sb.AppendShellLine($"helm dependency build {ShellEscape(path)}");
         }
 
         // Values resolved at start arrive as environment variables. Each is escaped for --set
-        // here, inside the container, the way HelmEscape escapes literal values below.
+        // here, inside the container, the way HelmEscape escapes literal values below. Command
+        // substitution strips trailing newlines, so the value is followed by a '.' that is
+        // removed afterwards.
         var resolvedValues = new List<(string Key, string ShellVariable)>();
         foreach (var (key, variable) in release.HelmValueVariables)
         {
             var shellVariable = $"_aspire_helm_value_{resolvedValues.Count}";
-            sb.AppendShellLine($"{shellVariable}=$(printf '%s' \"${variable}\" | sed -e 's/[\\\\,{{}}]/\\\\&/g')");
+            sb.AppendShellLine($"{shellVariable}=$(printf '%s.' \"${variable.Name}\" | sed -e 's/[\\\\,{{}}]/\\\\&/g')");
+            sb.AppendShellLine($"{shellVariable}=${{{shellVariable}%.}}");
             resolvedValues.Add((key, shellVariable));
         }
 
-        var chartRef = release.LocalChartDirectory is not null
-            ? LocalChartWorkPath
+        var chartRef = release.LocalChart is not null
+            ? release.LocalChart.ChartPath
             : release.RepoUrl is not null
                 ? $"aspire-k3s-{release.ReleaseName}/{release.Chart}"
                 : release.Chart!;
@@ -496,7 +509,7 @@ public static class K3sHelmBuilderExtensions
         sb.Append($" --namespace {ShellEscape(release.Namespace)} --create-namespace");
         sb.Append(" --wait --timeout 10m");
 
-        if (release.Version is not null && release.LocalChartDirectory is null)
+        if (release.Version is not null && release.LocalChart is null)
             sb.Append($" --version {ShellEscape(release.Version)}");
 
         // Values files: injected as {index}-{filename} to guarantee uniqueness and order.

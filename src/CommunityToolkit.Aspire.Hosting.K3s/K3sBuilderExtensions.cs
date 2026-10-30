@@ -469,6 +469,11 @@ public static class K3sBuilderExtensions
     /// changed argument — registers as a new node with a new hostname, and every persistent
     /// volume bound to the old node stays pending.
     /// </para>
+    /// <para>
+    /// A data volume created before the node name was fixed holds a node named after its old
+    /// container's hostname, whose password was never kept. Its first start registers a new node
+    /// under the resource name; persistent volumes bound to the old node must be recreated.
+    /// </para>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="builder"/> is <see langword="null"/>.</exception>
     [AspireExport]

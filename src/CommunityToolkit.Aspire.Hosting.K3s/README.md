@@ -93,6 +93,13 @@ runs, making subsequent starts much faster.
 version, a changed argument — then rejoins as the same node, and persistent volumes bound to it stay
 usable.
 
+> **Data volumes created before the node name was fixed**: the node in such a volume is named after
+> its old container's hostname, and its password lived only in that container, so neither can be
+> recovered once the container is recreated. The first start after upgrading registers a new node
+> under the resource name, and pods whose persistent volumes are bound to the old node stay
+> `Pending`. Delete the old node (`kubectl delete node <old-name>`) and recreate those
+> PersistentVolumeClaims, or remove the data volume to start fresh. Later recreations keep the node.
+
 ## Built-in components
 
 `servicelb` and `metrics-server` are disabled by default, because they are the slowest to start.
@@ -138,9 +145,10 @@ cluster.AddHelmRelease("my-app", "../../charts/my-app", @namespace: "my-app");
 ```
 
 The directory is mounted read-only and copied inside the Helm container, where its dependencies are
-fetched with `helm dependency build` — every HTTP repository its `Chart.yaml` lists is added first —
-so nothing has to be built on the host. A chart directory has its own version, so `version` is
-refused.
+fetched with `helm dependency build` — every HTTP repository its dependencies come from is added
+first — so nothing has to be built on the host. A dependency on another chart directory, such as
+`repository: file://../common`, is mounted beside it at the same relative path, and its own
+dependencies are built first. A chart directory has its own version, so `version` is refused.
 
 ### Values resolved at run time
 

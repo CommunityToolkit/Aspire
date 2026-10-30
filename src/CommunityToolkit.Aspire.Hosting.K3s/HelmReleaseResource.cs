@@ -1,3 +1,5 @@
+using CommunityToolkit.Aspire.Hosting;
+
 #pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting.ApplicationModel;
@@ -43,12 +45,12 @@ public sealed class HelmReleaseResource(
 
     /// <summary>
     /// Values resolved when the container starts — parameters, expressions, endpoints — keyed by
-    /// Helm value path, each naming the environment variable that carries it into the container.
+    /// Helm value path, each with the environment variable that carries it into the container.
     /// Carried in the environment rather than written into the install script so a secret never
     /// lands in a file. Populated by <c>WithHelmValue</c>; a key is in this or
-    /// <see cref="HelmValues"/>, never both.
+    /// <see cref="HelmValues"/>, never both. Only the variables listed here reach the container.
     /// </summary>
-    internal Dictionary<string, string> HelmValueVariables { get; } = new(StringComparer.Ordinal);
+    internal Dictionary<string, HelmValueVariable> HelmValueVariables { get; } = new(StringComparer.Ordinal);
 
     /// <summary>
     /// Variables handed out so far. Never decremented, so a key moved back to a literal value
@@ -57,10 +59,10 @@ public sealed class HelmReleaseResource(
     internal int HelmValueVariableCount { get; set; }
 
     /// <summary>
-    /// The absolute host path of a chart directory, when the chart is local rather than in a
-    /// repository or an OCI registry. Bind-mounted read-only into the container.
+    /// The chart directory and the local charts it depends on, when the chart is local rather
+    /// than in a repository or an OCI registry. Bind-mounted read-only into the container.
     /// </summary>
-    internal string? LocalChartDirectory { get; set; }
+    internal HelmLocalChart? LocalChart { get; set; }
 
     /// <summary>
     /// Absolute host paths of values files to inject into the helm container via
@@ -69,3 +71,8 @@ public sealed class HelmReleaseResource(
     /// </summary>
     internal List<string> ValuesFiles { get; } = [];
 }
+
+/// <summary>A Helm value resolved when the container starts, and the environment variable that carries it.</summary>
+/// <param name="Name">The environment variable name, e.g. <c>ASPIRE_HELM_VALUE_0</c>.</param>
+/// <param name="Value">The expression the variable is set to.</param>
+internal sealed record HelmValueVariable(string Name, ReferenceExpression Value);

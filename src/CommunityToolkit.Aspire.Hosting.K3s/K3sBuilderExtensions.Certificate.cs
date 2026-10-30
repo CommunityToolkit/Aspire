@@ -2,7 +2,6 @@ using System.Text;
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting;
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
 #pragma warning disable ASPIRECERTIFICATES001 // WithHttpsDeveloperCertificate is experimental
 
 namespace Aspire.Hosting;
@@ -171,4 +170,3 @@ public static class K3sCertificateBuilderExtensions
 }
 
 #pragma warning restore ASPIRECERTIFICATES001
-#pragma warning restore ASPIREATS001
