@@ -37,7 +37,7 @@ public sealed class K3sClusterResource(string name)
     /// <list type="bullet">
     ///   <item><c>cluster/kubeconfig.yaml</c> — raw file written by k3s (bind-mounted)</item>
     ///   <item><c>local/kubeconfig.yaml</c> — <c>server: https://localhost:{port}</c> (host processes)</item>
-    ///   <item><c>container/kubeconfig.yaml</c> — <c>server: https://{name}:6443</c> (DCP-network containers)</item>
+    ///   <item><c>container/kubeconfig.yaml</c> — the API endpoint resolved for the Aspire container network</item>
     /// </list>
     /// </summary>
     internal string? KubeconfigDirectory { get; set; }

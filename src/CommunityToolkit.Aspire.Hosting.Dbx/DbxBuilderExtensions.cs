@@ -12,7 +12,7 @@ public static class DbxBuilderExtensions
 {
     private const string DBX_STATIC_DIR = "/app/static";
     private const string DBX_DATA_DIR = "/app/data";
-        
+
     /// <summary>
     /// Configures the host port that the dbx resource is exposed on instead of using randomly assigned port.
     /// </summary>
@@ -51,7 +51,7 @@ public static class DbxBuilderExtensions
             var builderForExistingResource = builder.CreateResourceBuilder(existingDbxResource);
             return builderForExistingResource;
         }
-        
+
         var dbxContainer = new DbxContainerResource(name);
         var dbxContainerBuilder = builder.AddResource(dbxContainer)
                                            .WithImage(DbxContainerImageTags.Image, DbxContainerImageTags.Tag)
@@ -64,8 +64,14 @@ public static class DbxBuilderExtensions
 
         dbxContainerBuilder.WithContainerFiles(
             destinationPath: DBX_DATA_DIR,
-            callback: (context, _) =>
+            callback: async (context, cancellationToken) =>
             {
+                foreach (DbxConnectionConfig connection in dbxContainer.Connections)
+                {
+                    await PopulateEndpointValuesAsync(connection, dbxContainer, cancellationToken)
+                        .ConfigureAwait(false);
+                }
+
                 var options = new JsonSerializerOptions
                 {
                     PropertyNamingPolicy = JsonNamingPolicy.KebabCaseLower
@@ -75,25 +81,62 @@ public static class DbxBuilderExtensions
                 var secrets = dbxContainer.Connections
                     .ToDictionary(connection => $"connection:{connection.Id}:password", connection => connection.Password);
                 var secretsContents = JsonSerializer.Serialize(secrets);
-        
+
                 IEnumerable<ContainerFileSystemItem> files = [
                     new ContainerFile
                     {
-                        Contents = connectionsContents, 
+                        Contents = connectionsContents,
                         Name = "connections.json",
                     },
                     new ContainerFile
                     {
-                        Contents = secretsContents, 
+                        Contents = secretsContents,
                         Name = "secrets.json",
                     }
                 ];
-                
-                return Task.FromResult(files);
+
+                return files;
             }
         );
-        
+
         return dbxContainerBuilder;
+    }
+
+    private static async Task PopulateEndpointValuesAsync(
+        DbxConnectionConfig connection,
+        DbxContainerResource dbxContainer,
+        CancellationToken cancellationToken)
+    {
+        if (connection.Endpoint is not null)
+        {
+            ValueProviderContext valueProviderContext = new()
+            {
+                Caller = dbxContainer,
+            };
+
+            if (string.IsNullOrWhiteSpace(connection.Host))
+            {
+                connection.Host = (await connection.Endpoint
+                    .Property(EndpointProperty.Host)
+                    .GetValueAsync(valueProviderContext, cancellationToken)
+                    .ConfigureAwait(false))!;
+            }
+
+            if (connection.Port == 0)
+            {
+                string port = (await connection.Endpoint
+                    .Property(EndpointProperty.Port)
+                    .GetValueAsync(valueProviderContext, cancellationToken)
+                    .ConfigureAwait(false))!;
+                connection.Port = ushort.Parse(port, System.Globalization.CultureInfo.InvariantCulture);
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(connection.Host) || connection.Port == 0)
+        {
+            throw new DistributedApplicationException(
+                $"The dbx connection '{connection.Name}' must specify either an endpoint or explicit host and port values.");
+        }
     }
 }
 

@@ -7,6 +7,20 @@ namespace Aspire.Hosting;
 /// </summary>
 public static class ListmonkBuilderExtensions
 {
+    /// <summary>
+    /// Configures the host port that the listmonk resource is exposed on instead of using a randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for listmonk.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used a random port will be assigned.</param>
+    /// <returns>The resource builder for listmonk.</returns>
+    [AspireExport]
+    public static IResourceBuilder<ListmonkResource> WithHostPort(this IResourceBuilder<ListmonkResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(ListmonkResource.PrimaryEndpointName, endpoint => endpoint.Port = port);
+    }
+
     private const int ListmonkPort = 9000;
     private const string UploadsPath = "/listmonk/uploads";
     private const string AppAddressEnvVarName = "LISTMONK_app__address";
@@ -61,22 +75,27 @@ public static class ListmonkBuilderExtensions
         ArgumentException.ThrowIfNullOrEmpty(name);
 
         var resource = new ListmonkResource(name);
+        EndpointReference bindEndpoint = new(
+            resource,
+            ListmonkResource.PrimaryEndpointName,
+            KnownNetworkIdentifiers.DefaultAspireContainerNetwork);
+
         return builder.AddResource(resource)
             .WithImage(ListmonkContainerImageTags.Image, ListmonkContainerImageTags.Tag)
             .WithImageRegistry(ListmonkContainerImageTags.Registry)
             .WithHttpEndpoint(port: port, targetPort: ListmonkPort, name: ListmonkResource.PrimaryEndpointName)
             .WithEntrypoint("sh")
             .WithArgs("-c", "./listmonk --install --idempotent --yes --config '' && ./listmonk --upgrade --yes --config '' && ./listmonk --config ''")
-            .WithEnvironment(AppAddressEnvVarName, "0.0.0.0:9000")
+            .WithEnvironment(AppAddressEnvVarName, ReferenceExpression.Create($"{bindEndpoint.Property(EndpointProperty.IPV4Host)}:{bindEndpoint.Property(EndpointProperty.TargetPort)}"))
             .WithHttpHealthCheck("/health")
             .WithIconName("MailMultiple");
     }
 
     /// <summary>
-    /// Configures the listmonk web server address.
+    /// Configures the listmonk web server bind host, overriding the default which is derived from the resource's endpoint.
     /// </summary>
     /// <param name="builder">The listmonk resource builder.</param>
-    /// <param name="address">The address value for <c>LISTMONK_app__address</c>, for example <c>0.0.0.0:9000</c>.</param>
+    /// <param name="address">The host value to bind the listmonk web server to, for example <c>0.0.0.0</c>.</param>
     /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
     [AspireExport]
     public static IResourceBuilder<ListmonkResource> WithAppAddress(this IResourceBuilder<ListmonkResource> builder, string address)
@@ -84,7 +103,7 @@ public static class ListmonkBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(address);
 
-        return builder.WithEnvironment(AppAddressEnvVarName, address);
+        return builder.WithEndpoint(ListmonkResource.PrimaryEndpointName, endpoint => endpoint.TargetHost = address);
     }
 
     /// <summary>
@@ -104,8 +123,8 @@ public static class ListmonkBuilderExtensions
         var postgres = database.Resource.Parent;
 
         return builder
-            .WithEnvironment(DatabaseHostEnvVarName, postgres.Name)
-            .WithEnvironment(DatabasePortEnvVarName, ReferenceExpression.Create($"{postgres.PrimaryEndpoint.Property(EndpointProperty.TargetPort)}"))
+            .WithEnvironment(DatabaseHostEnvVarName, postgres.PrimaryEndpoint.Property(EndpointProperty.Host))
+            .WithEnvironment(DatabasePortEnvVarName, postgres.PrimaryEndpoint.Property(EndpointProperty.Port))
             .WithEnvironment(DatabaseUserEnvVarName, postgres.UserNameReference)
             .WithEnvironment(DatabasePasswordEnvVarName, postgres.PasswordParameter)
             .WithEnvironment(DatabaseNameEnvVarName, ReferenceExpression.Create($"{database.Resource.DatabaseName}"))
