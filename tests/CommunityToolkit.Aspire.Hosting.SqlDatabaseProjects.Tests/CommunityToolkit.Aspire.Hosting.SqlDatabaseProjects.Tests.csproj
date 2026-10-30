@@ -2,12 +2,18 @@
 
   <ItemGroup>
     <PackageReference Include="Testcontainers.MsSql" />
+    <PackageReference Include="ErikEJ.Dacpac.Chinook" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects\CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.csproj" />
-    <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
-    <ProjectReference Include="..\..\examples\sql-database-projects\CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.AppHost\CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.AppHost.csproj" />
+    <ProjectReference
+      Include="..\..\src\CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects\CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.csproj" />
+    <ProjectReference
+      Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
+    <ProjectReference
+      Include="..\..\examples\sql-database-projects\CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.AppHost\CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.AppHost.csproj" />
+    <ProjectReference Include="..\..\examples\sql-database-projects\SdkProject\SdkProject.csproj"
+      ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <ItemGroup>
@@ -18,8 +24,10 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Build" PrivateAssets="true" ExcludeAssets="runtime" />
-    <PackageReference Include="Microsoft.Build.Framework" PrivateAssets="true" ExcludeAssets="runtime" />
-    <PackageReference Include="Microsoft.NET.StringTools" PrivateAssets="true" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.Build.Framework" PrivateAssets="true"
+      ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.NET.StringTools" PrivateAssets="true"
+      ExcludeAssets="runtime" />
   </ItemGroup>
 
 </Project>

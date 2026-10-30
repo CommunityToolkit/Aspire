@@ -1,6 +1,7 @@
 using Aspire.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.SqlServer.Dac;
+using System.Xml.Linq;
 
 namespace CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.Tests;
 
@@ -70,6 +71,61 @@ public class AddSqlProjectTests
         Assert.NotNull(deployer.DacpacPath);
         Assert.True(File.Exists(deployer.DacpacPath));
         Assert.Contains("Release", deployer.DacpacPath, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Theory]
+    [InlineData("missing-project")]
+    [InlineData("failed-build")]
+    [InlineData("missing-dacpac")]
+    [InlineData("cancelled")]
+    public async Task AddSqlProject_PreparationFailurePreventsDeployment(string failure)
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"sql project error {Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+
+        try
+        {
+            var projectPath = Path.Combine(directory, "Database.sqlproj");
+            var dacpacPath = Path.Combine(directory, "Database.dacpac");
+            if (failure != "missing-dacpac")
+            {
+                await File.WriteAllBytesAsync(dacpacPath, [1, 2, 3]);
+            }
+
+            if (failure != "missing-project")
+            {
+                var projectDocument = new XDocument(
+                    new XElement("Project",
+                        new XAttribute("DefaultTargets", "Build"),
+                        new XElement("PropertyGroup", new XElement("SqlTargetPath", dacpacPath)),
+                        new XElement("Target", new XAttribute("Name", "Restore")),
+                        new XElement("Target", new XAttribute("Name", "Build"),
+                            failure == "failed-build" ? new XElement("Error", new XAttribute("Text", "Intentional test build failure")) : null)));
+                projectDocument.Save(projectPath);
+            }
+
+            var deployer = new RecordingDacpacDeployer();
+            var builder = DistributedApplication.CreateBuilder();
+            builder.Configuration["ConnectionStrings:Target"] = "Server=localhost;Database=Target;Integrated Security=True";
+            builder.Services.AddSingleton<IDacpacDeployer>(deployer);
+            var target = builder.AddConnectionString("Target");
+            var project = builder.AddSqlProject("schema", projectPath).WithReference(target);
+            using var app = builder.Build();
+            using var cancellation = new CancellationTokenSource();
+            if (failure == "cancelled")
+            {
+                cancellation.Cancel();
+            }
+
+            await app.Services.GetRequiredService<SqlProjectPublishService>()
+                .PublishSqlProject(project.Resource, target.Resource, null, cancellation.Token);
+
+            Assert.Null(deployer.DacpacPath);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
     }
 
     [Fact]
