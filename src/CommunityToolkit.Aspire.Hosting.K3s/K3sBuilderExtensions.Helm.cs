@@ -20,8 +20,10 @@ public static class K3sHelmBuilderExtensions
     /// <c>helm upgrade --install</c>.
     /// </param>
     /// <param name="chart">
-    /// The chart name, e.g. <c>argo-cd</c> for a repo chart or <c>oci://registry/chart</c>
-    /// for an OCI reference. Provide <paramref name="repo"/> when using a named repo chart.
+    /// The chart name, e.g. <c>argo-cd</c> for a repo chart, <c>oci://registry/chart</c>
+    /// for an OCI reference, or the path of a chart directory — one containing
+    /// <c>Chart.yaml</c> — relative to the AppHost project directory. Provide
+    /// <paramref name="repo"/> when using a named repo chart.
     /// </param>
     /// <param name="repo">
     /// Optional Helm repository URL, e.g. <c>https://argoproj.github.io/argo-helm</c>.
@@ -29,7 +31,8 @@ public static class K3sHelmBuilderExtensions
     /// </param>
     /// <param name="version">
     /// Optional chart version to pin, e.g. <c>7.8.0</c>. When <see langword="null"/> the
-    /// latest version available in the repository is installed.
+    /// latest version available in the repository is installed. Not used with a chart
+    /// directory, which carries its own version in <c>Chart.yaml</c>.
     /// </param>
     /// <param name="namespace">
     /// The Kubernetes namespace to install the release into. The namespace is created
@@ -44,13 +47,29 @@ public static class K3sHelmBuilderExtensions
     /// on resources that must start only after the chart is ready.
     /// </para>
     /// <para>
-    /// Customize the release with <see cref="WithHelmValue"/> for individual key/value pairs
-    /// or <see cref="WithHelmValuesFile"/> to supply a full YAML values file.
+    /// Customize the release with <see cref="WithHelmValue(IResourceBuilder{HelmReleaseResource}, string, string)"/>
+    /// for individual key/value pairs or <see cref="WithHelmValuesFile"/> to supply a full YAML
+    /// values file.
+    /// </para>
+    /// <para>
+    /// A chart directory is mounted read-only and copied inside the container, where its
+    /// dependencies are fetched with <c>helm dependency build</c> — so the chart's
+    /// <c>charts/</c> directory does not have to be built on the host. Every HTTP repository
+    /// its dependencies come from is added first, because Helm resolves a dependency only from
+    /// a repository it knows. A dependency on another chart directory (<c>file://</c>) is
+    /// mounted beside it, at the same relative path, and its own dependencies are built first.
     /// </para>
     /// </remarks>
     /// <exception cref="ArgumentNullException">
     /// <paramref name="builder"/>, <paramref name="name"/>, or <paramref name="chart"/> is
     /// <see langword="null"/>.
+    /// </exception>
+    /// <exception cref="ArgumentException">
+    /// <paramref name="version"/> is given for a chart directory.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    /// A <c>file://</c> dependency of the chart directory shares no directory with it, such as one
+    /// on another drive.
     /// </exception>
     [AspireExport]
     public static IResourceBuilder<HelmReleaseResource> AddHelmRelease(
@@ -67,11 +86,23 @@ public static class K3sHelmBuilderExtensions
 
         var cluster = builder.Resource;
 
+        var localChartDirectory = repo is null
+            ? ResolveLocalChartDirectory(builder.ApplicationBuilder.AppHostDirectory, chart)
+            : null;
+
+        if (localChartDirectory is not null && version is not null)
+        {
+            throw new ArgumentException(
+                $"'{chart}' is a chart directory, which carries its own version in Chart.yaml. Pass a version only for a repository or OCI chart.",
+                nameof(version));
+        }
+
         var release = new HelmReleaseResource(name, releaseName: name, @namespace, cluster)
         {
             Chart = chart,
             RepoUrl = repo,
             Version = version,
+            LocalChart = localChartDirectory is not null ? HelmLocalChart.Load(localChartDirectory) : null,
         };
 
         cluster.AddHelmRelease(release.Name, release.ReleaseName);
@@ -87,7 +118,7 @@ public static class K3sHelmBuilderExtensions
 
         var (helmRegistry, helmImage, helmTag) = cluster.HelmImageInfo;
 
-        return builder.ApplicationBuilder
+        var releaseBuilder = builder.ApplicationBuilder
             .AddResource(release)
             .WithImage(helmImage, helmTag)
             .WithImageRegistry(helmRegistry)
@@ -126,6 +157,14 @@ public static class K3sHelmBuilderExtensions
             // (cache/, http-cache/) and cause concurrent-container cache corruption.
             .WithBindMount(containerKubeconfigFile, K3sFileHelpers.ContainerKubeconfigPath, isReadOnly: true)
             .WithEnvironment("KUBECONFIG", K3sFileHelpers.ContainerKubeconfigPath)
+            // Values resolved at start, read when the container starts rather than added by each
+            // WithHelmValue call, so a key set again or moved back to a literal value leaves no
+            // variable behind.
+            .WithEnvironment(context =>
+            {
+                foreach (var variable in release.HelmValueVariables.Values)
+                    context.EnvironmentVariables[variable.Name] = variable.Value;
+            })
             .WithIconName("Rocket")
             .ExcludeFromManifest()
             .WithInitialState(new CustomResourceSnapshot
@@ -135,11 +174,38 @@ public static class K3sHelmBuilderExtensions
                 Properties =
                 [
                     new ResourcePropertySnapshot("ReleaseName", name),
-                    new ResourcePropertySnapshot("Chart", chart),
+                    new ResourcePropertySnapshot("Chart", localChartDirectory ?? chart),
                     new ResourcePropertySnapshot("Namespace", @namespace),
-                    new ResourcePropertySnapshot("Version", version ?? "latest"),
+                    new ResourcePropertySnapshot("Version", localChartDirectory is not null ? "local" : version ?? "latest"),
                 ],
             });
+
+        // Read-only: the script copies the charts before building their dependencies, so nothing
+        // is written into the source tree.
+        foreach (var (source, target) in release.LocalChart?.Mounts ?? [])
+            releaseBuilder.WithBindMount(source, target, isReadOnly: true);
+
+        // A workload must not start before the cluster's DNS knows its aliases, nor before the
+        // certificate it serves or trusts is there.
+        K3sDnsBuilderExtensions.WaitForClusterSetup(release, cluster);
+
+        return releaseBuilder;
+    }
+
+    /// <summary>
+    /// The absolute path of <paramref name="chart"/> when it names a chart directory, or
+    /// <see langword="null"/> when it names a repository or OCI chart.
+    /// </summary>
+    private static string? ResolveLocalChartDirectory(string appHostDirectory, string chart)
+    {
+        if (chart.Contains("://", StringComparison.Ordinal))
+            return null;
+
+        var path = Path.IsPathRooted(chart)
+            ? chart
+            : Path.GetFullPath(Path.Combine(appHostDirectory, chart));
+
+        return File.Exists(Path.Combine(path, "Chart.yaml")) ? path : null;
     }
 
     /// <summary>
@@ -154,8 +220,8 @@ public static class K3sHelmBuilderExtensions
     /// <returns>The same builder, for chaining.</returns>
     /// <remarks>
     /// Use this method for structured overrides — particularly values containing commas,
-    /// braces, or backslashes that cannot be safely expressed with <see cref="WithHelmValue"/>.
-    /// Values files are applied before <c>--set</c> flags, so <see cref="WithHelmValue"/>
+    /// braces, or backslashes that cannot be safely expressed with <see cref="WithHelmValue(IResourceBuilder{HelmReleaseResource}, string, string)"/>.
+    /// Values files are applied before <c>--set</c> flags, so <see cref="WithHelmValue(IResourceBuilder{HelmReleaseResource}, string, string)"/>
     /// always takes precedence.
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="builder"/> is <see langword="null"/>.</exception>
@@ -198,7 +264,7 @@ public static class K3sHelmBuilderExtensions
     /// <paramref name="builder"/>, <paramref name="key"/>, or <paramref name="value"/> is
     /// <see langword="null"/>.
     /// </exception>
-    [AspireExport]
+    [AspireExportIgnore(Reason = "Covered by the withHelmValue export, whose value accepts a string, a parameter, an expression or an endpoint.")]
     public static IResourceBuilder<HelmReleaseResource> WithHelmValue(
         this IResourceBuilder<HelmReleaseResource> builder,
         string key,
@@ -208,8 +274,167 @@ public static class K3sHelmBuilderExtensions
         ArgumentNullException.ThrowIfNull(key);
         ArgumentNullException.ThrowIfNull(value);
 
+        // Removing the key's variable also keeps its value out of the container's environment.
+        builder.Resource.HelmValueVariables.Remove(key);
         builder.Resource.HelmValues[key] = value;
         return builder;
+    }
+
+    /// <summary>
+    /// Adds a Helm <c>--set key=value</c> override whose value is resolved when the release
+    /// runs — a connection string, a host name, a port.
+    /// </summary>
+    /// <param name="builder">The Helm release resource builder.</param>
+    /// <param name="key">
+    /// The Helm value path using dot notation, e.g. <c>database.host</c>.
+    /// If the same key is set more than once, the last call wins.
+    /// </param>
+    /// <param name="value">The expression to resolve.</param>
+    /// <returns>The same builder, for chaining.</returns>
+    /// <remarks>
+    /// The value reaches the Helm container as an environment variable and is escaped for
+    /// <c>--set</c> inside it, so it never appears in the generated install script. Endpoint
+    /// references resolve as a container on the Aspire network sees them; pods reach those
+    /// addresses once the resource is made resolvable with
+    /// <see cref="K3sDnsBuilderExtensions.WithHostAlias"/>.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="builder"/>, <paramref name="key"/>, or <paramref name="value"/> is
+    /// <see langword="null"/>.
+    /// </exception>
+    [AspireExportIgnore(Reason = "Covered by the withHelmValue export, whose value accepts a string, a parameter, an expression or an endpoint.")]
+    public static IResourceBuilder<HelmReleaseResource> WithHelmValue(
+        this IResourceBuilder<HelmReleaseResource> builder,
+        string key,
+        ReferenceExpression value)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(key);
+        ArgumentNullException.ThrowIfNull(value);
+
+        return WithHelmValueVariable(builder, key, value);
+    }
+
+    /// <summary>
+    /// Adds a Helm <c>--set key=value</c> override whose value is a parameter, such as a
+    /// password.
+    /// </summary>
+    /// <param name="builder">The Helm release resource builder.</param>
+    /// <param name="key">
+    /// The Helm value path using dot notation, e.g. <c>auth.password</c>.
+    /// If the same key is set more than once, the last call wins.
+    /// </param>
+    /// <param name="value">The parameter whose value is assigned.</param>
+    /// <returns>The same builder, for chaining.</returns>
+    /// <remarks>
+    /// The value reaches the Helm container as an environment variable and is escaped for
+    /// <c>--set</c> inside it, so a secret parameter never appears in the generated install
+    /// script. Helm stores it in the release, as it stores every value it is given.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="builder"/>, <paramref name="key"/>, or <paramref name="value"/> is
+    /// <see langword="null"/>.
+    /// </exception>
+    [AspireExportIgnore(Reason = "Covered by the withHelmValue export, whose value accepts a string, a parameter, an expression or an endpoint.")]
+    public static IResourceBuilder<HelmReleaseResource> WithHelmValue(
+        this IResourceBuilder<HelmReleaseResource> builder,
+        string key,
+        IResourceBuilder<ParameterResource> value)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(key);
+        ArgumentNullException.ThrowIfNull(value);
+
+        return WithHelmValueVariable(builder, key, ReferenceExpression.Create($"{value.Resource}"));
+    }
+
+    /// <summary>
+    /// Adds a Helm <c>--set key=value</c> override whose value is an endpoint's URL.
+    /// </summary>
+    /// <param name="builder">The Helm release resource builder.</param>
+    /// <param name="key">
+    /// The Helm value path using dot notation, e.g. <c>api.url</c>.
+    /// If the same key is set more than once, the last call wins.
+    /// </param>
+    /// <param name="value">The endpoint whose URL is assigned.</param>
+    /// <returns>The same builder, for chaining.</returns>
+    /// <remarks>
+    /// The URL is the one a container on the Aspire network uses. Pods reach it once the
+    /// endpoint's resource is made resolvable with <see cref="K3sDnsBuilderExtensions.WithHostAlias"/>.
+    /// For a single part of the endpoint, such as its port, pass an expression built from
+    /// <c>EndpointReference.Property</c> instead.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="builder"/>, <paramref name="key"/>, or <paramref name="value"/> is
+    /// <see langword="null"/>.
+    /// </exception>
+    [AspireExportIgnore(Reason = "Covered by the withHelmValue export, whose value accepts a string, a parameter, an expression or an endpoint.")]
+    public static IResourceBuilder<HelmReleaseResource> WithHelmValue(
+        this IResourceBuilder<HelmReleaseResource> builder,
+        string key,
+        EndpointReference value)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(key);
+        ArgumentNullException.ThrowIfNull(value);
+
+        return WithHelmValueVariable(builder, key, ReferenceExpression.Create($"{value}"));
+    }
+
+    /// <summary>
+    /// Adds a Helm <c>--set key=value</c> override to the release.
+    /// </summary>
+    /// <param name="builder">The Helm release resource builder.</param>
+    /// <param name="key">
+    /// The Helm value path using dot notation, e.g. <c>server.service.type</c>.
+    /// If the same key is set more than once, the last call wins.
+    /// </param>
+    /// <param name="value">
+    /// The value to assign: a string, a parameter, an expression, or an endpoint, resolved when
+    /// the release runs.
+    /// </param>
+    /// <returns>The same builder, for chaining.</returns>
+    /// <remarks>
+    /// Helm <c>--set</c> metacharacters (<c>,</c>, <c>{</c>, <c>}</c>, <c>\</c>) are escaped.
+    /// Values resolved when the release runs reach the Helm container as environment variables,
+    /// so a secret never appears in the generated install script.
+    /// </remarks>
+    [AspireExport("withHelmValue")]
+    internal static IResourceBuilder<HelmReleaseResource> WithHelmValuePolyglot(
+        this IResourceBuilder<HelmReleaseResource> builder,
+        string key,
+        [AspireUnion(
+            typeof(string),
+            typeof(ReferenceExpression),
+            typeof(EndpointReference),
+            typeof(IResourceBuilder<ParameterResource>))]
+        object value) => value switch
+        {
+            string text => builder.WithHelmValue(key, text),
+            ReferenceExpression expression => builder.WithHelmValue(key, expression),
+            EndpointReference endpoint => builder.WithHelmValue(key, endpoint),
+            IResourceBuilder<ParameterResource> parameter => builder.WithHelmValue(key, parameter),
+            _ => throw new ArgumentException(
+                $"A Helm value must be a string, a parameter, an expression or an endpoint, not {value?.GetType().Name ?? "null"}.",
+                nameof(value)),
+        };
+
+    private static IResourceBuilder<HelmReleaseResource> WithHelmValueVariable(
+        IResourceBuilder<HelmReleaseResource> builder,
+        string key,
+        ReferenceExpression value)
+    {
+        var release = builder.Resource;
+        release.HelmValues.Remove(key);
+
+        // One variable per key for the release's lifetime: setting the key again replaces the
+        // value the variable carries.
+        var name = release.HelmValueVariables.TryGetValue(key, out var existing)
+            ? existing.Name
+            : $"ASPIRE_HELM_VALUE_{release.HelmValueVariableCount++}";
+        release.HelmValueVariables[key] = new HelmValueVariable(name, value);
+
+        return builder.WithReferenceRelationship(value);
     }
 
     // ── Script generation ─────────────────────────────────────────────────────
@@ -242,15 +467,49 @@ public static class K3sHelmBuilderExtensions
             sb.AppendShellLine($"helm repo update {ShellEscape(alias)}");
         }
 
-        var chartRef = release.RepoUrl is not null
-            ? $"aspire-k3s-{release.ReleaseName}/{release.Chart}"
-            : release.Chart!;
+        if (release.LocalChart is { } localChart)
+        {
+            // Copied out of the read-only mounts: helm dependency build writes charts/ beside
+            // Chart.yaml.
+            sb.AppendShellLine($"rm -rf {HelmLocalChart.WorkPath} && cp -R {HelmLocalChart.MountPath} {HelmLocalChart.WorkPath}");
+
+            // helm dependency build resolves an HTTP repository only once it has been added. The
+            // repositories were read from the charts on the host.
+            var repositoryIndex = 0;
+            foreach (var repository in localChart.Repositories)
+                sb.AppendShellLine($"helm repo add --force-update {ShellEscape($"aspire-k3s-dependency-{repositoryIndex++}")} {ShellEscape(repository)} > /dev/null");
+
+            // Helm refuses a chart whose dependencies are missing even when its values switch them
+            // all off, so they are built every time; Helm itself decides whether a chart has any,
+            // whatever form its Chart.yaml or requirements.yaml takes.
+            foreach (var path in localChart.BuildPaths)
+                sb.AppendShellLine($"helm dependency build {ShellEscape(path)}");
+        }
+
+        // Values resolved at start arrive as environment variables. Each is escaped for --set
+        // here, inside the container, the way HelmEscape escapes literal values below. Command
+        // substitution strips trailing newlines, so the value is followed by a '.' that is
+        // removed afterwards.
+        var resolvedValues = new List<(string Key, string ShellVariable)>();
+        foreach (var (key, variable) in release.HelmValueVariables)
+        {
+            var shellVariable = $"_aspire_helm_value_{resolvedValues.Count}";
+            sb.AppendShellLine($"{shellVariable}=$(printf '%s.' \"${variable.Name}\" | sed -e 's/[\\\\,{{}}]/\\\\&/g')");
+            sb.AppendShellLine($"{shellVariable}=${{{shellVariable}%.}}");
+            resolvedValues.Add((key, shellVariable));
+        }
+
+        var chartRef = release.LocalChart is not null
+            ? release.LocalChart.ChartPath
+            : release.RepoUrl is not null
+                ? $"aspire-k3s-{release.ReleaseName}/{release.Chart}"
+                : release.Chart!;
 
         sb.Append($"helm upgrade --install {ShellEscape(release.ReleaseName)} {ShellEscape(chartRef)}");
         sb.Append($" --namespace {ShellEscape(release.Namespace)} --create-namespace");
         sb.Append(" --wait --timeout 10m");
 
-        if (release.Version is not null)
+        if (release.Version is not null && release.LocalChart is null)
             sb.Append($" --version {ShellEscape(release.Version)}");
 
         // Values files: injected as {index}-{filename} to guarantee uniqueness and order.
@@ -274,6 +533,10 @@ public static class K3sHelmBuilderExtensions
         // and treats braces/brackets as list/map syntax in both positions.
         foreach (var (key, value) in release.HelmValues)
             sb.Append($" --set {ShellEscape($"{HelmEscape(key)}={HelmEscape(value)}")}");
+
+        // The key is quoted as a literal; the escaped value is expanded by the shell.
+        foreach (var (key, shellVariable) in resolvedValues)
+            sb.Append($" --set {ShellEscape($"{HelmEscape(key)}=")}\"${shellVariable}\"");
 
         return sb.ToString();
     }

@@ -42,7 +42,8 @@ public sealed class K3sClusterOptions
     /// </summary>
     /// <remarks>
     /// Common values: <c>traefik</c>, <c>coredns</c>, <c>local-storage</c>.
-    /// Note that <c>servicelb</c> and <c>metrics-server</c> are already disabled by default.
+    /// Note that <c>servicelb</c> and <c>metrics-server</c> are already disabled by default;
+    /// <see cref="K3sBuilderExtensions.WithEnabledComponent"/> turns them back on.
     /// </remarks>
     public IList<string> DisabledComponents { get; } = new List<string>();
 

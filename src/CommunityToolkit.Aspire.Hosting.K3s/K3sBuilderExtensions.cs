@@ -123,11 +123,18 @@ public static class K3sBuilderExtensions
             .WithArgs($"--tls-san={name}")
             .WithArgs("--tls-san=0.0.0.0")
 
-            // Disable components not needed for local development.
-            // servicelb and metrics-server are the biggest resource consumers and slowest
-            // to start; disabling them speeds up cluster readiness significantly.
-            .WithArgs("--disable=servicelb")
-            .WithArgs("--disable=metrics-server")
+            // Disabled components and the node name, from the resource's state rather than as
+            // fixed arguments, so WithEnabledComponent can take back a default and WithDataVolume
+            // can pin the node name. servicelb and metrics-server start disabled: they are the
+            // biggest resource consumers and slowest to start.
+            .WithArgs(context =>
+            {
+                foreach (var component in resource.DisabledComponents)
+                    context.Args.Add($"--disable={component}");
+
+                if (resource.UsesStableNodeName)
+                    context.Args.Add($"--node-name={name}");
+            })
 
             // Reduce log verbosity — k3s writes everything to stderr which DCP surfaces
             // as "error" level entries in the dashboard log viewer.
@@ -363,6 +370,10 @@ public static class K3sBuilderExtensions
     /// Call this method multiple times to disable more than one component.
     /// </param>
     /// <returns>The same builder, for chaining.</returns>
+    /// <remarks>
+    /// <c>servicelb</c> and <c>metrics-server</c> are disabled by default; use
+    /// <see cref="WithEnabledComponent"/> to turn them back on.
+    /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="builder"/> is <see langword="null"/>.</exception>
     /// <exception cref="ArgumentException"><paramref name="component"/> is <see langword="null"/> or whitespace.</exception>
     [AspireExport]
@@ -373,7 +384,41 @@ public static class K3sBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrWhiteSpace(component);
 
-        return builder.WithArgs($"--disable={component}");
+        if (!builder.Resource.DisabledComponents.Contains(component, StringComparer.Ordinal))
+            builder.Resource.DisabledComponents.Add(component);
+
+        return builder;
+    }
+
+    /// <summary>
+    /// Enables a built-in k3s component that this integration, or an earlier
+    /// <see cref="WithDisabledComponent"/> call, disabled.
+    /// </summary>
+    /// <param name="builder">The k3s cluster resource builder.</param>
+    /// <param name="component">
+    /// The component name to enable. <c>servicelb</c> and <c>metrics-server</c> are disabled by
+    /// default because they are the slowest to start.
+    /// </param>
+    /// <returns>The same builder, for chaining.</returns>
+    /// <remarks>
+    /// Enable <c>servicelb</c> when a <c>LoadBalancer</c> Service — such as the bundled Traefik
+    /// ingress controller — must bind to the node's ports, for example to publish ports 80 and
+    /// 443 from the cluster container. Enable <c>metrics-server</c> when a
+    /// <c>HorizontalPodAutoscaler</c> or <c>kubectl top</c> needs resource metrics.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException"><paramref name="builder"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="component"/> is <see langword="null"/> or whitespace.</exception>
+    [AspireExport]
+    public static IResourceBuilder<K3sClusterResource> WithEnabledComponent(
+        this IResourceBuilder<K3sClusterResource> builder,
+        string component)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(component);
+
+        builder.Resource.DisabledComponents.RemoveAll(c => string.Equals(c, component, StringComparison.Ordinal));
+
+        return builder;
     }
 
     /// <summary>
@@ -417,6 +462,18 @@ public static class K3sBuilderExtensions
     /// TLS certificates, and kubeconfig. Without this volume the cluster starts fresh on
     /// every AppHost launch. Combine with <c>ContainerLifetime.Persistent</c> on the cluster
     /// resource and its dependent Helm releases to avoid re-installing charts on every start.
+    /// <para>
+    /// The server node also keeps its identity: it registers under the resource name
+    /// (<c>--node-name</c>), and its node password lives in a second volume at
+    /// <c>/etc/rancher/node</c>. Without both, a recreated container — a new k3s version, a
+    /// changed argument — registers as a new node with a new hostname, and every persistent
+    /// volume bound to the old node stays pending.
+    /// </para>
+    /// <para>
+    /// A data volume created before the node name was fixed holds a node named after its old
+    /// container's hostname, whose password was never kept. Its first start registers a new node
+    /// under the resource name; persistent volumes bound to the old node must be recreated.
+    /// </para>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="builder"/> is <see langword="null"/>.</exception>
     [AspireExport]
@@ -426,17 +483,27 @@ public static class K3sBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        // Idempotent: remove any existing data-volume annotation at this target so that
+        // Idempotent: remove any existing volume annotations at these targets so that
         // calling WithDataVolume twice does not produce duplicate mounts that Docker rejects.
-        var existing = builder.Resource.Annotations
-            .OfType<ContainerMountAnnotation>()
-            .FirstOrDefault(m => m.Target == "/var/lib/rancher/k3s");
-        if (existing is not null)
+        foreach (var existing in builder.Resource.Annotations
+                     .OfType<ContainerMountAnnotation>()
+                     .Where(m => m.Target is DataDirectory or NodeIdentityDirectory)
+                     .ToList())
+        {
             builder.Resource.Annotations.Remove(existing);
+        }
+
+        builder.Resource.UsesStableNodeName = true;
 
         return builder
-            .WithVolume(name ?? VolumeNameGenerator.Generate(builder, "data"), "/var/lib/rancher/k3s");
+            .WithVolume(name ?? VolumeNameGenerator.Generate(builder, "data"), DataDirectory)
+            .WithVolume(name is null ? VolumeNameGenerator.Generate(builder, "node") : $"{name}-node", NodeIdentityDirectory);
     }
+
+    private const string DataDirectory = "/var/lib/rancher/k3s";
+
+    // Holds the node password the server checks a joining node against.
+    private const string NodeIdentityDirectory = "/etc/rancher/node";
 
     /// <summary>
     /// Sets the number of k3s agent (worker) nodes to add to the cluster.
