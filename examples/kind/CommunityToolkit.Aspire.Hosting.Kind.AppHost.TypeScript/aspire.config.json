@@ -4,7 +4,7 @@
     "language": "typescript/nodejs"
   },
   "sdk": {
-    "version": "17.0.0-preview.1.26528.13"
+    "version": "17.0.0-preview.1.26530.5"
   },
   "packages": {
     "CommunityToolkit.Aspire.Hosting.Kind": "../../../src/CommunityToolkit.Aspire.Hosting.Kind/CommunityToolkit.Aspire.Hosting.Kind.csproj"
