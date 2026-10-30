@@ -25,6 +25,132 @@ public class WithPackageTests
     }
 
     [Theory]
+    [InlineData("Mojolicious", "app-Mojolicious-installer")]
+    [InlineData("Foo::Bar", "app-Foo88Bar-installer")]
+    public void WithPackage_SameModuleTwice_CreatesSingleInstaller(string moduleName, string expectedInstallerName)
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddPerlScript("app", "scripts", "app.pl")
+            .WithCpanMinus()
+            .WithPackage(moduleName)
+            .WithPackage(moduleName);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var installerResource = Assert.Single(appModel.Resources.OfType<PerlModuleInstallerResource>());
+        Assert.Equal(expectedInstallerName, installerResource.Name);
+    }
+
+    [Theory]
+    [InlineData("Mojolicious")]
+    [InlineData("Foo::Bar")]
+    public void WithPackage_SameModuleTwice_AddsSingleWaitAnnotation(string moduleName)
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var resource = builder.AddPerlScript("app", "scripts", "app.pl")
+            .WithCpanMinus()
+            .WithPackage(moduleName)
+            .WithPackage(moduleName);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var installerResource = Assert.Single(appModel.Resources.OfType<PerlModuleInstallerResource>());
+        var waitAnnotation = Assert.Single(resource.Resource.Annotations.OfType<WaitAnnotation>());
+        Assert.Same(installerResource, waitAnnotation.Resource);
+        Assert.Equal(WaitType.WaitForCompletion, waitAnnotation.WaitType);
+    }
+
+    [Theory]
+    [InlineData("Foo88Bar", "Foo::Bar", false)]
+    [InlineData("Foo::Bar", "Foo88Bar", false)]
+    [InlineData("Foo::Bar", "foo::bar", false)]
+    [InlineData("foo::bar", "Foo::Bar", false)]
+    [InlineData("Foo88Bar", "Foo::Bar", true)]
+    [InlineData("Foo::Bar", "Foo88Bar", true)]
+    [InlineData("Foo::Bar", "foo::bar", true)]
+    [InlineData("foo::bar", "Foo::Bar", true)]
+    public void WithPackage_DifferentModulesWithCollidingInstallerNames_Throws(
+        string firstModuleName,
+        string secondModuleName,
+        bool installerCommandChanged)
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var resource = builder.AddPerlScript("app", "scripts", "app.pl")
+            .WithPackage(firstModuleName);
+        var installer = Assert.Single(builder.Resources.OfType<PerlModuleInstallerResource>());
+
+        if (installerCommandChanged)
+        {
+            builder.CreateResourceBuilder(installer).WithCommand("cpanm");
+        }
+
+        var exception = Assert.Throws<InvalidOperationException>(() => resource.WithPackage(secondModuleName));
+
+        Assert.Contains(firstModuleName, exception.Message, StringComparison.Ordinal);
+        Assert.Contains(secondModuleName, exception.Message, StringComparison.Ordinal);
+        Assert.Contains(installer.Name, exception.Message, StringComparison.Ordinal);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        Assert.Same(installer, Assert.Single(appModel.Resources.OfType<PerlModuleInstallerResource>()));
+        var requiredModule = Assert.Single(resource.Resource.Annotations.OfType<PerlRequiredModuleAnnotation>());
+        Assert.Equal(firstModuleName, requiredModule.Name);
+        var installerAnnotation = Assert.Single(resource.Resource.Annotations.OfType<PerlModuleInstallerAnnotation>());
+        Assert.Same(installer, installerAnnotation.Resource);
+        Assert.Equal(firstModuleName, installerAnnotation.PackageName);
+        var waitAnnotation = Assert.Single(resource.Resource.Annotations.OfType<WaitAnnotation>());
+        Assert.Same(installer, waitAnnotation.Resource);
+        Assert.Equal(WaitType.WaitForCompletion, waitAnnotation.WaitType);
+    }
+
+    [Theory]
+    [InlineData("Mojolicious")]
+    [InlineData("Foo::Bar")]
+    public void WithPackage_SameModuleAfterInstallerCommandChanges_ReusesInstaller(string moduleName)
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var resource = builder.AddPerlScript("app", "scripts", "app.pl")
+            .WithPackage(moduleName);
+        var installer = Assert.Single(builder.Resources.OfType<PerlModuleInstallerResource>());
+        builder.CreateResourceBuilder(installer).WithCommand("cpanm");
+
+        resource.WithPackage(moduleName);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        Assert.Same(installer, Assert.Single(appModel.Resources.OfType<PerlModuleInstallerResource>()));
+        Assert.Equal("cpanm", installer.Command);
+        var installerAnnotation = Assert.Single(resource.Resource.Annotations.OfType<PerlModuleInstallerAnnotation>());
+        Assert.Equal(moduleName, installerAnnotation.PackageName);
+        var waitAnnotation = Assert.Single(resource.Resource.Annotations.OfType<WaitAnnotation>());
+        Assert.Same(installer, waitAnnotation.Resource);
+        Assert.Equal(WaitType.WaitForCompletion, waitAnnotation.WaitType);
+    }
+
+    [Fact]
+    public void WithPackage_UnrelatedInstallerWithSameNameAndCommand_Throws()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var installer = new PerlModuleInstallerResource("app-Foo88Bar-installer", "Foo::Bar", builder.AppHostDirectory);
+        builder.AddResource(installer);
+        var resource = builder.AddPerlScript("app", "scripts", "app.pl");
+
+        var exception = Assert.Throws<InvalidOperationException>(() => resource.WithPackage("Foo::Bar"));
+
+        Assert.Contains("Foo::Bar", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(installer.Name, exception.Message, StringComparison.Ordinal);
+        Assert.Empty(resource.Resource.Annotations.OfType<PerlRequiredModuleAnnotation>());
+        Assert.Empty(resource.Resource.Annotations.OfType<PerlModuleInstallerAnnotation>());
+        Assert.Empty(resource.Resource.Annotations.OfType<WaitAnnotation>());
+    }
+
+    [Theory]
     [InlineData("DBI", false, false)]
     [InlineData("DBI", true, false)]
     [InlineData("DBI", false, true)]

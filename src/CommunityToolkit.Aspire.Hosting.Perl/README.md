@@ -142,6 +142,47 @@ While I highly recommend you use cpanm or Carton, the integration aims to suppor
 > `WithProjectDependencies()` is called, since `cpan` does not support `--installdeps`.
 > `WithLocalLib()` will also currently swap to `cpanm` because it wasn't clear to me at time of release how to integrate it with cpan.
 
+In run mode, calling `WithPackage()` repeatedly for the same module on the same resource
+reuses one installer and one completion dependency, including for names such as `Foo::Bar`.
+The installer keeps the `force` and `skipTest` values from the first call.
+
+Module identities are case-sensitive. If different modules map to the same installer resource
+name, `WithPackage()` throws `InvalidOperationException` instead of silently skipping a module.
+For example, `Foo88Bar` and `Foo::Bar` both map to `app-Foo88Bar-installer` on a resource named
+`app`. Case-only differences also collide because Aspire resource names are case-insensitive.
+An installer belonging to another resource is never reused. These checks apply only in run mode;
+publish mode retains the module requests without creating local installers.
+
+---
+
+## Certificate trust
+
+The experimental `WithPerlCertificateTrust()` API (`CTASPIREPERL001`) configures
+`SSL_CERT_FILE`, `PERL_LWP_SSL_CA_FILE`, and `MOJO_CA_FILE` for the Perl app and its
+package and project dependency installers. Each resource uses the certificate bundle
+provided by its own Aspire certificate trust context, not the AppHost process's
+`SSL_CERT_FILE` environment variable.
+
+Call it before or after `WithPackage()` or `WithProjectDependencies()`; both orders
+are supported. Certificate trust remains opt-in.
+
+---
+
+## OpenTelemetry
+
+Perl resources use OTLP over HTTP with JSON encoding (`http/json`). Perl's OTLP exporter does not
+support OTLP over gRPC, and JSON avoids requiring `Google::ProtocolBuffers::Dynamic`.
+
+Configure the dashboard's HTTP OTLP endpoint in run mode, for example with
+`ASPIRE_DASHBOARD_OTLP_HTTP_ENDPOINT_URL` or `DOTNET_DASHBOARD_OTLP_HTTP_ENDPOINT_URL`.
+When only the gRPC endpoint is configured, Aspire omits Perl OTLP exporter settings rather than
+sending Perl telemetry to the gRPC listener.
+
+The Perl SDK reads `OTEL_PERL_*` variables before standard `OTEL_*` variables. In run mode, the
+integration resolves the Perl-specific exporter, endpoint, protocol, and header variables from the
+final standard values, so overrides such as `.WithEnvironment("OTEL_EXPORTER_OTLP_ENDPOINT", url)`
+apply to Perl. Set an `OTEL_PERL_*` variable explicitly to override only the Perl SDK.
+
 ---
 
 ## Additional Information

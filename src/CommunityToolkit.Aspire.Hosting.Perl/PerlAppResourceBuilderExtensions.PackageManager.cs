@@ -211,7 +211,14 @@ public static partial class PerlAppResourceBuilderExtensions
     /// installation is skipped. The installer uses the active package manager —
     /// <c>cpan</c> by default, or <c>cpanm</c> if <see cref="WithCpanMinus{TResource}"/>
     /// was called.
+    /// In run mode, repeated calls for the same module on the same resource reuse the
+    /// existing installer and its completion dependency. The installer retains the
+    /// <paramref name="force"/> and <paramref name="skipTest"/> values from the first call.
     /// </remarks>
+    /// <exception cref="InvalidOperationException">
+    /// In run mode, the generated installer resource name is already in use by a different
+    /// module or resource. Module identities are compared using ordinal, case-sensitive matching.
+    /// </exception>
     [AspireExport]
     public static IResourceBuilder<TResource> WithPackage<TResource>(
         this IResourceBuilder<TResource> builder,
@@ -223,14 +230,14 @@ public static partial class PerlAppResourceBuilderExtensions
         ArgumentException.ThrowIfNullOrEmpty(packageName);
         EnsurePackageInstallIsSupported(builder);
 
+        AddPackageInstaller(builder, packageName, force, skipTest);
+
         builder.WithAnnotation(new PerlRequiredModuleAnnotation
         {
             Name = packageName,
             Force = force,
             SkipTest = skipTest
         });
-
-        AddPackageInstaller(builder, packageName, force, skipTest);
 
         return builder;
     }
@@ -387,18 +394,31 @@ public static partial class PerlAppResourceBuilderExtensions
             return;
         }
 
-        var installerName = $"{resource.Resource.Name}-{packageName}-installer";
+        var installerName = SanitizeInstallerResourceName($"{resource.Resource.Name}-{packageName}-installer");
         resource.ApplicationBuilder.TryCreateResourceBuilder<PerlModuleInstallerResource>(
             installerName, out var existingResource);
 
         if (existingResource is not null)
         {
-            // Installer already exists for this package
-            return;
+            var existingInstaller = resource.Resource.Annotations
+                .OfType<PerlModuleInstallerAnnotation>()
+                .SingleOrDefault(annotation => ReferenceEquals(annotation.Resource, existingResource.Resource));
+
+            if (existingInstaller is not null &&
+                string.Equals(existingInstaller.PackageName, packageName, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            throw new InvalidOperationException(
+                $"Cannot install Perl module '{packageName}': installer resource name '{existingResource.Resource.Name}' is already used " +
+                (existingInstaller is not null
+                    ? $"by module '{existingInstaller.PackageName}'."
+                    : "by another resource."));
         }
 
         var installer = new PerlModuleInstallerResource(
-            installerName.Replace(":", "8"), // replace colons with '8' for the installer resource name (Aspire resource names cannot contain ':')
+            installerName,
             packageName,
             resource.Resource.WorkingDirectory ?? throw new ArgumentNullException());
 
@@ -448,13 +468,13 @@ public static partial class PerlAppResourceBuilderExtensions
         // Make the parent resource wait for the installer to complete
         resource.WaitForCompletion(installerBuilder);
 
-        resource.WithAnnotation(new PerlModuleInstallerAnnotation(installer));
+        resource.WithAnnotation(new PerlModuleInstallerAnnotation(installer, packageName));
 
         // Eagerly propagate local::lib env vars if the annotation already exists
         TryAttachLocalLibToInstallerResource(installer, resource.Resource);
 
         // Eagerly propagate certificate trust env vars if configured
-        TryAttachCertificateTrustToInstallerResource(installer, resource.Resource);
+        TryAttachCertificateTrustToInstallerResource(installer, resource);
     }
 
     /// <summary>
@@ -535,7 +555,7 @@ public static partial class PerlAppResourceBuilderExtensions
         TryAttachLocalLibEnvironmentToProjectInstaller(resource);
 
         // Eagerly propagate certificate trust env vars if configured
-        TryAttachCertificateTrustToInstallerResource(installer, resource.Resource);
+        TryAttachCertificateTrustToInstallerResource(installer, resource);
     }
 
     /// <summary>
@@ -623,13 +643,14 @@ public static partial class PerlAppResourceBuilderExtensions
     /// Uses <see cref="PerlCertificateTrustAnnotation"/> on the parent as a guard —
     /// only propagates when cert trust is enabled. Skips if already attached.
     /// </summary>
+    /// <typeparam name="TResource">The type of the parent Perl application resource.</typeparam>
     /// <param name="installerResource">The installer resource that receives certificate variables.</param>
-    /// <param name="parentResource">The parent Perl application resource with certificate trust configuration.</param>
-    private static void TryAttachCertificateTrustToInstallerResource(
+    /// <param name="resource">The parent Perl resource builder with certificate trust configuration.</param>
+    private static void TryAttachCertificateTrustToInstallerResource<TResource>(
         ExecutableResource installerResource,
-        PerlAppResource parentResource)
+        IResourceBuilder<TResource> resource) where TResource : PerlAppResource
     {
-        if (!parentResource.Annotations.OfType<PerlCertificateTrustAnnotation>().Any())
+        if (!resource.Resource.Annotations.OfType<PerlCertificateTrustAnnotation>().Any())
         {
             return;
         }
@@ -641,20 +662,9 @@ public static partial class PerlAppResourceBuilderExtensions
 
         installerResource.Annotations.Add(new PerlCertificateTrustAnnotation());
 
-        installerResource.Annotations.Add(new EnvironmentCallbackAnnotation(context =>
-        {
-            // Propagate by reading from the process environment — Aspire sets these
-            // on the host process when certificate trust is configured.
-            var sslCertFile = Environment.GetEnvironmentVariable("SSL_CERT_FILE");
-            if (sslCertFile is not null)
-            {
-                context.EnvironmentVariables["SSL_CERT_FILE"] = sslCertFile;
-                context.EnvironmentVariables["PERL_LWP_SSL_CA_FILE"] = sslCertFile;
-                context.EnvironmentVariables["MOJO_CA_FILE"] = sslCertFile;
-            }
-
-            return Task.CompletedTask;
-        }));
+        // Unlike Python installers, Perl installers retain certificate trust for CPAN HTTPS requests.
+        resource.ApplicationBuilder.CreateResourceBuilder(installerResource)
+            .WithCertificateTrustConfiguration(ConfigurePerlCertificateTrust);
     }
 
     /// <summary>
@@ -669,12 +679,12 @@ public static partial class PerlAppResourceBuilderExtensions
     {
         foreach (var moduleAnnotation in resource.Resource.Annotations.OfType<PerlModuleInstallerAnnotation>())
         {
-            TryAttachCertificateTrustToInstallerResource(moduleAnnotation.Resource, resource.Resource);
+            TryAttachCertificateTrustToInstallerResource(moduleAnnotation.Resource, resource);
         }
 
         if (resource.Resource.TryGetLastAnnotation<PerlProjectInstallerAnnotation>(out var projectAnnotation))
         {
-            TryAttachCertificateTrustToInstallerResource(projectAnnotation.Resource, resource.Resource);
+            TryAttachCertificateTrustToInstallerResource(projectAnnotation.Resource, resource);
         }
     }
 
