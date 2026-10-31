@@ -37,15 +37,21 @@ See notes about the appDirectory parameter below.
 
 ## Core Concepts
 
-The integration provides two entry points for adding Perl resources:
+The integration provides four entry points for adding Perl resources:
 
-| Method | Purpose |
-|--------|---------|
-| `AddPerlScript(name, appDirectory, scriptName)` | Adds a Perl script (worker, CLI tool, etc.) |
-| `AddPerlApi(name, appDirectory, scriptName)` | Adds a Perl API server (e.g., Mojolicious `daemon`) |
+| Method | Purpose | Runs |
+|--------|---------|------|
+| `AddPerlScript(name, appDirectory, scriptName)` | Adds a Perl script (worker, CLI tool, etc.) | `perl -s <scriptName>` |
+| `AddPerlApi(name, appDirectory, scriptName)` | Adds a Perl API server (e.g., Mojolicious `daemon`) | `perl <scriptName> daemon` |
+| `AddPerlModule(name, appDirectory, moduleName)` | Runs a module's `run` method | `perl -M<moduleName> -e "<moduleName>->run()"` |
+| `AddPerlExecutable(name, appDirectory, executablePath)` | Runs a compiled binary or PAR-packed app without the `perl` interpreter | `<executablePath>` |
 
-Both create a `PerlAppResource` that appears in the Aspire dashboard. All subsequent configuration
-methods (`.WithCpanMinus()`, `.WithLocalLib()`, etc.) chain off the resource builder.
+All four create a `PerlAppResource` that appears in the Aspire dashboard and runs with `appDirectory`
+as its working directory. All subsequent configuration methods (`.WithCpanMinus()`, `.WithLocalLib()`,
+etc.) chain off the resource builder.
+
+`AddPerlModule` doesn't add `appDirectory` to `@INC`. The module must provide a `run` method and be
+installed, under a `WithLocalLib` path, or in a directory you add to `PERL5LIB`.
 
 ---
 
@@ -95,8 +101,9 @@ scripts/                   ← working directory
     └── lib/perl5/...
 ```
 
-> **Key insight:** The script path in `AddPerlScript` / `AddPerlApi` is relative to `AppHost.cs`,
-> and so is everything else — `WithLocalLib`, cpanfile discovery, and the process working directory.
+> **Key insight:** The script path in `AddPerlScript` / `AddPerlApi` is relative to `appDirectory`,
+> not to `AppHost.cs`. So are `WithLocalLib` and cpanfile discovery, and the process runs in
+> `appDirectory`. Only `appDirectory` itself is resolved against the AppHost project directory.
 
 ---
 
@@ -140,6 +147,9 @@ While I highly recommend you use cpanm or Carton, the integration aims to suppor
 
 > The default package manager is `cpan`, but it is automatically switched to `cpanm` when
 > `WithProjectDependencies()` is called, since `cpan` does not support `--installdeps`.
+> In run mode, every `AddPerl*` method calls `WithProjectDependencies()` for you when `appDirectory`
+> contains a `cpanfile`, `Makefile.PL`, or `Build.PL`. Those resources switch to `cpanm` and require it
+> to be installed, even if you never call a package-manager method.
 > `WithLocalLib()` will also currently swap to `cpanm` because it wasn't clear to me at time of release how to integrate it with cpan.
 
 In run mode, `cpan` is required only by individual-package installers that use the default
