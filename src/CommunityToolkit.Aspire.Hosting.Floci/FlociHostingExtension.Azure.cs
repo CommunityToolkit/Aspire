@@ -104,7 +104,7 @@ public static partial class FlociHostingExtension
     /// When ports are not specified, Docker assigns them as it starts the sidecar, and the integration
     /// allocates the child's proxyless AMQP endpoints from the ports floci-az reports once it is ready.
     /// The resource becomes <c>Running</c> at that point, so dependents can <c>WaitFor</c> it directly.
-    /// Requires floci-az 0.12.0 or later. This API is run-only; call it inside an
+    /// Requires floci-az 0.16.0 or later. This API is run-only; call it inside an
     /// <c>ExecutionContext.IsRunMode</c> branch when publishing the AppHost.
     /// </remarks>
     /// <ats-summary>Adds a Service Bus child resource to the Floci Azure emulator</ats-summary>
