@@ -6,6 +6,7 @@ using Aspire.Hosting.Eventing;
 using Aspire.Hosting.Lifecycle;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace CommunityToolkit.Aspire.Hosting.Floci;
 
@@ -20,10 +21,12 @@ namespace CommunityToolkit.Aspire.Hosting.Floci;
 /// API once the emulator is ready, and the child's endpoints are allocated then.
 /// </remarks>
 /// <param name="notifications">Publishes the Service Bus resources' state.</param>
+/// <param name="notificationOptions">Provides the default behavior of waits whose behavior is not set.</param>
 /// <param name="loggers">Provides the Service Bus resources' loggers.</param>
 /// <param name="httpClientFactory">Creates the client for floci-az's namespace API.</param>
 internal sealed class FlociServiceBusEndpointAllocator(
     ResourceNotificationService notifications,
+    IOptions<ResourceNotificationServiceOptions> notificationOptions,
     ResourceLoggerService loggers,
     IHttpClientFactory httpClientFactory) : IDistributedApplicationEventingSubscriber
 {
@@ -33,7 +36,8 @@ internal sealed class FlociServiceBusEndpointAllocator(
     internal const string HttpClientName = "CommunityToolkit.Aspire.Hosting.Floci.ServiceBus";
 
     /// <summary>
-    /// The namespace floci-az starts on boot when <c>FLOCI_AZ_SERVICES_SERVICE_BUS_START_ON_BOOT</c> is set.
+    /// The namespace floci-az starts on boot when <c>FLOCI_AZ_SERVICES_SERVICE_BUS_START_ON_BOOT</c> is set and no
+    /// topology file is mounted.
     /// </summary>
     internal const string DefaultNamespace = "default";
 
@@ -50,6 +54,7 @@ internal sealed class FlociServiceBusEndpointAllocator(
             eventing.Subscribe<BeforeStartEvent>((@event, ct) => AllocateConfiguredEndpointsAsync(eventing, @event, ct));
             eventing.Subscribe<ResourceReadyEvent>((@event, ct) => OnParentReadyAsync(eventing, @event, ct));
             eventing.Subscribe<ResourceStoppedEvent>(OnParentStoppedAsync);
+            eventing.Subscribe<BeforeResourceStartedEvent>(WaitForRedirectedServiceBusAsync);
         }
 
         return Task.CompletedTask;
@@ -65,29 +70,80 @@ internal sealed class FlociServiceBusEndpointAllocator(
         (endpoint.Port ?? 0).ToString(CultureInfo.InvariantCulture);
 
     /// <summary>
-    /// Reads the published host ports from a floci-az namespace API response.
+    /// Selects the Service Bus namespace floci-az runs and reads its published host ports.
     /// </summary>
     /// <remarks>
-    /// Reads <c>amqpHostPort</c> / <c>amqpsHostPort</c>, the ports Docker published on the host.
-    /// <c>amqpPort</c> / <c>amqpsPort</c> are the sidecar's container ports when floci-az runs in a container.
+    /// floci-az starts the <c>default</c> namespace on boot, unless a mounted topology file (<c>Config.json</c>)
+    /// takes precedence and starts the namespaces it declares. The first declared namespace binds the configured
+    /// ports, so a configured port identifies the namespace. Otherwise the <c>default</c> namespace is used, or else
+    /// the only namespace that runs. Reads <c>amqpHostPort</c> / <c>amqpsHostPort</c>, the ports Docker published on
+    /// the host. <c>amqpPort</c> / <c>amqpsPort</c> are the sidecar's container ports when floci-az runs in a container.
     /// </remarks>
-    /// <param name="json">The body of <c>GET /{account}-servicebus/namespaces/{namespace}</c>.</param>
+    /// <param name="json">The body of <c>GET /{account}-servicebus/namespaces</c>.</param>
+    /// <param name="configuredAmqpPort">The AMQP host port passed to <c>WithServiceBus</c>, if any.</param>
+    /// <param name="configuredAmqpTlsPort">The AMQPS host port passed to <c>WithServiceBus</c>, if any.</param>
     /// <returns>The AMQP and AMQPS host ports.</returns>
-    /// <exception cref="DistributedApplicationException">The response does not report both host ports.</exception>
-    internal static (int AmqpPort, int AmqpTlsPort) ParseNamespacePorts(string json)
+    /// <exception cref="DistributedApplicationException">
+    /// No namespace can be selected, or the selected namespace does not report both host ports.
+    /// </exception>
+    internal static (int AmqpPort, int AmqpTlsPort) ParseNamespacePorts(
+        string json,
+        int? configuredAmqpPort = null,
+        int? configuredAmqpTlsPort = null)
     {
         using JsonDocument document = JsonDocument.Parse(json);
-        return (ReadPort(document.RootElement, "amqpHostPort"), ReadPort(document.RootElement, "amqpsHostPort"));
+        if (document.RootElement.ValueKind != JsonValueKind.Object
+            || !document.RootElement.TryGetProperty("namespaces", out JsonElement namespacesElement)
+            || namespacesElement.ValueKind != JsonValueKind.Array)
+        {
+            throw new DistributedApplicationException(
+                $"floci-az did not report its Service Bus namespaces. Response: {json}");
+        }
 
-        int ReadPort(JsonElement root, string property) =>
-            root.ValueKind == JsonValueKind.Object
-            && root.TryGetProperty(property, out JsonElement value)
+        List<JsonElement> namespaces = [.. namespacesElement.EnumerateArray()
+            .Where(candidate => candidate.ValueKind == JsonValueKind.Object)];
+        int index = namespaces.FindIndex(candidate =>
+            (configuredAmqpPort is not null && TryReadPort(candidate, "amqpHostPort") == configuredAmqpPort)
+            || (configuredAmqpTlsPort is not null && TryReadPort(candidate, "amqpsHostPort") == configuredAmqpTlsPort));
+        if (index < 0)
+        {
+            index = namespaces.FindIndex(candidate => GetName(candidate) == DefaultNamespace);
+        }
+
+        if (index < 0 && namespaces.Count == 1)
+        {
+            index = 0;
+        }
+
+        if (index < 0)
+        {
+            string names = namespaces.Count > 0
+                ? string.Join(", ", namespaces.Select(candidate => $"'{GetName(candidate)}'"))
+                : "none";
+            throw new DistributedApplicationException(
+                $"floci-az did not report a single Service Bus namespace to use. Running namespaces: {names}. Declare one namespace in the topology file, name it '{DefaultNamespace}', or pass the host ports it binds to WithServiceBus.");
+        }
+
+        JsonElement selected = namespaces[index];
+        return (ReadPort(selected, "amqpHostPort"), ReadPort(selected, "amqpsHostPort"));
+
+        static string? GetName(JsonElement candidate) =>
+            candidate.TryGetProperty("name", out JsonElement name) && name.ValueKind == JsonValueKind.String
+                ? name.GetString()
+                : null;
+
+        static int? TryReadPort(JsonElement candidate, string property) =>
+            candidate.TryGetProperty(property, out JsonElement value)
             && value.ValueKind == JsonValueKind.Number
             && value.TryGetInt32(out int port)
             && port is > 0 and <= 65535
                 ? port
-                : throw new DistributedApplicationException(
-                    $"floci-az did not report a Service Bus host port in '{property}'. Response: {json}");
+                : null;
+
+        int ReadPort(JsonElement candidate, string property) =>
+            TryReadPort(candidate, property)
+            ?? throw new DistributedApplicationException(
+                $"floci-az did not report a Service Bus host port in '{property}' for namespace '{GetName(candidate)}'. Response: {json}");
     }
 
     private async Task AllocateConfiguredEndpointsAsync(
@@ -139,8 +195,8 @@ internal sealed class FlociServiceBusEndpointAllocator(
     /// <remarks>
     /// DCP tunnels a container's host dependencies into the container network when it creates the container, and
     /// needs their addresses at that point. Docker-assigned ports are not known then, so a container waiting for the
-    /// child would fail to start. Waiting for the parent keeps the ordering: the container's connection string
-    /// still resolves only once the ports are allocated.
+    /// child would fail to start. Waiting for the parent keeps the ordering. A <see cref="ServiceBusWaitAnnotation"/>
+    /// keeps the original wait, which is enforced before the container starts without making the child a dependency.
     /// </remarks>
     /// <param name="model">The application model.</param>
     /// <param name="resource">The Service Bus resource.</param>
@@ -155,7 +211,31 @@ internal sealed class FlociServiceBusEndpointAllocator(
                 {
                     WaitBehavior = wait.WaitBehavior
                 });
+                if (wait.WaitType == WaitType.WaitUntilHealthy)
+                {
+                    container.Annotations.Add(new ServiceBusWaitAnnotation(resource, wait.WaitBehavior));
+                }
             }
+        }
+    }
+
+    /// <summary>
+    /// Waits for the Service Bus resources whose container waits were redirected to their parent.
+    /// </summary>
+    /// <remarks>
+    /// Aspire raises <see cref="BeforeResourceStartedEvent"/> before DCP creates the container, so the container
+    /// starts only once the child is healthy, and fails to start when the child fails. This holds even when the
+    /// container's connection string does not depend on the Docker-assigned ports.
+    /// </remarks>
+    private async Task WaitForRedirectedServiceBusAsync(BeforeResourceStartedEvent @event, CancellationToken cancellationToken)
+    {
+        foreach (var wait in @event.Resource.Annotations.OfType<ServiceBusWaitAnnotation>().ToList())
+        {
+            var behavior = wait.WaitBehavior ?? notificationOptions.Value.DefaultWaitBehavior;
+            loggers.GetLogger(@event.Resource).LogInformation(
+                "Waiting for resource '{Resource}' to become healthy.", wait.Resource.Name);
+            await notifications.WaitForResourceHealthyAsync(wait.Resource.Name, behavior, cancellationToken)
+                .ConfigureAwait(false);
         }
     }
 
@@ -178,7 +258,7 @@ internal sealed class FlociServiceBusEndpointAllocator(
                 if (amqpEndpoint.Port is null || amqpTlsEndpoint.Port is null)
                 {
                     // Docker assigned these ports when floci-az started the sidecar; they change on every start.
-                    var (amqpPort, amqpTlsPort) = await DiscoverPortsAsync(parent, cancellationToken).ConfigureAwait(false);
+                    var (amqpPort, amqpTlsPort) = await DiscoverPortsAsync(parent, resource, cancellationToken).ConfigureAwait(false);
                     if (amqpEndpoint.Port is null)
                     {
                         Allocate(amqpEndpoint, amqpPort);
@@ -231,13 +311,13 @@ internal sealed class FlociServiceBusEndpointAllocator(
 
     private async Task<(int AmqpPort, int AmqpTlsPort)> DiscoverPortsAsync(
         FlociAzureContainerResource parent,
+        FlociAzureServiceBusResource resource,
         CancellationToken cancellationToken)
     {
         // floci-az serves HTTP and HTTPS on the same port, so the management call stays on plain HTTP.
         string? hostAndPort = await parent.PrimaryEndpoint.Property(EndpointProperty.HostAndPort)
             .GetValueAsync(cancellationToken).ConfigureAwait(false);
-        var uri = new Uri(
-            $"http://{hostAndPort}/{FlociAzureContainerResource.DefaultAccountName}-servicebus/namespaces/{DefaultNamespace}");
+        var uri = new Uri($"http://{hostAndPort}/{FlociAzureContainerResource.DefaultAccountName}-servicebus/namespaces");
 
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeout.CancelAfter(s_discoveryTimeout);
@@ -250,7 +330,9 @@ internal sealed class FlociServiceBusEndpointAllocator(
                 $"floci-az returned {(int)response.StatusCode} for {uri}: {body}");
         }
 
-        return ParseNamespacePorts(body);
+        return ParseNamespacePorts(body,
+            resource.AmqpEndpoint.EndpointAnnotation.Port,
+            resource.AmqpTlsEndpoint.EndpointAnnotation.Port);
     }
 
     private static IEnumerable<FlociAzureServiceBusResource> GetChildren(
@@ -262,12 +344,26 @@ internal sealed class FlociServiceBusEndpointAllocator(
 
     private static void FailPendingEndpoints(FlociAzureServiceBusResource resource, Exception exception)
     {
-        // Release consumers already waiting for the ports instead of leaving them blocked.
+        // Release consumers waiting for the ports instead of leaving them blocked, including consumers whose
+        // network allocation is first requested after the failure.
         foreach (var endpoint in new[] { resource.AmqpEndpoint.EndpointAnnotation, resource.AmqpTlsEndpoint.EndpointAnnotation })
         {
-            foreach (var snapshot in endpoint.AllAllocatedEndpoints.Where(snapshot => !snapshot.Snapshot.IsValueSet))
+            foreach (var network in new[] { KnownNetworkIdentifiers.LocalhostNetwork, KnownNetworkIdentifiers.DefaultAspireContainerNetwork })
             {
-                snapshot.Snapshot.SetException(exception);
+                var failed = new ValueSnapshot<AllocatedEndpoint>();
+                failed.SetException(exception);
+#pragma warning disable CS0618 // TryAdd is the only way to add a snapshot that holds an exception.
+                if (endpoint.AllAllocatedEndpoints.TryAdd(network, failed))
+#pragma warning restore CS0618
+                {
+                    continue;
+                }
+
+                foreach (var snapshot in endpoint.AllAllocatedEndpoints.Where(snapshot =>
+                    snapshot.NetworkID.Equals(network) && !snapshot.Snapshot.IsValueSet))
+                {
+                    snapshot.Snapshot.SetException(exception);
+                }
             }
         }
     }
@@ -298,5 +394,24 @@ internal sealed class FlociServiceBusEndpointAllocator(
             .ConfigureAwait(false);
         await eventing.PublishAsync(new ConnectionStringAvailableEvent(resource, services), cancellationToken)
             .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Records a container's wait for a Service Bus resource that was redirected to the resource's parent.
+    /// </summary>
+    /// <param name="resource">The Service Bus resource the container waits for.</param>
+    /// <param name="waitBehavior">The behavior of the original wait.</param>
+    internal sealed class ServiceBusWaitAnnotation(FlociAzureServiceBusResource resource, WaitBehavior? waitBehavior)
+        : IResourceAnnotation
+    {
+        /// <summary>
+        /// Gets the Service Bus resource the container waits for.
+        /// </summary>
+        public FlociAzureServiceBusResource Resource { get; } = resource;
+
+        /// <summary>
+        /// Gets the behavior of the original wait.
+        /// </summary>
+        public WaitBehavior? WaitBehavior { get; } = waitBehavior;
     }
 }

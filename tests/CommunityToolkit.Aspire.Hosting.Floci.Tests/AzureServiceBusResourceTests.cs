@@ -122,7 +122,7 @@ public class AzureServiceBusResourceTests
     {
         using var builder = TestDistributedApplicationBuilder.Create();
         var namespaceApi = new NamespaceApiStub();
-        namespaceApi.Respond("localhost:4577", """{"name":"default","amqpPort":5672,"amqpsPort":5671,"amqpHostPort":21001,"amqpsHostPort":21002,"mocked":false}""");
+        namespaceApi.Respond("localhost:4577", """{"namespaces":[{"name":"default","amqpPort":5672,"amqpsPort":5671,"amqpHostPort":21001,"amqpsHostPort":21002,"mocked":false}]}""");
         builder.Services.AddHttpClient(FlociServiceBusEndpointAllocator.HttpClientName)
             .ConfigurePrimaryHttpMessageHandler(() => namespaceApi);
 
@@ -144,7 +144,7 @@ public class AzureServiceBusResourceTests
         await builder.Eventing.PublishAsync(new ResourceReadyEvent(azure.Resource, app.Services),
             TestContext.Current.CancellationToken);
 
-        Assert.Equal("http://localhost:4577/devstoreaccount1-servicebus/namespaces/default",
+        Assert.Equal("http://localhost:4577/devstoreaccount1-servicebus/namespaces",
             Assert.Single(namespaceApi.Requests).ToString());
         Assert.Equal((configuredAmqpPort ?? 21001).ToString(), await serviceBus.Resource.AmqpEndpoint
             .Property(EndpointProperty.Port).GetValueAsync(TestContext.Current.CancellationToken));
@@ -189,7 +189,7 @@ public class AzureServiceBusResourceTests
     {
         using var builder = TestDistributedApplicationBuilder.Create();
         var namespaceApi = new NamespaceApiStub();
-        namespaceApi.Respond("localhost:4577", """{"name":"default","amqpPort":0,"amqpsPort":0,"amqpHostPort":0,"amqpsHostPort":0,"mocked":true}""");
+        namespaceApi.Respond("localhost:4577", """{"namespaces":[{"name":"default","amqpPort":0,"amqpsPort":0,"amqpHostPort":0,"amqpsHostPort":0,"mocked":true}]}""");
         builder.Services.AddHttpClient(FlociServiceBusEndpointAllocator.HttpClientName)
             .ConfigurePrimaryHttpMessageHandler(() => namespaceApi);
         var azure = builder.AddFlociAzure("floci-az");
@@ -208,6 +208,110 @@ public class AzureServiceBusResourceTests
         await Assert.ThrowsAsync<DistributedApplicationException>(() => pendingContainerConsumer);
         await Assert.ThrowsAsync<DistributedApplicationException>(() => serviceBus.Resource.ConnectionStringExpression
             .GetValueAsync(TestContext.Current.CancellationToken).AsTask());
+    }
+
+    [Fact]
+    public async Task ContainerNetworkLookupsAfterAFailedDiscoveryFail()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var namespaceApi = new NamespaceApiStub();
+        builder.Services.AddHttpClient(FlociServiceBusEndpointAllocator.HttpClientName)
+            .ConfigurePrimaryHttpMessageHandler(() => namespaceApi);
+        var azure = builder.AddFlociAzure("floci-az");
+        var serviceBus = azure.WithServiceBus();
+
+        await using var app = await builder.BuildAsync(TestContext.Current.CancellationToken);
+        await StartAllocatorAsync(builder, app);
+        AllocateParent(azure.Resource, 4577);
+        await builder.Eventing.PublishAsync(new ResourceReadyEvent(azure.Resource, app.Services),
+            TestContext.Current.CancellationToken);
+        Assert.Equal(KnownResourceStates.FailedToStart, GetState(app, serviceBus.Resource));
+
+        // The lookups start only after discovery has failed; they must not create pending snapshots that never complete.
+        foreach (var endpoint in new[] { serviceBus.Resource.AmqpEndpoint, serviceBus.Resource.AmqpTlsEndpoint })
+        {
+            var lookup = endpoint.EndpointAnnotation.AllAllocatedEndpoints.GetAllocatedEndpointAsync(
+                KnownNetworkIdentifiers.DefaultAspireContainerNetwork, TestContext.Current.CancellationToken);
+            await Assert.ThrowsAsync<DistributedApplicationException>(() => lookup.WaitAsync(
+                TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
+        }
+    }
+
+    [Fact]
+    public async Task ParentReadyDiscoversTheNamespaceStartedFromATopologyFile()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var namespaceApi = new NamespaceApiStub();
+        namespaceApi.Respond("localhost:4577", """{"namespaces":[{"name":"sbemulatorns","amqpPort":5672,"amqpsPort":5671,"amqpHostPort":21001,"amqpsHostPort":21002,"mocked":false}]}""");
+        builder.Services.AddHttpClient(FlociServiceBusEndpointAllocator.HttpClientName)
+            .ConfigurePrimaryHttpMessageHandler(() => namespaceApi);
+        var azure = builder.AddFlociAzure("floci-az");
+        var serviceBus = azure.WithServiceBus();
+
+        await using var app = await builder.BuildAsync(TestContext.Current.CancellationToken);
+        await StartAllocatorAsync(builder, app);
+        AllocateParent(azure.Resource, 4577);
+        await builder.Eventing.PublishAsync(new ResourceReadyEvent(azure.Resource, app.Services),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(KnownResourceStates.Running, GetState(app, serviceBus.Resource));
+        Assert.Equal("21001", await serviceBus.Resource.AmqpEndpoint.Property(EndpointProperty.Port)
+            .GetValueAsync(TestContext.Current.CancellationToken));
+        Assert.Equal("21002", await serviceBus.Resource.AmqpTlsEndpoint.Property(EndpointProperty.Port)
+            .GetValueAsync(TestContext.Current.CancellationToken));
+    }
+
+    [Theory]
+    [InlineData(null, false)]
+    [InlineData(5673, false)]
+    [InlineData(5673, true)]
+    public async Task ContainersWithRedirectedWaitsStillWaitForTheServiceBusResource(int? configuredAmqpPort, bool waitOnly)
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var namespaceApi = new NamespaceApiStub();
+        builder.Services.AddHttpClient(FlociServiceBusEndpointAllocator.HttpClientName)
+            .ConfigurePrimaryHttpMessageHandler(() => namespaceApi);
+        var azure = builder.AddFlociAzure("floci-az");
+        var serviceBus = azure.WithServiceBus(amqpPort: configuredAmqpPort);
+        var container = builder.AddContainer("api", "my-api-image").WaitFor(serviceBus);
+        if (!waitOnly)
+        {
+            container.WithReference(serviceBus);
+        }
+
+        await using var app = await builder.BuildAsync(TestContext.Current.CancellationToken);
+        await StartAllocatorAsync(builder, app);
+
+        // The container waits for the emulator, which DCP can tunnel, but its start stays gated on the child.
+        var gate = Assert.Single(container.Resource.Annotations.OfType<FlociServiceBusEndpointAllocator.ServiceBusWaitAnnotation>());
+        Assert.Same(serviceBus.Resource, gate.Resource);
+        var starting = builder.Eventing.PublishAsync(new BeforeResourceStartedEvent(container.Resource, app.Services),
+            TestContext.Current.CancellationToken);
+        await Task.Delay(100, TestContext.Current.CancellationToken);
+        Assert.False(starting.IsCompleted);
+
+        // Discovery fails (no namespace is reported), so the container fails to start instead of starting.
+        AllocateParent(azure.Resource, 4577);
+        await builder.Eventing.PublishAsync(new ResourceReadyEvent(azure.Resource, app.Services),
+            TestContext.Current.CancellationToken);
+        Assert.Equal(KnownResourceStates.FailedToStart, GetState(app, serviceBus.Resource));
+        await Assert.ThrowsAsync<DistributedApplicationException>(() => starting.WaitAsync(
+            TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task ContainersWaitingForCompletionAreNotGatedOnTheServiceBusResource()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var azure = builder.AddFlociAzure("floci-az");
+        var serviceBus = azure.WithServiceBus();
+        var container = builder.AddContainer("api", "my-api-image").WaitForCompletion(serviceBus);
+
+        await using var app = await builder.BuildAsync(TestContext.Current.CancellationToken);
+        await StartAllocatorAsync(builder, app);
+
+        Assert.Same(azure.Resource, Assert.Single(container.Resource.Annotations.OfType<WaitAnnotation>()).Resource);
+        Assert.Empty(container.Resource.Annotations.OfType<FlociServiceBusEndpointAllocator.ServiceBusWaitAnnotation>());
     }
 
     [Theory]
@@ -238,17 +342,36 @@ public class AzureServiceBusResourceTests
     public void ParseNamespacePortsReadsTheReportedHostPorts()
     {
         Assert.Equal((21001, 21002), FlociServiceBusEndpointAllocator.ParseNamespacePorts(
-            """{"name":"default","amqpPort":5672,"amqpsPort":5671,"amqpHostPort":21001,"amqpsHostPort":21002,"tlsCertPem":"","mocked":false}"""));
+            """{"namespaces":[{"name":"default","amqpPort":5672,"amqpsPort":5671,"amqpHostPort":21001,"amqpsHostPort":21002,"tlsCertPem":"","mocked":false}]}"""));
     }
 
     [Theory]
-    [InlineData("""{"name":"default","amqpPort":5672,"amqpsPort":5671}""")]
-    [InlineData("""{"name":"default","amqpHostPort":0,"amqpsHostPort":21002}""")]
-    [InlineData("""{"name":"default","amqpHostPort":21001,"amqpsHostPort":"21002"}""")]
-    [InlineData("""[]""")]
-    public void ParseNamespacePortsRejectsMissingPorts(string json)
+    // The default namespace wins when several run.
+    [InlineData("""{"namespaces":[{"name":"other","amqpHostPort":22001,"amqpsHostPort":22002},{"name":"default","amqpHostPort":21001,"amqpsHostPort":21002}]}""", null, null)]
+    // A topology file can start a single namespace with another name.
+    [InlineData("""{"namespaces":[{"name":"sbemulatorns","amqpHostPort":21001,"amqpsHostPort":21002}]}""", null, null)]
+    // A configured port identifies the namespace that bound it.
+    [InlineData("""{"namespaces":[{"name":"second","amqpHostPort":22001,"amqpsHostPort":22002},{"name":"first","amqpHostPort":5673,"amqpsHostPort":21002}]}""", 5673, null)]
+    [InlineData("""{"namespaces":[{"name":"second","amqpHostPort":22001,"amqpsHostPort":22002},{"name":"first","amqpHostPort":21001,"amqpsHostPort":5674}]}""", null, 5674)]
+    public void ParseNamespacePortsSelectsTheRunningNamespace(string json, int? configuredAmqpPort, int? configuredAmqpTlsPort)
     {
-        Assert.Throws<DistributedApplicationException>(() => FlociServiceBusEndpointAllocator.ParseNamespacePorts(json));
+        Assert.Equal((configuredAmqpPort ?? 21001, configuredAmqpTlsPort ?? 21002),
+            FlociServiceBusEndpointAllocator.ParseNamespacePorts(json, configuredAmqpPort, configuredAmqpTlsPort));
+    }
+
+    [Theory]
+    [InlineData("""{"namespaces":[{"name":"default","amqpPort":5672,"amqpsPort":5671}]}""", null)]
+    [InlineData("""{"namespaces":[{"name":"default","amqpHostPort":0,"amqpsHostPort":21002}]}""", null)]
+    [InlineData("""{"namespaces":[{"name":"default","amqpHostPort":21001,"amqpsHostPort":"21002"}]}""", null)]
+    [InlineData("""{"namespaces":[]}""", null)]
+    [InlineData("""{"namespaces":[{"name":"a","amqpHostPort":21001,"amqpsHostPort":21002},{"name":"b","amqpHostPort":22001,"amqpsHostPort":22002}]}""", null)]
+    [InlineData("""{"namespaces":[{"name":"a","amqpHostPort":21001,"amqpsHostPort":21002},{"name":"b","amqpHostPort":22001,"amqpsHostPort":22002}]}""", 5673)]
+    [InlineData("""{"name":"default","amqpHostPort":21001,"amqpsHostPort":21002}""", null)]
+    [InlineData("""[]""", null)]
+    public void ParseNamespacePortsRejectsMissingPorts(string json, int? configuredAmqpPort)
+    {
+        Assert.Throws<DistributedApplicationException>(() =>
+            FlociServiceBusEndpointAllocator.ParseNamespacePorts(json, configuredAmqpPort));
     }
 
     [Fact]
@@ -348,8 +471,8 @@ public class AzureServiceBusResourceTests
     {
         using var builder = TestDistributedApplicationBuilder.Create();
         var namespaceApi = new NamespaceApiStub();
-        namespaceApi.Respond("localhost:4577", """{"amqpPort":5672,"amqpsPort":5671,"amqpHostPort":21001,"amqpsHostPort":21002}""");
-        namespaceApi.Respond("localhost:4578", """{"amqpPort":5672,"amqpsPort":5671,"amqpHostPort":21003,"amqpsHostPort":21004}""");
+        namespaceApi.Respond("localhost:4577", """{"namespaces":[{"name":"default","amqpPort":5672,"amqpsPort":5671,"amqpHostPort":21001,"amqpsHostPort":21002}]}""");
+        namespaceApi.Respond("localhost:4578", """{"namespaces":[{"name":"default","amqpPort":5672,"amqpsPort":5671,"amqpHostPort":21003,"amqpsHostPort":21004}]}""");
         builder.Services.AddHttpClient(FlociServiceBusEndpointAllocator.HttpClientName)
             .ConfigurePrimaryHttpMessageHandler(() => namespaceApi);
         var first = builder.AddFlociAzure("first");
