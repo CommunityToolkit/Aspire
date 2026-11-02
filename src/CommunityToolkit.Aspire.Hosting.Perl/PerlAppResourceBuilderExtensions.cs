@@ -216,7 +216,6 @@ public static partial class PerlAppResourceBuilderExtensions
 
         resourceBuilder.WithOtlpExporterIfEndpointAvailable(OtlpProtocol.HttpJson);
         resourceBuilder.WithRequiredCommand("perl", "https://www.perl.org/get.html");
-        resourceBuilder.WithRequiredCommand("cpan", "https://metacpan.org/pod/CPAN");
 
         // OpenTelemetry::Exporter::OTLP supports HTTP/JSON and HTTP/protobuf, not gRPC.
         // HTTP/JSON avoids requiring Google::ProtocolBuffers::Dynamic for protobuf encoding, which can be difficult (though not impossible)to get on windows, specifically.

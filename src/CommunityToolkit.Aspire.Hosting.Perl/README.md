@@ -142,6 +142,12 @@ While I highly recommend you use cpanm or Carton, the integration aims to suppor
 > `WithProjectDependencies()` is called, since `cpan` does not support `--installdeps`.
 > `WithLocalLib()` will also currently swap to `cpanm` because it wasn't clear to me at time of release how to integrate it with cpan.
 
+In run mode, `cpan` is required only by individual-package installers that use the default
+package manager. Scripts without dependency installation, cpanm installers, and Carton
+installers do not require `cpan`. Each installer checks its final selected command before
+starting, using its resolved perlbrew path when configured. Missing commands produce
+warnings and installation links; they do not prevent an attempt to start the resource.
+
 In run mode, calling `WithPackage()` repeatedly for the same module on the same resource
 reuses one installer and one completion dependency, including for names such as `Foo::Bar`.
 The installer keeps the `force` and `skipTest` values from the first call.
