@@ -9,8 +9,10 @@ public class WithTunnelEndpointTests
     {
         var builder = DistributedApplication.CreateBuilder();
         
+#pragma warning disable ASPIREDOTNETPROJECT001
         var api = builder
-            .AddProject<Projects.CommunityToolkit_Aspire_Hosting_Ngrok_ApiService>("api");
+            .AddDotnetProject("api", new Projects.CommunityToolkit_Aspire_Hosting_Ngrok_ApiService().ProjectPath);
+#pragma warning restore ASPIREDOTNETPROJECT001
 
         builder.AddNgrok("ngrok")
             .WithTunnelEndpoint(api,"http");
@@ -30,8 +32,10 @@ public class WithTunnelEndpointTests
     {
         var builder = DistributedApplication.CreateBuilder();
         
+#pragma warning disable ASPIREDOTNETPROJECT001
         var api = builder
-            .AddProject<Projects.CommunityToolkit_Aspire_Hosting_Ngrok_ApiService>("api");
+            .AddDotnetProject("api", new Projects.CommunityToolkit_Aspire_Hosting_Ngrok_ApiService().ProjectPath);
+#pragma warning restore ASPIREDOTNETPROJECT001
 
         builder.AddNgrok("ngrok")
             .WithTunnelEndpoint(api,"http");
@@ -51,8 +55,10 @@ public class WithTunnelEndpointTests
     {
         var builder = DistributedApplication.CreateBuilder();
         
+#pragma warning disable ASPIREDOTNETPROJECT001
         var api = builder
-            .AddProject<Projects.CommunityToolkit_Aspire_Hosting_Ngrok_ApiService>("api");
+            .AddDotnetProject("api", new Projects.CommunityToolkit_Aspire_Hosting_Ngrok_ApiService().ProjectPath);
+#pragma warning restore ASPIREDOTNETPROJECT001
 
         builder.AddNgrok("ngrok")
             .WithTunnelEndpoint(api,"http", "custom-url");
@@ -72,8 +78,10 @@ public class WithTunnelEndpointTests
     {
         var builder = DistributedApplication.CreateBuilder();
         
+#pragma warning disable ASPIREDOTNETPROJECT001
         var api = builder
-            .AddProject<Projects.CommunityToolkit_Aspire_Hosting_Ngrok_ApiService>("api");
+            .AddDotnetProject("api", new Projects.CommunityToolkit_Aspire_Hosting_Ngrok_ApiService().ProjectPath);
+#pragma warning restore ASPIREDOTNETPROJECT001
 
         builder.AddNgrok("ngrok")
             .WithTunnelEndpoint(api,"http");
@@ -93,8 +101,10 @@ public class WithTunnelEndpointTests
     {
         var builder = DistributedApplication.CreateBuilder();
         
+#pragma warning disable ASPIREDOTNETPROJECT001
         var api = builder
-            .AddProject<Projects.CommunityToolkit_Aspire_Hosting_Ngrok_ApiService>("api");
+            .AddDotnetProject("api", new Projects.CommunityToolkit_Aspire_Hosting_Ngrok_ApiService().ProjectPath);
+#pragma warning restore ASPIREDOTNETPROJECT001
 
         builder.AddNgrok("ngrok")
             .WithTunnelEndpoint(api,"http", "custom-url", new Dictionary<string, string>() { ["key"] = "value" });
@@ -114,8 +124,10 @@ public class WithTunnelEndpointTests
     public void WithTunnelNullResourceBuilderThrows()
     {
         var builder = DistributedApplication.CreateBuilder();
+#pragma warning disable ASPIREDOTNETPROJECT001
         var api = builder
-            .AddProject<Projects.CommunityToolkit_Aspire_Hosting_Ngrok_ApiService>("api");
+            .AddDotnetProject("api", new Projects.CommunityToolkit_Aspire_Hosting_Ngrok_ApiService().ProjectPath);
+#pragma warning restore ASPIREDOTNETPROJECT001
         
         IResourceBuilder<NgrokResource> resourceBuilder = null!;
 
@@ -137,8 +149,10 @@ public class WithTunnelEndpointTests
     public void WithTunnelNullEndpointNameThrows()
     {
         var builder = DistributedApplication.CreateBuilder();
+#pragma warning disable ASPIREDOTNETPROJECT001
         var api = builder
-            .AddProject<Projects.CommunityToolkit_Aspire_Hosting_Ngrok_ApiService>("api");
+            .AddDotnetProject("api", new Projects.CommunityToolkit_Aspire_Hosting_Ngrok_ApiService().ProjectPath);
+#pragma warning restore ASPIREDOTNETPROJECT001
         var ngrok = builder.AddNgrok("ngrok");
 
         Assert.Throws<ArgumentNullException>(() => ngrok.WithTunnelEndpoint(api, null!));
@@ -148,8 +162,10 @@ public class WithTunnelEndpointTests
     public void WithTunnelEmptyEndpointNameThrows()
     {
         var builder = DistributedApplication.CreateBuilder();
+#pragma warning disable ASPIREDOTNETPROJECT001
         var api = builder
-            .AddProject<Projects.CommunityToolkit_Aspire_Hosting_Ngrok_ApiService>("api");
+            .AddDotnetProject("api", new Projects.CommunityToolkit_Aspire_Hosting_Ngrok_ApiService().ProjectPath);
+#pragma warning restore ASPIREDOTNETPROJECT001
         var ngrok = builder.AddNgrok("ngrok");
 
         Assert.Throws<ArgumentException>(() => ngrok.WithTunnelEndpoint(api, ""));
@@ -159,8 +175,10 @@ public class WithTunnelEndpointTests
     public void WithTunnelEmptyUrlThrows()
     {
         var builder = DistributedApplication.CreateBuilder();
+#pragma warning disable ASPIREDOTNETPROJECT001
         var api = builder
-            .AddProject<Projects.CommunityToolkit_Aspire_Hosting_Ngrok_ApiService>("api");
+            .AddDotnetProject("api", new Projects.CommunityToolkit_Aspire_Hosting_Ngrok_ApiService().ProjectPath);
+#pragma warning restore ASPIREDOTNETPROJECT001
         var ngrok = builder.AddNgrok("ngrok");
 
         Assert.Throws<ArgumentException>(() => ngrok.WithTunnelEndpoint(api, "http", ""));
@@ -170,8 +188,10 @@ public class WithTunnelEndpointTests
     public void WithTunnelWhitespaceUrlThrows()
     {
         var builder = DistributedApplication.CreateBuilder();
+#pragma warning disable ASPIREDOTNETPROJECT001
         var api = builder
-            .AddProject<Projects.CommunityToolkit_Aspire_Hosting_Ngrok_ApiService>("api");
+            .AddDotnetProject("api", new Projects.CommunityToolkit_Aspire_Hosting_Ngrok_ApiService().ProjectPath);
+#pragma warning restore ASPIREDOTNETPROJECT001
         var ngrok = builder.AddNgrok("ngrok");
 
         Assert.Throws<ArgumentException>(() => ngrok.WithTunnelEndpoint(api, "http", "   "));

@@ -127,7 +127,9 @@ public class ResourceBuilderExtensionsTests
         var pubsub = builder.AddDaprPubSub("pubsub");
         
         // Act - Reference Dapr components through the sidecar (preferred approach)
-        var project = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA>("test")
+#pragma warning disable ASPIREDOTNETPROJECT001
+        var project = builder.AddDotnetProject("test", new Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA().ProjectPath)
+#pragma warning restore ASPIREDOTNETPROJECT001
             .WithDaprSidecar(sidecar => 
             {
                 sidecar.WithReference(stateStore);

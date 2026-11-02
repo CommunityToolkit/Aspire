@@ -37,6 +37,6 @@ The repository currently targets Aspire **17.0.0-preview.1.26552.6**, an unsuppo
 
 `Directory.Build.props` pins hosting and testing packages, `global.json` pins the AppHost SDK, and example `aspire.config.json` files pin the polyglot SDK. Keep these versions aligned when upgrading. The nightly version already contains its prerelease suffix, so `AspirePreviewSuffix` is empty.
 
-The existing C# AppHosts still use `Aspire.AppHost.Sdk` for staged compatibility. Aspire 17 emits `ASPIRE012` for that obsolete SDK; migration to explicit `Aspire.Hosting.AppHost`/`Aspire.Hosting.Dotnet` references and `AddDotnetProject` is separate from the dependency upgrade.
+The C# AppHosts that host .NET projects now reference `Aspire.Hosting.Dotnet` and use `AddDotnetProject`; the TypeScript equivalents use `addDotnetProject`. `Aspire.Hosting.Dotnet` is centrally pinned to the same nightly version. The AppHosts still use `Aspire.AppHost.Sdk` for staged compatibility; Aspire 17 emits `ASPIRE012` for that obsolete SDK, and migrating to explicit `Aspire.Hosting.AppHost` references remains separate from this project-resource migration.
 
 Install the matching CLI with `aspire.dev`'s installer and its explicit version option (`-Version 17.0.0-preview.1.26552.6` on Windows or `--version 17.0.0-preview.1.26552.6` on Linux/macOS), rather than selecting a moving daily channel. See the [upstream daily-build guide](https://github.com/microsoft/aspire/blob/main/docs/using-latest-daily.md) for installer instructions.

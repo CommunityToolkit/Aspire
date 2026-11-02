@@ -46,7 +46,7 @@ public class KindImageLoadingTests
         builder.AddKubernetesEnvironment("k8s").WithKind();
 
         // Simulate a project resource by adding ContainerBuildOptionsCallbackAnnotation
-        // with default image name, just like ProjectResource's constructor does.
+        // with the default image name, just like DotnetProjectResource does.
         var apiBuilder = builder.AddContainer("api", "placeholder", "placeholder");
         apiBuilder.Resource.Annotations.Add(new ContainerBuildOptionsCallbackAnnotation(ctx =>
         {
@@ -74,7 +74,7 @@ public class KindImageLoadingTests
         builder.AddKubernetesEnvironment("k8s").WithKind();
 
         // Create a resource with only ContainerBuildOptionsCallbackAnnotation
-        // and no ContainerImageAnnotation (like a real ProjectResource).
+        // and no ContainerImageAnnotation (like a DotnetProjectResource).
         var resource = new TestComputeResource("myservice");
         resource.Annotations.Add(new ContainerBuildOptionsCallbackAnnotation(ctx =>
         {

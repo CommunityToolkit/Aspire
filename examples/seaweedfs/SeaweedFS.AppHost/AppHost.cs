@@ -29,7 +29,9 @@ IResourceBuilder<SeaweedFSContainerResource> seaweedfs = builder.AddSeaweedFS("s
                                        //.WithDataVolume(); // Uncomment to enable persistent storage across restarts
 
 // Adds the API and injects the SeaweedFS cluster connection string
-builder.AddProject<Projects.SeaweedFS_ApiService>("apiservice")
+#pragma warning disable ASPIREDOTNETPROJECT001
+builder.AddDotnetProject("apiservice", new Projects.SeaweedFS_ApiService().ProjectPath)
+#pragma warning restore ASPIREDOTNETPROJECT001
                         .WithReference(seaweedfs)
                         .WaitFor(seaweedfs)
                         .WithHttpHealthCheck("/health");

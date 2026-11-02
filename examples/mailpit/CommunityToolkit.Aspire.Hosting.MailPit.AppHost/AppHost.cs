@@ -6,7 +6,9 @@ var builder = DistributedApplication.CreateBuilder(args);
 var httpPort = builder.Configuration.GetValue<int?>("MailPit:HttpPort");
 var mailPit = builder.AddMailPit("mailpit", httpPort: httpPort);
 
-var sendmail = builder.AddProject<CommunityToolkit_Aspire_Hosting_MailPit_SendMailApi>("sendmail")
+#pragma warning disable ASPIREDOTNETPROJECT001
+var sendmail = builder.AddDotnetProject("sendmail", new CommunityToolkit_Aspire_Hosting_MailPit_SendMailApi().ProjectPath)
+#pragma warning restore ASPIREDOTNETPROJECT001
     .WithReference(mailPit)
     .WaitFor(mailPit);
 

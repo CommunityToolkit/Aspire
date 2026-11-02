@@ -3,8 +3,10 @@ using Projects;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
+#pragma warning disable ASPIREDOTNETPROJECT001
 var apiservice = builder
-    .AddProject<CommunityToolkit_Aspire_Hosting_k6_ApiService>("apiservice")
+    .AddDotnetProject("apiservice", new CommunityToolkit_Aspire_Hosting_k6_ApiService().ProjectPath)
+#pragma warning restore ASPIREDOTNETPROJECT001
     .WithHttpHealthCheck("/health");
 
 var k6 = builder.AddK6("k6")

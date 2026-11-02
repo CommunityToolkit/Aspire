@@ -94,7 +94,7 @@ if (includeCompileOnlyScenarios) {
     //   • Project/executable: KUBECONFIG=<host>/.k3s/k8s/local/kubeconfig.yaml
     //   • Container: KUBECONFIG=/tmp/k3s-kubeconfig.yaml + bind-mount
     const _projectRef = await builder
-        .addProject('operator', '../WidgetOperator/WidgetOperator.csproj')
+        .addDotnetProject('operator', '../WidgetOperator/WidgetOperator.csproj')
         .withReference(configuredCluster);
 
     const _containerRef = await builder
@@ -103,7 +103,7 @@ if (includeCompileOnlyScenarios) {
 
     // ── WithReference — service endpoint URL injection ────────────────────────
     const _endpointRef = await builder
-        .addProject('api', '../WidgetApi/WidgetApi.csproj')
+        .addDotnetProject('api', '../WidgetApi/WidgetApi.csproj')
         .withReference(podinfoWeb);
 }
 
