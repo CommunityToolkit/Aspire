@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <DisablePackageBaselineValidation>true</DisablePackageBaselineValidation>
+    <AdditionalPackageTags>hosting flare opentelemetry otlp observability logs traces metrics</AdditionalPackageTags>
+    <Description>Flare support for Aspire. Flare is a self-hosted, OpenTelemetry-native observability backend (logs, traces, metrics, alerting) for .NET.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
+    <PackageReference Include="Aspire.Hosting.ClickHouse" />
+    <PackageReference Include="Aspire.Hosting.Redis" />
+  </ItemGroup>
+
+</Project>

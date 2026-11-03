@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>CommunityToolkit.Aspire.Hosting.Flare.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)src\CommunityToolkit.Aspire.Hosting.Flare\FlareContainerImageTags.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\examples\flare\CommunityToolkit.Aspire.Hosting.Flare.AppHost\CommunityToolkit.Aspire.Hosting.Flare.AppHost.csproj" />
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.Flare\CommunityToolkit.Aspire.Hosting.Flare.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
+  </ItemGroup>
+
+</Project>

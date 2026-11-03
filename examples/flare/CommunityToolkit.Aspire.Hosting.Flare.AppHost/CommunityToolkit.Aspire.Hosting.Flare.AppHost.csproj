@@ -1,0 +1,11 @@
+<Project Sdk="Aspire.AppHost.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Flare\CommunityToolkit.Aspire.Hosting.Flare.csproj" IsAspireProjectResource="false" />
+  </ItemGroup>
+
+</Project>
