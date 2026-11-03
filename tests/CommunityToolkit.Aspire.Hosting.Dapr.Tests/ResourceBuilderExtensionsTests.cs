@@ -204,6 +204,29 @@ public class ResourceBuilderExtensionsTests
         Assert.Equal("redisHost", annotation.MetadataName);
     }
 
+    [Fact]
+    public async Task WithMetadataUsingValueProviderConfiguresSecretStoreAuthInGeneratedYaml()
+    {
+        // Arrange
+        var builder = DistributedApplication.CreateBuilder();
+        var component = builder.AddDaprComponent("servicebus-pubsub-queue", "pubsub.azure.servicebus.queues")
+            .WithMetadata("connectionString", new TestValueProvider("Endpoint=sb://localhost"));
+
+        var resource = Assert.Single(builder.Resources.OfType<DaprComponentResource>());
+
+        // Act
+        var yaml = await DaprDistributedApplicationLifecycleHook.GetDaprComponent(resource, resource.Type);
+
+        // Assert
+        var schema = DaprComponentSchema.FromYaml(yaml);
+        Assert.NotNull(schema.Auth);
+        Assert.Equal("secretstore", schema.Auth.SecretStore);
+
+        var metadataItem = Assert.IsType<DaprComponentSpecMetadataSecret>(Assert.Single(schema.Spec.Metadata));
+        Assert.Equal("connectionString", metadataItem.Name);
+        Assert.Equal("SERVICEBUS_PUBSUB_QUEUE_CONNECTIONSTRING", metadataItem.SecretKeyRef.Key);
+    }
+
     // Test helper class that implements IValueProvider
     private class TestValueProvider : global::Aspire.Hosting.ApplicationModel.IValueProvider
     {

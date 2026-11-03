@@ -645,7 +645,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
     }
 
 
-    private static async Task<string> GetDaprComponent(DaprComponentResource component, string type, CancellationToken cancellationToken = default)
+    internal static async Task<string> GetDaprComponent(DaprComponentResource component, string type, CancellationToken cancellationToken = default)
     {
         var content = new DaprComponentSchema(component.Name, type);
         await ConfigureDaprComponent(component, content, cancellationToken);
@@ -655,7 +655,10 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
 
     private static async Task ConfigureDaprComponent(DaprComponentResource component, DaprComponentSchema content, CancellationToken cancellationToken = default)
     {
-        if (component.TryGetAnnotationsOfType<DaprComponentSecretAnnotation>(out var secrets) && secrets.Any())
+        // Secret parameters and value providers are both exposed through secretKeyRef entries,
+        // so the component must reference the on-demand secret store to resolve them.
+        if ((component.TryGetAnnotationsOfType<DaprComponentSecretAnnotation>(out var secrets) && secrets.Any()) ||
+            (component.TryGetAnnotationsOfType<DaprComponentValueProviderAnnotation>(out var valueProviders) && valueProviders.Any()))
         {
             content.Auth = new DaprComponentAuth { SecretStore = "secretstore" };
         }
