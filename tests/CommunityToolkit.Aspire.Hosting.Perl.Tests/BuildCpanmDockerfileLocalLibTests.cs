@@ -61,4 +61,72 @@ public class BuildCpanmDockerfileLocalLibTests
         Assert.DoesNotContain("DockerfileEnvStatement", actual);
     }
 
+    [Fact]
+    public async Task BuildCpanmDockerfile_WithPlainLocalLibPath_RendersUnquotedPaths()
+    {
+        var dockerfile = await RenderCpanmDockerfileAsync("vendor/perl5");
+
+        Assert.Contains("RUN cpanm --local-lib /app/vendor/perl5 --installdeps --notest .\n", dockerfile);
+        Assert.Contains("ENV PERL5LIB=/app/vendor/perl5/lib/perl5\n", dockerfile);
+        Assert.Contains("ENV PERL_LOCAL_LIB_ROOT=/app/vendor/perl5\n", dockerfile);
+    }
+
+    [Theory]
+    [InlineData("./vendor/perl5/")]
+    [InlineData(".\\vendor\\perl5")]
+    public async Task BuildCpanmDockerfile_WithUnnormalizedLocalLibPath_RendersNormalizedPath(string localLibPath)
+    {
+        var dockerfile = await RenderCpanmDockerfileAsync(localLibPath);
+
+        Assert.Contains("RUN cpanm --local-lib /app/vendor/perl5 --installdeps --notest .\n", dockerfile);
+        Assert.Contains("ENV PERL_LOCAL_LIB_ROOT=/app/vendor/perl5\n", dockerfile);
+    }
+
+    [Fact]
+    public async Task BuildCpanmDockerfile_WithSpecialCharactersInLocalLibPath_QuotesPaths()
+    {
+        var dockerfile = await RenderCpanmDockerfileAsync("my lib/it's $HOME \"x\"");
+
+        Assert.Contains("RUN cpanm --local-lib '/app/my lib/it'\\''s $HOME \"x\"' --installdeps --notest .\n", dockerfile);
+        Assert.Contains("ENV PERL5LIB=\"/app/my lib/it's \\$HOME \\\"x\\\"/lib/perl5\"\n", dockerfile);
+        Assert.Contains("ENV PERL_LOCAL_LIB_ROOT=\"/app/my lib/it's \\$HOME \\\"x\\\"\"\n", dockerfile);
+    }
+
+    [Fact]
+    public void BuildCpanmDockerfile_WithControlCharactersInLocalLibPath_Throws()
+    {
+#pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+        var builder = new DockerfileBuilder();
+
+        Assert.Throws<InvalidOperationException>(() => builder.BuildCpanmDockerfile(
+            EntrypointType.Script,
+            "app.pl",
+            apiSubcommand: null,
+            "perl:5-slim",
+            localLibPath: "vendor\nRUN echo injected"));
+#pragma warning restore ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+    }
+
+    private static async Task<string> RenderCpanmDockerfileAsync(string localLibPath)
+    {
+#pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+        var builder = new DockerfileBuilder();
+
+        builder.BuildCpanmDockerfile(
+            EntrypointType.Script,
+            "app.pl",
+            apiSubcommand: null,
+            "perl:5-slim",
+            localLibPath);
+
+        using var stream = new MemoryStream();
+        using (var writer = new StreamWriter(stream, leaveOpen: true))
+        {
+            await builder.WriteAsync(writer, TestContext.Current.CancellationToken);
+        }
+#pragma warning restore ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+
+        return System.Text.Encoding.UTF8.GetString(stream.ToArray()).ReplaceLineEndings("\n");
+    }
+
 }
