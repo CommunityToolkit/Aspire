@@ -62,10 +62,14 @@ var cluster = builder
 | `WithPodSubnet(cidr)` | Sets `--cluster-cidr`. Default: k3s built-in `10.42.0.0/16`. |
 | `WithServiceSubnet(cidr)` | Sets `--service-cidr`. Default: k3s built-in `10.43.0.0/16`. |
 | `WithDisabledComponent(c)` | Passes `--disable=<c>`. Call multiple times for multiple components. |
+| `WithEnabledComponent(c)` | Takes back a disable. `servicelb` and `metrics-server` are disabled by default. |
+| `WithIngressDeveloperCertificate()` | Traefik serves the AppHost's developer certificate; release namespaces get it as a Secret. |
+| `WithHostAlias(resource, hostName?)` | Pods resolve an Aspire container by name. |
+| `WithCoreDnsCustomization(file, content)` | Adds a file to the `coredns-custom` ConfigMap. |
 | `WithExtraArg(arg)` | Appends a raw argument to `k3s server`. |
 | `WithHelmImage(registry?, image?, tag?)` | Overrides the `alpine/helm` image used by `AddHelmRelease`. |
 | `WithKubectlImage(registry?, image?, tag?)` | Overrides the `alpine/kubectl` image used by `AddK8sManifest`. |
-| `WithDataVolume(name?)` | Mounts a named Docker volume at `/var/lib/rancher/k3s`. |
+| `WithDataVolume(name?)` | Mounts named volumes at `/var/lib/rancher/k3s` and `/etc/rancher/node`, and fixes the node name. |
 | `WithLifetime(lifetime)` | Sets `ContainerLifetime.Persistent` or `Session` for cluster and agents. |
 
 ## Persistent cluster
@@ -83,6 +87,32 @@ runs, making subsequent starts much faster.
 > **Agent count and persistence**: with persistent containers, `agentCount` must stay
 > constant across runs. Decreasing it leaves orphaned agent containers that will fail to
 > rejoin the cluster; delete them manually with `docker rm -f`.
+
+`WithDataVolume` also keeps the server node's identity: it registers under the resource name
+(`--node-name`) and its node password lives in a second volume. A recreated container — a new k3s
+version, a changed argument — then rejoins as the same node, and persistent volumes bound to it stay
+usable.
+
+> **Data volumes created before the node name was fixed**: the node in such a volume is named after
+> its old container's hostname, and its password lived only in that container, so neither can be
+> recovered once the container is recreated. The first start after upgrading registers a new node
+> under the resource name, and pods whose persistent volumes are bound to the old node stay
+> `Pending`. Delete the old node (`kubectl delete node <old-name>`) and recreate those
+> PersistentVolumeClaims, or remove the data volume to start fresh. Later recreations keep the node.
+
+## Built-in components
+
+`servicelb` and `metrics-server` are disabled by default, because they are the slowest to start.
+Turn them back on when a workload needs them:
+
+```csharp
+var cluster = builder.AddK3sCluster("k8s")
+    .WithEnabledComponent("servicelb")       // LoadBalancer Services bind the node's ports
+    .WithEnabledComponent("metrics-server")  // HorizontalPodAutoscaler, kubectl top
+    // The bundled Traefik, published from the cluster container on the host's 80 and 443.
+    .WithEndpoint(port: 80, targetPort: 80, name: "web", scheme: "tcp", isProxied: false)
+    .WithEndpoint(port: 443, targetPort: 443, name: "websecure", scheme: "tcp", isProxied: false);
+```
 
 ## Deploying Helm charts
 
@@ -103,6 +133,35 @@ var podinfo = cluster.AddHelmRelease(
 builder.AddProject<Projects.MyOperator>("operator")
     .WaitForCompletion(podinfo)
     .WithReference(cluster);
+```
+
+### Charts from a directory
+
+Pass the path of a chart directory — one containing `Chart.yaml`, relative to the AppHost project
+directory — to install the chart you are working on:
+
+```csharp
+cluster.AddHelmRelease("my-app", "../../charts/my-app", @namespace: "my-app");
+```
+
+The directory is mounted read-only and copied inside the Helm container, where its dependencies are
+fetched with `helm dependency build` — every HTTP repository its dependencies come from is added
+first — so nothing has to be built on the host. A dependency on another chart directory, such as
+`repository: file://../common`, is mounted beside it at the same relative path, and its own
+dependencies are built first. A chart directory has its own version, so `version` is refused.
+
+### Values resolved at run time
+
+`WithHelmValue` also takes a parameter, an expression or an endpoint. Each reaches the Helm container
+as an environment variable and is escaped for `--set` there, so a secret never lands in the generated
+install script:
+
+```csharp
+var password = builder.AddParameter("db-password", secret: true);
+
+cluster.AddHelmRelease("my-app", "oci://registry.example.com/charts/my-app")
+    .WithHelmValue("database.password", password)
+    .WithHelmValue("database.port", ReferenceExpression.Create($"{postgres.GetEndpoint("tcp").Property(EndpointProperty.TargetPort)}"));
 ```
 
 ### Helm value precedence
@@ -234,20 +293,61 @@ await builder.addProject('api', '../MyApi/MyApi.csproj')
 await builder.build().run();
 ```
 
-## Reaching Aspire services from k3s pods
+## Serving the developer certificate
 
-k3s pods run on the internal pod network (`10.42.0.0/16`). Flannel masquerades outbound
-pod traffic through the k3s container's DCP network IP, so pods can reach DCP services
-using `host.docker.internal` and the host-mapped port.
+`WithIngressDeveloperCertificate` makes the AppHost's developer certificate — the one the machine trusts —
+the default certificate of the bundled Traefik ingress controller. It carries `*.dev.localhost`, so hosts
+published under that domain open in a browser without a warning:
 
 ```csharp
-var postgres = builder.AddPostgres("db");
+var cluster = builder.AddK3sCluster("k8s")
+    .WithEnabledComponent("servicelb")
+    .WithEndpoint(port: 443, targetPort: 443, name: "websecure", scheme: "tcp", isProxied: false)
+    .WithIngressDeveloperCertificate();
 
-cluster.AddHelmRelease("my-operator", "my-operator-chart")
-    .WithHelmValue("database.host", "host.docker.internal")
-    .WithHelmValue("database.port",
-        postgres.GetEndpoint("tcp").Property(EndpointProperty.Port));
+cluster.AddHelmRelease("my-app", "../../charts/my-app", @namespace: "my-app")
+    .WithHelmValue("ingress.host", "my-app.dev.localhost")
+    .WithHelmValue("ingress.tls.secretName", "aspire-developer-certificate");
 ```
+
+The certificate is stored as the TLS Secret `aspire-developer-certificate` in `kube-system` and in the
+namespace of every Helm release of the cluster, so a chart can name it for its ingress and mount its
+`tls.crt` to trust it — workloads that call each other through the ingress need that, because the
+certificate is self-signed. The Secret holds the private key: this is for local development only, and
+applies in run mode. Every Helm release and manifest waits for it; it is stored again on every start.
+
+## Reaching Aspire services from k3s pods
+
+Pods resolve names through the cluster's CoreDNS, which forwards to the node's resolver — inside a
+container, Docker's embedded DNS on a loopback address that pods cannot reach. So a pod resolves
+neither another Aspire container's name nor `host.docker.internal`. `WithHostAlias` makes a
+container resolvable from every pod, under its resource name or a name you choose:
+
+```csharp
+var postgres = builder.AddPostgres("postgres");
+
+var cluster = builder.AddK3sCluster("k8s")
+    .WithHostAlias(postgres);                           // pods resolve "postgres"
+
+cluster.AddHelmRelease("my-app", "oci://registry.example.com/charts/my-app")
+    .WithHelmValue("database.host", "postgres")
+    .WithHelmValue("database.port", "5432");            // the container port, not a host port
+```
+
+The container's address is looked up on the Aspire network each time the AppHost starts and written
+into the `coredns-custom` ConfigMap, which k3s's CoreDNS imports; CoreDNS is then restarted. Every Helm
+release and manifest of the cluster waits for that, whichever order they are declared in.
+
+`WithCoreDnsCustomization` adds your own file to the same ConfigMap — a `.override` file for plugins in
+the main server block, a `.server` file for a zone of its own:
+
+```csharp
+cluster.WithCoreDnsCustomization("my-app.override",
+    "rewrite name regex (.*\\.)?my-app\\.localhost\\.? traefik.kube-system.svc.cluster.local. answer auto");
+```
+
+The cluster owns `coredns-custom` once either method is used, so a chart that also creates it conflicts;
+move that configuration here.
 
 ## Additional information
 

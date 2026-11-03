@@ -140,6 +140,10 @@ public static class K3sManifestBuilderExtensions
             });
         }
 
+        // A workload must not start before the cluster's DNS knows its aliases, nor before the
+        // certificate it serves or trusts is there.
+        K3sDnsBuilderExtensions.WaitForClusterSetup(manifest, cluster);
+
         return resourceBuilder
             .WithEnvironment("KUBECONFIG", K3sFileHelpers.ContainerKubeconfigPath)
             .WithIconName("Code")
