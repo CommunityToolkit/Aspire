@@ -1,5 +1,6 @@
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.Dotnet;
 using CommunityToolkit.Aspire.Hosting.Stripe;
 
 using CommunityToolkit.Aspire.Testing;
@@ -137,7 +138,9 @@ public class AddStripeTests
         var builder = DistributedApplication.CreateBuilder();
         var apiKey = builder.AddParameter("stripe-api-key", TestApiKeyValue);
 
-        var api = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Stripe_Api>("api");
+#pragma warning disable ASPIREDOTNETPROJECT001
+        var api = builder.AddDotnetProject("api", new Projects.CommunityToolkit_Aspire_Hosting_Stripe_Api().ProjectPath);
+#pragma warning restore ASPIREDOTNETPROJECT001
 
         builder.AddStripe("stripe", apiKey)
             .WithListen(api);
@@ -238,7 +241,9 @@ public class AddStripeTests
         var builder = DistributedApplication.CreateBuilder();
         var apiKey = builder.AddParameter("stripe-api-key", TestApiKeyValue);
 
-        var api = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Stripe_Api>("api");
+#pragma warning disable ASPIREDOTNETPROJECT001
+        var api = builder.AddDotnetProject("api", new Projects.CommunityToolkit_Aspire_Hosting_Stripe_Api().ProjectPath);
+#pragma warning restore ASPIREDOTNETPROJECT001
 
         var stripe = builder.AddStripe("stripe", apiKey)
             .WithListen(api);
@@ -249,7 +254,7 @@ public class AddStripeTests
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var apiResource = Assert.Single(appModel.Resources.OfType<ProjectResource>());
+        var apiResource = Assert.Single(appModel.Resources.OfType<DotnetProjectResource>());
 
         // Verify that an EnvironmentCallbackAnnotation was added
         var envAnnotations = apiResource.Annotations.OfType<EnvironmentCallbackAnnotation>();
@@ -262,7 +267,9 @@ public class AddStripeTests
         var builder = DistributedApplication.CreateBuilder();
         var apiKey = builder.AddParameter("stripe-api-key", TestApiKeyValue);
 
-        var api = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Stripe_Api>("api");
+#pragma warning disable ASPIREDOTNETPROJECT001
+        var api = builder.AddDotnetProject("api", new Projects.CommunityToolkit_Aspire_Hosting_Stripe_Api().ProjectPath);
+#pragma warning restore ASPIREDOTNETPROJECT001
         var stripe = builder.AddStripe("stripe", apiKey)
             .WithListen(api);
 
@@ -272,7 +279,7 @@ public class AddStripeTests
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var apiResource = Assert.Single(appModel.Resources.OfType<ProjectResource>());
+        var apiResource = Assert.Single(appModel.Resources.OfType<DotnetProjectResource>());
 
         // Verify that an EnvironmentCallbackAnnotation was added
         var envAnnotations = apiResource.Annotations.OfType<EnvironmentCallbackAnnotation>();
@@ -286,7 +293,7 @@ public class AddStripeTests
         var apiKey = builder.AddParameter("stripe-api-key", TestApiKeyValue);
         var stripe = builder.AddStripe("stripe", apiKey);
 
-        IResourceBuilder<ProjectResource> apiBuilder = null!;
+        IResourceBuilder<DotnetProjectResource> apiBuilder = null!;
 
         Assert.Throws<ArgumentNullException>(() => apiBuilder.WithReference(stripe));
     }
@@ -295,7 +302,9 @@ public class AddStripeTests
     public void WithReferenceNullSourceThrows()
     {
         var builder = DistributedApplication.CreateBuilder();
-        var api = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Stripe_Api>("api");
+#pragma warning disable ASPIREDOTNETPROJECT001
+        var api = builder.AddDotnetProject("api", new Projects.CommunityToolkit_Aspire_Hosting_Stripe_Api().ProjectPath);
+#pragma warning restore ASPIREDOTNETPROJECT001
 
         Assert.Throws<ArgumentNullException>(() => api.WithReference((IResourceBuilder<StripeResource>)null!));
     }
@@ -307,7 +316,9 @@ public class AddStripeTests
 
         var apiKey = builder.AddParameter("stripe-api-key", TestApiKeyValue);
         var stripe = builder.AddStripe("stripe", apiKey);
-        var api = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Stripe_Api>("api");
+#pragma warning disable ASPIREDOTNETPROJECT001
+        var api = builder.AddDotnetProject("api", new Projects.CommunityToolkit_Aspire_Hosting_Stripe_Api().ProjectPath);
+#pragma warning restore ASPIREDOTNETPROJECT001
 
         Assert.Throws<ArgumentNullException>(() => api.WithReference(stripe, webhookSigningSecretEnvVarName: null!));
     }
@@ -319,7 +330,9 @@ public class AddStripeTests
 
         var apiKey = builder.AddParameter("stripe-api-key", TestApiKeyValue);
         var stripe = builder.AddStripe("stripe", apiKey);
-        var api = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Stripe_Api>("api");
+#pragma warning disable ASPIREDOTNETPROJECT001
+        var api = builder.AddDotnetProject("api", new Projects.CommunityToolkit_Aspire_Hosting_Stripe_Api().ProjectPath);
+#pragma warning restore ASPIREDOTNETPROJECT001
 
         Assert.Throws<ArgumentException>(() => api.WithReference(stripe, webhookSigningSecretEnvVarName: ""));
     }

@@ -130,6 +130,8 @@ jobs:
           --report-github
         env:
           CUSTOM_CONTAINER_REGISTRY: ${{ secrets.CUSTOM_CONTAINER_REGISTRY }}
+          # The Nx example relies on its checked-in lockfile for stable npm resolution.
+          NPM_CONFIG_PACKAGE_LOCK: ${{ matrix.name == 'Hosting.JavaScript.Extensions.Tests' }}
 
       - name: Dump docker info
         if: always() && runner.os == 'Linux'

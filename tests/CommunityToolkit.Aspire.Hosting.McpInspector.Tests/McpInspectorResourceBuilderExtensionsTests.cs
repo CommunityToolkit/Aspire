@@ -14,7 +14,9 @@ public class McpInspectorResourceBuilderExtensionsTests
         var appBuilder = DistributedApplication.CreateBuilder();
 
         // Create a mock MCP server resource
-        var mockServer = appBuilder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer>("mcpServer");
+#pragma warning disable ASPIREDOTNETPROJECT001
+        var mockServer = appBuilder.AddDotnetProject("mcpServer", new Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer().ProjectPath);
+#pragma warning restore ASPIREDOTNETPROJECT001
 
         // Act
         var inspector = appBuilder.AddMcpInspector("inspector")
@@ -45,7 +47,9 @@ public class McpInspectorResourceBuilderExtensionsTests
         var appBuilder = DistributedApplication.CreateBuilder();
 
         // Create a mock MCP server resource
-        var mockServer = appBuilder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer>("mcpServer");
+#pragma warning disable ASPIREDOTNETPROJECT001
+        var mockServer = appBuilder.AddDotnetProject("mcpServer", new Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer().ProjectPath);
+#pragma warning restore ASPIREDOTNETPROJECT001
 
         // Act
         var inspector = appBuilder.AddMcpInspector("inspector")
@@ -72,7 +76,9 @@ public class McpInspectorResourceBuilderExtensionsTests
         var appBuilder = DistributedApplication.CreateBuilder();
 
         // Create a mock MCP server resource
-        var mockServer = appBuilder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer>("mcpServer");
+#pragma warning disable ASPIREDOTNETPROJECT001
+        var mockServer = appBuilder.AddDotnetProject("mcpServer", new Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer().ProjectPath);
+#pragma warning restore ASPIREDOTNETPROJECT001
 
         // Act
         var inspector = appBuilder.AddMcpInspector("inspector")
@@ -99,8 +105,12 @@ public class McpInspectorResourceBuilderExtensionsTests
         var appBuilder = DistributedApplication.CreateBuilder();
 
         // Create mock MCP server resources
-        var mockServer1 = appBuilder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer>("mcpServer1");
-        var mockServer2 = appBuilder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer>("mcpServer2");
+#pragma warning disable ASPIREDOTNETPROJECT001
+        var mockServer1 = appBuilder.AddDotnetProject("mcpServer1", new Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer().ProjectPath);
+#pragma warning restore ASPIREDOTNETPROJECT001
+#pragma warning disable ASPIREDOTNETPROJECT001
+        var mockServer2 = appBuilder.AddDotnetProject("mcpServer2", new Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer().ProjectPath);
+#pragma warning restore ASPIREDOTNETPROJECT001
 
         // Act
         var inspector = appBuilder.AddMcpInspector("inspector")
@@ -307,7 +317,9 @@ public class McpInspectorResourceBuilderExtensionsTests
         var appBuilder = DistributedApplication.CreateBuilder();
 
         // Create a mock MCP server resource
-        var mockServer = appBuilder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer>("mcpServer");
+#pragma warning disable ASPIREDOTNETPROJECT001
+        var mockServer = appBuilder.AddDotnetProject("mcpServer", new Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer().ProjectPath);
+#pragma warning restore ASPIREDOTNETPROJECT001
 
         // Act
         var inspector = appBuilder.AddMcpInspector("inspector")
@@ -323,7 +335,7 @@ public class McpInspectorResourceBuilderExtensionsTests
 
         // The server should have an "Inspected By" relationship pointing at the inspector
         Assert.True(serverResource.TryGetAnnotationsOfType<ResourceRelationshipAnnotation>(out var serverRelationships));
-        var serverRelationship = Assert.Single(serverRelationships);
+        var serverRelationship = Assert.Single(serverRelationships, relationship => relationship.Type == "Inspected By");
         Assert.Same(inspectorResource, serverRelationship.Resource);
         Assert.Equal("Inspected By", serverRelationship.Type);
 
@@ -340,8 +352,12 @@ public class McpInspectorResourceBuilderExtensionsTests
         var appBuilder = DistributedApplication.CreateBuilder();
 
         // Create mock MCP server resources
-        var mockServer1 = appBuilder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer>("mcpServer1");
-        var mockServer2 = appBuilder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer>("mcpServer2");
+#pragma warning disable ASPIREDOTNETPROJECT001
+        var mockServer1 = appBuilder.AddDotnetProject("mcpServer1", new Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer().ProjectPath);
+#pragma warning restore ASPIREDOTNETPROJECT001
+#pragma warning disable ASPIREDOTNETPROJECT001
+        var mockServer2 = appBuilder.AddDotnetProject("mcpServer2", new Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer().ProjectPath);
+#pragma warning restore ASPIREDOTNETPROJECT001
 
         // Act: first is default, second is not
         var inspector = appBuilder.AddMcpInspector("inspector")
@@ -368,7 +384,9 @@ public class McpInspectorResourceBuilderExtensionsTests
         var appBuilder = DistributedApplication.CreateBuilder();
 
         // Create a mock MCP server resource
-        var mockServer = appBuilder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer>("mcpServer");
+#pragma warning disable ASPIREDOTNETPROJECT001
+        var mockServer = appBuilder.AddDotnetProject("mcpServer", new Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer().ProjectPath);
+#pragma warning restore ASPIREDOTNETPROJECT001
 
         // Act
         var inspector = appBuilder.AddMcpInspector("inspector")
@@ -417,7 +435,9 @@ public class McpInspectorResourceBuilderExtensionsTests
         var appBuilder = DistributedApplication.CreateBuilder();
 
         // Create a mock MCP server resource with https endpoint (uses name "https")
-        var mockServer = appBuilder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer>("mcpServer");
+#pragma warning disable ASPIREDOTNETPROJECT001
+        var mockServer = appBuilder.AddDotnetProject("mcpServer", new Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer().ProjectPath);
+#pragma warning restore ASPIREDOTNETPROJECT001
 
         // Act
         var inspector = appBuilder.AddMcpInspector("inspector")
@@ -448,8 +468,10 @@ public class McpInspectorResourceBuilderExtensionsTests
         var appBuilder = DistributedApplication.CreateBuilder();
 
         // Create a mock MCP server resource with both https and http endpoints
-        // AddProject creates "http" by default, we add "https" with explicit name
-        var mockServer = appBuilder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer>("mcpServer");
+        // AddDotnetProject creates "http" by default, we add "https" with explicit name
+#pragma warning disable ASPIREDOTNETPROJECT001
+        var mockServer = appBuilder.AddDotnetProject("mcpServer", new Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer().ProjectPath);
+#pragma warning restore ASPIREDOTNETPROJECT001
 
         // Act
         var inspector = appBuilder.AddMcpInspector("inspector")
@@ -474,7 +496,9 @@ public class McpInspectorResourceBuilderExtensionsTests
         var appBuilder = DistributedApplication.CreateBuilder();
 
         // AddProject creates both http and https endpoints by default
-        var mockServer = appBuilder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer>("mcpServer");
+#pragma warning disable ASPIREDOTNETPROJECT001
+        var mockServer = appBuilder.AddDotnetProject("mcpServer", new Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer().ProjectPath);
+#pragma warning restore ASPIREDOTNETPROJECT001
 
         // Act
         var inspector = appBuilder.AddMcpInspector("inspector")

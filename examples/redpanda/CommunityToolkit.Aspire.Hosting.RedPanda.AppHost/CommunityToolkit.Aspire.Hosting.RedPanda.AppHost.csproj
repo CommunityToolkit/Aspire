@@ -12,4 +12,7 @@
     <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.RedPanda.Consumer\CommunityToolkit.Aspire.Hosting.RedPanda.Consumer.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.Dotnet" />
+  </ItemGroup>
 </Project>

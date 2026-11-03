@@ -28,7 +28,9 @@ public class NgrokArgsTests
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        var api = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Ngrok_ApiService>("api");
+#pragma warning disable ASPIREDOTNETPROJECT001
+        var api = builder.AddDotnetProject("api", new Projects.CommunityToolkit_Aspire_Hosting_Ngrok_ApiService().ProjectPath);
+#pragma warning restore ASPIREDOTNETPROJECT001
 
         builder.AddNgrok("ngrok")
             .WithTunnelEndpoint(api, "http");

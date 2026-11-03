@@ -14,7 +14,7 @@ const apiServiceProjectPath = path.join(
 const ravendb = await builder.addRavenDB("ravendb");
 await ravendb.addDatabase("ravenDatabase");
 
-const apiService = await builder.addProject("apiservice", apiServiceProjectPath);
+const apiService = await builder.addDotnetProject("apiservice", apiServiceProjectPath);
 await apiService.withReference(ravendb);
 await apiService.waitFor(ravendb);
 

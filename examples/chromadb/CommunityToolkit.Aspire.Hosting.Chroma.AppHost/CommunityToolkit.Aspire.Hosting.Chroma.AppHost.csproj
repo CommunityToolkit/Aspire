@@ -11,4 +11,7 @@
     <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Chroma.ApiService\CommunityToolkit.Aspire.Hosting.Chroma.ApiService.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.Dotnet" />
+  </ItemGroup>
 </Project>

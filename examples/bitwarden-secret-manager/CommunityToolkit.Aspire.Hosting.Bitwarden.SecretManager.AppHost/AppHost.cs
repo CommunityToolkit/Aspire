@@ -48,7 +48,9 @@ var demoDbPasswordSecret = bitwarden.AddSecret("demo-db-password");
 
 // Register an API service that references the Bitwarden secret manager
 // There are two ways to reference secrets from the Bitwarden secret manager in Aspire.
-var api = builder.AddProject<CommunityToolkit_Aspire_Hosting_Bitwarden_SecretManager_ApiService>("api")
+#pragma warning disable ASPIREDOTNETPROJECT001
+var api = builder.AddDotnetProject("api", new CommunityToolkit_Aspire_Hosting_Bitwarden_SecretManager_ApiService().ProjectPath)
+#pragma warning restore ASPIREDOTNETPROJECT001
     .WithHttpHealthCheck("/health")
     .WithExternalHttpEndpoints();
 

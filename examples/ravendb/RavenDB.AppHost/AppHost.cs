@@ -7,7 +7,9 @@ var serverSettings = RavenDBServerSettings.Unsecured();
 var ravendb = builder.AddRavenDB("ravendb", serverSettings);
 ravendb.AddDatabase("ravenDatabase");
 
-builder.AddProject<CommunityToolkit_Aspire_Hosting_RavenDB_ApiService>("apiservice")
+#pragma warning disable ASPIREDOTNETPROJECT001
+builder.AddDotnetProject("apiservice", new CommunityToolkit_Aspire_Hosting_RavenDB_ApiService().ProjectPath)
+#pragma warning restore ASPIREDOTNETPROJECT001
     .WithReference(ravendb)
     .WaitFor(ravendb);
 

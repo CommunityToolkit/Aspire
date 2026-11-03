@@ -16,7 +16,9 @@ flociAws.WithFlociUI(configureContainer: ui =>
     ui.WithReference(flociGcp);
 }, containerName: "floci-ui");
 
-builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Floci_ApiService>("floci-api")
+#pragma warning disable ASPIREDOTNETPROJECT001
+builder.AddDotnetProject("floci-api", new Projects.CommunityToolkit_Aspire_Hosting_Floci_ApiService().ProjectPath)
+#pragma warning restore ASPIREDOTNETPROJECT001
     .WithExternalHttpEndpoints()
     .WithHttpHealthCheck("/health")
     .WithReference(flociAws)

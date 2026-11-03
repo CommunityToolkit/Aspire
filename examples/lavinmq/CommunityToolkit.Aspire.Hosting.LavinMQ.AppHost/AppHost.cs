@@ -4,7 +4,9 @@ var builder = DistributedApplication.CreateBuilder(args);
 
 var lavinmq = builder.AddLavinMQ("lavinmq");
 
-builder.AddProject<CommunityToolkit_Aspire_Hosting_LavinMQ_MassTransit>("masstransitExample")
+#pragma warning disable ASPIREDOTNETPROJECT001
+builder.AddDotnetProject("masstransitExample", new CommunityToolkit_Aspire_Hosting_LavinMQ_MassTransit().ProjectPath)
+#pragma warning restore ASPIREDOTNETPROJECT001
     .WithReference(lavinmq)
     .WithHttpHealthCheck(path: "/health")
     .WaitFor(lavinmq);

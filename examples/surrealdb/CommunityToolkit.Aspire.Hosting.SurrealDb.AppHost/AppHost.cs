@@ -32,7 +32,9 @@ db.WithCreationScript(
 #pragma warning restore CTASPIRE002 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
 
-builder.AddProject<CommunityToolkit_Aspire_Hosting_SurrealDb_ApiService>("apiservice")
+#pragma warning disable ASPIREDOTNETPROJECT001
+builder.AddDotnetProject("apiservice", new CommunityToolkit_Aspire_Hosting_SurrealDb_ApiService().ProjectPath)
+#pragma warning restore ASPIREDOTNETPROJECT001
     .WithReference(db)
     .WaitFor(db);
 

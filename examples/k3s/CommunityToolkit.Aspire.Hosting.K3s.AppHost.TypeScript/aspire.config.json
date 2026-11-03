@@ -4,9 +4,10 @@
     "language": "typescript/nodejs"
   },
   "sdk": {
-    "version": "13.6.4"
+    "version": "17.0.0-preview.1.26552.6"
   },
   "packages": {
-    "CommunityToolkit.Aspire.Hosting.K3s": "../../../src/CommunityToolkit.Aspire.Hosting.K3s/CommunityToolkit.Aspire.Hosting.K3s.csproj"
+    "CommunityToolkit.Aspire.Hosting.K3s": "../../../src/CommunityToolkit.Aspire.Hosting.K3s/CommunityToolkit.Aspire.Hosting.K3s.csproj",
+    "Aspire.Hosting.Dotnet": "17.0.0-preview.1.26552.6"
   }
 }

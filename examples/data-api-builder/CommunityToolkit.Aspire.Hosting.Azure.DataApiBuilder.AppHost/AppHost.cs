@@ -17,7 +17,9 @@ var dab = builder.AddDataAPIBuilder("dab")
     .WaitFor(sqlServer)
     .WithReference(sqlDatabase);
 
-builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Azure_DataApiBuilder_BlazorApp>("blazorApp")
+#pragma warning disable ASPIREDOTNETPROJECT001
+builder.AddDotnetProject("blazorApp", new Projects.CommunityToolkit_Aspire_Hosting_Azure_DataApiBuilder_BlazorApp().ProjectPath)
+#pragma warning restore ASPIREDOTNETPROJECT001
     .WithReference(dab);
 
 builder.Build().Run();
