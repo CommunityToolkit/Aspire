@@ -2,6 +2,7 @@
 
     <ItemGroup>
         <PackageReference Include="Aspire.Keycloak.Authentication" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     </ItemGroup>
 
