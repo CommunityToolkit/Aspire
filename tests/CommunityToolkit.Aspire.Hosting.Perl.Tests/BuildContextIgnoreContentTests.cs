@@ -56,6 +56,57 @@ public class BuildContextIgnoreContentTests
     }
 
     [Fact]
+    public void BuildContextIgnoreContent_Default_ExcludesEnvFilesAtAnyDepth()
+    {
+        var rules = ReadRules(PerlAppResourceBuilderExtensions.BuildContextIgnoreContent(localLibPath: null));
+
+        Assert.Contains("**/.env", rules);
+        Assert.Contains("**/.env.*", rules);
+        Assert.DoesNotContain(".env", rules);
+        Assert.DoesNotContain(".env.*", rules);
+    }
+
+    [Theory]
+    [InlineData("#vendor", "/#vendor")]
+    [InlineData("#ve^ndor", "/#ve^ndor")]
+    [InlineData("!vendor", "[!]vendor")]
+    [InlineData("vendor/perl[5]", "vendor/perl[[]5]")]
+    [InlineData("vendor/*", "vendor/[*]")]
+    [InlineData("vendor/perl?", "vendor/perl[?]")]
+    [InlineData("vendor/#perl!", "vendor/#perl!")]
+    [InlineData("ve^ndor", "ve^ndor")]
+    public void BuildContextIgnoreContent_WithSpecialCharactersInLocalLibPath_EncodesLiteralPath(string localLibPath, string expectedRule)
+    {
+        var rules = ReadRules(PerlAppResourceBuilderExtensions.BuildContextIgnoreContent(localLibPath));
+
+        Assert.Single(rules, rule => rule == expectedRule);
+        Assert.DoesNotContain(localLibPath, rules.Where(rule => rule != expectedRule));
+    }
+
+    [Theory]
+    [InlineData("ve^ndor/*")]
+    [InlineData("ve^ndor[5]")]
+    [InlineData("ve^ndor]")]
+    [InlineData("!ve^ndor")]
+    public void BuildContextIgnoreContent_WithCaretInPatternRule_Throws(string localLibPath)
+    {
+        var exception = Assert.Throws<InvalidOperationException>(
+            () => PerlAppResourceBuilderExtensions.BuildContextIgnoreContent(localLibPath));
+
+        Assert.Contains("'^'", exception.Message);
+    }
+
+    [Theory]
+    [InlineData("vendor\nperl5")]
+    [InlineData("vendor\rperl5")]
+    [InlineData("vendor\tperl5")]
+    public void BuildContextIgnoreContent_WithControlCharactersInLocalLibPath_Throws(string localLibPath)
+    {
+        Assert.Throws<InvalidOperationException>(
+            () => PerlAppResourceBuilderExtensions.BuildContextIgnoreContent(localLibPath));
+    }
+
+    [Fact]
     public void BuildContextIgnoreContent_WithRootedLocalLibPath_IgnoresIt()
     {
         var rooted = OperatingSystem.IsWindows() ? @"C:\perl\lib" : "/opt/perl/lib";

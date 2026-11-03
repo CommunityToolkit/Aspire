@@ -202,8 +202,12 @@ When publishing, Perl resources are built as container images.
 Generated Dockerfiles install dependencies inside the image and then copy the app with `COPY . .`.
 To keep host-built modules out of the image, a `<name>.Dockerfile.dockerignore` is emitted next
 to the generated Dockerfile. It excludes `local`, any relative `WithLocalLib` path, `blib`, `_build`,
-`.git`, `.env` files, and Dockerfiles. If the app directory contains an authored `.dockerignore`, no
+`.git`, `.env` files (at any depth), and Dockerfiles. If the app directory contains an authored `.dockerignore`, no
 ignore file is generated and yours applies. Keep `local` (or your local::lib path) in it.
+
+Special characters in a relative `WithLocalLib` path are escaped in the generated ignore rule and quoted in the
+generated Dockerfile. Publishing fails with a descriptive error for paths that contain control characters, or that
+combine `^` with `*`, `?`, `[`, `]`, or a leading `!`, because Docker cannot match such paths portably.
 
 ---
 
