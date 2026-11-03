@@ -3,6 +3,7 @@ using Aspire.Hosting;
 using Aspire.Hosting.Utils;
 using ChromaDB.Client;
 using CommunityToolkit.Aspire.Testing;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 
 namespace CommunityToolkit.Aspire.Hosting.Chroma.Tests;
@@ -126,6 +127,42 @@ public class ChromaFunctionalTests(ITestOutputHelper testOutputHelper)
                 }
             }
         }
+    }
+
+    [Fact]
+    public async Task VerifyWaitForOnChromaBlocksDependentResources()
+    {
+        var cts = new CancellationTokenSource(TimeSpan.FromMinutes(10));
+        using var builder = TestDistributedApplicationBuilder.Create(testOutputHelper);
+
+        var healthCheckTcs = new TaskCompletionSource<HealthCheckResult>();
+        builder.Services.AddHealthChecks().AddAsyncCheck("blocking_check", () => healthCheckTcs.Task);
+
+        var resource = builder.AddChroma("resource")
+                              .WithHealthCheck("blocking_check");
+
+        var dependentResource = builder.AddChroma("dependentresource")
+                                       .WaitFor(resource);
+
+        using var app = builder.Build();
+
+        var pendingStart = app.StartAsync(cts.Token);
+
+        var rns = app.Services.GetRequiredService<ResourceNotificationService>();
+
+        await rns.WaitForResourceAsync(resource.Resource.Name, KnownResourceStates.Running, cts.Token);
+
+        await rns.WaitForResourceAsync(dependentResource.Resource.Name, KnownResourceStates.Waiting, cts.Token);
+
+        healthCheckTcs.SetResult(HealthCheckResult.Healthy());
+
+        await rns.WaitForResourceAsync(resource.Resource.Name, re => re.Snapshot.HealthStatus == HealthStatus.Healthy, cts.Token);
+
+        await rns.WaitForResourceAsync(dependentResource.Resource.Name, KnownResourceStates.Running, cts.Token);
+
+        await pendingStart;
+
+        await app.StopAsync();
     }
 
     private static async Task<IHost> StartClientHostAsync(ChromaResource resource)

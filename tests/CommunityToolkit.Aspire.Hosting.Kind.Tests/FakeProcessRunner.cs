@@ -22,6 +22,7 @@ internal sealed class FakeProcessRunner : IProcessRunner
     public TimeSpan Delay { get; set; }
     public Queue<TimeSpan> Delays { get; } = new();
     public Func<TimeSpan, CancellationToken, Task> DelayAsync { get; set; } = Task.Delay;
+    public Action<ExecutedCommand>? OnCommandExecuted { get; set; }
 
     public async Task<ProcessResult> RunAsync(
         ILogger logger,
@@ -34,9 +35,11 @@ internal sealed class FakeProcessRunner : IProcessRunner
     {
         ProcessResult result;
         TimeSpan delay;
+        ExecutedCommand command;
         lock (_lock)
         {
-            Commands.Add(new(fileName, string.Join(" ", arguments), workingDirectory, environmentVariables, standardInput));
+            command = new(fileName, string.Join(" ", arguments), workingDirectory, environmentVariables, standardInput);
+            Commands.Add(command);
 
             result = ResultsByFileName.TryGetValue(fileName, out var fileResult)
                     ? fileResult
@@ -45,6 +48,8 @@ internal sealed class FakeProcessRunner : IProcessRunner
                         : NextResult;
             delay = Delays.Count > 0 ? Delays.Dequeue() : Delay;
         }
+
+        OnCommandExecuted?.Invoke(command);
 
         if (delay > TimeSpan.Zero)
         {

@@ -32,6 +32,11 @@ app.MapPost("/create", async (ChromaClient chroma) =>
 
 app.MapGet("/query", async (ChromaClient chroma, string collectionName) =>
 {
+    if (!await chroma.CollectionExistsAsync(collectionName))
+    {
+        return Results.NotFound();
+    }
+
     var collectionClient = chroma.GetCollectionClient(await chroma.GetCollectionAsync(collectionName));
 
     var results = await collectionClient.QueryAsync(

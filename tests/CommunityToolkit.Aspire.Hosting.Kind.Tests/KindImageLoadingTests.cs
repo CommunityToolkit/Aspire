@@ -5,8 +5,11 @@
 #pragma warning disable ASPIREPIPELINES003 // ContainerBuildOptionsCallbackAnnotation is experimental
 #pragma warning disable ASPIRECONTAINERRUNTIME001 // IContainerRuntimeResolver is experimental
 
+using System.Collections.Concurrent;
+using System.Reflection;
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.Kubernetes;
 using Aspire.Hosting.Utils;
 using CommunityToolkit.Aspire.Hosting.Kind;
 using CommunityToolkit.Aspire.Testing;
@@ -43,7 +46,7 @@ public class KindImageLoadingTests
         builder.AddKubernetesEnvironment("k8s").WithKind();
 
         // Simulate a project resource by adding ContainerBuildOptionsCallbackAnnotation
-        // with default image name, just like ProjectResource's constructor does.
+        // with the default image name, just like DotnetProjectResource does.
         var apiBuilder = builder.AddContainer("api", "placeholder", "placeholder");
         apiBuilder.Resource.Annotations.Add(new ContainerBuildOptionsCallbackAnnotation(ctx =>
         {
@@ -71,7 +74,7 @@ public class KindImageLoadingTests
         builder.AddKubernetesEnvironment("k8s").WithKind();
 
         // Create a resource with only ContainerBuildOptionsCallbackAnnotation
-        // and no ContainerImageAnnotation (like a real ProjectResource).
+        // and no ContainerImageAnnotation (like a DotnetProjectResource).
         var resource = new TestComputeResource("myservice");
         resource.Annotations.Add(new ContainerBuildOptionsCallbackAnnotation(ctx =>
         {
@@ -181,7 +184,7 @@ public class KindImageLoadingTests
     [Fact]
     public async Task UsesCorrectClusterName()
     {
-        var (fakeRunner, builder) = CreateBuilderWithFakeRunner();
+        var (fakeRunner, builder) = CreateBuilderWithFakeRunner("my-env");
 
         builder.AddKubernetesEnvironment("my-env").WithKind();
 
@@ -205,10 +208,9 @@ public class KindImageLoadingTests
     }
 
     [Fact]
-    [RequiresLinux(Reason = "The current Windows runner for GitHub Actions only has Helm 4.1.4, which is below the Aspire requirement of Helm 4.2.0. This test is skipped on Windows to avoid failures in CI.")]
     public async Task UsesPodmanProviderWhenLoadingImagesWithPodmanRuntime()
     {
-        var (fakeRunner, builder) = CreateBuilderWithFakeRunner("ASPIRE_CONTAINER_RUNTIME=podman");
+        var (fakeRunner, builder) = CreateBuilderWithFakeRunner(args: ["ASPIRE_CONTAINER_RUNTIME=podman"]);
 
         builder.AddKubernetesEnvironment("k8s").WithKind();
 
@@ -230,14 +232,89 @@ public class KindImageLoadingTests
         Assert.Equal("podman", kindLoadCommand.EnvironmentVariables["KIND_EXPERIMENTAL_PROVIDER"]);
     }
 
-    private static (FakeProcessRunner runner, IDistributedApplicationTestingBuilder builder) CreateBuilderWithFakeRunner(params string[] args)
+    [Fact]
+    public async Task DeploysThroughHelmAfterKindClusterAndImageLoading()
+    {
+        var invocations = new ConcurrentQueue<string>();
+        var outputDirectory = Directory.CreateTempSubdirectory(".kind-helm-test");
+        var fakeRunner = new FakeProcessRunner
+        {
+            OnCommandExecuted = command => invocations.Enqueue($"{command.FileName} {command.Arguments}")
+        };
+        var builder = TestDistributedApplicationBuilder.Create(
+            "AppHost:Operation=publish",
+            $"Pipeline:OutputPath={outputDirectory.FullName}",
+            "Pipeline:Step=helm-deploy-k8s");
+
+        builder.Services.AddSingleton<IProcessRunner>(fakeRunner);
+        builder.Services.AddSingleton<global::Aspire.Hosting.Publishing.IContainerRuntimeResolver>(
+            new FakeContainerRuntimeResolver("Docker"));
+
+        builder.AddKubernetesEnvironment("k8s").WithKind();
+        builder.AddContainer("web", "nginx", "latest");
+
+        var localImage = new TestComputeResource("local-image");
+        localImage.Annotations.Add(new ContainerBuildOptionsCallbackAnnotation(ctx =>
+        {
+            ctx.LocalImageName = "local-image";
+            ctx.LocalImageTag = "latest";
+        }));
+        builder.AddResource(localImage);
+
+        // Aspire keeps IHelmRunner internal; proxy it to observe the built-in Helm deployment.
+        var helmRunnerType = typeof(KubernetesEnvironmentResource).Assembly.GetType(
+            "Aspire.Hosting.Kubernetes.IHelmRunner",
+            throwOnError: true)!;
+        var helmRunner = (RecordingHelmRunnerProxy)DispatchProxy.Create(
+            helmRunnerType,
+            typeof(RecordingHelmRunnerProxy));
+        helmRunner.OnInvocation = arguments => invocations.Enqueue($"helm {arguments}");
+        builder.Services.AddSingleton(helmRunnerType, helmRunner);
+
+        try
+        {
+            using var app = builder.Build();
+            await app.RunAsync();
+
+            var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+            var kindResource = Assert.Single(model.Resources.OfType<KindEnvironmentResource>());
+            var kubernetesEnvironment = Assert.Single(model.Resources.OfType<KubernetesEnvironmentResource>());
+            Assert.Equal(kindResource.KubeconfigPath, kubernetesEnvironment.KubeConfigPath);
+
+            var commands = invocations.ToArray();
+            var createClusterIndex = Array.FindIndex(
+                commands,
+                command => command.StartsWith("kind create cluster", StringComparison.Ordinal));
+            var loadImageIndex = Array.FindIndex(
+                commands,
+                command => command.StartsWith("kind load docker-image", StringComparison.Ordinal));
+            var helmDeployIndex = Array.FindIndex(
+                commands,
+                command => command.StartsWith("helm upgrade --install", StringComparison.Ordinal));
+
+            Assert.True(createClusterIndex >= 0, "The Kind cluster creation command was not run.");
+            Assert.True(loadImageIndex > createClusterIndex, "Kind image loading must follow cluster creation.");
+            Assert.True(helmDeployIndex > loadImageIndex, "Helm deployment must follow Kind image loading.");
+
+            var helmDeployCommand = commands[helmDeployIndex];
+            Assert.Contains($"--kubeconfig \"{kindResource.KubeconfigPath}\"", helmDeployCommand);
+        }
+        finally
+        {
+            outputDirectory.Delete(recursive: true);
+        }
+    }
+
+    private static (FakeProcessRunner runner, IDistributedApplicationTestingBuilder builder) CreateBuilderWithFakeRunner(
+        string environmentName = "k8s",
+        params string[] args)
     {
         var fakeRunner = new FakeProcessRunner();
         var builderArgs = new List<string>
         {
             "AppHost:Operation=publish",
             $"Pipeline:OutputPath={Directory.CreateTempSubdirectory(".kind-test").FullName}",
-            "Pipeline:Deploy=true",
+            $"Pipeline:Step=kind-load-images-{environmentName}-kind",
         };
         builderArgs.AddRange(args);
 
@@ -262,4 +339,29 @@ public class KindImageLoadingTests
     /// a real project reference or container image annotation.
     /// </summary>
     private sealed class TestComputeResource(string name) : Resource(name);
+}
+
+/// <summary>
+/// Records calls to Aspire's internal Helm runner during pipeline tests.
+/// </summary>
+public class RecordingHelmRunnerProxy : DispatchProxy
+{
+    public Action<string>? OnInvocation { get; set; }
+
+    protected override object? Invoke(MethodInfo? targetMethod, object?[]? args)
+    {
+        if (targetMethod?.Name != "RunAsync" || args is null || args[0] is not string command)
+        {
+            throw new NotSupportedException($"Unsupported Helm runner invocation: {targetMethod?.Name ?? "<unknown>"}.");
+        }
+
+        OnInvocation?.Invoke(command);
+
+        if (command == "version --short" && args[2] is Action<string> writeVersion)
+        {
+            writeVersion("v4.2.0");
+        }
+
+        return Task.FromResult(0);
+    }
 }

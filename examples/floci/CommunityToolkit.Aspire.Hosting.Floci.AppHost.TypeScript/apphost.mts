@@ -35,7 +35,7 @@ const appHostDirectory = path.dirname(fileURLToPath(import.meta.url));
 const apiServiceProject = "CommunityToolkit.Aspire.Hosting.Floci.ApiService";
 const apiServiceProjectPath = path.join(appHostDirectory, "..", apiServiceProject, apiServiceProject + ".csproj");
 
-const apiService = await builder.addProject("floci-api", apiServiceProjectPath)
+const apiService = await builder.addDotnetProject("floci-api", apiServiceProjectPath)
     .withExternalHttpEndpoints()
     .withHttpHealthCheck({ path: "/health" })
     .withFlociAwsReference(flociAws)
@@ -199,7 +199,7 @@ if (includeCompileOnlyScenarios) {
     //   For GCP: PUBSUB_EMULATOR_HOST, FIRESTORE_EMULATOR_HOST, DATASTORE_EMULATOR_HOST,
     //            STORAGE_EMULATOR_HOST, SECRET_MANAGER_EMULATOR_HOST, GOOGLE_CLOUD_PROJECT
     const _project = await builder
-        .addProject('api', '../FlociApi/FlociApi.csproj')
+        .addDotnetProject('api', '../FlociApi/FlociApi.csproj')
         .withFlociAwsReference(flociAws)
         .withFlociAzureReference(flociAzure)
         .withFlociGcpReference(flociGcp);

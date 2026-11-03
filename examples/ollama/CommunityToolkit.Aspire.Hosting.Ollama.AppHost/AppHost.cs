@@ -12,7 +12,9 @@ var ollama2 = builder.AddOllama("ollama2")
 
 var tinyllama = ollama2.AddModel("tinyllama", "tinyllama");
 
-builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Ollama_Web>("webfrontend")
+#pragma warning disable ASPIREDOTNETPROJECT001
+builder.AddDotnetProject("webfrontend", new Projects.CommunityToolkit_Aspire_Hosting_Ollama_Web().ProjectPath)
+#pragma warning restore ASPIREDOTNETPROJECT001
     .WithExternalHttpEndpoints()
     .WithReference(phi3)
     .WaitFor(phi3)

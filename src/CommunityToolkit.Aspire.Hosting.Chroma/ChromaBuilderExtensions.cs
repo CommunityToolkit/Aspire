@@ -16,9 +16,11 @@ public static class ChromaBuilderExtensions
     // Chroma 0.x keeps its data in persist_directory, ./chroma by default, and reads it from this variable.
     private const string PersistDirectoryVariable = "PERSIST_DIRECTORY";
 
+    private const string StdoutTracingVariable = "CHROMA_STDOUT_TRACING";
+
     /// <summary>
     /// Adds a ChromaDB container resource to the application model.
-    /// The default image is <inheritdoc cref="ChromaContainerImageTags.Image"/> and the tag is <inheritdoc cref="ChromaContainerImageTags.Tag"/>.
+    /// The default image is "chromadb/chroma" and the tag is "1.5.9".
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
     /// <param name="name">The name of the resource. This name will be used as the connection string name when referenced in a dependency.</param>
@@ -35,12 +37,20 @@ public static class ChromaBuilderExtensions
 
         ChromaResource chroma = new(name);
 
-        return builder.AddResource(chroma)
+        var resource = builder.AddResource(chroma)
              .WithImage(ChromaContainerImageTags.Image, ChromaContainerImageTags.Tag)
              .WithImageRegistry(ChromaContainerImageTags.Registry)
              .WithHttpEndpoint(targetPort: ChromaPort, port: port, name: ChromaResource.PrimaryEndpointName)
              .WithHttpHealthCheck("/api/v2/heartbeat")
              .WithIconName("DatabaseSearch");
+
+        if (builder.ExecutionContext.IsRunMode)
+        {
+            // Chroma 1.x writes the requests it serves to its log only with this variable, so that the dashboard shows them.
+            resource.WithEnvironment(StdoutTracingVariable, "true");
+        }
+
+        return resource;
     }
 
     /// <summary>

@@ -8,7 +8,9 @@ var sqliteEF = builder.AddSqlite("sqlite-ef")
     .WithSqliteWeb()
     ;
 
-var api = builder.AddProject<Projects.CommunityToolkit_Aspire_Sqlite_Api>("api")
+#pragma warning disable ASPIREDOTNETPROJECT001
+var api = builder.AddDotnetProject("api", new Projects.CommunityToolkit_Aspire_Sqlite_Api().ProjectPath)
+#pragma warning restore ASPIREDOTNETPROJECT001
     .WithReference(sqlite)
     .WithReference(sqliteEF);
 

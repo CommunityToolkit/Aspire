@@ -7,6 +7,9 @@ registries:
   dotnet-eng:
     type: nuget-feed
     url: https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json
+  dotnet9:
+    type: nuget-feed
+    url: https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet9/nuget/v3/index.json
   dotnet9-transport:
     type: nuget-feed
     url: https://dnceng.pkgs.visualstudio.com/public/_packaging/dotnet9-transport/nuget/v3/index.json
@@ -24,6 +27,7 @@ updates:
   registries:
   - nuget-org
   - dotnet-eng
+  - dotnet9
   - dotnet9-transport
   schedule:
     interval: weekly

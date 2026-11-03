@@ -9,7 +9,7 @@ An Aspire hosting integration for [Flyway](https://flywaydb.org/), a database mi
 
 ### Prerequisites
 
-- .NET 8.0 or later
+- .NET 10.0 or later
 - Docker (for running the Flyway and database containers)
 
 ### Installation

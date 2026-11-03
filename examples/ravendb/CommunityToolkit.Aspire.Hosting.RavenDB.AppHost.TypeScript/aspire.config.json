@@ -4,7 +4,7 @@
     "language": "typescript/nodejs"
   },
   "sdk": {
-    "version": "13.6.4"
+    "version": "17.0.0-preview.1.26552.6"
   },
   "profiles": {
     "https": {
@@ -16,6 +16,7 @@
     }
   },
   "packages": {
-    "CommunityToolkit.Aspire.Hosting.RavenDB": "../../../src/CommunityToolkit.Aspire.Hosting.RavenDB/CommunityToolkit.Aspire.Hosting.RavenDB.csproj"
+    "CommunityToolkit.Aspire.Hosting.RavenDB": "../../../src/CommunityToolkit.Aspire.Hosting.RavenDB/CommunityToolkit.Aspire.Hosting.RavenDB.csproj",
+    "Aspire.Hosting.Dotnet": "17.0.0-preview.1.26552.6"
   }
 }

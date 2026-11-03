@@ -10,11 +10,13 @@ var postgres2 = builder.AddPostgres("postgres2")
 postgres2.AddDatabase("db3");
 postgres2.AddDatabase("db4");
 
-var mongodb1 = builder.AddMongoDB("mongodb1").WithDbGate();
+// MongoDB 8.x cannot start on some CI runner kernels (SERVER-121912).
+// Use the supported 7.0 release line for this example until those kernels are compatible.
+var mongodb1 = builder.AddMongoDB("mongodb1").WithImageTag("7.0").WithDbGate();
 mongodb1.AddDatabase("db5");
 mongodb1.AddDatabase("db6");
 
-var mongodb2 = builder.AddMongoDB("mongodb2").WithDbGate();
+var mongodb2 = builder.AddMongoDB("mongodb2").WithImageTag("7.0").WithDbGate();
 mongodb2.AddDatabase("db7");
 mongodb2.AddDatabase("db8");
 

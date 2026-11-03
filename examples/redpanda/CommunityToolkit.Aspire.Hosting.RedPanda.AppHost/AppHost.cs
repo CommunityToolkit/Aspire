@@ -6,7 +6,9 @@ var redpanda = builder.AddRedPanda("redpanda")
 
 // A sample application that produces to and consumes from the Redpanda broker using the
 // standard Aspire.Confluent.Kafka client integration.
-builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_RedPanda_Consumer>("consumer")
+#pragma warning disable ASPIREDOTNETPROJECT001
+builder.AddDotnetProject("consumer", new Projects.CommunityToolkit_Aspire_Hosting_RedPanda_Consumer().ProjectPath)
+#pragma warning restore ASPIREDOTNETPROJECT001
     .WithHttpEndpoint()
     .WithReference(redpanda)
     .WaitFor(redpanda)

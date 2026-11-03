@@ -4,7 +4,7 @@ const builder = await createBuilder();
 
 const duckdb = await builder.addDuckDB("analytics");
 
-const api = await builder.addProject(
+const api = await builder.addDotnetProject(
     "api",
     "../CommunityToolkit.Aspire.DuckDB.Api/CommunityToolkit.Aspire.DuckDB.Api.csproj",
 );

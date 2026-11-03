@@ -35,7 +35,9 @@ var devSquad      = builder.AddSquad("dev-squad",      teamRoot: devSquadRoot);
 //    caller picks. Both squads are referenced so both connection strings are
 //    injected into the ApiApp; the ApiApp's /ask and /dispatch endpoints take a
 //    ?squad=research|dev query parameter to choose at request time.
-builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Squad_ApiApp>("squad-api")
+#pragma warning disable ASPIREDOTNETPROJECT001
+builder.AddDotnetProject("squad-api", new Projects.CommunityToolkit_Aspire_Hosting_Squad_ApiApp().ProjectPath)
+#pragma warning restore ASPIREDOTNETPROJECT001
     .WithReference(researchSquad)
     .WithReference(devSquad);
 

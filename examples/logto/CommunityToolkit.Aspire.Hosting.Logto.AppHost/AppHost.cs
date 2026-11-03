@@ -9,10 +9,14 @@ var logto = builder.AddLogto("logto", postgres)
     .WithDatabaseSeeding();
 
 
-var clientOIDC = builder.AddProject<Projects.CommunityToolkit_Aspire_Logto_ClientOIDC>("clientOIDC")
+#pragma warning disable ASPIREDOTNETPROJECT001
+var clientOIDC = builder.AddDotnetProject("clientOIDC", new Projects.CommunityToolkit_Aspire_Logto_ClientOIDC().ProjectPath)
+#pragma warning restore ASPIREDOTNETPROJECT001
     .WithReference(logto)
     .WaitFor(logto);
-var clientJWT = builder.AddProject<Projects.CommunityToolkit_Aspire_Logto_ClientJWT>("clientJWT")
+#pragma warning disable ASPIREDOTNETPROJECT001
+var clientJWT = builder.AddDotnetProject("clientJWT", new Projects.CommunityToolkit_Aspire_Logto_ClientJWT().ProjectPath)
+#pragma warning restore ASPIREDOTNETPROJECT001
     .WithReference(logto)
     .WaitFor(logto);
 

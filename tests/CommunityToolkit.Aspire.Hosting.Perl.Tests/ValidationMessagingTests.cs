@@ -1,5 +1,6 @@
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.Lifecycle;
 using CommunityToolkit.Aspire.Hosting.Perl;
 using CommunityToolkit.Aspire.Hosting.Perl.Annotations;
 using CommunityToolkit.Aspire.Testing;
@@ -27,11 +28,57 @@ public class ValidationMessagingTests
 #pragma warning restore ASPIRECOMMAND001
 
         // Windows pathway uses direct interaction service in startup events, not command validation.
-        Assert.Equal(2, requiredCommands.Count);
+        Assert.Single(requiredCommands);
         Assert.Contains(requiredCommands, a => a.Command == "perl");
-        Assert.Contains(requiredCommands, a => a.Command == "cpan");
+        Assert.DoesNotContain(requiredCommands, a => a.Command == "cpan");
         Assert.DoesNotContain(requiredCommands, a => a.Command == "perlbrew");
         Assert.DoesNotContain(requiredCommands, a => a.HelpLink == "https://github.com/stevieb9/berrybrew");
+    }
+
+    [Fact]
+    public async Task InstallerRequiredCommand_UsesResolvedPathAndIsValidatedBeforeResourceStarts()
+    {
+        using var tempDir = new TempDirectory();
+        var builder = DistributedApplication.CreateBuilder(new DistributedApplicationOptions
+        {
+            DisableDashboard = true
+        });
+        var interactionService = new RecordingInteractionService();
+#pragma warning disable ASPIREINTERACTION001
+        builder.Services.AddSingleton<IInteractionService>(interactionService);
+#pragma warning restore ASPIREINTERACTION001
+
+        var environment = new PerlbrewEnvironment(tempDir.Path, "perl-5.38.0");
+        var resource = builder.AddPerlScript("perl-app", tempDir.Path, "app.pl")
+            .WithAnnotation(new PerlbrewEnvironmentAnnotation(environment.Version, null)
+            {
+                Environment = environment
+            })
+            .WithPackage("DBI");
+
+        using var app = builder.Build();
+        var validatorSubscriber = Assert.Single(
+            app.Services.GetServices<IDistributedApplicationEventingSubscriber>(),
+            subscriber => subscriber.GetType().Name == "RequiredCommandValidationEventingSubscriber");
+        await validatorSubscriber.SubscribeAsync(builder.Eventing, builder.ExecutionContext, TestContext.Current.CancellationToken);
+
+        await LoggingTestHelper.PublishBeforeStartAndCollectLogsAsync(builder, app, resource.Resource.Name);
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var installer = Assert.Single(appModel.Resources.OfType<PerlModuleInstallerResource>());
+#pragma warning disable ASPIRECOMMAND001
+        var annotation = Assert.Single(installer.Annotations.OfType<RequiredCommandAnnotation>());
+#pragma warning restore ASPIRECOMMAND001
+        Assert.Equal(environment.GetExecutable("cpan"), installer.Command);
+        Assert.Equal(installer.Command, annotation.Command);
+        Assert.False(interactionService.PromptNotificationCalled);
+
+        await builder.Eventing.PublishAsync(
+            new BeforeResourceStartedEvent(installer, app.Services), TestContext.Current.CancellationToken);
+
+        Assert.True(interactionService.PromptNotificationCalled);
+        Assert.Contains(installer.Command, interactionService.LastMessage);
+        Assert.Equal("https://metacpan.org/pod/CPAN", interactionService.LastOptions?.LinkUrl);
     }
 
     [Fact, RequiresWindows]

@@ -12,7 +12,7 @@
     "watch": "tsc --watch"
   },
   "dependencies": {
-    "vscode-jsonrpc": "^9.0.3"
+    "vscode-jsonrpc": "^8.2.1"
   },
   "engines": {
     "node": "^20.19.0 || ^22.13.0 || >=24"

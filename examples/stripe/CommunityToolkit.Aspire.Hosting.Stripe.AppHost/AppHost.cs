@@ -1,6 +1,8 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-var api = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Stripe_Api>("api");
+#pragma warning disable ASPIREDOTNETPROJECT001
+var api = builder.AddDotnetProject("api", new Projects.CommunityToolkit_Aspire_Hosting_Stripe_Api().ProjectPath);
+#pragma warning restore ASPIREDOTNETPROJECT001
 
 // Provide a development default; override via configuration in real projects.
 var stripeApiKey = builder.AddParameter("stripe-api-key", secret: true);

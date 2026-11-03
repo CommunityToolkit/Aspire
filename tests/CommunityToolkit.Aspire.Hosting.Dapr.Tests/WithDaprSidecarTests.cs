@@ -12,7 +12,9 @@ public class WithDaprSidecarTests
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        var rb = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA>("test")
+#pragma warning disable ASPIREDOTNETPROJECT001
+        var rb = builder.AddDotnetProject("test", new Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA().ProjectPath)
+#pragma warning restore ASPIREDOTNETPROJECT001
             .WithDaprSidecar();
 
         Assert.Single(rb.Resource.Annotations.OfType<DaprSidecarAnnotation>());
@@ -23,7 +25,9 @@ public class WithDaprSidecarTests
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        var rb = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA>("test")
+#pragma warning disable ASPIREDOTNETPROJECT001
+        var rb = builder.AddDotnetProject("test", new Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA().ProjectPath)
+#pragma warning restore ASPIREDOTNETPROJECT001
             .WithDaprSidecar();
 
         var resource = Assert.Single(builder.Resources.OfType<DaprSidecarResource>());
@@ -38,7 +42,9 @@ public class WithDaprSidecarTests
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA>("test")
+#pragma warning disable ASPIREDOTNETPROJECT001
+        builder.AddDotnetProject("test", new Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA().ProjectPath)
+#pragma warning restore ASPIREDOTNETPROJECT001
             .WithDaprSidecar(new DaprSidecarOptions { AppId = "appId" });
 
         var resource = Assert.Single(builder.Resources.OfType<DaprSidecarResource>());
@@ -52,7 +58,9 @@ public class WithDaprSidecarTests
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA>("test")
+#pragma warning disable ASPIREDOTNETPROJECT001
+        builder.AddDotnetProject("test", new Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA().ProjectPath)
+#pragma warning restore ASPIREDOTNETPROJECT001
             .WithDaprSidecar(b => b.WithOptions(new DaprSidecarOptions { AppId = "appId" }));
 
         var resource = Assert.Single(builder.Resources.OfType<DaprSidecarResource>());
@@ -66,7 +74,9 @@ public class WithDaprSidecarTests
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA>("service-a")
+#pragma warning disable ASPIREDOTNETPROJECT001
+        builder.AddDotnetProject("service-a", new Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA().ProjectPath)
+#pragma warning restore ASPIREDOTNETPROJECT001
             .WithDaprSidecar();
 
         var sidecarResource = Assert.Single(builder.Resources.OfType<IDaprSidecarResource>());
@@ -77,12 +87,15 @@ public class WithDaprSidecarTests
         // Create a resource builder and use it with WaitFor
         var sidecarResourceBuilder = builder.CreateResourceBuilder(sidecarResource);
 
-        var serviceB = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceB>("service-b")
+#pragma warning disable ASPIREDOTNETPROJECT001
+        var serviceB = builder.AddDotnetProject("service-b", new Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceB().ProjectPath)
+#pragma warning restore ASPIREDOTNETPROJECT001
             .WaitFor(sidecarResourceBuilder);
 
         // Verify the wait annotation was added
         Assert.NotNull(serviceB);
-        var waitAnnotation = Assert.Single(serviceB.Resource.Annotations.OfType<WaitAnnotation>());
+        var waitAnnotation = Assert.Single(serviceB.Resource.Annotations.OfType<WaitAnnotation>(),
+            annotation => annotation.WaitType != WaitType.WaitForCompletion);
         Assert.Equal(sidecarResource.Name, waitAnnotation.Resource.Name);
     }
 
@@ -94,7 +107,9 @@ public class WithDaprSidecarTests
         var stateStore = builder.AddDaprStateStore("statestore");
         var pubSub = builder.AddDaprPubSub("pubsub");
         
-        builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA>("test")
+#pragma warning disable ASPIREDOTNETPROJECT001
+        builder.AddDotnetProject("test", new Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA().ProjectPath)
+#pragma warning restore ASPIREDOTNETPROJECT001
             .WithDaprSidecar(sidecar => 
             {
                 sidecar.WithReference(stateStore).WithReference(pubSub);
@@ -116,11 +131,14 @@ public class WithDaprSidecarTests
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        var app = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA>("test")
+#pragma warning disable ASPIREDOTNETPROJECT001
+        var app = builder.AddDotnetProject("test", new Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA().ProjectPath)
+#pragma warning restore ASPIREDOTNETPROJECT001
             .WithDaprSidecar();
 
-        // Verify no wait annotations on the main resource
-        Assert.Empty(app.Resource.Annotations.OfType<WaitAnnotation>());
+        // Ignore the build-resource dependency added by Project v2.
+        Assert.DoesNotContain(app.Resource.Annotations.OfType<WaitAnnotation>(),
+            annotation => annotation.WaitType != WaitType.WaitForCompletion);
 
         // Verify the sidecar resource exists
         var sidecarResource = Assert.Single(builder.Resources.OfType<DaprSidecarResource>());
@@ -137,12 +155,15 @@ public class WithDaprSidecarTests
         
         var database = builder.AddContainer("db", "postgres");
         
-        var app = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA>("test")
+#pragma warning disable ASPIREDOTNETPROJECT001
+        var app = builder.AddDotnetProject("test", new Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA().ProjectPath)
+#pragma warning restore ASPIREDOTNETPROJECT001
             .WaitFor(database)
             .WithDaprSidecar();
         
         // Verify the main resource has the wait annotation
-        var waitAnnotation = Assert.Single(app.Resource.Annotations.OfType<WaitAnnotation>());
+        var waitAnnotation = Assert.Single(app.Resource.Annotations.OfType<WaitAnnotation>(),
+            annotation => annotation.WaitType != WaitType.WaitForCompletion);
         Assert.Equal("db", waitAnnotation.Resource.Name);
         
         // Verify the sidecar resource exists
@@ -162,13 +183,17 @@ public class WithDaprSidecarTests
         var database = builder.AddContainer("db", "postgres");
         var redis = builder.AddContainer("cache", "redis");
         
-        var app = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA>("test")
+#pragma warning disable ASPIREDOTNETPROJECT001
+        var app = builder.AddDotnetProject("test", new Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA().ProjectPath)
+#pragma warning restore ASPIREDOTNETPROJECT001
             .WaitFor(database)
             .WaitFor(redis)
             .WithDaprSidecar();
         
         // Verify the main resource has both wait annotations
-        var waitAnnotations = app.Resource.Annotations.OfType<WaitAnnotation>().ToList();
+        var waitAnnotations = app.Resource.Annotations.OfType<WaitAnnotation>()
+            .Where(annotation => annotation.WaitType != WaitType.WaitForCompletion)
+            .ToList();
         Assert.Equal(2, waitAnnotations.Count);
         Assert.Contains(waitAnnotations, w => w.Resource.Name == "db");
         Assert.Contains(waitAnnotations, w => w.Resource.Name == "cache");
