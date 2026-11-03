@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 
 #pragma warning disable ASPIREMCP001
 #pragma warning disable CTASPIREAGENTS001
+#pragma warning disable ASPIREDOTNETPROJECT001
 
 var builder = DistributedApplication.CreateBuilder(args);
 
@@ -36,7 +37,7 @@ var a2aAgent = builder.AddUvicornApp("a2a-jsonrpc-agent", "../weather-agent-pyth
     .WaitFor(chat)
     .AsAgent(AgentProtocol.A2A);
 
-builder.AddProject<Projects.ResponsesAgent>("responses-agent")
+builder.AddDotnetProject("responses-agent", new Projects.ResponsesAgent().ProjectPath)
     .WithHttpEndpoint(env: "PORT")
     .WithReference(chat)
     .WithEnvironment("A2A_JSONRPC_AGENT_AGENTCARD_URL",
@@ -54,7 +55,7 @@ builder.AddNodeApp("vercel-ai-responses-agent", "../vercel-ai-responses-agent", 
     .WaitFor(chat)
     .AsAgent(AgentProtocol.Responses, agentName: "vercel-ai-responses-agent");
 
-builder.AddProject<Projects.McpAgent>("mcp-agent")
+builder.AddDotnetProject("mcp-agent", new Projects.McpAgent().ProjectPath)
     .WithHttpEndpoint(env: "PORT")
     .WithReference(chat)
     .WaitFor(chat)
@@ -69,7 +70,7 @@ builder.AddUvicornApp("agui-acp-agent", "../agui-acp-agent-python", "agui_acp_ag
     .AsAgent(AgentProtocol.AgUi)
     .AsAgent(AgentProtocol.Acp, agentName: "agui-acp-agent");
 
-builder.AddProject<Projects.AgentEnvDump>("agent-env-dump")
+builder.AddDotnetProject("agent-env-dump", new Projects.AgentEnvDump().ProjectPath)
     .WithEnvironment("A2A_JSONRPC_AGENT_AGENTCARD_URL",
         ReferenceExpression.Create($"{a2aAgent.GetEndpoint("http")}/.well-known/agent-card.json"))
     .WaitFor(a2aAgent);

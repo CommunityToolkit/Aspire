@@ -1011,10 +1011,12 @@ public class AgentResourceBuilderExtensionsTests
     {
         using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
 
+#pragma warning disable CS0618 // Preserve coverage for legacy ProjectResource consumers.
         var agent = builder.AddProject<ProjectA>("weather-agent")
             .WithHttpEndpoint(targetPort: 8080)
             .WithEndpoint("http", e => AllocateEndpoint(e, "weather-agent.dev.internal", 8080))
             .AsAgent(AgentProtocol.A2A);
+#pragma warning restore CS0618
 
         var consumer = builder.AddContainer("consumer", "image")
             .WithReference(agent);

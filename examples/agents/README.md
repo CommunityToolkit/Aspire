@@ -13,15 +13,18 @@ This example keeps all six extracted multi-protocol samples:
 
 The AppHost references the local `src/CommunityToolkit.Aspire.Hosting.Agents`
 project and public Aspire packages. SDK and Aspire versions follow the Toolkit's
-central configuration. Foundry uses the repository's Aspire preview suffix
-because the integration is still a preview. All NuGet dependency versions are
+central configuration, including Foundry. All NuGet dependency versions are
 managed in the repository-root `Directory.Packages.props`, including the shared
 MCP SDK version.
+
+The .NET resources use `AddDotnetProject` from `Aspire.Hosting.Dotnet`, matching
+the repository's Aspire 17 preview examples. Their HTTP endpoint still supplies
+the `PORT` environment variable used by the agent services.
 
 ## Prerequisites
 
 - .NET SDK **10.0.401** or a compatible .NET 10 SDK.
-- Aspire CLI **13.6.x** for the lifecycle commands below.
+- Aspire CLI matching the repository's **Aspire 17 preview** for the lifecycle commands below.
 - Node.js **20 or newer**, with npm. The preserved `package-lock.json` selects
   **npm**, not pnpm/yarn/bun. Validation used Node.js 24.18.0 and npm 11.16.0.
 - Python **3.13** (the weather sample pins this minor version), and
