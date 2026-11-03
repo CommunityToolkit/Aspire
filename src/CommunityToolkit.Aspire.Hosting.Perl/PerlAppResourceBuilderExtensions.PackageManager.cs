@@ -206,12 +206,15 @@ public static partial class PerlAppResourceBuilderExtensions
     /// <param name="skipTest">If <c>true</c>, skip running tests during installation.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{TResource}"/>.</returns>
     /// <remarks>
-    /// A child installer resource is created that runs before the main application starts.
-    /// If the module is already installed (verified via <c>perl -MModuleName -e 1</c>),
-    /// installation is skipped. The installer uses the active package manager —
-    /// <c>cpan</c> by default, or <c>cpanm</c> if <see cref="WithCpanMinus{TResource}"/>
-    /// was called.
-    /// In run mode, repeated calls for the same module on the same resource reuse the
+    /// In run mode, a child installer resource invokes the selected package manager before
+    /// the main application starts. No separate check is made to see whether the module is
+    /// already installed; the package manager may skip a module it considers up to date when
+    /// <paramref name="force"/> is <see langword="false"/>. When <paramref name="force"/>
+    /// is <see langword="true"/>, the installer passes the package manager's force option
+    /// (<c>--force</c> for <c>cpanm</c> or <c>-f</c> for <c>cpan</c>).
+    /// The installer uses <c>cpan</c> by default, or <c>cpanm</c> if
+    /// <see cref="WithCpanMinus{TResource}"/> was called.
+    /// Repeated calls in run mode for the same module on the same resource reuse the
     /// existing installer and its completion dependency. The installer retains the
     /// <paramref name="force"/> and <paramref name="skipTest"/> values from the first call.
     /// </remarks>
