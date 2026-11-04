@@ -16,7 +16,7 @@
     "@nx/js": "24.0.3",
     "@nx/react": "24.0.3",
     "@nx/vite": "23.1.1",
-    "@nx/web": "23.1.1",
+    "@nx/web": "24.0.3",
     "@nx/workspace": "23.1.1",
     "@swc-node/register": "~1.11.1",
     "@swc/cli": "~0.6.0",
