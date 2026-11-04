@@ -11,7 +11,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.8.0",
-    "@nx/eslint": "23.1.1",
+    "@nx/eslint": "24.0.3",
     "@nx/eslint-plugin": "24.0.3",
     "@nx/js": "24.0.3",
     "@nx/react": "24.0.3",
