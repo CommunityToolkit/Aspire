@@ -12,17 +12,17 @@
     "watch": "tsc --watch"
   },
   "dependencies": {
-    "vscode-jsonrpc": "^9.0.3"
+    "vscode-jsonrpc": "^8.2.1"
   },
   "engines": {
     "node": "^20.19.0 || ^22.13.0 || >=24"
   },
   "devDependencies": {
-    "@types/node": "^26.6.4",
+    "@types/node": "^26.6.6",
     "eslint": "^10.11.0",
     "nodemon": "^3.1.14",
     "tsx": "^4.23.15",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.70.1"
+    "typescript-eslint": "^8.72.1"
   }
 }

@@ -127,7 +127,9 @@ public class ResourceBuilderExtensionsTests
         var pubsub = builder.AddDaprPubSub("pubsub");
         
         // Act - Reference Dapr components through the sidecar (preferred approach)
-        var project = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA>("test")
+#pragma warning disable ASPIREDOTNETPROJECT001
+        var project = builder.AddDotnetProject("test", new Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA().ProjectPath)
+#pragma warning restore ASPIREDOTNETPROJECT001
             .WithDaprSidecar(sidecar => 
             {
                 sidecar.WithReference(stateStore);
@@ -200,6 +202,29 @@ public class ResourceBuilderExtensionsTests
         Assert.NotNull(annotation.ValueProvider);
         Assert.IsAssignableFrom<IValueProvider>(annotation.ValueProvider);
         Assert.Equal("redisHost", annotation.MetadataName);
+    }
+
+    [Fact]
+    public async Task WithMetadataUsingValueProviderConfiguresSecretStoreAuthInGeneratedYaml()
+    {
+        // Arrange
+        var builder = DistributedApplication.CreateBuilder();
+        var component = builder.AddDaprComponent("servicebus-pubsub-queue", "pubsub.azure.servicebus.queues")
+            .WithMetadata("connectionString", new TestValueProvider("Endpoint=sb://localhost"));
+
+        var resource = Assert.Single(builder.Resources.OfType<DaprComponentResource>());
+
+        // Act
+        var yaml = await DaprDistributedApplicationLifecycleHook.GetDaprComponent(resource, resource.Type);
+
+        // Assert
+        var schema = DaprComponentSchema.FromYaml(yaml);
+        Assert.NotNull(schema.Auth);
+        Assert.Equal("secretstore", schema.Auth.SecretStore);
+
+        var metadataItem = Assert.IsType<DaprComponentSpecMetadataSecret>(Assert.Single(schema.Spec.Metadata));
+        Assert.Equal("connectionString", metadataItem.Name);
+        Assert.Equal("SERVICEBUS_PUBSUB_QUEUE_CONNECTIONSTRING", metadataItem.SecretKeyRef.Key);
     }
 
     // Test helper class that implements IValueProvider

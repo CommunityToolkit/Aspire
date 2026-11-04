@@ -6,7 +6,7 @@ An Aspire hosting integration for [flagd](https://flagd.dev), a feature flag eva
 
 ### Prerequisites
 
--   .NET 8.0 or later
+-   .NET 10.0 or later
 -   Docker (for running the flagd container)
 
 ### Installation

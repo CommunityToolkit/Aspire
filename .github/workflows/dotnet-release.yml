@@ -113,6 +113,15 @@ jobs:
           files: |
             ./*.nupkg
 
+  bump-version:
+    needs: release
+    permissions:
+      contents: write
+      pull-requests: write
+    uses: ./.github/workflows/release-version-bump.yml
+    with:
+      release_tag: ${{ github.ref_name }}
+
   publish-nuget:
     needs: sign
     runs-on: ubuntu-latest

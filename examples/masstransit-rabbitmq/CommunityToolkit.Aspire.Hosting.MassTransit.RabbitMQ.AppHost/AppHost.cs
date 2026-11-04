@@ -6,10 +6,14 @@ var rmq = builder.AddRabbitMQ(
     .WithExternalHttpEndpoints()
     .WithManagementPlugin(port: 15672);
 
-var api = builder.AddProject<Projects.CommunityToolkit_Aspire_MassTransit_RabbitMQ_ApiService>("api")
+#pragma warning disable ASPIREDOTNETPROJECT001
+var api = builder.AddDotnetProject("api", new Projects.CommunityToolkit_Aspire_MassTransit_RabbitMQ_ApiService().ProjectPath)
+#pragma warning restore ASPIREDOTNETPROJECT001
     .WaitFor(rmq).WithReference(rmq);
 
-builder.AddProject<Projects.CommunityToolkit_Aspire_MassTransit_RabbitMQ_Publisher>("publisher")
+#pragma warning disable ASPIREDOTNETPROJECT001
+builder.AddDotnetProject("publisher", new Projects.CommunityToolkit_Aspire_MassTransit_RabbitMQ_Publisher().ProjectPath)
+#pragma warning restore ASPIREDOTNETPROJECT001
     .WaitFor(api).WaitFor(rmq).WithReference(rmq);
 
 builder.Build().Run();

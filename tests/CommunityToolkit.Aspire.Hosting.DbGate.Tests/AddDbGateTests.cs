@@ -261,6 +261,10 @@ public class AddDbGateTests
         envs.Remove("CONNECTIONS");
 
         Assert.Equal("mongodb1,mongodb2,postgres1,postgres2,redis1,redis2,sqlserver1,sqlserver2,mysql1,mysql2", CONNECTIONS);
+        var redis1Password = await redisResource1.PasswordParameter!.GetValueAsync(default);
+        var expectedRedis1Uri = $"rediss://:{Uri.EscapeDataString(redis1Password!)}@storage.dev.internal:10000";
+        var redis2Password = await redisResource2.PasswordParameter!.GetValueAsync(default);
+        var expectedRedis2Uri = $"rediss://:{Uri.EscapeDataString(redis2Password!)}@storage.dev.internal:10000";
 
         Assert.Collection(envs,
             item =>
@@ -360,15 +364,10 @@ public class AddDbGateTests
                 Assert.Equal("LABEL_redis1", item.Key);
                 Assert.Equal(redisResource1.Name, item.Value);
             },
-            async item =>
+            item =>
             {
-                var expectedRedisUrl = redisResource1.PasswordParameter switch
-                {
-                    IValueProvider parameter => $"rediss://:{await parameter.GetValueAsync(default)}@{redisResource1.Name}:{redisResource1.PrimaryEndpoint.TargetPort}",
-                    _ => $"rediss://{redisResource1.Name}:{redisResource1.PrimaryEndpoint.TargetPort}"
-                };
                 Assert.Equal("URL_redis1", item.Key);
-                Assert.Equal(expectedRedisUrl, item.Value);
+                Assert.Equal(expectedRedis1Uri, item.Value);
             },
             item =>
             {
@@ -380,15 +379,10 @@ public class AddDbGateTests
                 Assert.Equal("LABEL_redis2", item.Key);
                 Assert.Equal(redisResource2.Name, item.Value);
             },
-            async item =>
+            item =>
             {
-                var expectedRedisUrl = redisResource2.PasswordParameter switch
-                {
-                    IValueProvider parameter => $"rediss://:{await parameter.GetValueAsync(default)}@{redisResource2.Name}:{redisResource2.PrimaryEndpoint.TargetPort}",
-                    _ => $"rediss://{redisResource2.Name}:{redisResource2.PrimaryEndpoint.TargetPort}"
-                };
                 Assert.Equal("URL_redis2", item.Key);
-                Assert.Equal(expectedRedisUrl, item.Value);
+                Assert.Equal(expectedRedis2Uri, item.Value);
             },
             item =>
             {
@@ -529,6 +523,11 @@ public class AddDbGateTests
             var endpoint = resource.GetEndpoint("tcp").EndpointAnnotation;
             var ae = new AllocatedEndpoint(endpoint, "storage.dev.internal", 10000, EndpointBindingMode.SingleAddress, null, KnownNetworkIdentifiers.DefaultAspireContainerNetwork);
             endpoint.AllAllocatedEndpoints.AddOrUpdateAllocatedEndpoint(KnownNetworkIdentifiers.DefaultAspireContainerNetwork, ae);
+            if (resource is RedisResource)
+            {
+                endpoint.UriScheme = "rediss";
+                endpoint.TlsEnabled = true;
+            }
         }
     }
 

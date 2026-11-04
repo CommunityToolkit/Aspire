@@ -16,17 +16,23 @@ var pubSub = builder.AddDaprPubSub("pubsub")
                     .WaitFor(redis);
 
 
-builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA>("servicea")
+#pragma warning disable ASPIREDOTNETPROJECT001
+builder.AddDotnetProject("servicea", new Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA().ProjectPath)
+#pragma warning restore ASPIREDOTNETPROJECT001
        .PublishAsAzureContainerApp((i,c)=> { })
        .WithDaprSidecar(sidecar => sidecar.WithReference(stateStore).WithReference(pubSub))
        .WaitFor(redis);
 
-builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceB>("serviceb")
+#pragma warning disable ASPIREDOTNETPROJECT001
+builder.AddDotnetProject("serviceb", new Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceB().ProjectPath)
+#pragma warning restore ASPIREDOTNETPROJECT001
        .WithDaprSidecar(sidecar => sidecar.WithReference(pubSub))
        .WaitFor(redis);
 
 // console app with no appPort (sender only)
-builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceC>("servicec")
+#pragma warning disable ASPIREDOTNETPROJECT001
+builder.AddDotnetProject("servicec", new Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceC().ProjectPath)
+#pragma warning restore ASPIREDOTNETPROJECT001
        .WithDaprSidecar(sidecar => sidecar.WithReference(stateStore))
        .WaitFor(redis);
 

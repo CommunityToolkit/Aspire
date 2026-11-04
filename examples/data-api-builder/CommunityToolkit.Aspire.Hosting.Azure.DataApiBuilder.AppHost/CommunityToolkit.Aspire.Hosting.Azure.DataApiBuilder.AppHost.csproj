@@ -9,7 +9,9 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.SqlServer" />
+    <PackageReference Include="System.Security.Cryptography.Pkcs" />
     <PackageReference Include="AspNetCore.HealthChecks.SqlServer" />
+    <PackageReference Include="Aspire.Hosting.Dotnet" />
   </ItemGroup>
 
   <ItemGroup>

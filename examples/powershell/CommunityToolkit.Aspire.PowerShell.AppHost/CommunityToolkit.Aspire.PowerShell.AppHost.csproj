@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.Azure.Storage" />
+    <PackageReference Include="JsonSchema.Net" />
   </ItemGroup>
 
   <ItemGroup>

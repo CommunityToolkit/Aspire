@@ -1,4 +1,5 @@
 using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.Dotnet;
 using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Squad.Tests;
@@ -16,7 +17,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
 
         var model = fixture.App.Services.GetRequiredService<DistributedApplicationModel>();
         var apiApp = model.Resources
-            .OfType<ProjectResource>()
+            .OfType<DotnetProjectResource>()
             .Single(resource => resource.Name == resourceName);
 
         using HttpClient httpClient = new()

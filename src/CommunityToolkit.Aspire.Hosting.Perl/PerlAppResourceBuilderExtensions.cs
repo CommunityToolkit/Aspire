@@ -13,7 +13,6 @@ namespace Aspire.Hosting;
 /// </summary>
 public static partial class PerlAppResourceBuilderExtensions
 {
-    private const string DefaultPerlEnvironment = "perl";
     private const PerlPackageManager DefaultPackageManager = PerlPackageManager.Cpan;
 
     /// <summary>
@@ -52,7 +51,7 @@ public static partial class PerlAppResourceBuilderExtensions
     [AspireExport]
     public static IResourceBuilder<PerlAppResource> AddPerlScript(
         this IDistributedApplicationBuilder builder, [ResourceName] string resourceName, string appDirectory, string scriptName)
-        => AddPerlAppCore(builder, resourceName, appDirectory, EntrypointType.Script, scriptName, DefaultPerlEnvironment);
+        => AddPerlAppCore(builder, resourceName, appDirectory, EntrypointType.Script, scriptName);
 
     /// <summary>
     /// Adds a Perl API server resource (e.g., Mojolicious, Dancer2) to the application model.
@@ -92,7 +91,7 @@ public static partial class PerlAppResourceBuilderExtensions
     [AspireExport]
     public static IResourceBuilder<PerlAppResource> AddPerlApi(
         this IDistributedApplicationBuilder builder, [ResourceName] string resourceName, string appDirectory, string scriptName)
-        => AddPerlAppCore(builder, resourceName, appDirectory, EntrypointType.API, scriptName, DefaultPerlEnvironment, "daemon");
+        => AddPerlAppCore(builder, resourceName, appDirectory, EntrypointType.API, scriptName, "daemon");
 
     /// <summary>
     /// Adds a Perl module to the application model. The module is executed using
@@ -113,7 +112,7 @@ public static partial class PerlAppResourceBuilderExtensions
     [AspireExport]
     public static IResourceBuilder<PerlAppResource> AddPerlModule(
         this IDistributedApplicationBuilder builder, [ResourceName] string resourceName, string appDirectory, string moduleName)
-        => AddPerlAppCore(builder, resourceName, appDirectory, EntrypointType.Module, moduleName, DefaultPerlEnvironment);
+        => AddPerlAppCore(builder, resourceName, appDirectory, EntrypointType.Module, moduleName);
 
     /// <summary>
     /// Adds a Perl executable (compiled binary or PAR-packed application) to the application model.
@@ -134,7 +133,7 @@ public static partial class PerlAppResourceBuilderExtensions
     [AspireExport]
     public static IResourceBuilder<PerlAppResource> AddPerlExecutable(
         this IDistributedApplicationBuilder builder, [ResourceName] string resourceName, string appDirectory, string executablePath)
-        => AddPerlAppCore(builder, resourceName, appDirectory, EntrypointType.Executable, executablePath, DefaultPerlEnvironment);
+        => AddPerlAppCore(builder, resourceName, appDirectory, EntrypointType.Executable, executablePath);
 
 
     /// <summary>
@@ -148,18 +147,16 @@ public static partial class PerlAppResourceBuilderExtensions
     /// <param name="appDirectory">The application working directory path.</param>
     /// <param name="entrypointType">How the entrypoint should be invoked.</param>
     /// <param name="entrypoint">The script/module/executable entrypoint.</param>
-    /// <param name="virtualEnvironmentPath">Reserved environment path argument for future compatibility.</param>
     /// <param name="typeOfApi">Optional API subcommand such as <c>daemon</c>.</param>
     /// <returns>The configured Perl application resource builder.</returns>
     private static IResourceBuilder<PerlAppResource> AddPerlAppCore(
         IDistributedApplicationBuilder builder, string resourceName, string appDirectory, EntrypointType entrypointType,
-        string entrypoint, string virtualEnvironmentPath, string? typeOfApi = null)
+        string entrypoint, string? typeOfApi = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(resourceName);
         ArgumentNullException.ThrowIfNull(appDirectory);
         ArgumentException.ThrowIfNullOrEmpty(entrypoint);
-        ArgumentNullException.ThrowIfNull(virtualEnvironmentPath);
 
         // Resolve the app directory against the AppHost directory so behavior is
         // consistent between aspire run and integration test fixtures.
@@ -214,26 +211,40 @@ public static partial class PerlAppResourceBuilderExtensions
                 break;
         }
 
-        resourceBuilder.WithOtlpExporter();
+        resourceBuilder.WithOtlpExporterIfEndpointAvailable(OtlpProtocol.HttpJson);
         resourceBuilder.WithRequiredCommand("perl", "https://www.perl.org/get.html");
-        resourceBuilder.WithRequiredCommand("cpan", "https://metacpan.org/pod/CPAN");
 
-        // Configure OpenTelemetry exporters using environment variables
-        // https://opentelemetry.io/docs/specs/otel/configuration/sdk-environment-variables/#exporter-selection
-        // The Perl OpenTelemetry SDK defaults to JSON encoding when Google::ProtocolBuffers::Dynamic
-        // is not available. Using http/json avoids a silent protocol mismatch where the SDK sends
-        // JSON-encoded data with a protobuf content-type that the OTLP collector rejects.
+        // OpenTelemetry::Exporter::OTLP supports HTTP/JSON and HTTP/protobuf, not gRPC.
+        // HTTP/JSON avoids requiring Google::ProtocolBuffers::Dynamic for protobuf encoding, which can be difficult (though not impossible)to get on windows, specifically.
         resourceBuilder.WithEnvironment(context =>
         {
+            if (context.ExecutionContext.IsRunMode &&
+                !context.EnvironmentVariables.ContainsKey("OTEL_EXPORTER_OTLP_ENDPOINT"))
+            {
+                return;
+            }
+
             context.EnvironmentVariables["OTEL_TRACES_EXPORTER"] = "otlp";
             context.EnvironmentVariables["OTEL_LOGS_EXPORTER"] = "otlp";
             context.EnvironmentVariables["OTEL_METRICS_EXPORTER"] = "otlp";
-            context.EnvironmentVariables["OTEL_EXPORTER_OTLP_PROTOCOL"] = "http/protobuf";
 
-            context.EnvironmentVariables["OTEL_PERL_TRACES_EXPORTER"] = "otlp";
-            context.EnvironmentVariables["OTEL_PERL_LOGS_EXPORTER"] = "otlp";
-            context.EnvironmentVariables["OTEL_PERL_METRICS_EXPORTER"] = "otlp";
-            context.EnvironmentVariables["OTEL_PERL_EXPORTER_OTLP_PROTOCOL"] = "http/protobuf";
+            if (!context.ExecutionContext.IsRunMode)
+            {
+                context.EnvironmentVariables["OTEL_PERL_TRACES_EXPORTER"] = "otlp";
+                context.EnvironmentVariables["OTEL_PERL_LOGS_EXPORTER"] = "otlp";
+                context.EnvironmentVariables["OTEL_PERL_METRICS_EXPORTER"] = "otlp";
+                return;
+            }
+
+            // OpenTelemetry::Common reads OTEL_PERL_* before OTEL_*.
+            // Resolve OTEL_PERL_* from final OTEL_* values so later standard overrides still apply.
+            // Explicit OTEL_PERL_* values added later replace these mirrors.
+            MirrorPerlOtelVariable(context, "OTEL_TRACES_EXPORTER", "OTEL_PERL_TRACES_EXPORTER");
+            MirrorPerlOtelVariable(context, "OTEL_LOGS_EXPORTER", "OTEL_PERL_LOGS_EXPORTER");
+            MirrorPerlOtelVariable(context, "OTEL_METRICS_EXPORTER", "OTEL_PERL_METRICS_EXPORTER");
+            MirrorPerlOtelVariable(context, "OTEL_EXPORTER_OTLP_ENDPOINT", "OTEL_PERL_EXPORTER_OTLP_ENDPOINT");
+            MirrorPerlOtelVariable(context, "OTEL_EXPORTER_OTLP_PROTOCOL", "OTEL_PERL_EXPORTER_OTLP_PROTOCOL");
+            MirrorPerlOtelVariable(context, "OTEL_EXPORTER_OTLP_HEADERS", "OTEL_PERL_EXPORTER_OTLP_HEADERS");
         });
 
         if (builder.ExecutionContext.IsRunMode)
@@ -243,13 +254,9 @@ public static partial class PerlAppResourceBuilderExtensions
                 resourceBuilder.WithProjectDependencies();
             }
 
-            /* 
-             * Subscribe to BeforeStartEvent for this specific resource to wire up dependencies dynamically
-             * This allows methods like WithPip, WithUv, and WithVirtualEnvironment to add/remove resources 
-             * and the dependencies will be established based on which resources actually exist 
-             * Only do this in run mode since the installer and venv creator only run in run mode        
-             * https://github.com/dotnet/aspire/pull/12663/commits/c60eb2189bde0ae9b3b0dd03ec37a591103c7b63
-             * */
+            // Wire installer ordering at BeforeStartEvent instead of here so it reflects the installers that
+            // WithProjectDependencies, WithPackage, WithCpanMinus/WithCarton, and WithLocalLib end up creating,
+            // regardless of call order. Installers only exist in run mode.
             var resourceToSetup = resourceBuilder.Resource;
             builder.Eventing.Subscribe<BeforeStartEvent>((evt, ct) =>
             {
@@ -497,6 +504,7 @@ public static partial class PerlAppResourceBuilderExtensions
     /// variables that common Perl HTTP libraries respect.
     /// Sets <c>SSL_CERT_FILE</c> (IO::Socket::SSL / LWP), <c>PERL_LWP_SSL_CA_FILE</c> (LWP::UserAgent),
     /// and <c>MOJO_CA_FILE</c> (Mojolicious) to the certificate bundle path provided by Aspire.
+    /// Also configures package and project dependency installers using each resource's own certificate trust context.
     /// </summary>
     /// <typeparam name="TResource">The type of the Perl application resource.</typeparam>
     /// <param name="builder">The resource builder.</param>
@@ -515,22 +523,35 @@ public static partial class PerlAppResourceBuilderExtensions
 
         builder.Resource.Annotations.Add(new PerlCertificateTrustAnnotation());
 
-        builder.WithCertificateTrustConfiguration(context =>
-        {
-            if (context.CertificateBundlePath is { } bundlePath)
-            {
-                context.EnvironmentVariables["SSL_CERT_FILE"] = bundlePath;
-                context.EnvironmentVariables["PERL_LWP_SSL_CA_FILE"] = bundlePath;
-                context.EnvironmentVariables["MOJO_CA_FILE"] = bundlePath;
-            }
-
-            return Task.CompletedTask;
-        });
+        builder.WithCertificateTrustConfiguration(ConfigurePerlCertificateTrust);
 
         // Propagate cert trust env vars to any existing installer child resources
         TryAttachCertificateTrustToExistingInstallers(builder);
 
         return builder;
+    }
+
+    /// <summary>
+    /// Configures Perl SSL/TLS environment variables from the resource's certificate bundle.
+    /// </summary>
+    private static Task ConfigurePerlCertificateTrust(CertificateTrustConfigurationCallbackAnnotationContext context)
+    {
+        if (context.CertificateBundlePath is { } bundlePath)
+        {
+            context.EnvironmentVariables["SSL_CERT_FILE"] = bundlePath;
+            context.EnvironmentVariables["PERL_LWP_SSL_CA_FILE"] = bundlePath;
+            context.EnvironmentVariables["MOJO_CA_FILE"] = bundlePath;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Sets a Perl-specific OpenTelemetry variable to resolve from the final standard variable value.
+    /// </summary>
+    private static void MirrorPerlOtelVariable(EnvironmentCallbackContext context, string sourceName, string targetName)
+    {
+        context.EnvironmentVariables[targetName] = new PerlOtelEnvironmentVariableMirror(context.EnvironmentVariables, sourceName);
     }
 
     /// <summary>

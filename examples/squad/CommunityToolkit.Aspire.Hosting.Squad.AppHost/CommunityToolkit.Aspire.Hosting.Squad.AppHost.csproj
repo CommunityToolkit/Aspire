@@ -28,4 +28,7 @@
     <EmbeddedResource Remove="research-squad\**;dev-squad\**" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.Dotnet" />
+  </ItemGroup>
 </Project>

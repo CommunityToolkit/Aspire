@@ -91,6 +91,9 @@ namespace Aspire.Hosting
 
         [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.FlociAzureServiceBusResource> WithServiceBus(this ApplicationModel.IResourceBuilder<ApplicationModel.FlociAzureContainerResource> builder, string name = "servicebus", int? amqpPort = null, int? amqpTlsPort = null) { throw null; }
+
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.FlociAzureStorageResource> WithStorage(this ApplicationModel.IResourceBuilder<ApplicationModel.FlociAzureContainerResource> builder, string name = "storage") { throw null; }
     }
 }
 
@@ -136,6 +139,22 @@ namespace Aspire.Hosting.ApplicationModel
         public ReferenceExpression ConnectionStringExpression { get { throw null; } }
 
         public FlociAzureContainerResource Parent { get { throw null; } }
+
+        System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties() { throw null; }
+    }
+
+    [AspireExport(ExposeProperties = true)]
+    public partial class FlociAzureStorageResource : Resource, IResourceWithParent<FlociAzureContainerResource>, IResourceWithParent, IResource, IResourceWithConnectionString, IExpressionValue, IValueProvider, IManifestExpressionProvider, IValueWithReferences
+    {
+        public FlociAzureStorageResource(string name, FlociAzureContainerResource parent) : base(default!) { }
+
+        public string AccountName { get { throw null; } }
+
+        public ReferenceExpression ConnectionStringExpression { get { throw null; } }
+
+        public FlociAzureContainerResource Parent { get { throw null; } }
+
+        public ReferenceExpression ServiceEndpoint { get { throw null; } }
 
         System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties() { throw null; }
     }

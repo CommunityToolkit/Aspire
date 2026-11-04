@@ -12,4 +12,7 @@
     <ItemGroup>
     </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.Dotnet" />
+  </ItemGroup>
 </Project>

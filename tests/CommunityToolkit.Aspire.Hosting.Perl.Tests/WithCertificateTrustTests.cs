@@ -5,6 +5,11 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
+// SSL_CERT_FILE is process-wide, so these tests must not overlap other collections.
+[CollectionDefinition(nameof(WithCertificateTrustTests), DisableParallelization = true)]
+public class WithCertificateTrustTestsCollection;
+
+[Collection(nameof(WithCertificateTrustTests))]
 public class WithCertificateTrustTests
 {
     [Fact]
@@ -45,6 +50,9 @@ public class WithCertificateTrustTests
 
 #pragma warning disable CTASPIREPERL001
         builder.AddPerlScript("perl-app", "scripts", "app.pl")
+            .WithCpanMinus()
+            .WithPackage("Mojolicious")
+            .WithProjectDependencies()
             .WithPerlCertificateTrust()
             .WithPerlCertificateTrust();
 #pragma warning restore CTASPIREPERL001
@@ -52,60 +60,125 @@ public class WithCertificateTrustTests
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
+        Assert.Single(appModel.Resources.OfType<PerlAppResource>());
+        Assert.Equal(2, appModel.Resources.OfType<PerlModuleInstallerResource>().Count());
 
-        // Verify the marker annotation is present and singular
-        Assert.Single(resource.Annotations.OfType<CommunityToolkit.Aspire.Hosting.Perl.Annotations.PerlCertificateTrustAnnotation>());
-
-        var annotations = resource.Annotations
-            .OfType<CertificateTrustConfigurationCallbackAnnotation>()
-            .ToList();
-        Assert.Single(annotations);
+        foreach (var resource in appModel.Resources)
+        {
+            Assert.Single(resource.Annotations.OfType<PerlCertificateTrustAnnotation>());
+            Assert.Single(resource.Annotations.OfType<CertificateTrustConfigurationCallbackAnnotation>());
+        }
     }
 
     [Fact]
-    public void WithPerlCertificateTrust_PropagatesEnvVarsToInstallerChildResources()
+    public void Installers_WithoutPerlCertificateTrust_DoNotConfigureCertificateTrust()
     {
         var builder = DistributedApplication.CreateBuilder();
-
-#pragma warning disable CTASPIREPERL001
         builder.AddPerlScript("perl-app", "scripts", "app.pl")
             .WithCpanMinus()
             .WithPackage("Mojolicious")
-            .WithPerlCertificateTrust();
-#pragma warning restore CTASPIREPERL001
+            .WithProjectDependencies();
 
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var installerResource = Assert.Single(appModel.Resources.OfType<PerlModuleInstallerResource>());
-
-        // Verify the cert trust marker annotation was propagated to the installer
-        Assert.Single(installerResource.Annotations.OfType<CommunityToolkit.Aspire.Hosting.Perl.Annotations.PerlCertificateTrustAnnotation>());
-
-        // Verify exactly one env callback was added for cert trust
-        Assert.Single(installerResource.Annotations.OfType<EnvironmentCallbackAnnotation>());
+        var installers = appModel.Resources.OfType<PerlModuleInstallerResource>().ToList();
+        Assert.Equal(2, installers.Count);
+        Assert.All(installers, installer =>
+        {
+            Assert.Empty(installer.Annotations.OfType<PerlCertificateTrustAnnotation>());
+            Assert.Empty(installer.Annotations.OfType<CertificateTrustConfigurationCallbackAnnotation>());
+        });
     }
 
-    [Fact]
-    public void WithPerlCertificateTrust_BeforeWithPackage_StillPropagates()
+    [Theory]
+    [InlineData(false, false, null)]
+    [InlineData(true, false, null)]
+    [InlineData(false, true, null)]
+    [InlineData(true, true, null)]
+    [InlineData(false, false, "shell-ca-bundle.pem")]
+    [InlineData(true, false, "shell-ca-bundle.pem")]
+    [InlineData(false, true, "shell-ca-bundle.pem")]
+    [InlineData(true, true, "shell-ca-bundle.pem")]
+    public async Task WithPerlCertificateTrust_InstallersUseTheirCertificateContext(
+        bool certificateTrustFirst,
+        bool projectDependencies,
+        string? processCertificateFile)
     {
-        var builder = DistributedApplication.CreateBuilder();
+        var originalCertificateFile = Environment.GetEnvironmentVariable("SSL_CERT_FILE");
+        try
+        {
+            Environment.SetEnvironmentVariable("SSL_CERT_FILE", processCertificateFile);
+            Assert.Equal(processCertificateFile, Environment.GetEnvironmentVariable("SSL_CERT_FILE"));
+
+            var builder = DistributedApplication.CreateBuilder();
+            var perlApp = builder.AddPerlScript("perl-app", "scripts", "app.pl")
+                .WithCpanMinus();
 
 #pragma warning disable CTASPIREPERL001
-        builder.AddPerlScript("perl-app", "scripts", "app.pl")
-            .WithPerlCertificateTrust()
+            if (certificateTrustFirst)
+            {
+                perlApp.WithPerlCertificateTrust();
+            }
+
+            if (projectDependencies)
+            {
+                perlApp.WithProjectDependencies();
+            }
+            else
+            {
+                perlApp.WithPackage("Mojolicious");
+            }
+
+            if (!certificateTrustFirst)
+            {
+                perlApp.WithPerlCertificateTrust();
+            }
 #pragma warning restore CTASPIREPERL001
-            .WithCpanMinus()
-            .WithPackage("Mojolicious");
 
-        using var app = builder.Build();
+            using var app = builder.Build();
 
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var installerResource = Assert.Single(appModel.Resources.OfType<PerlModuleInstallerResource>());
+            var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+            var installerResource = Assert.Single(appModel.Resources.OfType<PerlModuleInstallerResource>());
 
-        // Verify the cert trust marker annotation was propagated even though
-        // WithPerlCertificateTrust() was called before WithPackage()
-        Assert.Single(installerResource.Annotations.OfType<CommunityToolkit.Aspire.Hosting.Perl.Annotations.PerlCertificateTrustAnnotation>());
+            foreach (var resource in new IResource[] { perlApp.Resource, installerResource })
+            {
+                var environment = new Dictionary<string, object>();
+                var certificateDirectory = Path.Combine(builder.AppHostDirectory, resource.Name, "certs");
+                var bundlePath = ReferenceExpression.Create($"{Path.Combine(certificateDirectory, "bundle.pem")}");
+                var certificateContext = new CertificateTrustConfigurationCallbackAnnotationContext
+                {
+                    ExecutionContext = builder.ExecutionContext,
+                    Resource = resource,
+                    Arguments = [],
+                    EnvironmentVariables = environment,
+                    CertificateBundlePath = bundlePath,
+                    CertificateDirectoriesPath = ReferenceExpression.Create($"{certificateDirectory}"),
+                    Scope = CertificateTrustScope.Override,
+                    CancellationToken = TestContext.Current.CancellationToken
+                };
+
+                foreach (var callback in resource.Annotations.OfType<CertificateTrustConfigurationCallbackAnnotation>())
+                {
+                    await callback.Callback(certificateContext);
+                }
+
+                var environmentContext = new EnvironmentCallbackContext(builder.ExecutionContext, environment);
+                foreach (var callback in resource.Annotations.OfType<EnvironmentCallbackAnnotation>())
+                {
+                    await callback.Callback(environmentContext);
+                }
+
+                Assert.All(new[] { "SSL_CERT_FILE", "PERL_LWP_SSL_CA_FILE", "MOJO_CA_FILE" }, variable =>
+                {
+                    Assert.True(environment.TryGetValue(variable, out var value), $"{resource.Name} is missing {variable}.");
+                    Assert.Same(bundlePath, value);
+                });
+            }
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("SSL_CERT_FILE", originalCertificateFile);
+        }
     }
 }
