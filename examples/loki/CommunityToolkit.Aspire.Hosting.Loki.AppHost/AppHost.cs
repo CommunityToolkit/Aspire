@@ -4,7 +4,9 @@ var loki = builder.AddLoki("loki")
 	.WithHttpHostPort(13100)
 	.WithGrpcHostPort(19096);
 
-builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Loki_Api>("api")
+#pragma warning disable ASPIREDOTNETPROJECT001
+builder.AddDotnetProject("api", new Projects.CommunityToolkit_Aspire_Hosting_Loki_Api().ProjectPath)
+#pragma warning restore ASPIREDOTNETPROJECT001
 	.WithReference(loki)
 	.WaitFor(loki);
 

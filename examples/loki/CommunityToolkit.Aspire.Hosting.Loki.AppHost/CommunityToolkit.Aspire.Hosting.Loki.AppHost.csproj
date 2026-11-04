@@ -11,4 +11,8 @@
     <ProjectReference Include="../../../src/CommunityToolkit.Aspire.Hosting.Loki/CommunityToolkit.Aspire.Hosting.Loki.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.Dotnet" />
+  </ItemGroup>
+
 </Project>

@@ -29,7 +29,7 @@ public static class LokiBuilderExtensions
             .WithImage(LokiContainerImageTags.Image, LokiContainerImageTags.Tag)
             .WithImageRegistry(LokiContainerImageTags.Registry)
             .WithHttpEndpoint(targetPort: 3100, name: LokiResource.HttpEndpointName)
-            .WithEndpoint(targetPort: 9096, name: LokiResource.GrpcEndpointName, scheme: "http")
+            .WithEndpoint(targetPort: 9095, name: LokiResource.GrpcEndpointName, scheme: "http")
             .WithEndpoint(LokiResource.GrpcEndpointName, endpoint => endpoint.Transport = "http2")
             .WithHttpHealthCheck("/ready", endpointName: LokiResource.HttpEndpointName)
             .WithArgs("-config.file=/etc/loki/local-config.yaml")

@@ -52,7 +52,7 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
         var grpc = loki.Resource.Annotations.OfType<EndpointAnnotation>().Single(endpoint => endpoint.Name == "grpc");
         Assert.Equal("http", grpc.UriScheme);
         Assert.Equal("http2", grpc.Transport);
-        Assert.Equal(9096, grpc.TargetPort);
+        Assert.Equal(9095, grpc.TargetPort);
         Assert.Equal(grpcPort, grpc.Port);
         Assert.True(grpc.IsProxied);
         Assert.Empty(loki.Resource.Annotations.OfType<ContainerMountAnnotation>());
@@ -267,7 +267,7 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
         var bindings = resource.GetProperty("bindings");
         Assert.Equal(3100, bindings.GetProperty("http").GetProperty("targetPort").GetInt32());
         Assert.Equal("http", bindings.GetProperty("http").GetProperty("scheme").GetString());
-        Assert.Equal(9096, bindings.GetProperty("grpc").GetProperty("targetPort").GetInt32());
+        Assert.Equal(9095, bindings.GetProperty("grpc").GetProperty("targetPort").GetInt32());
         Assert.Equal("http", bindings.GetProperty("grpc").GetProperty("scheme").GetString());
         Assert.Equal("http2", bindings.GetProperty("grpc").GetProperty("transport").GetString());
         if (persistData)
