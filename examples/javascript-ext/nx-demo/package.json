@@ -13,7 +13,7 @@
     "@eslint/js": "^9.8.0",
     "@nx/eslint": "23.1.1",
     "@nx/eslint-plugin": "24.0.3",
-    "@nx/js": "23.3.0",
+    "@nx/js": "24.0.3",
     "@nx/react": "24.0.3",
     "@nx/vite": "23.1.1",
     "@nx/web": "23.1.1",
