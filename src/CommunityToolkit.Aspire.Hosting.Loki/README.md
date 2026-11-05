@@ -39,7 +39,6 @@ var loki = builder.AddLoki("loki")
 
 builder.Build().Run();
 ```
-
 Configuration files are copied to `/etc/loki/local-config.yaml` for local runs and publishing. Keep custom storage paths under `/loki` and listeners on container ports 3100 (HTTP) and 9095 (gRPC). Host ports are randomly assigned unless configured.
 
 Use `.WithDataBindMount("./loki-data")` instead of `.WithDataVolume()` for host storage. The directory must be writable by the container user (UID 10001).
