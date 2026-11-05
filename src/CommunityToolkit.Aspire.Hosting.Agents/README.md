@@ -153,11 +153,32 @@ referenced parameter schemas use a raw-JSON dialog so values retain their JSON
 types. Canceling either dialog cancels the invocation and still terminates the
 MCP session. Tool responses must match the invocation's JSON-RPC request ID.
 
-The commands contain a limited MCP Streamable HTTP client: initialization,
-paginated tool discovery, JSON/SSE tool responses, and session termination, plus
-dashboard input controls. This is not a general-purpose MCP SDK: transports such
-as stdio, authentication flows, and other MCP client capabilities are outside its
-scope. See [CTASPIREAGENTS001](../../docs/diagnostics.md#ctaspireagents001).
+The commands use the official `ModelContextProtocol.Core` SDK for Streamable HTTP
+initialization, JSON/SSE handling, request correlation, and session termination.
+Dashboard input controls and guarded paginated tool discovery remain in this
+integration. Each invocation resolves the endpoint again and owns a new session.
+Tool calls have no fixed timeout and honor command cancellation. SDK-issued
+session termination has an independent five-second timeout; cleanup failures are
+logged without replacing the command result. OAuth is not configured.
+Transports such as stdio and other MCP client capabilities remain outside the
+commands' scope. See [CTASPIREAGENTS001](../../docs/diagnostics.md#ctaspireagents001).
+
+Failures appear in dashboard command notifications, with available SDK or tool
+details under **View response**. Resource console logs contain the command outcome
+and cleanup warnings, not raw tool-response bodies. These commands do not configure
+OpenTelemetry: dashboard traces require instrumentation and export from the AppHost
+or MCP server. Traces do not automatically recover response bodies or error data
+discarded by the SDK.
+
+**Known SDK limitations:** These commands are developer tools, not a durable agent client.
+SDK 1.4.1 does not retain the session ID when the initialization response cannot
+be parsed, so that failure cannot terminate the server session. Its transport also
+does not dispose responses when parsing or correlation fails. Malformed JSON/SSE
+bodies are replaced by SDK diagnostics rather than returned verbatim. Tests tagged
+`SdkGap` characterize these SDK failure paths rather than assert cleanup parity.
+Successful results retain the JSON-RPC envelope and raw
+tool content; protocol errors retain code/message, but not arbitrary error data.
+The SDK requires correct JSON/SSE content types and complete SSE event framing.
 
 ## Additional documentation
 

@@ -10,6 +10,9 @@ using System.Text.Json.Nodes;
 using Aspire.Hosting.ApplicationModel;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using ModelContextProtocol;
+using ModelContextProtocol.Client;
+using ModelContextProtocol.Protocol;
 
 namespace Aspire.Hosting;
 
@@ -189,26 +192,72 @@ public static class McpToolCommandResourceBuilderExtensions
 
             using var httpClient = context.Services.GetRequiredService<IHttpClientFactory>().CreateClient(string.Empty);
             httpClient.Timeout = Timeout.InfiniteTimeSpan;
-            using var request = new HttpRequestMessage(HttpMethod.Post, uri);
+            using var transportClient = new HttpClient(new McpCleanupHandler(
+                httpClient, context.Services.GetRequiredService<ResourceLoggerService>().GetLogger(context.ResourceName)))
+            {
+                Timeout = Timeout.InfiniteTimeSpan
+            };
+            await using var transport = new HttpClientTransport(new HttpClientTransportOptions
+            {
+                Endpoint = uri,
+                Name = "Aspire Dashboard",
+                TransportMode = HttpTransportMode.StreamableHttp,
+                OwnsSession = true
+            }, transportClient);
+            await using var client = await McpClient.CreateAsync(transport, new McpClientOptions
+            {
+                ClientInfo = new Implementation { Name = "Aspire Dashboard", Version = "1.0" },
+                InitializationTimeout = Timeout.InfiniteTimeSpan
+            }, cancellationToken: context.CancellationToken).ConfigureAwait(true);
             var requestContext = new McpToolCommandContext(
-                context.Services, context.ResourceName, context.CancellationToken, httpClient, context.Arguments, request);
-            var session = new McpSession();
+                context.Services, context.CancellationToken, context.Arguments);
+            var tools = await ReadAllMcpToolsAsync(client, context.CancellationToken).ConfigureAwait(true);
+            if (tools.Count == 0)
+            {
+                throw new InvalidOperationException("MCP server did not return any tools.");
+            }
 
-            // Own the entire invocation so preparation and transport failures also clean up the session.
+            var (selectedTool, arguments) = await GetMcpToolCallAsync(requestContext, tools).ConfigureAwait(true);
             try
             {
-                var requestId = await PrepareMcpToolCallRequestAsync(requestContext, session).ConfigureAwait(true);
-                using var response = await httpClient.SendAsync(request, context.CancellationToken).ConfigureAwait(true);
-                return await GetMcpCommandResultAsync(requestContext, response, requestId).ConfigureAwait(true);
+                // Keep the result as JSON so the dashboard preserves unknown content types and metadata.
+                var response = await client.SendRequestAsync(new JsonRpcRequest
+                {
+                    Id = new RequestId(Guid.NewGuid().ToString("N")),
+                    Method = "tools/call",
+                    Params = new JsonObject { ["name"] = selectedTool.Name, ["arguments"] = arguments }
+                }, context.CancellationToken).ConfigureAwait(true);
+                context.CancellationToken.ThrowIfCancellationRequested();
+                return GetMcpCommandResult(response);
             }
-            finally
+            catch (McpProtocolException ex)
             {
-                await TerminateMcpSessionAsync(requestContext, session).ConfigureAwait(true);
+                return CommandResults.Failure(
+                    "MCP tool call returned a JSON-RPC error.",
+                    JsonSerializer.Serialize(new { code = (int)ex.ErrorCode, message = ex.Message }, s_indentedJsonOptions),
+                    CommandResultFormat.Json);
             }
         }
         catch (OperationCanceledException ex) when (ex is McpDialogCanceledException || context.CancellationToken.IsCancellationRequested)
         {
             return CommandResults.Canceled();
+        }
+        catch (HttpRequestException ex)
+        {
+            return CommandResults.Failure(
+                ex.StatusCode is { } status
+                    ? $"MCP request failed with HTTP status {(int)status} ({status})."
+                    : "MCP transport request failed.",
+                ex.Message,
+                CommandResultFormat.Text);
+        }
+        catch (McpException ex)
+        {
+            return CommandResults.Failure("MCP protocol request failed.", ex.Message, CommandResultFormat.Text);
+        }
+        catch (JsonException ex)
+        {
+            return CommandResults.Failure("MCP server returned invalid JSON.", ex.Message, CommandResultFormat.Text);
         }
         catch (Exception ex)
         {
@@ -216,102 +265,19 @@ public static class McpToolCommandResourceBuilderExtensions
         }
     }
 
-    private static async Task TerminateMcpSessionAsync(McpToolCommandContext ctx, McpSession session)
-    {
-        if (string.IsNullOrWhiteSpace(session.Id))
-        {
-            return;
-        }
-
-        try
-        {
-            // Cleanup must still run after a canceled command, but must not hang shutdown.
-            using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-            using var request = new HttpRequestMessage(HttpMethod.Delete, ctx.Request.RequestUri);
-            request.Headers.Add("Mcp-Session-Id", session.Id);
-            if (!string.IsNullOrWhiteSpace(session.ProtocolVersion))
-            {
-                request.Headers.Add("MCP-Protocol-Version", session.ProtocolVersion);
-            }
-
-            using var response = await ctx.HttpClient.SendAsync(request, cancellation.Token).ConfigureAwait(true);
-            // Servers may decline explicit session termination with 405.
-            // https://modelcontextprotocol.io/specification/2025-06-18/basic/transports#session-management
-            if (response.StatusCode != HttpStatusCode.MethodNotAllowed)
-            {
-                response.EnsureSuccessStatusCode();
-            }
-        }
-        catch (Exception ex) when (ex is HttpRequestException or OperationCanceledException)
-        {
-            // Preserve the tool/preparation result; cleanup errors belong in the resource log.
-            ctx.Services.GetRequiredService<ResourceLoggerService>().GetLogger(ctx.ResourceName)
-                .LogWarning(ex, "Could not terminate the MCP session.");
-        }
-    }
-
-    private static async Task<string> PrepareMcpToolCallRequestAsync(McpToolCommandContext ctx, McpSession session)
-    {
-        var initializeRequest = CreateMcpInitializeRequest();
-        using var initializeMessage = new HttpRequestMessage(HttpMethod.Post, ctx.Request.RequestUri);
-        ConfigureMcpRequest(initializeMessage, initializeRequest, sessionId: null, protocolVersion: null);
-        using var initializeHttpResponse = await ctx.HttpClient.SendAsync(initializeMessage, ctx.CancellationToken).ConfigureAwait(true);
-        // Capture the assigned session before parsing so even an invalid initialize payload is cleaned up.
-        session.Id = initializeHttpResponse.Headers.TryGetValues("Mcp-Session-Id", out var sessionIds) ? sessionIds.FirstOrDefault() : null;
-        var initializePayload = await ReadMcpJsonRpcPayloadAsync(initializeHttpResponse, initializeRequest["id"], ctx.CancellationToken).ConfigureAwait(true);
-        var sessionId = session.Id;
-        var protocolVersion = session.ProtocolVersion = initializePayload["result"]?["protocolVersion"]?.GetValue<string>()
-            ?? throw new InvalidOperationException("MCP server did not return a negotiated protocol version.");
-
-        await SendMcpJsonRpcNotificationAsync(ctx, "notifications/initialized", sessionId, protocolVersion).ConfigureAwait(true);
-
-        var tools = await ReadAllMcpToolsAsync(ctx, sessionId, protocolVersion).ConfigureAwait(true);
-        if (tools.Count == 0)
-        {
-            throw new InvalidOperationException("MCP server did not return any tools.");
-        }
-
-        var (selectedTool, arguments) = await GetMcpToolCallAsync(ctx, tools).ConfigureAwait(true);
-
-        var request = CreateMcpJsonRpcRequest(
-            "tools/call",
-            new JsonObject
-            {
-                ["name"] = selectedTool.Name,
-                ["arguments"] = arguments
-            });
-        ConfigureMcpRequest(ctx.Request, request, sessionId, protocolVersion);
-        return request["id"]!.GetValue<string>();
-    }
-
     private static async Task<IReadOnlyList<McpTool>> ReadAllMcpToolsAsync(
-        McpToolCommandContext ctx,
-        string? sessionId,
-        string protocolVersion)
+        McpClient client,
+        CancellationToken cancellationToken)
     {
         var tools = new List<McpTool>();
         var seenCursors = new HashSet<string>(StringComparer.Ordinal);
         string? cursor = null;
         do
         {
-            var parameters = new JsonObject();
-            if (cursor is not null)
-            {
-                parameters["cursor"] = cursor;
-            }
-
-            var response = await SendMcpJsonRpcRequestAsync(
-                ctx,
-                CreateMcpJsonRpcRequest("tools/list", parameters),
-                sessionId,
-                protocolVersion).ConfigureAwait(true);
-            using (response.Response)
-            {
-                tools.AddRange(ReadMcpTools(response.Payload));
-                cursor = response.Payload["result"]?["nextCursor"]?.GetValue<string>() is { Length: > 0 } nextCursor
-                    ? nextCursor
-                    : null;
-            }
+            var page = await client.ListToolsAsync(new ListToolsRequestParams { Cursor = cursor }, cancellationToken).ConfigureAwait(true);
+            tools.AddRange(page.Tools.Where(tool => !string.IsNullOrEmpty(tool.Name)).Select(tool =>
+                new McpTool(tool.Name, tool.Description, JsonSerializer.SerializeToNode(tool.InputSchema) as JsonObject)));
+            cursor = page.NextCursor is { Length: > 0 } nextCursor ? nextCursor : null;
 
             if (cursor is not null && !seenCursors.Add(cursor))
             {
@@ -350,221 +316,31 @@ public static class McpToolCommandResourceBuilderExtensions
         };
     }
 
-    private static async Task<ExecuteCommandResult> GetMcpCommandResultAsync(McpToolCommandContext ctx, HttpResponseMessage response, string requestId)
+    private static ExecuteCommandResult GetMcpCommandResult(JsonRpcResponse response)
     {
-        ctx.CancellationToken.ThrowIfCancellationRequested();
-
-        var responseBody = await response.Content.ReadAsStringAsync(ctx.CancellationToken).ConfigureAwait(true);
-        if (!response.IsSuccessStatusCode)
+        if (response.Result is JsonObject toolResult &&
+            toolResult["content"] is JsonArray &&
+            (toolResult["isError"] is null || toolResult["isError"] is JsonValue isErrorValue && isErrorValue.TryGetValue<bool>(out _)))
         {
-            return CommandResults.Failure(
-                $"MCP tool call failed with status code {(int)response.StatusCode} ({response.StatusCode}).",
-                responseBody,
-                CommandResultFormat.Text);
-        }
-
-        var expectedId = JsonValue.Create(requestId);
-        var result = TryExtractServerSentEventResponseData(responseBody, expectedId, out var sseData) ? sseData : responseBody;
-        try
-        {
-            if (JsonNode.Parse(result) is JsonObject responseJson)
+            if (toolResult["isError"]?.GetValue<bool>() is true)
             {
-                if ((responseJson["error"] is not null ||
-                    responseJson["result"] is JsonObject resultObject && resultObject["content"] is JsonArray) &&
-                    !JsonNode.DeepEquals(responseJson["id"], expectedId))
-                {
-                    return CommandResults.Failure(
-                        "MCP server returned a JSON-RPC tool response with a missing or unexpected id.",
-                        responseBody,
-                        CommandResultFormat.Text);
-                }
-
-                if (responseJson["error"] is { } error)
-                {
-                    return CommandResults.Failure(
-                        "MCP tool call returned a JSON-RPC error.",
-                        JsonSerializer.Serialize(error, s_indentedJsonOptions),
-                        CommandResultFormat.Json);
-                }
-
-                if (responseJson["result"] is JsonObject toolResult &&
-                    toolResult["content"] is JsonArray &&
-                    (toolResult["isError"] is null || toolResult["isError"] is JsonValue isErrorValue && isErrorValue.TryGetValue<bool>(out _)))
-                {
-                    if (toolResult["isError"]?.GetValue<bool>() is true)
-                    {
-                        return CommandResults.Failure(
-                            "MCP tool reported an error.",
-                            JsonSerializer.Serialize(toolResult, s_indentedJsonOptions),
-                            CommandResultFormat.Json);
-                    }
-
-                    return CommandResults.Success(
-                        message: "MCP tool response received.",
-                        result: JsonSerializer.Serialize(responseJson, s_indentedJsonOptions),
-                        resultFormat: CommandResultFormat.Json,
-                        displayImmediately: true);
-                }
+                return CommandResults.Failure(
+                    "MCP tool reported an error.",
+                    JsonSerializer.Serialize(toolResult, s_indentedJsonOptions),
+                    CommandResultFormat.Json);
             }
-        }
-        catch (JsonException)
-        {
-            // A proxy error page or truncated JSON body can arrive with a successful HTTP status.
-            // Preserve the original body (including SSE framing) in the failure for diagnostics.
+
+            return CommandResults.Success(
+                message: "MCP tool response received.",
+                result: JsonSerializer.Serialize(response, s_indentedJsonOptions),
+                resultFormat: CommandResultFormat.Json,
+                displayImmediately: true);
         }
 
         return CommandResults.Failure(
             "MCP server returned an empty or invalid JSON-RPC tool response.",
-            responseBody,
-            CommandResultFormat.Text);
-    }
-
-    private static JsonObject CreateMcpInitializeRequest()
-    {
-        return CreateMcpJsonRpcRequest(
-            "initialize",
-            new JsonObject
-            {
-                ["protocolVersion"] = "2025-06-18",
-                ["capabilities"] = new JsonObject(),
-                ["clientInfo"] = new JsonObject
-                {
-                    ["name"] = "Aspire Dashboard",
-                    ["version"] = "1.0"
-                }
-            });
-    }
-
-    private static JsonObject CreateMcpJsonRpcRequest(string method, JsonObject parameters)
-    {
-        return new JsonObject
-        {
-            ["jsonrpc"] = "2.0",
-            ["id"] = Guid.NewGuid().ToString("N"),
-            ["method"] = method,
-            ["params"] = parameters
-        };
-    }
-
-    private static JsonObject CreateMcpJsonRpcNotification(string method)
-    {
-        return new JsonObject
-        {
-            ["jsonrpc"] = "2.0",
-            ["method"] = method
-        };
-    }
-
-    private static async Task<(HttpResponseMessage Response, JsonObject Payload)> SendMcpJsonRpcRequestAsync(
-        McpToolCommandContext ctx,
-        JsonObject request,
-        string? sessionId,
-        string? protocolVersion)
-    {
-        using var requestMessage = new HttpRequestMessage(HttpMethod.Post, ctx.Request.RequestUri);
-        ConfigureMcpRequest(requestMessage, request, sessionId, protocolVersion);
-
-        var response = await ctx.HttpClient.SendAsync(requestMessage, ctx.CancellationToken).ConfigureAwait(true);
-        try
-        {
-            var payload = await ReadMcpJsonRpcPayloadAsync(response, request["id"], ctx.CancellationToken).ConfigureAwait(true);
-            return (response, payload);
-        }
-        catch
-        {
-            response.Dispose();
-            throw;
-        }
-    }
-
-    private static async Task SendMcpJsonRpcNotificationAsync(
-        McpToolCommandContext ctx,
-        string method,
-        string? sessionId,
-        string protocolVersion)
-    {
-        using var requestMessage = new HttpRequestMessage(HttpMethod.Post, ctx.Request.RequestUri);
-        ConfigureMcpRequest(requestMessage, CreateMcpJsonRpcNotification(method), sessionId, protocolVersion);
-
-        using var response = await ctx.HttpClient.SendAsync(requestMessage, ctx.CancellationToken).ConfigureAwait(true);
-        if (!response.IsSuccessStatusCode)
-        {
-            var errorPayload = await response.Content.ReadAsStringAsync(ctx.CancellationToken).ConfigureAwait(true);
-            throw new InvalidOperationException($"MCP notification '{method}' failed with status code {(int)response.StatusCode} ({response.StatusCode}): {errorPayload}");
-        }
-    }
-
-    private static void ConfigureMcpRequest(
-        HttpRequestMessage request,
-        JsonObject payload,
-        string? sessionId,
-        string? protocolVersion)
-    {
-        request.Headers.Accept.ParseAdd("application/json");
-        request.Headers.Accept.ParseAdd("text/event-stream");
-        if (!string.IsNullOrWhiteSpace(sessionId))
-        {
-            request.Headers.Add("Mcp-Session-Id", sessionId);
-        }
-
-        if (!string.IsNullOrWhiteSpace(protocolVersion))
-        {
-            request.Headers.Add("MCP-Protocol-Version", protocolVersion);
-        }
-
-        request.Content = new StringContent(payload.ToString(), Encoding.UTF8, "application/json");
-    }
-
-    private static async Task<JsonObject> ReadMcpJsonRpcPayloadAsync(
-        HttpResponseMessage response,
-        JsonNode? expectedId,
-        CancellationToken cancellationToken)
-    {
-        var responseBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(true);
-        if (!response.IsSuccessStatusCode)
-        {
-            throw new InvalidOperationException($"MCP request failed with status code {(int)response.StatusCode} ({response.StatusCode}): {responseBody}");
-        }
-
-        var payload = TryExtractServerSentEventResponseData(responseBody, expectedId, out var sseData) ? sseData : responseBody;
-        var responseJson = JsonNode.Parse(payload) as JsonObject
-            ?? throw new InvalidOperationException("MCP server returned an empty or invalid JSON-RPC response.");
-        if (!JsonNode.DeepEquals(responseJson["id"], expectedId))
-        {
-            throw new InvalidOperationException("MCP server returned a JSON-RPC response with an unexpected id.");
-        }
-
-        if (responseJson["error"] is { } error)
-        {
-            throw new InvalidOperationException($"MCP server returned a JSON-RPC error: {error.ToJsonString()}");
-        }
-
-        return responseJson;
-    }
-
-    private static IReadOnlyList<McpTool> ReadMcpTools(JsonObject payload)
-    {
-        var tools = payload["result"]?["tools"] as JsonArray;
-        if (tools is null)
-        {
-            return [];
-        }
-
-        var result = new List<McpTool>();
-        foreach (var toolNode in tools)
-        {
-            if (toolNode is not JsonObject tool || tool["name"]?.GetValue<string>() is not { Length: > 0 } name)
-            {
-                continue;
-            }
-
-            result.Add(new McpTool(
-                name,
-                tool["description"]?.GetValue<string>(),
-                tool["inputSchema"] as JsonObject));
-        }
-
-        return result;
+            JsonSerializer.Serialize(response, s_indentedJsonOptions),
+            CommandResultFormat.Json);
     }
 
     private static McpTool GetSelectedMcpTool(InteractionInputCollection arguments, IReadOnlyList<McpTool> tools)
@@ -1048,97 +824,53 @@ public static class McpToolCommandResourceBuilderExtensions
         }
     }
 
-    private static bool TryExtractServerSentEventResponseData(string responseBody, JsonNode? expectedId, out string data)
+    private sealed class McpCleanupHandler(HttpClient httpClient, ILogger logger) : HttpMessageHandler
     {
-        // MCP Streamable HTTP can send notifications before the matching response:
-        //   event: message
-        //   data: {"jsonrpc":"2.0","method":"notifications/progress","params":{...}}
-        //
-        //   event: message
-        //   data: {"jsonrpc":"2.0","id":"...","result":{...}}
-        // Join consecutive data lines within each event and return only a JSON-RPC response
-        // whose id matches the request. When the caller does not have the request id, return
-        // the first response-shaped event and skip notifications without an id and server
-        // requests that contain both an id and a method.
-        using var reader = new StringReader(responseBody);
-        var builder = new StringBuilder();
-        string? line;
-        while ((line = reader.ReadLine()) is not null)
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            if (line.Length == 0)
+            // HttpClient cannot send the same message twice. Forward through the configured
+            // AppHost client without bypassing its default headers or message handlers.
+            using var forwarded = new HttpRequestMessage(request.Method, request.RequestUri)
             {
-                if (TryUseEventData(builder, expectedId, out data))
+                Content = request.Content,
+                Version = request.Version,
+                VersionPolicy = request.VersionPolicy
+            };
+            foreach (var header in request.Headers)
+            {
+                forwarded.Headers.TryAddWithoutValidation(header.Key, header.Value);
+            }
+
+            if (request.Method != HttpMethod.Delete)
+            {
+                return await httpClient.SendAsync(forwarded, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+            }
+
+            // The SDK owns DELETE, but does not bound it or report unsuccessful status codes.
+            using var cleanup = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            try
+            {
+                var response = await httpClient.SendAsync(forwarded, HttpCompletionOption.ResponseHeadersRead, cleanup.Token).ConfigureAwait(false);
+                if (!response.IsSuccessStatusCode && response.StatusCode != HttpStatusCode.MethodNotAllowed)
                 {
-                    return true;
+                    logger.LogWarning("Could not terminate the MCP session. HTTP status: {StatusCode}.", (int)response.StatusCode);
                 }
 
-                builder.Clear();
-                continue;
+                return response;
             }
-
-            if (!line.StartsWith("data:", StringComparison.Ordinal))
+            catch (Exception ex) when (ex is HttpRequestException or OperationCanceledException)
             {
-                continue;
+                // Do not log request URLs, headers, bodies, or server-controlled exception messages.
+                logger.LogWarning("Could not terminate the MCP session. Failure type: {FailureType}.", ex.GetType().Name);
+                throw;
             }
-
-            var value = line["data:".Length..];
-            if (value.StartsWith(' '))
-            {
-                value = value[1..];
-            }
-
-            if (builder.Length > 0)
-            {
-                builder.Append('\n');
-            }
-
-            builder.Append(value);
-        }
-
-        return TryUseEventData(builder, expectedId, out data);
-    }
-
-    private static bool TryUseEventData(StringBuilder builder, JsonNode? expectedId, out string data)
-    {
-        data = string.Empty;
-        if (builder.Length == 0)
-        {
-            return false;
-        }
-
-        try
-        {
-            if (JsonNode.Parse(builder.ToString()) is not JsonObject payload ||
-                payload["id"] is null ||
-                payload["method"] is not null ||
-                expectedId is not null && !JsonNode.DeepEquals(payload["id"], expectedId))
-            {
-                return false;
-            }
-
-            data = builder.ToString();
-            return true;
-        }
-        catch (JsonException)
-        {
-            return false;
         }
     }
 
     private sealed record McpToolCommandContext(
         IServiceProvider Services,
-        string ResourceName,
         CancellationToken CancellationToken,
-        HttpClient HttpClient,
-        InteractionInputCollection Arguments,
-        HttpRequestMessage Request);
-
-    private sealed class McpSession
-    {
-        public string? Id { get; set; }
-
-        public string? ProtocolVersion { get; set; }
-    }
+        InteractionInputCollection Arguments);
 
     private sealed class McpDialogCanceledException(string message) : OperationCanceledException(message);
 

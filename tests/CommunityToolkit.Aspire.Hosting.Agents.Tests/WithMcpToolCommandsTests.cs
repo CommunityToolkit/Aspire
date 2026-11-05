@@ -17,7 +17,7 @@ namespace CommunityToolkit.Aspire.Hosting.Agents.Tests;
 #pragma warning disable ASPIREINTERACTION001 // InteractionInput is used to test dashboard command arguments.
 
 [Trait("Partition", "5")]
-public class WithMcpToolCommandsTests
+public partial class WithMcpToolCommandsTests
 {
     [Fact]
     public void WithMcpServer_OnlyAddsMetadata()
@@ -604,7 +604,7 @@ public class WithMcpToolCommandsTests
     [InlineData("event: message\ndata: invalid-json\n\n")]
     [InlineData("event: message\ndata: {\"jsonrpc\":\"2.0\",\"id\":\"tool-call\"}\n\n")]
     [InlineData("event: message\ndata: {\"jsonrpc\":\"2.0\",\"id\":\"tool-call\",\"result\":{}}\n\n")]
-    public async Task WithMcpToolCommands_InvokeCommandRejectsMalformedResponseAndPreservesBody(string responseBody)
+    public async Task WithMcpToolCommands_InvokeCommandRejectsMalformedResponse(string responseBody)
     {
         using var appBuilder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
         HttpResponseMessage? invalidResponse = null;
@@ -613,7 +613,11 @@ public class WithMcpToolCommandsTests
             ToolResponse = payload =>
             {
                 responseBody = responseBody.Replace("tool-call", payload["id"]!.GetValue<string>(), StringComparison.Ordinal);
-                return invalidResponse = new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(responseBody) };
+                return invalidResponse = new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(responseBody, Encoding.UTF8,
+                        responseBody.StartsWith("event:", StringComparison.Ordinal) ? "text/event-stream" : "application/json")
+                };
             }
         };
         appBuilder.Services.AddHttpClient(string.Empty).ConfigurePrimaryHttpMessageHandler(() => handler);
@@ -626,13 +630,17 @@ public class WithMcpToolCommandsTests
             container.Resource, "app-mcp-call-tool", CreateMcpArguments("get_weather", "{}")).DefaultTimeout();
 
         Assert.False(result.Success);
-        Assert.Equal("MCP server returned an empty or invalid JSON-RPC tool response.", result.Message);
+        Assert.Contains(result.Message, new[]
+        {
+            "MCP protocol request failed.",
+            "MCP server returned an empty or invalid JSON-RPC tool response."
+        });
         Assert.NotNull(result.Data);
-        Assert.Equal(responseBody, result.Data.Value);
-        Assert.Equal(CommandResultFormat.Text, result.Data.Format);
         Assert.Equal(["session-1"], handler.TerminatedSessions);
         Assert.NotNull(invalidResponse);
-        await Assert.ThrowsAsync<ObjectDisposedException>(invalidResponse.Content.ReadAsStringAsync);
+        // Raw malformed bodies and parse-failure response disposal are SDK gaps,
+        // characterized separately rather than hiding them behind a second parser.
+        invalidResponse.Dispose();
     }
 
     [Theory]
@@ -653,7 +661,8 @@ public class WithMcpToolCommandsTests
                 }.ToJsonString();
                 return new HttpResponseMessage(HttpStatusCode.OK)
                 {
-                    Content = new StringContent(streaming ? $"data: {payload}\n\n" : payload)
+                    Content = new StringContent(streaming ? $"data: {payload}\n\n" : payload,
+                        Encoding.UTF8, streaming ? "text/event-stream" : "application/json")
                 };
             }
         };
@@ -755,7 +764,8 @@ public class WithMcpToolCommandsTests
                 }
                 return new HttpResponseMessage(HttpStatusCode.OK)
                 {
-                    Content = new StringContent(streaming ? $"data: {payload.ToJsonString()}\n\n" : payload.ToJsonString())
+                    Content = new StringContent(streaming ? $"data: {payload.ToJsonString()}\n\n" : payload.ToJsonString(),
+                        Encoding.UTF8, streaming ? "text/event-stream" : "application/json")
                 };
             }
         };
@@ -767,9 +777,8 @@ public class WithMcpToolCommandsTests
         var result = await app.ResourceCommands.ExecuteCommandAsync(
             resource.Resource, "app-mcp-call-tool", CreateMcpArguments("get_weather", "{}")).DefaultTimeout();
         Assert.False(result.Success);
-        Assert.Equal(streaming
-            ? "MCP server returned an empty or invalid JSON-RPC tool response."
-            : "MCP server returned a JSON-RPC tool response with a missing or unexpected id.", result.Message);
+        Assert.Equal("MCP protocol request failed.", result.Message);
+        Assert.Contains("without a reply", result.Data?.Value);
         Assert.Equal(["session-1"], handler.TerminatedSessions);
     }
 
@@ -790,8 +799,8 @@ public class WithMcpToolCommandsTests
                 return new HttpResponseMessage(HttpStatusCode.OK)
                 {
                     Content = new StringContent(
-                        $"data: {{\"jsonrpc\":\"2.0\",\"id\":\"another-request\",\"error\":{{\"message\":\"Unrelated error\"}}}}\n\n" +
-                        $"data: {response.ToJsonString()}\n\n")
+                        $"data: {{\"jsonrpc\":\"2.0\",\"id\":\"another-request\",\"error\":{{\"code\":-32000,\"message\":\"Unrelated error\"}}}}\n\n" +
+                        $"data: {response.ToJsonString()}\n\n", Encoding.UTF8, "text/event-stream")
                 };
             }
         };
@@ -1052,11 +1061,13 @@ public class WithMcpToolCommandsTests
             container.Resource, "app-mcp-call-tool", CreateMcpArguments("get_weather", "{}")).DefaultTimeout();
 
         Assert.False(result.Success);
-        Assert.Equal("Transport failed.", result.Message);
+        Assert.Equal("MCP transport request failed.", result.Message);
+        Assert.Equal("Transport failed.", result.Data?.Value);
         Assert.Equal(["session-1"], handler.TerminatedSessions);
     }
 
     [Theory]
+    [InlineData("notifications/initialized")]
     [InlineData("tools/list")]
     [InlineData("tools/call")]
     public async Task WithMcpToolCommands_TerminatesSessionAfterCancellation(string canceledMethod)
@@ -1141,13 +1152,14 @@ public class WithMcpToolCommandsTests
     [InlineData("tools/list", "invalid-json")]
     [InlineData("tools/list", """{"jsonrpc":"2.0","id":"wrong-id","result":{}}""")]
     [InlineData("tools/list", "http-error")]
-    public async Task WithMcpToolCommands_DisposesInvalidResponseAndTerminatesSession(string failingMethod, string responseBody)
+    [Trait("SdkGap", "FailureOwnership")]
+    public async Task WithMcpToolCommands_SdkFailureOwnershipCharacterization(string failingMethod, string responseBody)
     {
         using var appBuilder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
         var invalidResponse = new HttpResponseMessage(
             responseBody == "http-error" ? HttpStatusCode.InternalServerError : HttpStatusCode.OK)
         {
-            Content = new StringContent(responseBody)
+            Content = new StringContent(responseBody, Encoding.UTF8, "application/json")
         };
         if (failingMethod == "initialize")
         {
@@ -1168,8 +1180,19 @@ public class WithMcpToolCommandsTests
             container.Resource, "app-mcp-call-tool", CreateMcpArguments("get_weather", "{}")).DefaultTimeout();
 
         Assert.False(result.Success);
-        Assert.Equal(["session-1"], handler.TerminatedSessions);
-        await Assert.ThrowsAsync<ObjectDisposedException>(invalidResponse.Content.ReadAsStringAsync);
+        // SDK 1.4.1 captures the session only after parsing initialization and does not
+        // dispose the HTTP response when parsing/correlation throws inside its transport.
+        Assert.Equal(failingMethod == "initialize" ? [] : new[] { "session-1" }, handler.TerminatedSessions);
+        if (responseBody == "http-error")
+        {
+            await Assert.ThrowsAsync<ObjectDisposedException>(invalidResponse.Content.ReadAsStringAsync);
+        }
+        else
+        {
+            Assert.Equal(responseBody, await invalidResponse.Content.ReadAsStringAsync());
+        }
+
+        invalidResponse.Dispose();
     }
 
     [Fact]
@@ -1189,6 +1212,100 @@ public class WithMcpToolCommandsTests
         Assert.True(result.Success);
         Assert.Empty(handler.TerminatedSessions);
         Assert.Equal(["initialize", "notifications/initialized", "tools/list", "tools/call"], handler.Methods);
+    }
+
+    [Fact]
+    public async Task WithMcpToolCommands_RejectsCursorCycle()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
+        var handler = new McpCommandHandler(paginateTools: true) { RepeatCursor = true };
+        builder.Services.AddHttpClient(string.Empty).ConfigurePrimaryHttpMessageHandler(() => handler);
+        var resource = AddMcpContainer(builder);
+        using var app = builder.Build();
+        await app.StartAsync().DefaultTimeout();
+        await MoveResourceToRunningStateAsync(app, resource.Resource);
+
+        var result = await app.ResourceCommands.ExecuteCommandAsync(
+            resource.Resource, "app-mcp-call-tool", CreateMcpArguments("get_weather", "{}")).DefaultTimeout();
+
+        Assert.False(result.Success);
+        Assert.Equal("MCP server returned the tools/list cursor 'page-2' more than once.", result.Message);
+        Assert.Equal([null, "page-2"], handler.ToolListCursors);
+        Assert.Equal(["session-1"], handler.TerminatedSessions);
+        Assert.Null(handler.ToolCallRequest);
+    }
+
+    [Theory]
+    [InlineData("initialize", HttpStatusCode.Unauthorized)]
+    [InlineData("tools/call", HttpStatusCode.InternalServerError)]
+    [InlineData("DELETE", HttpStatusCode.InternalServerError)]
+    public async Task WithMcpToolCommands_DoesNotAcquireCredentialsOrLogResponseBodies(string failingMethod, HttpStatusCode status)
+    {
+        const string sensitiveBody = "sensitive-server-response";
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
+        var handler = new McpCommandHandler
+        {
+            OverrideResponse = (method, _) =>
+            {
+                if (method != failingMethod)
+                {
+                    return Task.FromResult<HttpResponseMessage?>(null);
+                }
+
+                var response = new HttpResponseMessage(status) { Content = new StringContent(sensitiveBody) };
+                response.Headers.WwwAuthenticate.ParseAdd("Bearer resource_metadata=\"https://auth.example.test/metadata\"");
+                return Task.FromResult<HttpResponseMessage?>(response);
+            }
+        };
+        builder.Services.AddHttpClient(string.Empty).ConfigurePrimaryHttpMessageHandler(() => handler);
+        var resource = AddMcpContainer(builder);
+        using var app = builder.Build();
+        await app.StartAsync().DefaultTimeout();
+        await MoveResourceToRunningStateAsync(app, resource.Resource);
+
+        var result = await app.ResourceCommands.ExecuteCommandAsync(
+            resource.Resource, "app-mcp-call-tool", CreateMcpArguments("get_weather", "{}")).DefaultTimeout();
+
+        Assert.Equal(failingMethod == "DELETE", result.Success);
+        Assert.DoesNotContain(sensitiveBody, result.Message);
+        if (failingMethod == "initialize")
+        {
+            Assert.Equal(["initialize"], handler.Methods);
+            Assert.Empty(handler.TerminatedSessions);
+        }
+
+        await using var logs = app.Services.GetRequiredService<ResourceLoggerService>().GetAllAsync(resource.Resource).GetAsyncEnumerator();
+        Assert.True(await logs.MoveNextAsync().AsTask().DefaultTimeout());
+        Assert.DoesNotContain(logs.Current, line => line.Content.Contains(sensitiveBody, StringComparison.Ordinal));
+    }
+
+    [Theory]
+    [InlineData("application/json")]
+    [InlineData("text/event-stream")]
+    [Trait("SdkGap", "RawMalformedBody")]
+    public async Task WithMcpToolCommands_SdkDoesNotPreserveMalformedBody(string contentType)
+    {
+        using var builder = TestDistributedApplicationBuilder.Create(options => options.TrustDeveloperCertificate = false);
+        using var response = new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(contentType == "application/json" ? "malformed-body" : "data: malformed-body\n\n",
+                Encoding.UTF8, contentType)
+        };
+        var handler = new McpCommandHandler { ToolResponse = _ => response };
+        builder.Services.AddHttpClient(string.Empty).ConfigurePrimaryHttpMessageHandler(() => handler);
+        var resource = AddMcpContainer(builder);
+        using var app = builder.Build();
+        await app.StartAsync().DefaultTimeout();
+        await MoveResourceToRunningStateAsync(app, resource.Resource);
+
+        var result = await app.ResourceCommands.ExecuteCommandAsync(
+            resource.Resource, "app-mcp-call-tool", CreateMcpArguments("get_weather", "{}")).DefaultTimeout();
+
+        Assert.False(result.Success);
+        Assert.Equal("MCP protocol request failed.", result.Message);
+        Assert.Contains("without a reply", result.Data?.Value);
+        Assert.DoesNotContain("malformed-body", result.Data?.Value);
+        Assert.Equal(["session-1"], handler.TerminatedSessions);
     }
 
     private static async Task AssertMcpUrlAsync(IDistributedApplicationBuilder builder, IResource resource, string expectedUrl)
@@ -1283,13 +1400,34 @@ public class WithMcpToolCommandsTests
 
         public JsonObject? ToolSchema { get; init; }
 
+        public bool RepeatCursor { get; init; }
+
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             Assert.Equal(ExpectedUrl, request.RequestUri?.ToString());
+            if (request.Method == HttpMethod.Get)
+            {
+                return new HttpResponseMessage(HttpStatusCode.MethodNotAllowed);
+            }
+
             var body = request.Content is null
                 ? string.Empty
                 : await request.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(true);
             var payload = string.IsNullOrEmpty(body) ? null : JsonNode.Parse(body) as JsonObject;
+            if (payload?["method"]?.GetValue<string>() == "initialize" &&
+                payload["params"]?["clientInfo"]?["name"]?.GetValue<string>() != "Aspire Dashboard")
+            {
+                // Aspire can probe MCP metadata independently. This fake serves only the
+                // command client so background discovery cannot share its synthetic session.
+                return new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
+            }
+
+            if (payload?["id"] is not null && payload["method"] is null)
+            {
+                // The SDK answers server-initiated requests such as ping.
+                return new HttpResponseMessage(HttpStatusCode.Accepted);
+            }
+
             var method = request.Method == HttpMethod.Delete ? "DELETE" : payload?["method"]?.GetValue<string>();
             Methods.Add(method);
             if (method == "DELETE")
@@ -1310,7 +1448,8 @@ public class WithMcpToolCommandsTests
                     new JsonObject
                     {
                         ["protocolVersion"] = "2025-06-18",
-                        ["capabilities"] = new JsonObject()
+                        ["capabilities"] = new JsonObject { ["tools"] = new JsonObject() },
+                        ["serverInfo"] = new JsonObject { ["name"] = "test-server", ["version"] = "1.0" }
                     },
                     sessionId: SessionId),
                 "DELETE" => new HttpResponseMessage(HttpStatusCode.NoContent),
@@ -1344,7 +1483,8 @@ public class WithMcpToolCommandsTests
                 payload["id"],
                 new JsonObject
                 {
-                    ["tools"] = new JsonArray(CreateTool("get_weather"))
+                    ["tools"] = new JsonArray(CreateTool("get_weather")),
+                    ["nextCursor"] = RepeatCursor ? "page-2" : null
                 });
         }
 
@@ -1444,7 +1584,7 @@ public class WithMcpToolCommandsTests
                          event: message
                          data: {{{payload.ToJsonString()}}}
 
-                         """,
+                         """ + "\n\n",
                         Encoding.UTF8,
                         "text/event-stream")
                     : new StringContent(payload.ToJsonString(), Encoding.UTF8, "application/json")

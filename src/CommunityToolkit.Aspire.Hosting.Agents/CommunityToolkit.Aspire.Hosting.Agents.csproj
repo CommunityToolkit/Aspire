@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting" />
+    <PackageReference Include="ModelContextProtocol.Core" />
   </ItemGroup>
 
 </Project>

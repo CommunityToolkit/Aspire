@@ -3,6 +3,9 @@
     <NoWarn>$(NoWarn);CTASPIREAGENTS001;ASPIREMCP001;ASPIREINTERACTION001</NoWarn>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="ModelContextProtocol.AspNetCore" />
+  </ItemGroup>
+  <ItemGroup>
     <Using Include="Aspire.Hosting" />
     <Using Include="Aspire.Hosting.Utils" />
     <Using Include="CommunityToolkit.Aspire.Testing" />

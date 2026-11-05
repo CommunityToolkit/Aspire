@@ -26,7 +26,7 @@ Current usage:
 
 - `WithMcpToolCommands(...)`
 
-These commands implement a limited MCP Streamable HTTP client for local development, not a general-purpose MCP client. They do not acquire credentials or forward dashboard-user identity.
+These commands use the official MCP SDK's Streamable HTTP transport for local development, not a general-purpose MCP client. They do not acquire credentials or forward dashboard-user identity. Known SDK limitations and dashboard diagnostics are documented in the [Agents integration README](../src/CommunityToolkit.Aspire.Hosting.Agents/README.md#mcp-servers).
 
 Suppress this diagnostic only when you intentionally opt into the experimental API surface.
 
