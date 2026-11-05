@@ -9,15 +9,16 @@ public class BuildCpanmDockerfileTests
     [Fact]
     public void BuildCpanmDockerfile_UsesSingleStage()
     {
-#pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+#pragma warning disable ASPIREDOCKERFILEBUILDER001
         var builder = new DockerfileBuilder();
 
         builder.BuildCpanmDockerfile(
             EntrypointType.Script,
             "app.pl",
             apiSubcommand: null,
-            "perl:5-slim");
-#pragma warning restore ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+            "perl:5-slim",
+            dependencyFiles: ["cpanfile"]);
+#pragma warning restore ASPIREDOCKERFILEBUILDER001
 
         Assert.Single(builder.Stages);
     }
@@ -25,15 +26,16 @@ public class BuildCpanmDockerfileTests
     [Fact]
     public void BuildCpanmDockerfile_ProducesExpectedStatementSequence()
     {
-#pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+#pragma warning disable ASPIREDOCKERFILEBUILDER001
         var builder = new DockerfileBuilder();
 
         builder.BuildCpanmDockerfile(
             EntrypointType.Script,
             "app.pl",
             apiSubcommand: null,
-            "perl:5-slim");
-#pragma warning restore ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+            "perl:5-slim",
+            dependencyFiles: ["cpanfile"]);
+#pragma warning restore ASPIREDOCKERFILEBUILDER001
 
         string[] expected =
         [

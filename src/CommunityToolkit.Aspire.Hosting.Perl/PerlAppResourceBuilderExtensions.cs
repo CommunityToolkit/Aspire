@@ -687,8 +687,15 @@ public static partial class PerlAppResourceBuilderExtensions
             ? appDirectory
             : Path.GetFullPath(appDirectory, appHostDirectory);
 
-        return File.Exists(Path.Combine(resolvedDir, "cpanfile"))
-            || File.Exists(Path.Combine(resolvedDir, "Makefile.PL"))
-            || File.Exists(Path.Combine(resolvedDir, "Build.PL"));
+        return GetDependencyFiles(resolvedDir).Length > 0;
+    }
+
+    /// <summary>
+    /// Finds supported dependency manifests in the resolved application directory.
+    /// </summary>
+    private static string[] GetDependencyFiles(string appDirectory)
+    {
+        string[] dependencyFiles = ["cpanfile", "Makefile.PL", "Build.PL"];
+        return dependencyFiles.Where(file => File.Exists(Path.Combine(appDirectory, file))).ToArray();
     }
 }
