@@ -1,5 +1,6 @@
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
+using CommunityToolkit.Aspire.Testing;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.Tests;
@@ -132,6 +133,33 @@ public class RoutingExtensionTests
         // Verify the wait annotation points to the collector resource
         Assert.Same(collector.Resource, waitAnnotation.Resource);
         Assert.Equal(WaitType.WaitUntilHealthy, waitAnnotation.WaitType);
+    }
+
+    [Theory]
+    [InlineData(null, "http://localhost:14317")]
+    [InlineData("grpc", "http://localhost:14317")]
+    [InlineData("http/protobuf", "http://localhost:14318")]
+    [InlineData("http/json", "http://localhost:14318")]
+    public async Task WithOpenTelemetryCollectorRoutingUsesEndpointMatchingOtlpProtocol(string? protocol, string expectedEndpoint)
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var collector = builder.AddOpenTelemetryCollector("collector")
+            .WithEndpoint("grpc", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 14317))
+            .WithEndpoint("http", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 14318));
+
+        var testResource = builder.AddResource(new TestResource("test-resource"));
+
+        if (protocol is not null)
+        {
+            testResource.WithEnvironment("OTEL_EXPORTER_OTLP_PROTOCOL", protocol);
+        }
+
+        testResource.WithOpenTelemetryCollectorRouting(collector);
+
+        var environment = await testResource.Resource.GetEnvironmentVariablesAsync();
+
+        Assert.Equal(expectedEndpoint, environment["OTEL_EXPORTER_OTLP_ENDPOINT"]);
     }
 
     [Fact]

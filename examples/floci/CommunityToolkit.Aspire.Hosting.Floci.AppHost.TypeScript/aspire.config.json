@@ -4,7 +4,7 @@
     "language": "typescript/nodejs"
   },
   "sdk": {
-    "version": "17.0.0-preview.1.26552.6"
+    "version": "17.0.0-preview.1.26553.5"
   },
   "profiles": {
     "https": {
@@ -17,6 +17,6 @@
   },
   "packages": {
     "CommunityToolkit.Aspire.Hosting.Floci": "../../../src/CommunityToolkit.Aspire.Hosting.Floci/CommunityToolkit.Aspire.Hosting.Floci.csproj",
-    "Aspire.Hosting.Dotnet": "17.0.0-preview.1.26552.6"
+    "Aspire.Hosting.Dotnet": "17.0.0-preview.1.26553.5"
   }
 }

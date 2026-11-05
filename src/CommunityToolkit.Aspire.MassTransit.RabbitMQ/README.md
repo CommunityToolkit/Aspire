@@ -6,6 +6,10 @@ This package provides an **Aspire client extension** for seamlessly integrating 
 
 The name string should match the name used in `Aspire.Hosting.RabbitMQ.AddRabbitMQ()`, as it references the connection string.
 
+## MassTransit version support
+
+This integration currently targets MassTransit 8.x. MassTransit 9.x introduced commercial licensing, so the Toolkit keeps its MassTransit dependencies below 9.0.0. MassTransit 9.x and later are outside the integration's supported and tested scope. Consumers can choose to upgrade MassTransit dependencies independently, but compatibility is not guaranteed by this integration.
+
 ---
 
 ## Features
@@ -55,4 +59,3 @@ builder.AddMassTransitRabbitMq<ISecondBus>("rabbitmq2", massTransitConfiguration
     x.AddConsumer<TestConsumerTwo>();
 });
 ```
-
