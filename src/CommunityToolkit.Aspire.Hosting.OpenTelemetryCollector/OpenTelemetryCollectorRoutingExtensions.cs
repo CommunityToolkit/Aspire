@@ -27,7 +27,11 @@ public static class OpenTelemetryCollectorRoutingExtensions
         builder.WithEnvironment(callback =>
         {
             var otlpProtocol = callback.EnvironmentVariables.GetValueOrDefault("OTEL_EXPORTER_OTLP_PROTOCOL", "grpc");
-            var endpoint = collectorBuilder.Resource.GetEndpoint(otlpProtocol.ToString() ?? "grpc");
+            // OTLP protocol values are "grpc", "http/protobuf" or "http/json", while the collector endpoints are named "grpc" and "http".
+            var endpointName = otlpProtocol.ToString()?.StartsWith("http", StringComparison.OrdinalIgnoreCase) == true
+                ? OpenTelemetryCollectorResource.HttpEndpointName
+                : OpenTelemetryCollectorResource.GrpcEndpointName;
+            var endpoint = collectorBuilder.Resource.GetEndpoint(endpointName);
             callback.Logger.LogDebug("Forwarding Telemetry for {name} to the collector on {endpoint}", builder.Resource.Name, endpoint.Url);
 
             if (!callback.EnvironmentVariables.TryAdd("OTEL_EXPORTER_OTLP_ENDPOINT", endpoint))
