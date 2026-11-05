@@ -49,6 +49,7 @@
     <Project Path="examples/flagd/CommunityToolkit.Aspire.Hosting.Flagd.AppHost/CommunityToolkit.Aspire.Hosting.Flagd.AppHost.csproj" />
   </Folder>
   <Folder Name="/examples/flare/">
+    <Project Path="examples/flare/CommunityToolkit.Aspire.Hosting.Flare.ApiService/CommunityToolkit.Aspire.Hosting.Flare.ApiService.csproj" />
     <Project Path="examples/flare/CommunityToolkit.Aspire.Hosting.Flare.AppHost/CommunityToolkit.Aspire.Hosting.Flare.AppHost.csproj" />
   </Folder>
   <Folder Name="/examples/floci/">

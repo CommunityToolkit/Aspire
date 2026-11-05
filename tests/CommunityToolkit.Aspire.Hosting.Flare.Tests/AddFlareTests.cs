@@ -68,8 +68,9 @@ public class AddFlareTests
 
         var grpc = Assert.Single(flare.Resource.Annotations.OfType<EndpointAnnotation>(), e => e.Name == "otlp-grpc");
         Assert.Equal(4317, grpc.TargetPort);
-        Assert.Equal(4317, grpc.Port); // unproxied: host port defaults to the target port
+        Assert.Equal(4317, grpc.Port); // set explicitly: Aspire 17 assigns a random host port to unproxied endpoints otherwise
         Assert.False(grpc.IsProxied);
+        Assert.Equal("http2", grpc.Transport);
 
         var http = Assert.Single(flare.Resource.Annotations.OfType<EndpointAnnotation>(), e => e.Name == "otlp-http");
         Assert.Equal(4318, http.TargetPort);
@@ -113,6 +114,28 @@ public class AddFlareTests
         Assert.Same(flare.Resource, flare.Resource.Api.Parent);
         Assert.Same(flare.Resource, flare.Resource.AlertWorker.Parent);
         Assert.Same(flare.Resource, flare.Resource.Dashboard.Parent);
+
+        var database = Assert.Single(builder.Resources.OfType<ClickHouseDatabaseResource>());
+        IResource[] children = [flare.Resource.Api, flare.Resource.AlertWorker, flare.Resource.Dashboard, database];
+        foreach (var child in children)
+        {
+            var relationship = Assert.Single(child.Annotations.OfType<ResourceRelationshipAnnotation>(), r => r.Type == "Parent");
+            Assert.Same(flare.Resource, relationship.Resource);
+        }
+    }
+
+    [Fact]
+    public async Task AddFlarePointsTheBrowserFacingUrlsAtLocalhostEndpoints()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+
+        var flare = CreateFlare(builder);
+
+        var dashboardConfig = await flare.Resource.Dashboard.GetEnvironmentVariablesAsync(DistributedApplicationOperation.Publish);
+        var apiConfig = await flare.Resource.Api.GetEnvironmentVariablesAsync(DistributedApplicationOperation.Publish);
+
+        Assert.Equal("{flare-api.bindings.http.url}", dashboardConfig["PUBLIC_API_URL"]);
+        Assert.Equal("{flare-dashboard.bindings.http.url}", apiConfig["Cors__AllowedOrigins__0"]);
     }
 
     [Fact]

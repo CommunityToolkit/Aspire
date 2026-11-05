@@ -1,8 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
-
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
@@ -121,5 +119,3 @@ public class FlareDashboardResource([ResourceName] string name, FlareResource pa
     /// </summary>
     public EndpointReference PrimaryEndpoint => field ??= new(this, HttpEndpointName);
 }
-
-#pragma warning restore ASPIREATS001 // AspireExport is experimental

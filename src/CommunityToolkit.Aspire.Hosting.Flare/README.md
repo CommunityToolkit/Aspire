@@ -49,8 +49,8 @@ ClickHouse and Redis keep their data in the volumes you configure on those resou
 | Method | Purpose |
 | --- | --- |
 | `WithIngestPorts(grpcPort, httpPort)` | Change the host ports of the OTLP endpoints. |
-| `WithApiKey(parameter)` | Require an API key on the ingest service. |
-| `WithPublicUrls(apiUrl, dashboardUrl)` | Set the URLs a browser uses once the stack is published and no longer reachable on localhost. |
+| `WithApiKey(parameter)` | Require an API key on the ingest service. OTLP clients send it as `Authorization: Bearer <key>` (for example `OTEL_EXPORTER_OTLP_HEADERS=Authorization=Bearer <key>`). |
+| `WithPublicUrls(apiUrl, dashboardUrl)` | Set the URLs a browser uses once the stack is published and no longer reachable on localhost. `dashboardUrl` is also the API's allowed CORS origin, so pass an origin only (`https://flare.example.com`, no path or trailing slash). |
 | `WithFlareImageTag(tag)` | Change the image tag of all four containers. |
 
 ## Connection Properties

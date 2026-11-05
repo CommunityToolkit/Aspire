@@ -4,8 +4,6 @@
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Utils;
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
-
 namespace Aspire.Hosting;
 
 /// <summary>
@@ -85,8 +83,9 @@ public static class FlareBuilderExtensions
         // Ingest: the OTLP ports are fixed and unproxied on purpose, so OTLP clients outside the
         // AppHost can use the conventional 4317/4318 without going through Aspire's proxy.
         var flare = builder.AddResource(flareResource)
-            .WithEndpoint(port: null, targetPort: OtlpGrpcPort, scheme: "http", name: FlareResource.OtlpGrpcEndpointName, isProxied: false)
-            .WithEndpoint(port: null, targetPort: OtlpHttpPort, scheme: "http", name: FlareResource.OtlpHttpEndpointName, isProxied: false)
+            .WithEndpoint(port: OtlpGrpcPort, targetPort: OtlpGrpcPort, scheme: "http", name: FlareResource.OtlpGrpcEndpointName, isProxied: false)
+            .WithEndpoint(FlareResource.OtlpGrpcEndpointName, e => e.Transport = "http2", createIfNotExists: false)
+            .WithEndpoint(port: OtlpHttpPort, targetPort: OtlpHttpPort, scheme: "http", name: FlareResource.OtlpHttpEndpointName, isProxied: false)
             .WithImage(FlareContainerImageTags.IngestImage, FlareContainerImageTags.Tag)
             .WithImageRegistry(FlareContainerImageTags.Registry)
             .WithReference(database, ClickHouseConnectionName)
@@ -124,11 +123,12 @@ public static class FlareBuilderExtensions
 
         // The dashboard's JavaScript runs in the user's browser, so both URLs below are pinned to the
         // localhost network: the default container-network address would not resolve from the host.
+        var apiBrowserEndpoint = api.GetEndpoint(FlareApiResource.HttpEndpointName, KnownNetworkIdentifiers.LocalhostNetwork);
         var dashboard = builder.AddResource(dashboardResource)
             .WithHttpEndpoint(port: dashboardPort, targetPort: DashboardPort, name: FlareDashboardResource.HttpEndpointName)
             .WithImage(FlareContainerImageTags.DashboardImage, FlareContainerImageTags.Tag)
             .WithImageRegistry(FlareContainerImageTags.Registry)
-            .WithEnvironment("PUBLIC_API_URL", api.GetEndpoint(FlareApiResource.HttpEndpointName, KnownNetworkIdentifiers.LocalhostNetwork))
+            .WithEnvironment("PUBLIC_API_URL", ReferenceExpression.Create($"{apiBrowserEndpoint}"))
             .WaitFor(api)
             .WithHttpHealthCheck("/")
             .WithParentRelationship(flare)
@@ -136,7 +136,8 @@ public static class FlareBuilderExtensions
 
         // The API rejects every browser origin it has not been told about, so without this the
         // dashboard cannot call it.
-        api.WithEnvironment("Cors__AllowedOrigins__0", dashboard.GetEndpoint(FlareDashboardResource.HttpEndpointName, KnownNetworkIdentifiers.LocalhostNetwork));
+        var dashboardBrowserEndpoint = dashboard.GetEndpoint(FlareDashboardResource.HttpEndpointName, KnownNetworkIdentifiers.LocalhostNetwork);
+        api.WithEnvironment("Cors__AllowedOrigins__0", ReferenceExpression.Create($"{dashboardBrowserEndpoint}"));
 
         database.WithParentRelationship(flare);
 
@@ -202,8 +203,9 @@ public static class FlareBuilderExtensions
     }
 
     /// <summary>
-    /// Requires an API key on the ingest service. Clients must send the same key, for example in an
-    /// <c>x-api-key</c> header.
+    /// Requires an API key on the ingest service. OTLP clients must send it as
+    /// <c>Authorization: Bearer &lt;key&gt;</c>, for example through
+    /// <c>OTEL_EXPORTER_OTLP_HEADERS=Authorization=Bearer &lt;key&gt;</c>.
     /// </summary>
     /// <param name="builder">The Flare resource builder.</param>
     /// <param name="apiKey">The parameter holding the API key.</param>
@@ -228,7 +230,11 @@ public static class FlareBuilderExtensions
     /// </summary>
     /// <param name="builder">The Flare resource builder.</param>
     /// <param name="apiUrl">The parameter holding the public URL of the query API, or <see langword="null"/> to leave it unchanged.</param>
-    /// <param name="dashboardUrl">The parameter holding the public URL of the dashboard, or <see langword="null"/> to leave it unchanged.</param>
+    /// <param name="dashboardUrl">
+    /// The parameter holding the public URL of the dashboard, or <see langword="null"/> to leave it unchanged.
+    /// The query API uses this value verbatim as its allowed CORS origin, so it must be an origin only:
+    /// <c>scheme://host[:port]</c>, with no path and no trailing slash (for example <c>https://flare.example.com</c>).
+    /// </param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     [AspireExport]
     public static IResourceBuilder<FlareResource> WithPublicUrls(
@@ -326,6 +332,14 @@ public static class FlareBuilderExtensions
         this IResourceBuilder<IResourceWithEnvironment> builder,
         IResourceBuilder<FlareResource> flare,
         bool useHttp = false) => builder.WithOtlpExporter(flare, useHttp);
-}
 
-#pragma warning restore ASPIREATS001 // AspireExport is experimental
+    // Groups a resource under the Flare resource in the dashboard. This is the only parent a Flare
+    // child may have, so the parent is typed as FlareResource rather than any IResource.
+    // The children deliberately do not implement IResourceWithParent<FlareResource>: Aspire forbids a
+    // resource from waiting on its parent, and the dashboard waits on the API.
+    internal static IResourceBuilder<T> WithParentRelationship<T>(
+        this IResourceBuilder<T> child,
+        IResourceBuilder<FlareResource> parent)
+        where T : IResource
+        => ResourceBuilderExtensions.WithParentRelationship(child, parent);
+}
