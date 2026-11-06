@@ -7,9 +7,24 @@ namespace Aspire.Hosting.ApplicationModel;
 [AspireExport(ExposeProperties = true)]
 public class TempoResource(string name) : ContainerResource(name), IResourceWithServiceDiscovery
 {
+    /// <summary>
+    /// The HTTP query and readiness endpoint name.
+    /// </summary>
     internal const string HttpEndpointName = "http";
+
+    /// <summary>
+    /// The internal gRPC endpoint name.
+    /// </summary>
     internal const string GrpcEndpointName = "grpc";
+
+    /// <summary>
+    /// The OTLP gRPC ingestion endpoint name.
+    /// </summary>
     internal const string OtlpGrpcEndpointName = "otlp-grpc";
+
+    /// <summary>
+    /// The OTLP HTTP ingestion endpoint name.
+    /// </summary>
     internal const string OtlpHttpEndpointName = "otlp-http";
 
     private EndpointReference? _httpEndpoint;

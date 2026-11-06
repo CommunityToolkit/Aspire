@@ -66,8 +66,6 @@ public class TempoFunctionalTests(ITestOutputHelper testOutputHelper)
                           endpoint: 0.0.0.0:4317
                         http:
                           endpoint: 0.0.0.0:4318
-                ingester:
-                  flush_all_on_shutdown: true
                 storage:
                   trace:
                     backend: local

@@ -16,4 +16,5 @@ app.Run();
 /// <summary>
 /// Represents the trace identifier of an API request.
 /// </summary>
-public sealed record TraceResponse(string? TraceId);
+/// <param name="TraceId">The current request's trace identifier, if available.</param>
+internal sealed record TraceResponse(string? TraceId);

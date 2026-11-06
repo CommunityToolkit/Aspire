@@ -10,11 +10,20 @@ using OpenTelemetry.Trace;
 
 namespace Microsoft.Extensions.Hosting;
 
+/// <summary>
+/// Provides shared service configuration for the Tempo example.
+/// </summary>
 public static class Extensions
 {
     private const string HealthEndpointPath = "/health";
     private const string AlivenessEndpointPath = "/alive";
 
+    /// <summary>
+    /// Adds telemetry, health checks, service discovery, and HTTP resilience.
+    /// </summary>
+    /// <typeparam name="TBuilder">The host application builder type.</typeparam>
+    /// <param name="builder">The host application builder.</param>
+    /// <returns>The host application builder.</returns>
     public static TBuilder AddServiceDefaults<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
     {
         builder.ConfigureOpenTelemetry();
@@ -28,6 +37,12 @@ public static class Extensions
         return builder;
     }
 
+    /// <summary>
+    /// Configures telemetry for the Aspire dashboard and trace export to Tempo.
+    /// </summary>
+    /// <typeparam name="TBuilder">The host application builder type.</typeparam>
+    /// <param name="builder">The host application builder.</param>
+    /// <returns>The host application builder.</returns>
     public static TBuilder ConfigureOpenTelemetry<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
     {
         var hasDashboardExporter = !string.IsNullOrWhiteSpace(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"]);
@@ -81,6 +96,12 @@ public static class Extensions
         return builder;
     }
 
+    /// <summary>
+    /// Adds the service's default liveness health check.
+    /// </summary>
+    /// <typeparam name="TBuilder">The host application builder type.</typeparam>
+    /// <param name="builder">The host application builder.</param>
+    /// <returns>The host application builder.</returns>
     public static TBuilder AddDefaultHealthChecks<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
     {
         builder.Services.AddHealthChecks()
@@ -88,6 +109,11 @@ public static class Extensions
         return builder;
     }
 
+    /// <summary>
+    /// Maps readiness and liveness endpoints in the development environment.
+    /// </summary>
+    /// <param name="app">The web application.</param>
+    /// <returns>The web application.</returns>
     public static WebApplication MapDefaultEndpoints(this WebApplication app)
     {
         if (app.Environment.IsDevelopment())

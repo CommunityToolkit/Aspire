@@ -169,8 +169,15 @@ public static class TempoBuilderExtensions
         return builder.WithAnnotation(new TempoConfigFileAnnotation(path), ResourceAnnotationMutationBehavior.Replace);
     }
 
+    /// <summary>
+    /// Identifies the custom configuration file copied into the Tempo container.
+    /// </summary>
+    /// <param name="source">The absolute path to the host configuration file.</param>
     private sealed class TempoConfigFileAnnotation(string source) : IResourceAnnotation
     {
+        /// <summary>
+        /// Gets the absolute path to the host configuration file.
+        /// </summary>
         public string Source { get; } = source;
     }
 }
