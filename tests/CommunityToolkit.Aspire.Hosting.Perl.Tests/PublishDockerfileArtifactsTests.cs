@@ -62,6 +62,45 @@ public class PublishDockerfileArtifactsTests
     }
 
     [Theory, RequiresDocker]
+    [InlineData(true, null)]
+    [InlineData(true, "vendor/perl5")]
+    [InlineData(false, "vendor/perl5")]
+    public async Task Publish_CartonLocalLib_ChildPerlLoadsInstalledModules(bool useCarton, string? localLibPath)
+    {
+        using var temp = new TempDirectory();
+        var appDir = CreateAppDirectory(temp);
+        File.WriteAllText(Path.Combine(appDir, "cpanfile"), "requires 'Try::Tiny';\n");
+        File.WriteAllText(Path.Combine(appDir, "app.pl"),
+            """
+            use strict;
+            use warnings;
+            use Try::Tiny;
+            my $status = system($^X, '-MTry::Tiny', '-e', 'exit 0');
+            die "Child Perl failed: $status\n" if $status != 0;
+            """);
+
+        var result = await PublishAsync(temp, appDir, app =>
+        {
+            if (useCarton)
+            {
+                app.WithCarton().WithProjectDependencies(cartonDeployment: false);
+            }
+            else
+            {
+                app.WithCpanMinus().WithProjectDependencies();
+            }
+
+            if (localLibPath is not null)
+            {
+                app.WithLocalLib(localLibPath);
+            }
+        });
+
+        // The child does not inherit the entrypoint's -I flag, only its environment.
+        await BuildAndRunImageAsync(result, appDir);
+    }
+
+    [Theory, RequiresDocker]
     [InlineData("Makefile.PL")]
     [InlineData("Build.PL")]
     public async Task Publish_WithExecutableManifestLoadingProjectFile_GeneratedImageRuns(string manifestName)
@@ -184,6 +223,106 @@ public class PublishDockerfileArtifactsTests
     }
 
     [Theory]
+    [InlineData(null, "/app/local", "/app/local/lib/perl5")]
+    [InlineData("vendor/perl5", "/app/vendor/perl5", "/app/vendor/perl5/lib/perl5")]
+    [InlineData("vendor lib/$perl", "\"/app/vendor lib/\\$perl\"", "\"/app/vendor lib/\\$perl/lib/perl5\"")]
+    public async Task Publish_CartonLocalLib_InstallTargetMatchesRuntime(
+        string? localLibPath, string expectedRoot, string expectedPerl5Lib)
+    {
+        using var temp = new TempDirectory();
+        var appDir = CreateAppDirectory(temp);
+
+        var result = await PublishAsync(temp, appDir, app =>
+        {
+            app.WithCarton().WithProjectDependencies(cartonDeployment: false);
+            if (localLibPath is not null)
+            {
+                app.WithLocalLib(localLibPath);
+            }
+        });
+
+        var dockerfile = (await File.ReadAllTextAsync(result.DockerfilePath, TestContext.Current.CancellationToken))
+            .ReplaceLineEndings("\n");
+        var runtimeIndex = dockerfile.IndexOf("FROM perl:5-slim", StringComparison.Ordinal);
+        Assert.True(runtimeIndex >= 0, $"Expected a separate runtime stage.\n{dockerfile}");
+        var buildStage = dockerfile[..runtimeIndex];
+        var runtimeStage = dockerfile[runtimeIndex..];
+
+        Assert.Contains($"ENV PERL5LIB={expectedPerl5Lib}\n", runtimeStage);
+        Assert.Contains($"ENV PERL_LOCAL_LIB_ROOT={expectedRoot}\n", runtimeStage);
+        var containerRoot = $"/app/{localLibPath ?? "local"}";
+        Assert.Contains($"ENTRYPOINT [\"perl\",\"-I{containerRoot}/lib/perl5\",\"app.pl\"]", runtimeStage);
+
+        using var manifest = JsonDocument.Parse(await File.ReadAllTextAsync(
+            Path.Combine(result.OutputDirectory, "aspire-manifest.json"), TestContext.Current.CancellationToken));
+        var environment = manifest.RootElement.GetProperty("resources").GetProperty(ResourceName).GetProperty("env");
+        Assert.Equal(containerRoot, environment.GetProperty("PERL_CARTON_PATH").GetString());
+        Assert.Equal(containerRoot, environment.GetProperty("PERL_LOCAL_LIB_ROOT").GetString());
+        Assert.Equal($"{containerRoot}/lib/perl5", environment.GetProperty("PERL5LIB").GetString());
+
+        if (localLibPath is not null)
+        {
+            var cartonPathIndex = buildStage.IndexOf($"ENV PERL_CARTON_PATH={expectedRoot}\n", StringComparison.Ordinal);
+            var installIndex = buildStage.IndexOf("RUN carton install\n", StringComparison.Ordinal);
+            Assert.True(cartonPathIndex >= 0 && installIndex > cartonPathIndex,
+                $"Carton's install path must match the runtime local::lib root before installing.\n{dockerfile}");
+        }
+    }
+
+    [Theory]
+    [InlineData("../vendor/perl5")]
+    [InlineData("vendor/../../perl5")]
+    [InlineData("..\\vendor\\perl5")]
+    public async Task Publish_CartonLocalLib_ParentRelativePathOutsideApp_FailsWithActionableError(string localLibPath)
+    {
+        using var temp = new TempDirectory();
+        var appDir = CreateAppDirectory(temp);
+        var outputDir = Directory.CreateDirectory(Path.Combine(temp.Path, "out")).FullName;
+        var builder = DistributedApplication.CreateBuilder(
+            ["--operation", "publish", "--publisher", "manifest", "--output-path", outputDir, "--step", "publish-manifest"]);
+        using var errorLogger = new PublishErrorLoggerProvider();
+        builder.Services.AddLogging(logging => logging.AddProvider(errorLogger));
+        builder.AddPerlScript(ResourceName, appDir, "app.pl")
+            .WithCarton()
+            .WithProjectDependencies(cartonDeployment: false)
+            .WithLocalLib(localLibPath);
+
+        using var app = builder.Build();
+        await app.RunAsync(TestContext.Current.CancellationToken);
+
+        Assert.Contains(errorLogger.Exceptions, exception =>
+            exception is InvalidOperationException &&
+            exception.Message.Contains(localLibPath, StringComparison.Ordinal) &&
+            exception.Message.Contains("/app", StringComparison.Ordinal) &&
+            exception.Message.Contains("WithLocalLib", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task Publish_CartonLocalLib_ParentRelativePathInsideApp_UsesNormalizedRoot()
+    {
+        using var temp = new TempDirectory();
+        var appDir = CreateAppDirectory(temp);
+
+        var result = await PublishAsync(temp, appDir, app => app
+            .WithCarton()
+            .WithProjectDependencies(cartonDeployment: false)
+            .WithLocalLib("vendor/staging/../perl5"));
+
+        var dockerfile = await File.ReadAllTextAsync(result.DockerfilePath, TestContext.Current.CancellationToken);
+        Assert.Contains("ENV PERL_CARTON_PATH=/app/vendor/perl5", dockerfile);
+        Assert.Contains("ENV PERL_LOCAL_LIB_ROOT=/app/vendor/perl5", dockerfile);
+        Assert.Contains("ENV PERL5LIB=/app/vendor/perl5/lib/perl5", dockerfile);
+        Assert.Contains("ENTRYPOINT [\"perl\",\"-I/app/vendor/perl5/lib/perl5\",\"app.pl\"]", dockerfile);
+
+        using var manifest = JsonDocument.Parse(await File.ReadAllTextAsync(
+            Path.Combine(result.OutputDirectory, "aspire-manifest.json"), TestContext.Current.CancellationToken));
+        var environment = manifest.RootElement.GetProperty("resources").GetProperty(ResourceName).GetProperty("env");
+        Assert.Equal("/app/vendor/perl5", environment.GetProperty("PERL_CARTON_PATH").GetString());
+        Assert.Equal("/app/vendor/perl5", environment.GetProperty("PERL_LOCAL_LIB_ROOT").GetString());
+        Assert.Equal("/app/vendor/perl5/lib/perl5", environment.GetProperty("PERL5LIB").GetString());
+    }
+
+    [Theory]
     [InlineData("cpanfile", "cpanfile.snapshot", "carton install")]
     [InlineData("Makefile.PL", "cpanfile", "WithCpanMinus")]
     [InlineData("Build.PL", "cpanfile", "WithCpanMinus")]
@@ -293,6 +432,52 @@ public class PublishDockerfileArtifactsTests
         Assert.Equal(authored, await File.ReadAllTextAsync(result.DockerfilePath, TestContext.Current.CancellationToken));
         Assert.False(File.Exists(result.DockerfilePath + ".dockerignore"));
         Assert.Empty(Directory.GetFiles(result.OutputDirectory, "*.dockerignore", SearchOption.AllDirectories));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Publish_WithAuthoredDockerfile_AbsoluteLocalLibPathIsPreserved(bool useCarton)
+    {
+        using var temp = new TempDirectory();
+        var appDir = CreateAppDirectory(temp);
+        const string authored = """
+            FROM perl:5-slim
+            WORKDIR /app
+            ENV PERL5LIB=/opt/perl-libs/lib/perl5
+            ENV PERL_LOCAL_LIB_ROOT=/opt/perl-libs
+            COPY . .
+            ENTRYPOINT ["perl","app.pl"]
+            """;
+        File.WriteAllText(Path.Combine(appDir, "Dockerfile"), authored);
+
+        var result = await PublishAsync(temp, appDir, app =>
+        {
+            if (useCarton)
+            {
+                app.WithCarton();
+            }
+
+            app.WithLocalLib("/opt/perl-libs");
+        });
+
+        Assert.Equal(Path.Combine(appDir, "Dockerfile"), result.DockerfilePath, StringComparer.OrdinalIgnoreCase);
+        Assert.Equal(authored, await File.ReadAllTextAsync(result.DockerfilePath, TestContext.Current.CancellationToken));
+
+        using var manifest = JsonDocument.Parse(await File.ReadAllTextAsync(
+            Path.Combine(result.OutputDirectory, "aspire-manifest.json"), TestContext.Current.CancellationToken));
+        var environment = manifest.RootElement.GetProperty("resources").GetProperty(ResourceName).GetProperty("env");
+        Assert.Equal("/opt/perl-libs", environment.GetProperty("PERL_LOCAL_LIB_ROOT").GetString());
+        Assert.Equal("/opt/perl-libs/lib/perl5", environment.GetProperty("PERL5LIB").GetString());
+        if (useCarton)
+        {
+            Assert.Equal("/opt/perl-libs", environment.GetProperty("PERL_CARTON_PATH").GetString());
+        }
+        else
+        {
+            Assert.Equal("INSTALL_BASE=/opt/perl-libs", environment.GetProperty("PERL_MM_OPT").GetString());
+            Assert.Equal("--install_base /opt/perl-libs", environment.GetProperty("PERL_MB_OPT").GetString());
+        }
     }
 
     [Fact]
