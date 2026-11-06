@@ -464,6 +464,8 @@ public static partial class PerlAppResourceBuilderExtensions
     /// <item><c>PERL_MM_OPT</c> — <c>INSTALL_BASE=&lt;resolved&gt;</c></item>
     /// <item><c>PERL_MB_OPT</c> — <c>--install_base &lt;resolved&gt;</c></item>
     /// </list>
+    /// With Carton, sets <c>PERL_CARTON_PATH</c> instead of <c>PERL_MM_OPT</c> and
+    /// <c>PERL_MB_OPT</c>, since Carton manages its own installer options.
     /// These ensure modules are resolved from and installed into the local directory
     /// without requiring system-level permissions.
     /// <para>
@@ -556,18 +558,32 @@ public static partial class PerlAppResourceBuilderExtensions
 
     /// <summary>
     /// Resolves the local::lib path from the resource's <see cref="PerlLocalLibAnnotation"/>,
-    /// returning <c>null</c> when no local::lib is configured.
+    /// defaulting to <c>local</c> for Carton and returning <c>null</c> otherwise.
     /// </summary>
     /// <param name="resource">The Perl resource to inspect for local::lib annotations.</param>
+    /// <param name="isPublishMode">Whether to resolve the path inside the generated container.</param>
     /// <returns>The resolved local::lib path, or <c>null</c> when not configured.</returns>
-    private static string? ResolveLocalLibPath(PerlAppResource resource)
+    private static string? ResolveLocalLibPath(PerlAppResource resource, bool isPublishMode = false)
     {
-        if (!resource.TryGetLastAnnotation<PerlLocalLibAnnotation>(out var localLibAnnotation))
+        string? configuredPath = null;
+        if (resource.TryGetLastAnnotation<PerlLocalLibAnnotation>(out var localLibAnnotation))
+        {
+            configuredPath = localLibAnnotation.Path;
+        }
+        else if (resource.TryGetLastAnnotation<PerlPackageManagerAnnotation>(out var packageManager) &&
+            packageManager.PackageManager == PerlPackageManager.Carton)
+        {
+            configuredPath = "local";
+        }
+
+        if (configuredPath is null)
         {
             return null;
         }
 
-        return ResolveLocalLibPath(resource.WorkingDirectory, localLibAnnotation.Path);
+        return isPublishMode
+            ? GetContainerLocalLibRoot(configuredPath)
+            : ResolveLocalLibPath(resource.WorkingDirectory, configuredPath);
     }
 
     /// <summary>
@@ -611,15 +627,34 @@ public static partial class PerlAppResourceBuilderExtensions
     /// Applies local::lib environment variables to an environment-variable dictionary.
     /// </summary>
     /// <param name="environmentVariables">The destination environment variable map.</param>
-    /// <param name="localLibPath">The resolved local::lib directory path.</param>
-    private static void ApplyLocalLibEnvironment(IDictionary<string, object> environmentVariables, string localLibPath)
+    /// <param name="resource">The Perl resource whose final package manager and local::lib settings are applied.</param>
+    /// <param name="isPublishMode">Whether to use container paths instead of host paths.</param>
+    private static void ApplyLocalLibEnvironment(
+        IDictionary<string, object> environmentVariables,
+        PerlAppResource resource,
+        bool isPublishMode)
     {
-        var libPerl5 = Path.Combine(localLibPath, "lib", "perl5");
+        if (ResolveLocalLibPath(resource, isPublishMode) is not { } localLibPath)
+        {
+            return;
+        }
+
+        var libPerl5 = isPublishMode
+            ? $"{localLibPath}/lib/perl5"
+            : Path.Combine(localLibPath, "lib", "perl5");
 
         environmentVariables["PERL5LIB"] = libPerl5;
         environmentVariables["PERL_LOCAL_LIB_ROOT"] = localLibPath;
-        environmentVariables["PERL_MM_OPT"] = $"INSTALL_BASE={localLibPath}";
-        environmentVariables["PERL_MB_OPT"] = $"--install_base {localLibPath}";
+        if (resource.TryGetLastAnnotation<PerlPackageManagerAnnotation>(out var packageManager) &&
+            packageManager.PackageManager == PerlPackageManager.Carton)
+        {
+            environmentVariables["PERL_CARTON_PATH"] = localLibPath;
+        }
+        else
+        {
+            environmentVariables["PERL_MM_OPT"] = $"INSTALL_BASE={localLibPath}";
+            environmentVariables["PERL_MB_OPT"] = $"--install_base {localLibPath}";
+        }
     }
 
     /// <summary>
@@ -666,11 +701,7 @@ public static partial class PerlAppResourceBuilderExtensions
 
         resource.WithEnvironment(context =>
         {
-            if (resource.Resource.TryGetLastAnnotation<PerlLocalLibAnnotation>(out var localLibAnnotation))
-            {
-                var localLibPath = ResolveLocalLibPath(resource.Resource.WorkingDirectory, localLibAnnotation.Path);
-                ApplyLocalLibEnvironment(context.EnvironmentVariables, localLibPath);
-            }
+            ApplyLocalLibEnvironment(context.EnvironmentVariables, resource.Resource, context.ExecutionContext.IsPublishMode);
         });
     }
 

@@ -123,6 +123,13 @@ Implementation note: `WithLocalLib` path resolution uses `Path.IsPathRooted(conf
 If `true`, the value is used directly. If `false`, it is combined with the resource working
 directory and converted to an absolute path.
 
+With Carton, `WithLocalLib` also sets `PERL_CARTON_PATH` for the application and its
+dependency installer. Carton installs into the same directory used by `PERL5LIB` and
+`PERL_LOCAL_LIB_ROOT`; without `WithLocalLib`, that directory defaults to `local`.
+The integration leaves `PERL_MM_OPT` and `PERL_MB_OPT` unset for Carton because
+Carton manages its own installer options.
+Carton's underlying Perl build tools can fail when the local::lib path contains
+spaces, even with correct Dockerfile quoting. Prefer a path such as `vendor/perl5`.
 
 ### Resolution examples
 
@@ -229,6 +236,12 @@ is copied; a missing snapshot fails publishing only when deployment mode is enab
 Deployment mode is the publish default; use `.WithCarton().WithProjectDependencies(cartonDeployment: false)`
 to allow installation without a snapshot. Carton requires a `cpanfile` for project dependencies;
 use `WithCpanMinus()` for projects with only `Makefile.PL` or `Build.PL`.
+
+Generated Carton Dockerfiles set `PERL_CARTON_PATH` before installing dependencies,
+using `/app/local` by default or `/app/<WithLocalLib path>` for a relative custom path.
+The runtime image and published environment use the same root for `PERL5LIB` and
+`PERL_LOCAL_LIB_ROOT`, so executable entrypoints and child Perl processes can load
+installed modules. Generated Perl entrypoint `-I` arguments also use that root.
 
 Generated Dockerfiles install dependencies inside the image and copy the app with `COPY . .`.
 To keep host-built modules out of the image, a `<name>.Dockerfile.dockerignore` is emitted next

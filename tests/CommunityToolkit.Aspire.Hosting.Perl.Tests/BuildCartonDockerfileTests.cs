@@ -65,6 +65,7 @@ public class BuildCartonDockerfileTests
             "DockerfileFromStatement",
             "DockerfileWorkDirStatement",
             "DockerfileRunStatement",        // cpanm Carton
+            "DockerfileEnvStatement",        // PERL_CARTON_PATH
             "DockerfileCopyStatement",       // cpanfile
             "DockerfileCopyStatement",       // cpanfile.snapshot
             "DockerfileRunStatement",        // carton install
@@ -99,6 +100,8 @@ public class BuildCartonDockerfileTests
             "DockerfileFromStatement",
             "DockerfileWorkDirStatement",
             "DockerfileCopyFromStatement",   // copy from build stage
+            "DockerfileEnvStatement",        // PERL5LIB
+            "DockerfileEnvStatement",        // PERL_LOCAL_LIB_ROOT
             "DockerfileEntrypointStatement",
         ];
 

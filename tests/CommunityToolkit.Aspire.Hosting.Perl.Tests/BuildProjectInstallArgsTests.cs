@@ -35,7 +35,7 @@ public class BuildProjectInstallArgsTests
     [Fact]
     public void BuildProjectInstallArgs_CartonWithLocalLib_DoesNotAddFlag()
     {
-        // Carton manages its own local directory; --local-lib is not used
+        // Carton's install root is supplied through PERL_CARTON_PATH, not cpanm's --local-lib flag.
         var args = PerlAppResourceBuilderExtensions.BuildProjectInstallArgs(
             PerlPackageManager.Carton, cartonDeployment: false, localLibPath: "/app/local");
 

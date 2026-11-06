@@ -164,6 +164,9 @@ public static partial class PerlAppResourceBuilderExtensions
     /// Calling <see cref="WithPackage{TResource}"/> after <c>WithCarton()</c> will throw
     /// because Carton does not support installing individual modules.
     /// To install Carton, you may use "cpanm Carton".
+    /// Dependencies use the <c>local</c> directory unless overridden with
+    /// <see cref="WithLocalLib{TResource}"/>. The installer and application receive
+    /// matching <c>PERL_CARTON_PATH</c> and module search paths.
     /// </remarks>
     /// <typeparam name="TResource">The type of the Perl application resource.</typeparam>
     /// <param name="builder">The resource builder.</param>
@@ -189,6 +192,7 @@ public static partial class PerlAppResourceBuilderExtensions
             "https://metacpan.org/pod/Carton");
 #pragma warning restore ASPIRECOMMAND001
 
+        EnsureLocalLibEnvironmentCallback(builder);
         TryAttachLocalLibEnvironmentToProjectInstaller(builder);
 
         return builder;
@@ -473,7 +477,7 @@ public static partial class PerlAppResourceBuilderExtensions
             {
                 installerBuilder.WithEnvironment(context =>
                 {
-                    ApplyLocalLibEnvironment(context.EnvironmentVariables, localLibPath);
+                    ApplyLocalLibEnvironment(context.EnvironmentVariables, resource.Resource, context.ExecutionContext.IsPublishMode);
                 });
             }
         });
@@ -557,7 +561,7 @@ public static partial class PerlAppResourceBuilderExtensions
             {
                 installerBuilder.WithEnvironment(context =>
                 {
-                    ApplyLocalLibEnvironment(context.EnvironmentVariables, localLibPath);
+                    ApplyLocalLibEnvironment(context.EnvironmentVariables, resource.Resource, context.ExecutionContext.IsPublishMode);
                 });
             }
         });
@@ -586,8 +590,7 @@ public static partial class PerlAppResourceBuilderExtensions
             return;
         }
 
-        if (!resource.Resource.TryGetLastAnnotation<PerlLocalLibAnnotation>(out _) ||
-            !resource.Resource.TryGetLastAnnotation<PerlProjectInstallerAnnotation>(out var projectInstallerAnnotation))
+        if (!resource.Resource.TryGetLastAnnotation<PerlProjectInstallerAnnotation>(out var projectInstallerAnnotation))
         {
             return;
         }
@@ -605,7 +608,7 @@ public static partial class PerlAppResourceBuilderExtensions
         ExecutableResource installerResource,
         PerlAppResource parentResource)
     {
-        if (!parentResource.TryGetLastAnnotation<PerlLocalLibAnnotation>(out var localLibAnnotation))
+        if (ResolveLocalLibPath(parentResource) is null)
         {
             return;
         }
@@ -619,8 +622,7 @@ public static partial class PerlAppResourceBuilderExtensions
 
         installerResource.Annotations.Add(new EnvironmentCallbackAnnotation(context =>
         {
-            var localLibPath = ResolveLocalLibPath(parentResource.WorkingDirectory, localLibAnnotation.Path);
-            ApplyLocalLibEnvironment(context.EnvironmentVariables, localLibPath);
+            ApplyLocalLibEnvironment(context.EnvironmentVariables, parentResource, context.ExecutionContext.IsPublishMode);
             return Task.CompletedTask;
         }));
     }
