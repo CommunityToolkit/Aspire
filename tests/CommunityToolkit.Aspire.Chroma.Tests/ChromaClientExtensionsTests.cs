@@ -288,7 +288,7 @@ public class ChromaClientExtensionsTests
     }
 
     [Fact]
-    public async Task KeyedClientsUseTheirOwnConnectionsAndHealthChecks()
+    public void KeyedClientsUseTheirOwnConnectionsAndHealthChecks()
     {
         var builder = Host.CreateApplicationBuilder();
         builder.Configuration.AddInMemoryCollection([
