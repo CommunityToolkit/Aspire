@@ -123,7 +123,8 @@ public static class AspireChromaExtensions
         }
 
         // An endpoint with only the address of the server, like http://localhost:8000, gets the path of the v2 API.
-        var options = new ChromaConfigurationOptions(settings.Endpoint, tenant: settings.Tenant, database: settings.Database, chromaToken: settings.Token);
+        var options = new ChromaConfigurationOptions(settings.Endpoint, tenant: settings.Tenant, database: settings.Database, chromaToken: settings.Token)
+            .WithDistributedChroma(settings.Distributed);
 
         return sp.CreateChromaClient(options, connectionName);
     }

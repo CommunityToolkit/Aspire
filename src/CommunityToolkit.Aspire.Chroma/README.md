@@ -74,6 +74,16 @@ Endpoint=https://api.trychroma.com;Token=<API key>;Tenant=<tenant>;Database=<dat
 
 The token goes in the `X-Chroma-Token` header. The settings `Token`, `Tenant` and `Database` in `Aspire:Chroma:Client` give the values the connection string does not have, while the `Endpoint` of a connection string replaces the `Endpoint` of the settings. The settings given in code win over both. In the AppHost, `builder.AddConnectionString("chroma")` passes the connection string to the services that reference it.
 
+## Distributed Chroma
+
+For distributed Chroma, the one Chroma Cloud runs on, installed elsewhere, like with the Helm chart of Chroma, the connection string says so with `Distributed=true`:
+
+```
+Endpoint=http://chroma.example:8000;Distributed=true
+```
+
+The client then works as on distributed Chroma, as with `WithDistributedChroma` of ChromaDotNet.Client: it sends the indexes added with `ifSupported`, throws before the filters on the documents that distributed Chroma gets wrong, and deletes a collection or a database in one request. The setting `Distributed` in `Aspire:Chroma:Client` does the same. `Distributed=true` in the connection string sets it, while `false` or no value leaves the one of the settings, and the settings given in code win over both. An address of Chroma Cloud is distributed Chroma in any case.
+
 ## Traces and metrics
 
 The integration adds the traces and the metrics of ChromaDotNet.Client to OpenTelemetry: a span for each operation, like `query movies`, and the histogram `db.client.operation.duration`. `DisableTracing` and `DisableMetrics` turn them off.
