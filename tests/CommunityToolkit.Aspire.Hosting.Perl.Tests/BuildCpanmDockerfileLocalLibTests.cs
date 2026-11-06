@@ -9,7 +9,7 @@ public class BuildCpanmDockerfileLocalLibTests
     [Fact]
     public void BuildCpanmDockerfile_WithLocalLib_ProducesExpectedStatementSequence()
     {
-#pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+#pragma warning disable ASPIREDOCKERFILEBUILDER001
         var builder = new DockerfileBuilder();
 
         builder.BuildCpanmDockerfile(
@@ -17,8 +17,9 @@ public class BuildCpanmDockerfileLocalLibTests
             "app.pl",
             apiSubcommand: null,
             "perl:5-slim",
+            dependencyFiles: ["cpanfile"],
             localLibPath: "local");
-#pragma warning restore ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+#pragma warning restore ASPIREDOCKERFILEBUILDER001
 
         string[] expected =
         [
@@ -43,7 +44,7 @@ public class BuildCpanmDockerfileLocalLibTests
     [Fact]
     public void BuildCpanmDockerfile_WithoutLocalLib_HasNoEnvStatements()
     {
-#pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+#pragma warning disable ASPIREDOCKERFILEBUILDER001
         var builder = new DockerfileBuilder();
 
         builder.BuildCpanmDockerfile(
@@ -51,8 +52,9 @@ public class BuildCpanmDockerfileLocalLibTests
             "app.pl",
             apiSubcommand: null,
             "perl:5-slim",
+            dependencyFiles: ["cpanfile"],
             localLibPath: null);
-#pragma warning restore ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+#pragma warning restore ASPIREDOCKERFILEBUILDER001
 
         var actual = builder.Stages[0].Statements
             .Select(s => s.GetType().Name)
@@ -95,7 +97,7 @@ public class BuildCpanmDockerfileLocalLibTests
     [Fact]
     public void BuildCpanmDockerfile_WithControlCharactersInLocalLibPath_Throws()
     {
-#pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+#pragma warning disable ASPIREDOCKERFILEBUILDER001
         var builder = new DockerfileBuilder();
 
         Assert.Throws<InvalidOperationException>(() => builder.BuildCpanmDockerfile(
@@ -103,13 +105,14 @@ public class BuildCpanmDockerfileLocalLibTests
             "app.pl",
             apiSubcommand: null,
             "perl:5-slim",
+            dependencyFiles: ["cpanfile"],
             localLibPath: "vendor\nRUN echo injected"));
-#pragma warning restore ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+#pragma warning restore ASPIREDOCKERFILEBUILDER001
     }
 
     private static async Task<string> RenderCpanmDockerfileAsync(string localLibPath)
     {
-#pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+#pragma warning disable ASPIREDOCKERFILEBUILDER001
         var builder = new DockerfileBuilder();
 
         builder.BuildCpanmDockerfile(
@@ -117,6 +120,7 @@ public class BuildCpanmDockerfileLocalLibTests
             "app.pl",
             apiSubcommand: null,
             "perl:5-slim",
+            dependencyFiles: ["cpanfile"],
             localLibPath);
 
         using var stream = new MemoryStream();
@@ -124,7 +128,7 @@ public class BuildCpanmDockerfileLocalLibTests
         {
             await builder.WriteAsync(writer, TestContext.Current.CancellationToken);
         }
-#pragma warning restore ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+#pragma warning restore ASPIREDOCKERFILEBUILDER001
 
         return System.Text.Encoding.UTF8.GetString(stream.ToArray()).ReplaceLineEndings("\n");
     }

@@ -9,7 +9,7 @@ public class BuildCartonDockerfileTests
     [Fact]
     public void BuildCartonDockerfile_ProducesMultiStage()
     {
-#pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+#pragma warning disable ASPIREDOCKERFILEBUILDER001
         var builder = new DockerfileBuilder();
 
         builder.BuildCartonDockerfile(
@@ -17,8 +17,10 @@ public class BuildCartonDockerfileTests
             "app.pl",
             apiSubcommand: null,
             "perl:5-slim",
-            "perl:5");
-#pragma warning restore ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+            "perl:5",
+            hasCpanfile: true,
+            hasSnapshot: true);
+#pragma warning restore ASPIREDOCKERFILEBUILDER001
 
         Assert.Equal(2, builder.Stages.Count);
     }
@@ -26,7 +28,7 @@ public class BuildCartonDockerfileTests
     [Fact]
     public void BuildCartonDockerfile_BuildStageNamedBuild()
     {
-#pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+#pragma warning disable ASPIREDOCKERFILEBUILDER001
         var builder = new DockerfileBuilder();
 
         builder.BuildCartonDockerfile(
@@ -34,8 +36,10 @@ public class BuildCartonDockerfileTests
             "app.pl",
             apiSubcommand: null,
             "perl:5-slim",
-            "perl:5");
-#pragma warning restore ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+            "perl:5",
+            hasCpanfile: true,
+            hasSnapshot: true);
+#pragma warning restore ASPIREDOCKERFILEBUILDER001
 
         Assert.Equal("build", builder.Stages[0].StageName);
     }
@@ -43,7 +47,7 @@ public class BuildCartonDockerfileTests
     [Fact]
     public void BuildCartonDockerfile_BuildStageProducesExpectedStatementSequence()
     {
-#pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+#pragma warning disable ASPIREDOCKERFILEBUILDER001
         var builder = new DockerfileBuilder();
 
         builder.BuildCartonDockerfile(
@@ -51,8 +55,10 @@ public class BuildCartonDockerfileTests
             "app.pl",
             apiSubcommand: null,
             "perl:5-slim",
-            "perl:5");
-#pragma warning restore ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+            "perl:5",
+            hasCpanfile: true,
+            hasSnapshot: true);
+#pragma warning restore ASPIREDOCKERFILEBUILDER001
 
         string[] expected =
         [
@@ -75,7 +81,7 @@ public class BuildCartonDockerfileTests
     [Fact]
     public void BuildCartonDockerfile_RuntimeStageProducesExpectedStatementSequence()
     {
-#pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+#pragma warning disable ASPIREDOCKERFILEBUILDER001
         var builder = new DockerfileBuilder();
 
         builder.BuildCartonDockerfile(
@@ -83,8 +89,10 @@ public class BuildCartonDockerfileTests
             "app.pl",
             apiSubcommand: null,
             "perl:5-slim",
-            "perl:5");
-#pragma warning restore ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+            "perl:5",
+            hasCpanfile: true,
+            hasSnapshot: true);
+#pragma warning restore ASPIREDOCKERFILEBUILDER001
 
         string[] expected =
         [

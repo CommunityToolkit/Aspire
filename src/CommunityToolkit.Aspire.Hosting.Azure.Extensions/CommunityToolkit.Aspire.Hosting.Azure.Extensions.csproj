@@ -9,6 +9,7 @@
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting" />
     <PackageReference Include="Aspire.Hosting.Azure.Storage" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" VersionOverride="10.0.14" />
   </ItemGroup>
 
 </Project>

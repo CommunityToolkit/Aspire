@@ -169,6 +169,10 @@ For example, `Foo88Bar` and `Foo::Bar` both map to `app-Foo88Bar-installer` on a
 An installer belonging to another resource is never reused. These checks apply only in run mode;
 publish mode retains the module requests without creating local installers.
 
+`WithCarton()` and `WithPackage()` cannot be combined in run or publish mode, in either
+call order. Carton dependencies must be declared in `cpanfile`; use `WithProjectDependencies()`
+to install them. Individual module installation is supported with cpan or cpanm instead.
+
 ---
 
 ## Certificate trust
@@ -201,15 +205,32 @@ apply to Perl. Set an `OTEL_PERL_*` variable explicitly to override only the Per
 
 ---
 
-## Publishing
+## Publishing (preview)
 
-When publishing, Perl resources are built as container images.
+When publishing, Perl resources are built as container images. Generated Dockerfile publishing
+remains preview until Docker build-and-run smoke tests validate both cpanm and Carton images in CI.
 
 - If the app directory contains a `Dockerfile`, it is used as-is.
 - Otherwise, a Dockerfile is generated: cpanm (single-stage) by default, or Carton (multi-stage)
   when `WithCarton()` is used. Base images can be changed with `WithDockerfileBaseImage`.
 
-Generated Dockerfiles install dependencies inside the image and then copy the app with `COPY . .`.
+Generated cpanm Dockerfiles run `cpanm --installdeps --notest .` when the app directory contains
+`cpanfile`, `Makefile.PL`, or `Build.PL`. Projects with `Makefile.PL` or `Build.PL` copy the full
+application context before installation because these executable manifests can load project-local
+files. Projects with only `cpanfile` copy that manifest first, install dependencies, and then copy
+the application context, preserving the dependency cache layer when application code changes.
+Apps without a dependency manifest skip project dependency installation.
+Modules requested with `WithPackage()` are installed with cpanm after project dependencies,
+respecting `force`, `skipTest`, and `WithLocalLib()`. Repeated requests for the same module
+use the first request's options, matching run mode.
+
+Carton installs dependencies only when a `cpanfile` exists. An existing `cpanfile.snapshot`
+is copied; a missing snapshot fails publishing only when deployment mode is enabled.
+Deployment mode is the publish default; use `.WithCarton().WithProjectDependencies(cartonDeployment: false)`
+to allow installation without a snapshot. Carton requires a `cpanfile` for project dependencies;
+use `WithCpanMinus()` for projects with only `Makefile.PL` or `Build.PL`.
+
+Generated Dockerfiles install dependencies inside the image and copy the app with `COPY . .`.
 To keep host-built modules out of the image, a `<name>.Dockerfile.dockerignore` is emitted next
 to the generated Dockerfile. It excludes `local`, any relative `WithLocalLib` path, `blib`, `_build`,
 `.git`, `.env` files (at any depth), and Dockerfiles. If the app directory contains an authored `.dockerignore`, no

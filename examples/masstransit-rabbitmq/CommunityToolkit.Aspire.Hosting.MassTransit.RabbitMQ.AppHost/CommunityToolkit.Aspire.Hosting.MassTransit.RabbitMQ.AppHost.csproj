@@ -8,6 +8,7 @@
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.RabbitMQ" />
     <PackageReference Include="Aspire.Hosting.Dotnet" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" VersionOverride="10.0.14" />
   </ItemGroup>
 
   <ItemGroup>

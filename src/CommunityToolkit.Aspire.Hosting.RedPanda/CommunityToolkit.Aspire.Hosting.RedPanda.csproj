@@ -11,6 +11,7 @@
          the health check registered by the built-in Aspire Kafka hosting integration. Transitively
          brings in Confluent.Kafka for ProducerConfig. -->
     <PackageReference Include="AspNetCore.HealthChecks.Kafka" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" VersionOverride="10.0.14" />
   </ItemGroup>
 
   <ItemGroup>

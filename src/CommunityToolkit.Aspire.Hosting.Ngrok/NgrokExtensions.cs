@@ -200,11 +200,17 @@ public static class NgrokExtensions
                 {
                     ngrokConfig.AppendLine($"  {endpointReference.Resource.Name}-{endpointReference.EndpointName}:");
                     if (ngrokEndpoint.Labels is null)
-                        continue;
-                    ngrokConfig.AppendLine("    labels:");
-                    foreach (var label in ngrokEndpoint.Labels)
                     {
-                        ngrokConfig.AppendLine($"      - {label.Key}={label.Value}");
+                        // Tunnels without labels must declare a proto, labeled tunnels get it from the matching edge
+                        ngrokConfig.AppendLine($"    proto: {(endpointReference.Scheme == "tcp" ? "tcp" : "http")}");
+                    }
+                    else
+                    {
+                        ngrokConfig.AppendLine("    labels:");
+                        foreach (var label in ngrokEndpoint.Labels)
+                        {
+                            ngrokConfig.AppendLine($"      - {label.Key}={label.Value}");
+                        }
                     }
                     ngrokConfig.AppendLine($"    addr: {GetUpstreamUrl(endpointReference)}");
                 }

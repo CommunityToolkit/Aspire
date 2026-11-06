@@ -42,14 +42,6 @@ Suppress this diagnostic only when you intentionally opt into the experimental A
 
 ## CTASPIREPERL002
 
-Dockerfile generation for Perl resources is marked as experimental. The publish-mode Dockerfile
-builder (`BuildCpanmDockerfile`, `BuildCartonDockerfile`, `BuildContainerEntrypointArguments`)
-has not been fully validated across all deployment targets and may change in future releases.
-
-Current usage:
-
-- `BuildCpanmDockerfile(...)` - single-stage cpanm Dockerfile generation
-- `BuildCartonDockerfile(...)` - multi-stage Carton Dockerfile generation
-- `BuildContainerEntrypointArguments(...)` - container entrypoint argument construction
-
-Suppress this diagnostic only when you intentionally opt into the experimental Dockerfile generation.
+Retired. This diagnostic applied only to internal Perl Dockerfile helpers and did not gate a
+consumer API. The ID is reserved and must not be reused. Generated Perl Dockerfile publishing
+remains preview; see the Perl integration README for its validation status.

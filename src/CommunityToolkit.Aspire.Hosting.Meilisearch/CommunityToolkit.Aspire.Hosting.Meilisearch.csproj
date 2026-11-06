@@ -13,6 +13,7 @@
     <PackageReference Include="Aspire.Hosting" />
     <PackageReference Include="MeiliSearch" />
     <PackageReference Include="Microsoft.Bcl.Memory" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" VersionOverride="10.0.14" />
   </ItemGroup>
 
 </Project>
