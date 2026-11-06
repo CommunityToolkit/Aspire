@@ -345,9 +345,19 @@ public static partial class PerlAppResourceBuilderExtensions
             stage.Run("cpanm App::cpanminus || true");
         }
 
-        foreach (var dependencyFile in dependencyFiles)
+        var copyProjectBeforeInstall = dependencyFiles.Contains("Makefile.PL", StringComparer.Ordinal)
+            || dependencyFiles.Contains("Build.PL", StringComparer.Ordinal);
+
+        if (copyProjectBeforeInstall)
         {
-            stage.Copy(dependencyFile, "./");
+            stage.Copy(".", ".");
+        }
+        else
+        {
+            foreach (var dependencyFile in dependencyFiles)
+            {
+                stage.Copy(dependencyFile, "./");
+            }
         }
 
         if (dependencyFiles.Count > 0)
@@ -365,7 +375,10 @@ public static partial class PerlAppResourceBuilderExtensions
             }
         }
 
-        stage.Copy(".", ".");
+        if (!copyProjectBeforeInstall)
+        {
+            stage.Copy(".", ".");
+        }
 
         if (localLibRoot is not null)
         {

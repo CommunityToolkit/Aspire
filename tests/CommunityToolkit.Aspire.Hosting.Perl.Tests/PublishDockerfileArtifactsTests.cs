@@ -61,6 +61,46 @@ public class PublishDockerfileArtifactsTests
         await BuildAndRunImageAsync(result, appDir);
     }
 
+    [Theory, RequiresDocker]
+    [InlineData("Makefile.PL")]
+    [InlineData("Build.PL")]
+    public async Task Publish_WithExecutableManifestLoadingProjectFile_GeneratedImageRuns(string manifestName)
+    {
+        using var temp = new TempDirectory();
+        var appDir = CreateAppDirectory(temp, includeCpanfile: false);
+        File.WriteAllText(Path.Combine(appDir, "deps.pl"), "+{ 'Try::Tiny' => 0 };\n");
+        File.WriteAllText(Path.Combine(appDir, "app.pl"), "use Try::Tiny; exit 0;\n");
+        var moduleDir = Directory.CreateDirectory(Path.Combine(appDir, "lib", "Publish")).FullName;
+        File.WriteAllText(Path.Combine(moduleDir, "Smoke.pm"), "package Publish::Smoke;\nour $VERSION = '0.01';\n1;\n");
+        File.WriteAllText(Path.Combine(appDir, manifestName),
+            manifestName == "Makefile.PL"
+                ? """
+                  use ExtUtils::MakeMaker;
+                  my $dependencies = require './deps.pl';
+                  WriteMakefile(
+                      NAME => 'Publish::Smoke',
+                      VERSION => '0.01',
+                      PREREQ_PM => $dependencies,
+                  );
+                  """
+                : """
+                  use Module::Build;
+                  my $dependencies = require './deps.pl';
+                  Module::Build->new(
+                      module_name => 'Publish::Smoke',
+                      dist_version => '0.01',
+                      dist_abstract => 'Publish smoke test',
+                      dist_author => 'Aspire tests',
+                      license => 'perl',
+                      requires => $dependencies,
+                  )->create_build_script;
+                  """);
+
+        var result = await PublishAsync(temp, appDir, app => app.WithLocalLib("vendor/perl5"));
+
+        await BuildAndRunImageAsync(result, appDir);
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
@@ -86,22 +126,40 @@ public class PublishDockerfileArtifactsTests
     }
 
     [Theory]
-    [InlineData("Makefile.PL")]
-    [InlineData("Build.PL")]
-    public async Task Publish_WithAlternateDependencyManifest_CopiesManifestBeforeInstalling(string manifestName)
+    [InlineData("Makefile.PL", false)]
+    [InlineData("Build.PL", false)]
+    [InlineData("Makefile.PL", true)]
+    [InlineData("Build.PL", true)]
+    public async Task Publish_WithExecutableManifest_CopiesProjectBeforeInstalling(string manifestName, bool includeCpanfile)
     {
         using var temp = new TempDirectory();
-        var appDir = CreateAppDirectory(temp, includeCpanfile: false);
+        var appDir = CreateAppDirectory(temp, includeCpanfile);
         File.WriteAllText(Path.Combine(appDir, manifestName), "# dependency manifest\n");
 
         var result = await PublishAsync(temp, appDir);
 
         var dockerfile = await File.ReadAllTextAsync(result.DockerfilePath, TestContext.Current.CancellationToken);
-        var copyIndex = dockerfile.IndexOf($"COPY {manifestName} ./", StringComparison.Ordinal);
+        var copyIndex = dockerfile.IndexOf("COPY . .", StringComparison.Ordinal);
         var installIndex = dockerfile.IndexOf("RUN cpanm --installdeps --notest .", StringComparison.Ordinal);
-        Assert.True(copyIndex >= 0, $"Expected COPY for {manifestName}.\n{dockerfile}");
-        Assert.True(installIndex > copyIndex, $"Expected dependency installation after manifest COPY.\n{dockerfile}");
-        Assert.DoesNotContain("COPY cpanfile", dockerfile);
+        Assert.True(copyIndex >= 0, $"Expected application context COPY for {manifestName}.\n{dockerfile}");
+        Assert.True(installIndex > copyIndex, $"Expected dependency installation after application context COPY.\n{dockerfile}");
+        Assert.Single(dockerfile.Split('\n'), line => line.TrimEnd('\r') == "COPY . .");
+    }
+
+    [Fact]
+    public async Task Publish_WithCpanfileOnly_InstallsDependenciesBeforeCopyingProject()
+    {
+        using var temp = new TempDirectory();
+        var appDir = CreateAppDirectory(temp);
+
+        var result = await PublishAsync(temp, appDir);
+
+        var dockerfile = await File.ReadAllTextAsync(result.DockerfilePath, TestContext.Current.CancellationToken);
+        var manifestCopyIndex = dockerfile.IndexOf("COPY cpanfile ./", StringComparison.Ordinal);
+        var installIndex = dockerfile.IndexOf("RUN cpanm --installdeps --notest .", StringComparison.Ordinal);
+        var projectCopyIndex = dockerfile.IndexOf("COPY . .", StringComparison.Ordinal);
+        Assert.True(manifestCopyIndex >= 0 && installIndex > manifestCopyIndex && projectCopyIndex > installIndex,
+            $"Expected a manifest-only dependency cache layer before application context COPY.\n{dockerfile}");
     }
 
     [Theory]

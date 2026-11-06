@@ -214,8 +214,11 @@ remains preview until Docker build-and-run smoke tests validate both cpanm and C
 - Otherwise, a Dockerfile is generated: cpanm (single-stage) by default, or Carton (multi-stage)
   when `WithCarton()` is used. Base images can be changed with `WithDockerfileBaseImage`.
 
-Generated cpanm Dockerfiles copy only dependency manifests found in the app directory
-(`cpanfile`, `Makefile.PL`, and `Build.PL`) before running `cpanm --installdeps --notest .`.
+Generated cpanm Dockerfiles run `cpanm --installdeps --notest .` when the app directory contains
+`cpanfile`, `Makefile.PL`, or `Build.PL`. Projects with `Makefile.PL` or `Build.PL` copy the full
+application context before installation because these executable manifests can load project-local
+files. Projects with only `cpanfile` copy that manifest first, install dependencies, and then copy
+the application context, preserving the dependency cache layer when application code changes.
 Apps without a dependency manifest skip project dependency installation.
 Modules requested with `WithPackage()` are installed with cpanm after project dependencies,
 respecting `force`, `skipTest`, and `WithLocalLib()`. Repeated requests for the same module
@@ -227,7 +230,7 @@ Deployment mode is the publish default; use `.WithCarton().WithProjectDependenci
 to allow installation without a snapshot. Carton requires a `cpanfile` for project dependencies;
 use `WithCpanMinus()` for projects with only `Makefile.PL` or `Build.PL`.
 
-Generated Dockerfiles install dependencies inside the image and then copy the app with `COPY . .`.
+Generated Dockerfiles install dependencies inside the image and copy the app with `COPY . .`.
 To keep host-built modules out of the image, a `<name>.Dockerfile.dockerignore` is emitted next
 to the generated Dockerfile. It excludes `local`, any relative `WithLocalLib` path, `blib`, `_build`,
 `.git`, `.env` files (at any depth), and Dockerfiles. If the app directory contains an authored `.dockerignore`, no
