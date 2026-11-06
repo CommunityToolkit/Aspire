@@ -561,7 +561,7 @@ public static partial class PerlAppResourceBuilderExtensions
     /// defaulting to <c>local</c> for Carton and returning <c>null</c> otherwise.
     /// </summary>
     /// <param name="resource">The Perl resource to inspect for local::lib annotations.</param>
-    /// <param name="isPublishMode">Whether to resolve the path inside the generated container.</param>
+    /// <param name="isPublishMode">Whether the resource is being published.</param>
     /// <returns>The resolved local::lib path, or <c>null</c> when not configured.</returns>
     private static string? ResolveLocalLibPath(PerlAppResource resource, bool isPublishMode = false)
     {
@@ -581,7 +581,7 @@ public static partial class PerlAppResourceBuilderExtensions
             return null;
         }
 
-        return isPublishMode
+        return isPublishMode && !File.Exists(Path.Combine(resource.WorkingDirectory, "Dockerfile"))
             ? GetContainerLocalLibRoot(configuredPath)
             : ResolveLocalLibPath(resource.WorkingDirectory, configuredPath);
     }

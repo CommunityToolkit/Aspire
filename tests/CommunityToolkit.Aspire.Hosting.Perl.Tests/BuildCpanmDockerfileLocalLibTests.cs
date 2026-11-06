@@ -77,12 +77,27 @@ public class BuildCpanmDockerfileLocalLibTests
     [Theory]
     [InlineData("./vendor/perl5/")]
     [InlineData(".\\vendor\\perl5")]
+    [InlineData("vendor/staging/../perl5")]
+    [InlineData("vendor\\staging\\..\\perl5")]
     public async Task BuildCpanmDockerfile_WithUnnormalizedLocalLibPath_RendersNormalizedPath(string localLibPath)
     {
         var dockerfile = await RenderCpanmDockerfileAsync(localLibPath);
 
         Assert.Contains("RUN cpanm --local-lib /app/vendor/perl5 --installdeps --notest .\n", dockerfile);
         Assert.Contains("ENV PERL_LOCAL_LIB_ROOT=/app/vendor/perl5\n", dockerfile);
+    }
+
+    [Theory]
+    [InlineData("../vendor/perl5")]
+    [InlineData("vendor/../../perl5")]
+    [InlineData("..\\vendor\\perl5")]
+    public async Task BuildCpanmDockerfile_WithLocalLibPathOutsideApp_Throws(string localLibPath)
+    {
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => RenderCpanmDockerfileAsync(localLibPath));
+
+        Assert.Contains(localLibPath, exception.Message);
+        Assert.Contains("/app", exception.Message);
+        Assert.Contains("WithLocalLib", exception.Message);
     }
 
     [Fact]

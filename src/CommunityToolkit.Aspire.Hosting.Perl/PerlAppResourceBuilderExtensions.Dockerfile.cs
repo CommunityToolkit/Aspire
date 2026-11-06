@@ -179,7 +179,35 @@ public static partial class PerlAppResourceBuilderExtensions
     private static string GetContainerLocalLibRoot(string localLibPath)
     {
         ThrowIfLocalLibPathHasControlCharacters(localLibPath);
-        return $"/app/{NormalizeRelativeLocalLibPath(localLibPath) ?? localLibPath}";
+
+        // Resolve container paths independently of the host OS.
+        var normalized = localLibPath.Replace('\\', '/').Trim();
+        List<string> segments = [];
+        foreach (var segment in normalized.Split('/', StringSplitOptions.RemoveEmptyEntries))
+        {
+            if (segment == ".")
+            {
+                continue;
+            }
+
+            if (segment == "..")
+            {
+                if (segments.Count == 0)
+                {
+                    throw new InvalidOperationException(
+                        $"The local::lib path '{localLibPath}' configured with WithLocalLib escapes /app. " +
+                        "Use a path within the application directory for generated Dockerfiles.");
+                }
+
+                segments.RemoveAt(segments.Count - 1);
+            }
+            else
+            {
+                segments.Add(segment);
+            }
+        }
+
+        return segments.Count == 0 ? "/app" : $"/app/{string.Join('/', segments)}";
     }
 
     private static bool IsShellSafe(string value) =>

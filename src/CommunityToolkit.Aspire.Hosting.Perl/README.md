@@ -243,6 +243,11 @@ The runtime image and published environment use the same root for `PERL5LIB` and
 `PERL_LOCAL_LIB_ROOT`, so executable entrypoints and child Perl processes can load
 installed modules. Generated Perl entrypoint `-I` arguments also use that root.
 
+Generated Dockerfiles normalize local::lib paths within `/app` and reject parent-relative
+paths that escape it, such as `../vendor/perl5`. Authored Dockerfiles keep the existing
+path resolution instead: rooted paths such as `/opt/perl-libs` are preserved, not remapped
+under `/app`. Configure `WithLocalLib` to match the image's dependency installation path.
+
 Generated Dockerfiles install dependencies inside the image and copy the app with `COPY . .`.
 To keep host-built modules out of the image, a `<name>.Dockerfile.dockerignore` is emitted next
 to the generated Dockerfile. It excludes `local`, any relative `WithLocalLib` path, `blib`, `_build`,
