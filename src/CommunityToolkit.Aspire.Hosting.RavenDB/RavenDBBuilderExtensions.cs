@@ -13,7 +13,7 @@ namespace Aspire.Hosting;
 /// <summary>
 /// Provides extension methods for adding RavenDB resources to an <see cref="IDistributedApplicationBuilder"/>.
 /// </summary>
-public static class RavenDBBuilderExtensions
+public static partial class RavenDBBuilderExtensions
 {
     /// <summary>
     /// Adds a RavenDB server resource to the application model. A container is used for local development.
@@ -234,7 +234,7 @@ public static class RavenDBBuilderExtensions
         // Use the resource name as the database name if it's not provided
         databaseName ??= name;
 
-        builder.Resource.AddDatabase(name, databaseName);
+        builder.Resource.AddDatabase(name, databaseName, ensureCreated);
         var databaseResource = new RavenDBDatabaseResource(name, databaseName, builder.Resource);
 
         string? connectionString = null;
