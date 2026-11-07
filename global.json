@@ -6,6 +6,6 @@
     "runner": "Microsoft.Testing.Platform"
   },
   "msbuild-sdks": {
-    "Aspire.AppHost.Sdk": "17.0.0-preview.1.26555.3"
+    "Aspire.AppHost.Sdk": "17.1.0-preview.1.26556.8"
   }
 }

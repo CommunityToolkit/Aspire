@@ -4,7 +4,7 @@
     "language": "typescript/nodejs"
   },
   "sdk": {
-    "version": "17.0.0-preview.1.26555.3"
+    "version": "17.1.0-preview.1.26556.8"
   },
   "profiles": {
     "https": {
