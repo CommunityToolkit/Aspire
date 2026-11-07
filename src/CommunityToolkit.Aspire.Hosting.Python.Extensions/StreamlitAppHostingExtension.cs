@@ -75,14 +75,7 @@ public static class StreamlitAppHostingExtension
 
                 // Configure server address
                 context.Args.Add("--server.address");
-                if (builder.ExecutionContext.IsPublishMode)
-                {
-                    context.Args.Add("0.0.0.0");
-                }
-                else
-                {
-                    context.Args.Add(endpoint.EndpointAnnotation.TargetHost);
-                }
+                context.Args.Add(endpoint.Property(EndpointProperty.IPV4Host));
             });
 
         // Create a StreamlitAppResource wrapping the PythonAppResource

@@ -117,11 +117,10 @@ public static class RedisBuilderExtensions
     {
         var redisResource = builder.Resource;
 
-        var name = redisResource.Name;
-        var connectionId = DbGateBuilderExtensions.SanitizeConnectionId(name);
+        var connectionId = DbGateBuilderExtensions.SanitizeConnectionId(redisResource.Name);
         var label = $"LABEL_{connectionId}";
 
-        context.EnvironmentVariables.Add(label, name);
+        context.EnvironmentVariables.Add(label, redisResource.Name);
         context.EnvironmentVariables.Add($"URL_{connectionId}", redisResource.UriExpression);
         context.EnvironmentVariables.Add($"ENGINE_{connectionId}", "redis@dbgate-plugin-redis");
 
@@ -175,15 +174,15 @@ public static class RedisBuilderExtensions
     )
     {
         var redisResource = builder.Resource;
-        
+        var endpoint = redisResource.GetEndpoint("secondary");
+
         dbxBuilder.Resource.AddConnection(
             new DbxConnectionConfig
             {
                 Id = redisResource.Name,
                 Name = redisResource.Name,
                 DbType = DbxDatabaseType.Redis,
-                Host = redisResource.Name,
-                Port = ushort.Parse(redisResource.GetEndpoint("secondary").TargetPort!.Value.ToString()),
+                Endpoint = endpoint,
                 Username = string.Empty,
                 Password = redisResource.PasswordParameter is not null 
                     ? await redisResource.PasswordParameter.GetValueAsync(context.CancellationToken) ?? string.Empty 

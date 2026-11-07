@@ -46,6 +46,22 @@ public static partial class FlociHostingExtension
     }
 
     /// <summary>
+    /// Configures the host port that the Floci GCP resource is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for Floci GCP.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
+    /// <returns>The resource builder for Floci GCP.</returns>
+    [AspireExport("withHostPortGcp", MethodName = "withHostPort")]
+    public static IResourceBuilder<FlociGcpContainerResource> WithHostPort(
+        this IResourceBuilder<FlociGcpContainerResource> builder,
+        int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(builder.Resource.EndpointName, endpoint => endpoint.Port = port);
+    }
+
+    /// <summary>
     /// Adds a reference to a Floci GCP emulator resource, injecting the standard
     /// <c>ConnectionStrings__{name}</c> entry plus the <c>*_EMULATOR_HOST</c> environment variables
     /// the Google Cloud SDKs already honor, along with <c>GOOGLE_CLOUD_PROJECT</c> and
@@ -139,4 +155,3 @@ public static partial class FlociHostingExtension
         return builder;
     }
 }
-

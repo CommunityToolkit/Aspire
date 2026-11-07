@@ -65,12 +65,13 @@ public static class OpenTelemetryCollectorExtensions
         {
             const int healthPort = 13233;
             resourceBuilder.WithEndpoint(targetPort: healthPort, name: "health", scheme: "http")
-                .WithHttpHealthCheck("/health", endpointName: "health")
-                .WithArgs(
-                    "--feature-gates=confmap.enableMergeAppendOption",
-                    $"--config=yaml:extensions::health_check/aspire::endpoint: 0.0.0.0:{healthPort}",
-                    "--config=yaml:service::extensions: [ health_check/aspire ]"
-                    );
+                .WithHttpHealthCheck("/health", endpointName: "health");
+
+            EndpointReference healthEndpoint = resourceBuilder.GetEndpoint("health");
+            resourceBuilder.WithArgs(
+                "--feature-gates=confmap.enableMergeAppendOption",
+                ReferenceExpression.Create($"--config=yaml:extensions::health_check/aspire::endpoint: {healthEndpoint.Property(EndpointProperty.IPV4Host)}:{healthEndpoint.Property(EndpointProperty.TargetPort)}"),
+                "--config=yaml:service::extensions: [ health_check/aspire ]");
         }
         return resourceBuilder;
 

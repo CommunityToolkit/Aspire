@@ -1,4 +1,4 @@
-﻿using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.RavenDB;
 using Microsoft.Extensions.DependencyInjection;
 using Raven.Client.Documents;
@@ -15,6 +15,34 @@ namespace Aspire.Hosting;
 /// </summary>
 public static class RavenDBBuilderExtensions
 {
+    /// <summary>
+    /// Configures the host port that the RavenDB resource is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for RavenDB.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
+    /// <returns>The resource builder for RavenDB.</returns>
+    [AspireExport]
+    public static IResourceBuilder<RavenDBServerResource> WithHostPort(this IResourceBuilder<RavenDBServerResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(builder.Resource.PrimaryEndpointName, endpoint => endpoint.Port = port);
+    }
+
+    /// <summary>
+    /// Configures the host port that the RavenDB TCP endpoint is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for RavenDB.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
+    /// <returns>The resource builder for RavenDB.</returns>
+    [AspireExport]
+    public static IResourceBuilder<RavenDBServerResource> WithTcpHostPort(this IResourceBuilder<RavenDBServerResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(builder.Resource.TcpEndpointName, endpoint => endpoint.Port = port);
+    }
+
     /// <summary>
     /// Adds a RavenDB server resource to the application model. A container is used for local development.
     /// This overload simplifies the configuration by creating an unsecured RavenDB server resource with default settings.
@@ -183,8 +211,8 @@ public static class RavenDBBuilderExtensions
 
     private static void ConfigureEnvironmentVariables(EnvironmentCallbackContext context, RavenDBServerResource serverResource, Dictionary<string, object>? environmentVariables = null)
     {
-        var tcpPort = serverResource.TcpEndpoint.IsAllocated ? serverResource.TcpEndpoint.Port : serverResource.TcpEndpoint.TargetPort;
-        context.EnvironmentVariables.TryAdd("RAVEN_ServerUrl_Tcp", $"{serverResource.TcpEndpoint.Scheme}://0.0.0.0:{tcpPort}");
+        EndpointReference tcpEndpoint = serverResource.TcpEndpoint;
+        context.EnvironmentVariables.TryAdd("RAVEN_ServerUrl_Tcp", ReferenceExpression.Create($"{tcpEndpoint.Scheme}://{tcpEndpoint.Property(EndpointProperty.IPV4Host)}:{tcpEndpoint.Property(EndpointProperty.TargetPort)}"));
 
         if (environmentVariables is null)
         {

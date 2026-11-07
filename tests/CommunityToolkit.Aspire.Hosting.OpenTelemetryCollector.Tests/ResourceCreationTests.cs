@@ -365,8 +365,8 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
         }
 
         // Should not contain TLS certificate configuration args
-        Assert.DoesNotContain(context.Args.Cast<string>(), a => a.Contains("receivers::otlp::protocols::http::tls::cert_file"));
-        Assert.DoesNotContain(context.Args.Cast<string>(), a => a.Contains("receivers::otlp::protocols::grpc::tls::cert_file"));
+        Assert.DoesNotContain(context.Args.OfType<string>(), a => a.Contains("receivers::otlp::protocols::http::tls::cert_file"));
+        Assert.DoesNotContain(context.Args.OfType<string>(), a => a.Contains("receivers::otlp::protocols::grpc::tls::cert_file"));
     }
 
     [Fact]
@@ -468,7 +468,10 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
             }
 
             Assert.Contains("--feature-gates=confmap.enableMergeAppendOption", argsContext.Args);
-            Assert.Contains("--config=yaml:extensions::health_check/aspire::endpoint: 0.0.0.0:13233", argsContext.Args);
+            ReferenceExpression healthEndpointArgument = Assert.Single(argsContext.Args.OfType<ReferenceExpression>());
+            Assert.Equal(
+                "--config=yaml:extensions::health_check/aspire::endpoint: {collector.bindings.health.host}:{collector.bindings.health.targetPort}",
+                healthEndpointArgument.ValueExpression);
             Assert.Contains("--config=yaml:service::extensions: [ health_check/aspire ]", argsContext.Args);
         }
 

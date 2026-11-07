@@ -16,6 +16,20 @@ namespace Aspire.Hosting;
 /// </summary>
 public static class KurrentDBBuilderExtensions
 {
+    /// <summary>
+    /// Configures the host port that the KurrentDB resource is exposed on instead of using a randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for KurrentDB.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used a random port will be assigned.</param>
+    /// <returns>The resource builder for KurrentDB.</returns>
+    [AspireExport]
+    public static IResourceBuilder<KurrentDBResource> WithHostPort(this IResourceBuilder<KurrentDBResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(KurrentDBResource.HttpEndpointName, endpoint => endpoint.Port = port);
+    }
+
     private const string DataTargetFolder = "/var/lib/kurrentdb";
 
     /// <summary>
