@@ -8,7 +8,7 @@ param(
 
     [string[]]$RequiredCommands = @(),
 
-    [ValidateSet("healthy", "up", "down")]
+    [ValidateSet("healthy", "up", "down", "finished")]
     [string]$WaitStatus = "healthy",
 
     [int]$WaitTimeoutSeconds = 180,
@@ -58,6 +58,56 @@ function Invoke-ExternalCommand {
         $joinedArguments = [string]::Join(" ", $Arguments)
         throw "Command failed with exit code ${LASTEXITCODE}: $FilePath $joinedArguments"
     }
+}
+
+function Wait-ForResourceToFinish {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$ResourceName,
+
+        [Parameter(Mandatory = $true)]
+        [string]$AppHostPath,
+
+        [Parameter(Mandatory = $true)]
+        [int]$TimeoutSeconds
+    )
+
+    $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+    $aspirePath = Resolve-ExternalCommandPath "aspire"
+    while ($stopwatch.Elapsed.TotalSeconds -lt $TimeoutSeconds) {
+        $describeOutput = & $aspirePath describe `
+            --apphost $AppHostPath `
+            --format Json `
+            --log-level None `
+            --non-interactive `
+            --nologo
+        if ($LASTEXITCODE -ne 0) {
+            throw "Failed to inspect resource '$ResourceName' while waiting for it to finish."
+        }
+
+        $snapshot = ($describeOutput -join [Environment]::NewLine) | ConvertFrom-Json
+        $failedResource = $snapshot.resources | Where-Object { $_.state -like "Failed*" } | Select-Object -First 1
+        if ($null -ne $failedResource) {
+            throw "Resource '$($failedResource.name)' failed with state '$($failedResource.state)' while waiting for '$ResourceName'."
+        }
+
+        $resource = $snapshot.resources | Where-Object { $_.name -eq $ResourceName } | Select-Object -First 1
+        if ($null -eq $resource) {
+            throw "Resource '$ResourceName' was not found in the AppHost snapshot."
+        }
+
+        if ($resource.state -eq "Finished" -and $resource.exitCode -eq 0) {
+            return
+        }
+
+        if ($resource.state -eq "Finished") {
+            throw "Resource '$ResourceName' finished with exit code '$($resource.exitCode)'."
+        }
+
+        Start-Sleep -Seconds 2
+    }
+
+    throw "Timed out waiting for resource '$ResourceName' to finish successfully."
 }
 
 function Write-DiagnosticsSection {
@@ -224,14 +274,19 @@ try {
 
         foreach ($resource in $WaitForResources) {
             try {
-                Invoke-ExternalCommand "aspire" @(
-                    "wait",
-                    $resource,
-                    "--status", $WaitStatus,
-                    "--apphost", $resolvedAppHostPath,
-                    "--timeout", $WaitTimeoutSeconds,
-                    "--log-level", "debug"
-                )
+                if ($WaitStatus -eq "finished") {
+                    Wait-ForResourceToFinish -ResourceName $resource -AppHostPath $resolvedAppHostPath -TimeoutSeconds $WaitTimeoutSeconds
+                }
+                else {
+                    Invoke-ExternalCommand "aspire" @(
+                        "wait",
+                        $resource,
+                        "--status", $WaitStatus,
+                        "--apphost", $resolvedAppHostPath,
+                        "--timeout", $WaitTimeoutSeconds,
+                        "--log-level", "debug"
+                    )
+                }
             }
             catch {
                 Write-DiagnosticsSection -Title "aspire describe" -Action {

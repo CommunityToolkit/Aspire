@@ -12,7 +12,7 @@ public static class TypeScriptAppHostTest
     /// <param name="packageName">The integration package name and project directory name.</param>
     /// <param name="exampleName">The example folder name.</param>
     /// <param name="waitForResources">The resources that must reach the expected Aspire state, if any.</param>
-    /// <param name="waitStatus">The Aspire resource status to wait for.</param>
+    /// <param name="waitStatus">The Aspire resource status to wait for: healthy, up, down, or finished.</param>
     /// <param name="requiredCommands">Optional commands that must exist on <c>PATH</c> before validation runs.</param>
     /// <param name="secrets">Optional dictionary of secret key-value pairs to set via <c>aspire secret set</c> before starting the app host.</param>
     /// <param name="waitTimeoutSeconds">Optional timeout, in seconds, to wait for resources to reach the expected status.</param>
@@ -33,9 +33,9 @@ public static class TypeScriptAppHostTest
         ArgumentException.ThrowIfNullOrWhiteSpace(exampleName);
         ArgumentNullException.ThrowIfNull(waitForResources);
 
-        if (waitStatus is not "healthy" and not "up" and not "down")
+        if (waitStatus is not "healthy" and not "up" and not "down" and not "finished")
         {
-            throw new ArgumentException("Wait status must be one of 'healthy', 'up', or 'down'.", nameof(waitStatus));
+            throw new ArgumentException("Wait status must be one of 'healthy', 'up', 'down', or 'finished'.", nameof(waitStatus));
         }
 
         List<string> resources = waitForResources

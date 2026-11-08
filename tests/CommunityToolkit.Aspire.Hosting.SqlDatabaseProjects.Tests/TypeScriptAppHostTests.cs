@@ -7,13 +7,14 @@ namespace CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.Tests;
 public class TypeScriptAppHostTests
 {
     [Fact]
-    public async Task TypeScriptAppHostCompilesAndStarts()
+    public async Task TypeScriptAppHostCompilesAndDeploysResources()
     {
         await TypeScriptAppHostTest.Run(
             appHostProject: "CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.AppHost.TypeScript",
             packageName: "CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects",
             exampleName: "sql-database-projects",
-            waitForResources: [],
+            waitForResources: ["database-project", "package-project"],
+            waitStatus: "finished",
             cancellationToken: TestContext.Current.CancellationToken);
     }
 }

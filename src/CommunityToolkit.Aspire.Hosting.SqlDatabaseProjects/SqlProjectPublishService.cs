@@ -23,6 +23,13 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksu
                 state => state with { State = new ResourceStateSnapshot(KnownResourceStates.Starting, KnownResourceStateStyles.Error) });
 
             string? dacpacPath = null;
+            string? dacpacIdentity = null;
+            string? projectDirectory = null;
+            if (resource.TryGetLastAnnotation<IProjectMetadata>(out var metadata))
+            {
+                projectDirectory = Path.GetDirectoryName(Path.GetFullPath(metadata.ProjectPath, hostEnvironment.ContentRootPath));
+            }
+
             if (resource.TryGetLastAnnotation<SqlProjectBuildAnnotation>(out var buildAnnotation)
                 && resource.TryGetLastAnnotation<IProjectMetadata>(out var projectMetadata))
             {
@@ -31,7 +38,8 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksu
                 try
                 {
                     await BuildProjectAsync(projectMetadata.ProjectPath, buildAnnotation.Configuration, logger, cancellationToken);
-                    var builtDacpacPath = ResolveDacpacPath(resource.GetDacpacPath());
+                    var builtDacpacPath = ResolveDacpacPath(resource.GetDacpacPath(), projectDirectory);
+                    dacpacIdentity = builtDacpacPath;
                     if (File.Exists(builtDacpacPath))
                     {
                         temporaryDacpacDirectory = Path.Combine(Path.GetTempPath(), "CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects", Guid.NewGuid().ToString("N"));
@@ -56,6 +64,7 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksu
                 try
                 {
                     dacpacPath = await RestoreNuGetPackageAsync(packageAnnotation, logger, cancellationToken);
+                    dacpacIdentity = dacpacPath;
                     resource.Annotations.Add(new DacpacMetadataAnnotation(dacpacPath));
                 }
                 finally
@@ -64,7 +73,8 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksu
                 }
             }
 
-            dacpacPath ??= ResolveDacpacPath(resource.GetDacpacPath());
+            dacpacPath ??= ResolveDacpacPath(resource.GetDacpacPath(), projectDirectory);
+            dacpacIdentity ??= dacpacPath;
 
             if (!File.Exists(dacpacPath))
             {
@@ -96,7 +106,7 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksu
             {
                 options.DropExtendedPropertiesNotInSource = false;
 
-                var result = await dacpacChecksumService.CheckIfDeployedAsync(dacpacPath, connectionString, logger, cancellationToken);
+                var result = await dacpacChecksumService.CheckIfDeployedAsync(dacpacPath, dacpacIdentity, connectionString, logger, cancellationToken);
                 if (result is null)
                 {
                     await resourceNotificationService.PublishUpdateAsync(resource,
@@ -118,7 +128,7 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksu
 
             if (!string.IsNullOrEmpty(checksum) && resource.HasAnnotationOfType<DacpacSkipWhenDeployedAnnotation>())
             {
-                await dacpacChecksumService.SetChecksumAsync(dacpacPath, connectionString, checksum, logger, cancellationToken);
+                await dacpacChecksumService.SetChecksumAsync(dacpacPath, dacpacIdentity, connectionString, checksum, logger, cancellationToken);
             }
 
             await resourceNotificationService.PublishUpdateAsync(resource,
@@ -158,8 +168,10 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksu
         }
     }
 
-    private string ResolveDacpacPath(string dacpacPath)
-        => Path.IsPathRooted(dacpacPath) ? dacpacPath : Path.Combine(hostEnvironment.ContentRootPath, dacpacPath);
+    private string ResolveDacpacPath(string dacpacPath, string? baseDirectory = null)
+        => Path.IsPathRooted(dacpacPath)
+            ? dacpacPath
+            : Path.GetFullPath(dacpacPath, baseDirectory ?? hostEnvironment.ContentRootPath);
 
     private static async Task BuildProjectAsync(string projectPath, string configuration, ILogger logger, CancellationToken cancellationToken)
     {

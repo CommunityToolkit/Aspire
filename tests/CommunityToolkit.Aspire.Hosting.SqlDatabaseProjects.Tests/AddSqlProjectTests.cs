@@ -77,6 +77,50 @@ public class AddSqlProjectTests
     }
 
     [Fact]
+    public async Task AddSqlProject_ResolvesRelativeDacpacPathFromProjectDirectory()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"sql project output {Guid.NewGuid():N}");
+        var projectDirectory = Path.Combine(directory, "Database");
+        Directory.CreateDirectory(projectDirectory);
+
+        try
+        {
+            var projectPath = Path.Combine(projectDirectory, "Database.sqlproj");
+            var relativeDacpacPath = Path.Combine("bin", "Debug", "Database.dacpac");
+            var projectDocument = new XDocument(
+                new XElement("Project",
+                    new XAttribute("DefaultTargets", "Build"),
+                    new XElement("PropertyGroup", new XElement("SqlTargetPath", relativeDacpacPath)),
+                    new XElement("Target", new XAttribute("Name", "Restore")),
+                    new XElement("Target", new XAttribute("Name", "Build"),
+                        new XElement("MakeDir", new XAttribute("Directories", Path.GetDirectoryName(relativeDacpacPath)!)),
+                        new XElement("WriteLinesToFile",
+                            new XAttribute("File", relativeDacpacPath),
+                            new XAttribute("Lines", "test DACPAC")))));
+            projectDocument.Save(projectPath);
+
+            var deployer = new RecordingDacpacDeployer();
+            var builder = DistributedApplication.CreateBuilder();
+            builder.Configuration["ConnectionStrings:Target"] = "Server=localhost;Database=Target;Integrated Security=True;TrustServerCertificate=True";
+            builder.Services.AddSingleton<IDacpacDeployer>(deployer);
+            var target = builder.AddConnectionString("Target");
+            var project = builder.AddSqlProject("schema", projectPath).WithReference(target);
+
+            using var app = builder.Build();
+            var publishService = app.Services.GetRequiredService<SqlProjectPublishService>();
+
+            await publishService.PublishSqlProject(project.Resource, target.Resource, null, CancellationToken.None);
+
+            Assert.True(deployer.DacpacExistedDuringDeploy);
+            Assert.Equal(1, deployer.DeployCount);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task AddSqlProject_ConcurrentBuildsForSamePathUseIsolatedDacpacs()
     {
         var projectPath = Path.GetFullPath(TestProject.RelativePath, AppContext.BaseDirectory);
@@ -109,6 +153,35 @@ public class AddSqlProjectTests
         }
 
         Assert.All(deployer.DacpacPaths, path => Assert.False(File.Exists(path)));
+    }
+
+    [Fact]
+    public async Task AddSqlProject_SkipWhenDeployedUsesStableChecksumIdentity()
+    {
+        var projectPath = Path.GetFullPath(TestProject.RelativePath, AppContext.BaseDirectory);
+        var deployer = new RecordingDacpacDeployer();
+        var checksumService = new RecordingChecksumService();
+        var builder = DistributedApplication.CreateBuilder();
+        builder.Configuration["ConnectionStrings:Target"] = "Server=localhost;Database=Target;Integrated Security=True;TrustServerCertificate=True";
+        builder.Services.AddSingleton<IDacpacDeployer>(deployer);
+        builder.Services.AddSingleton<IDacpacChecksumService>(checksumService);
+        var target = builder.AddConnectionString("Target");
+        var project = builder.AddSqlProject("schema", projectPath).WithReference(target).WithSkipWhenDeployed();
+
+        using var app = builder.Build();
+        var publishService = app.Services.GetRequiredService<SqlProjectPublishService>();
+
+        await publishService.PublishSqlProject(project.Resource, target.Resource, null, CancellationToken.None);
+        await publishService.PublishSqlProject(project.Resource, target.Resource, null, CancellationToken.None);
+
+        Assert.Equal(2, checksumService.DacpacPaths.Count);
+        Assert.NotEqual(checksumService.DacpacPaths[0], checksumService.DacpacPaths[1]);
+        Assert.All(checksumService.DacpacPaths, path => Assert.True(checksumService.DacpacExistedDuringCheck[path]));
+        Assert.Equal(2, checksumService.DacpacIdentities.Count);
+        Assert.Equal(checksumService.DacpacIdentities[0], checksumService.DacpacIdentities[1]);
+        Assert.Equal(checksumService.DacpacIdentities[0], checksumService.SetChecksumIdentities.Single());
+        Assert.Equal(1, deployer.DeployCount);
+        Assert.All(checksumService.DacpacPaths, path => Assert.False(File.Exists(path)));
     }
 
     [Theory]
@@ -327,8 +400,11 @@ public class AddSqlProjectTests
 
         public bool DacpacExistedDuringDeploy { get; private set; }
 
+        public int DeployCount { get; private set; }
+
         public void Deploy(string dacpacPath, DacDeployOptions options, string targetConnectionString, string? targetDatabaseName, ILogger deploymentLogger, CancellationToken cancellationToken)
         {
+            DeployCount++;
             DacpacPath = dacpacPath;
             DacpacExistedDuringDeploy = File.Exists(dacpacPath);
         }
@@ -357,6 +433,34 @@ public class AddSqlProjectTests
             }
 
             _releaseDeployments.Wait(cancellationToken);
+        }
+    }
+
+    private sealed class RecordingChecksumService : IDacpacChecksumService
+    {
+        private readonly HashSet<string> _deployedIdentities = [];
+
+        public List<string> DacpacPaths { get; } = [];
+
+        public List<string> DacpacIdentities { get; } = [];
+
+        public List<string> SetChecksumIdentities { get; } = [];
+
+        public Dictionary<string, bool> DacpacExistedDuringCheck { get; } = [];
+
+        public Task<string?> CheckIfDeployedAsync(string dacpacPath, string dacpacIdentity, string targetConnectionString, ILogger deploymentSkipLogger, CancellationToken cancellationToken)
+        {
+            DacpacPaths.Add(dacpacPath);
+            DacpacIdentities.Add(dacpacIdentity);
+            DacpacExistedDuringCheck[dacpacPath] = File.Exists(dacpacPath);
+            return Task.FromResult<string?>(_deployedIdentities.Contains(dacpacIdentity) ? null : "checksum");
+        }
+
+        public Task SetChecksumAsync(string dacpacPath, string dacpacIdentity, string targetConnectionString, string dacpacChecksum, ILogger deploymentSkipLogger, CancellationToken cancellationToken)
+        {
+            SetChecksumIdentities.Add(dacpacIdentity);
+            _deployedIdentities.Add(dacpacIdentity);
+            return Task.CompletedTask;
         }
     }
 }
