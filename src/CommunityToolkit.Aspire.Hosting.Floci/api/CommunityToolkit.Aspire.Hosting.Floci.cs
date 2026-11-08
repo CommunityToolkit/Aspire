@@ -128,7 +128,7 @@ namespace Aspire.Hosting.ApplicationModel
     }
 
     [AspireExport(ExposeProperties = true)]
-    public partial class FlociAzureServiceBusResource : Resource, IResourceWithParent<FlociAzureContainerResource>, IResourceWithParent, IResource, IResourceWithConnectionString, IExpressionValue, IValueProvider, IManifestExpressionProvider, IValueWithReferences, IResourceWithEndpoints
+    public partial class FlociAzureServiceBusResource : Resource, IResourceWithConnectionString, IResource, IExpressionValue, IValueProvider, IManifestExpressionProvider, IValueWithReferences, IResourceWithEndpoints
     {
         public FlociAzureServiceBusResource(string name, FlociAzureContainerResource parent) : base(default!) { }
 
