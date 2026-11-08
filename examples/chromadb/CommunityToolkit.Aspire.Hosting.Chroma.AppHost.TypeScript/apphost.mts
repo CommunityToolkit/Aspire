@@ -3,7 +3,6 @@ import { createBuilder } from "./.aspire/modules/aspire.mjs";
 const builder = await createBuilder();
 
 const chroma = await builder.addChroma("chroma");
-await chroma.withHostPort({ port: 18080 });
 await chroma.withDataVolume({ name: "chroma-data" });
 
 const _primaryEndpoint = await chroma.primaryEndpoint();

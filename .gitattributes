@@ -18,6 +18,11 @@
 *.cmd text eol=crlf
 *.bat text eol=crlf
 
+# SSH private-key fixtures must retain Unix line endings when mounted into containers.
+examples/sftp/**/ssh_host_*_key text eol=lf
+examples/sftp/**/id_rsa text eol=lf
+examples/sftp/**/id_ed25519 text eol=lf
+
 *.cs text=auto diff=csharp
 *.vb text=auto
 *.resx text=auto

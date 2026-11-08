@@ -3,7 +3,7 @@ using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Floci.Tests;
 
-[RequiresDocker]
+[RequiresTestcontainers]
 public class TypeScriptAppHostTests
 {
     [Fact]

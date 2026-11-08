@@ -687,7 +687,7 @@ public class McpInspectorResourceBuilderExtensionsTests
         var args = await inspectorResource.GetArgumentListAsync();
         var argsList = args.ToList();
 
-        Assert.Equal(new[] { "-y", "@modelcontextprotocol/inspector@0.15.0" }, args);
+        Assert.Equal(new[] { "-y", "--package", "@modelcontextprotocol/inspector@0.15.0", "mcp-inspector" }, args);
     }
 
     [Fact]

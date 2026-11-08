@@ -400,7 +400,9 @@ public static class McpInspectorResourceBuilderExtensions
                     ctx.Args.Insert(0, packageName);
                     break;
                 default: // npm/npx
+                    ctx.Args.Insert(0, "mcp-inspector");
                     ctx.Args.Insert(0, packageName);
+                    ctx.Args.Insert(0, "--package");
                     ctx.Args.Insert(0, "-y");
                     break;
             }
