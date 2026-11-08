@@ -2,7 +2,6 @@
 
   <ItemGroup>
     <PackageReference Include="Testcontainers.MsSql" />
-    <PackageReference Include="ErikEJ.Dacpac.Chinook" />
   </ItemGroup>
 
   <ItemGroup>
