@@ -713,7 +713,7 @@ public class McpInspectorResourceBuilderExtensionsTests
         var args = await inspectorResource.GetArgumentListAsync();
         var argsList = args.ToList();
 
-        Assert.Equal("@modelcontextprotocol/inspector@1.2.3", args[1]);
+        Assert.Equal("@modelcontextprotocol/inspector@1.2.3", args[2]);
     }
 
     private static async Task<IReadOnlyList<string>> GetArgsAsync(McpInspectorResource resource)

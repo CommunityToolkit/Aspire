@@ -594,6 +594,9 @@ public class AddDbGateTests
         var app = await builder.BuildAsync();
         await app.StartAsync();
         await tcs.Task;
+        await app.ResourceNotifications
+            .WaitForResourceHealthyAsync("dbgate")
+            .WaitAsync(TimeSpan.FromMinutes(2));
 
         var urls = dbgate.Resource.Annotations.OfType<ResourceUrlAnnotation>();
         Assert.Single(urls, u => u.DisplayText == "DbGate Dashboard");
