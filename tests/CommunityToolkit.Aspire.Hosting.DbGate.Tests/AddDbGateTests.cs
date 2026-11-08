@@ -595,7 +595,7 @@ public class AddDbGateTests
         await app.StartAsync();
         await tcs.Task;
         await app.ResourceNotifications
-            .WaitForResourceHealthyAsync("dbgate")
+            .WaitForResourceAsync("dbgate", KnownResourceStates.Running)
             .WaitAsync(TimeSpan.FromMinutes(2));
 
         var urls = dbgate.Resource.Annotations.OfType<ResourceUrlAnnotation>();
