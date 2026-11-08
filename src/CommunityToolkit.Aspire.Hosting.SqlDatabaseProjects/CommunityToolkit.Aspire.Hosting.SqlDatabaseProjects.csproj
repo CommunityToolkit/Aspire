@@ -1,11 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Description>An Aspire hosting integration capable of deploying SQL Server Database Projects as
-      part of your AppHost.</Description>
+    <Description>An Aspire hosting integration capable of deploying SQL Server Database Projects as part of your AppHost.</Description>
     <AdditionalPackageTags>hosting sql sqlproj</AdditionalPackageTags>
-    <!--Microsoft.SqlServer.DacFx
-    package have vulnerable dependency-->
+    <!--Microsoft.SqlServer.DacFx package have vulnerable dependency-->
     <NoWarn>$(NoWarn);NU1903;ASPIREATS001</NoWarn>
   </PropertyGroup>
 
@@ -21,8 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="**/*.props;**/*.targets" Pack="true"
-      PackagePath="%(RecursiveDir)%(Filename)%(Extension)" />
+    <None Include="**/*.props;**/*.targets" Pack="true" PackagePath="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>
