@@ -146,6 +146,22 @@ public class AddChromaTests
         Assert.Equal(8000, endpoint.TargetPort);
     }
 
+    [Fact]
+    public void WithHostPortBindsThatHostPort()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        appBuilder.AddChroma("chroma")
+            .WithHostPort(8123);
+
+        using var app = appBuilder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(appModel.Resources.OfType<ChromaResource>());
+        var endpoint = Assert.Single(resource.Annotations.OfType<EndpointAnnotation>());
+        Assert.Equal(8123, endpoint.Port);
+        Assert.Equal(8000, endpoint.TargetPort);
+    }
+
     // The documentation of AddChroma writes the default image and tag as text, which the TypeScript AppHost shows too;
     // this test fails when they no longer match the image of the resource.
     [Fact]

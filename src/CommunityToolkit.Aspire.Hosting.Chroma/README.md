@@ -15,7 +15,8 @@ In your AppHost's `Program.cs`:
 ```csharp
 var builder = DistributedApplication.CreateBuilder(args);
 
-var chroma = builder.AddChroma("chroma");
+var chroma = builder.AddChroma("chroma")
+                    .WithHostPort(8000);
 
 builder.AddProject<Projects.MyWebApp>("mywebapp")
        .WithReference(chroma);
@@ -23,7 +24,7 @@ builder.AddProject<Projects.MyWebApp>("mywebapp")
 builder.Build().Run();
 ```
 
-`AddChroma("chroma")` adds a container resource named `chroma`, with the HTTP endpoint `http` on port 8000 of the container. The port on the host changes at each run; `AddChroma("chroma", port: 8000)` sets it. A resource that references it gets the connection string `ConnectionStrings__chroma`, `Endpoint=http://{host}:{port}`, and the variables `CHROMA_HOST`, `CHROMA_PORT` and `CHROMA_URI`: the values of the `Host`, `Port` and `UriExpression` properties of the resource.
+`AddChroma("chroma")` adds a container resource named `chroma`, with the HTTP endpoint `http` on port 8000 of the container. The port on the host changes at each run; `WithHostPort(8000)` sets it. A resource that references it gets the connection string `ConnectionStrings__chroma`, `Endpoint=http://{host}:{port}`, and the variables `CHROMA_HOST`, `CHROMA_PORT` and `CHROMA_URI`: the values of the `Host`, `Port` and `UriExpression` properties of the resource.
 
 ### TypeScript AppHost
 
@@ -32,7 +33,8 @@ import { createBuilder } from "./.aspire/modules/aspire.mjs";
 
 const builder = await createBuilder();
 
-const chroma = await builder.addChroma("chroma", { port: 8000 });
+const chroma = await builder.addChroma("chroma");
+await chroma.withHostPort({ port: 8000 });
 await chroma.withDataVolume({ name: "chroma-data" });
 
 await builder.build().run();
