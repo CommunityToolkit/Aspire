@@ -11,6 +11,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
     [InlineData("sdk-project", "SdkProject", "Database1")]
     [InlineData("other-sdk-project", "SdkProject", "Database3")]
     [InlineData("chinook", "InvoiceLine", "Database2")]
+    [InlineData("chinook-package", "InvoiceLine", "PackageDatabase")]
     public async Task ProjectBasedResourceStartsAndRespondsOk(string resourceName, string tableName, string database)
     {
         await fixture.ResourceNotificationService.WaitForResourceAsync(resourceName, KnownResourceStates.TerminalStates).WaitAsync(TimeSpan.FromMinutes(5));
