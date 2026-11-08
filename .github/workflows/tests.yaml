@@ -122,6 +122,10 @@ jobs:
       - name: Set up WSLC (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          CUSTOM_CONTAINER_REGISTRY: ${{ secrets.CUSTOM_CONTAINER_REGISTRY }}
         run: |
           $dockerService = Get-Service -Name docker -ErrorAction SilentlyContinue
           if ($null -ne $dockerService) {
@@ -145,6 +149,18 @@ jobs:
           wslc info
           if ($LASTEXITCODE -ne 0) {
             throw "WSLC runtime check failed: $LASTEXITCODE"
+          }
+
+          if (![string]::IsNullOrWhiteSpace($env:CUSTOM_CONTAINER_REGISTRY) `
+              -and ![string]::IsNullOrWhiteSpace($env:DOCKER_USERNAME) `
+              -and ![string]::IsNullOrWhiteSpace($env:DOCKER_PASSWORD)) {
+            $env:DOCKER_PASSWORD | wslc login `
+              --username $env:DOCKER_USERNAME `
+              --password-stdin `
+              $env:CUSTOM_CONTAINER_REGISTRY
+            if ($LASTEXITCODE -ne 0) {
+              throw "WSLC registry login failed: $LASTEXITCODE"
+            }
           }
 
       - name: Verify Docker is running
