@@ -1,6 +1,7 @@
 using Aspire.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.SqlServer.Dac;
+using System.Collections.Concurrent;
 using System.Xml.Linq;
 
 namespace CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.Tests;
@@ -62,6 +63,7 @@ public class AddSqlProjectTests
         var project = appBuilder.AddSqlProject("MySqlProject", projectPath, "Release");
         var target = appBuilder.AddConnectionString("Target");
         project.WithReference(target);
+        var expectedDacpacPath = ((IResourceWithDacpac)project.Resource).GetDacpacPath();
 
         using var app = appBuilder.Build();
         var publishService = app.Services.GetRequiredService<SqlProjectPublishService>();
@@ -69,8 +71,44 @@ public class AddSqlProjectTests
         await publishService.PublishSqlProject(project.Resource, target.Resource, null, CancellationToken.None);
 
         Assert.NotNull(deployer.DacpacPath);
-        Assert.True(File.Exists(deployer.DacpacPath));
-        Assert.Contains("Release", deployer.DacpacPath, StringComparison.OrdinalIgnoreCase);
+        Assert.True(deployer.DacpacExistedDuringDeploy);
+        Assert.False(File.Exists(deployer.DacpacPath));
+        Assert.Contains("Release", expectedDacpacPath, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task AddSqlProject_ConcurrentBuildsForSamePathUseIsolatedDacpacs()
+    {
+        var projectPath = Path.GetFullPath(TestProject.RelativePath, AppContext.BaseDirectory);
+        var deployer = new BlockingDacpacDeployer();
+        var builder = DistributedApplication.CreateBuilder();
+        builder.Configuration["ConnectionStrings:Target"] = "Server=localhost;Database=Target;Integrated Security=True;TrustServerCertificate=True";
+        builder.Services.AddSingleton<IDacpacDeployer>(deployer);
+        var target = builder.AddConnectionString("Target");
+        var firstProject = builder.AddSqlProject("first-schema", projectPath).WithReference(target);
+        var secondProject = builder.AddSqlProject("second-schema", projectPath).WithReference(target);
+
+        using var app = builder.Build();
+        var publishService = app.Services.GetRequiredService<SqlProjectPublishService>();
+        var firstDeployment = Task.Run(() => publishService.PublishSqlProject(firstProject.Resource, target.Resource, null, CancellationToken.None));
+        var secondDeployment = Task.Run(() => publishService.PublishSqlProject(secondProject.Resource, target.Resource, null, CancellationToken.None));
+
+        try
+        {
+            await deployer.WaitForTwoDeploymentsAsync(TimeSpan.FromMinutes(2));
+
+            var dacpacPaths = deployer.DacpacPaths;
+            Assert.Equal(2, dacpacPaths.Length);
+            Assert.NotEqual(dacpacPaths[0], dacpacPaths[1]);
+            Assert.All(dacpacPaths, path => Assert.True(File.Exists(path)));
+        }
+        finally
+        {
+            deployer.ReleaseDeployments();
+            await Task.WhenAll(firstDeployment, secondDeployment);
+        }
+
+        Assert.All(deployer.DacpacPaths, path => Assert.False(File.Exists(path)));
     }
 
     [Theory]
@@ -287,9 +325,38 @@ public class AddSqlProjectTests
     {
         public string? DacpacPath { get; private set; }
 
+        public bool DacpacExistedDuringDeploy { get; private set; }
+
         public void Deploy(string dacpacPath, DacDeployOptions options, string targetConnectionString, string? targetDatabaseName, ILogger deploymentLogger, CancellationToken cancellationToken)
         {
             DacpacPath = dacpacPath;
+            DacpacExistedDuringDeploy = File.Exists(dacpacPath);
+        }
+    }
+
+    private sealed class BlockingDacpacDeployer : IDacpacDeployer
+    {
+        private readonly ConcurrentQueue<string> _dacpacPaths = new();
+        private readonly TaskCompletionSource _twoDeploymentsStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly ManualResetEventSlim _releaseDeployments = new();
+        private int _deploymentCount;
+
+        public string[] DacpacPaths => _dacpacPaths.ToArray();
+
+        public Task WaitForTwoDeploymentsAsync(TimeSpan timeout)
+            => _twoDeploymentsStarted.Task.WaitAsync(timeout);
+
+        public void ReleaseDeployments() => _releaseDeployments.Set();
+
+        public void Deploy(string dacpacPath, DacDeployOptions options, string targetConnectionString, string? targetDatabaseName, ILogger deploymentLogger, CancellationToken cancellationToken)
+        {
+            _dacpacPaths.Enqueue(dacpacPath);
+            if (Interlocked.Increment(ref _deploymentCount) == 2)
+            {
+                _twoDeploymentsStarted.TrySetResult();
+            }
+
+            _releaseDeployments.Wait(cancellationToken);
         }
     }
 }

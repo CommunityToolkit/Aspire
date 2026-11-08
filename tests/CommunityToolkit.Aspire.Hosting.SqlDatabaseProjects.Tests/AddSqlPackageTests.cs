@@ -1,6 +1,7 @@
 using Aspire.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.SqlServer.Dac;
+using System.Collections.Concurrent;
 using System.IO.Compression;
 using System.Xml.Linq;
 
@@ -116,6 +117,29 @@ public class AddSqlPackageTests
 
         Assert.Equal("version", exception.ParamName);
         Assert.Empty(builder.Resources.OfType<SqlProjectResource>());
+    }
+
+    [Theory]
+    [InlineData("_Company.Database", true)]
+    [InlineData("Company.Database_", true)]
+    [InlineData("Company..Database", false)]
+    [InlineData("Company.-Database", false)]
+    public void AddSqlPackage_ValidatesPackageIdUsingNuGetRules(string packageId, bool isValid)
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        if (isValid)
+        {
+            builder.AddSqlPackage("schema", packageId, "1.0.0");
+            Assert.Single(builder.Resources.OfType<SqlProjectResource>());
+        }
+        else
+        {
+            var exception = Assert.Throws<ArgumentException>(() => builder.AddSqlPackage("schema", packageId, "1.0.0"));
+
+            Assert.Equal("packageId", exception.ParamName);
+            Assert.Empty(builder.Resources.OfType<SqlProjectResource>());
+        }
     }
 
     [Theory]
