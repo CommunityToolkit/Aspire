@@ -42,6 +42,14 @@ public class NgrokConfigurationFileTests
 
             var endpointAnnotation = api.Resource.Annotations.OfType<EndpointAnnotation>().Single();
             endpointAnnotation.AllocatedEndpoint = new AllocatedEndpoint(endpointAnnotation, "api", 8080);
+            endpointAnnotation.AllAllocatedEndpoints.AddOrUpdateAllocatedEndpoint(
+                KnownNetworkIdentifiers.DefaultAspireContainerNetwork,
+                new AllocatedEndpoint(
+                    endpointAnnotation,
+                    "api",
+                    8080,
+                    EndpointBindingMode.SingleAddress,
+                    networkId: KnownNetworkIdentifiers.DefaultAspireContainerNetwork));
 
             var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
             var resource = Assert.Single(appModel.Resources.OfType<NgrokResource>());

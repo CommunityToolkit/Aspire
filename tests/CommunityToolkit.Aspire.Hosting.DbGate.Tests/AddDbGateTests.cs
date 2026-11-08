@@ -262,9 +262,9 @@ public class AddDbGateTests
 
         Assert.Equal("mongodb1,mongodb2,postgres1,postgres2,redis1,redis2,sqlserver1,sqlserver2,mysql1,mysql2", CONNECTIONS);
         var redis1Password = await redisResource1.PasswordParameter!.GetValueAsync(default);
-        var expectedRedis1Uri = $"rediss://:{Uri.EscapeDataString(redis1Password!)}@storage.dev.internal:10000";
+        var expectedRedis1Uri = $"rediss://:{Uri.EscapeDataString(redis1Password!)}@redis1:6379";
         var redis2Password = await redisResource2.PasswordParameter!.GetValueAsync(default);
-        var expectedRedis2Uri = $"rediss://:{Uri.EscapeDataString(redis2Password!)}@storage.dev.internal:10000";
+        var expectedRedis2Uri = $"rediss://:{Uri.EscapeDataString(redis2Password!)}@redis2:6379";
 
         Assert.Collection(envs,
             item =>
