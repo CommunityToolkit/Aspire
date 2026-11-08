@@ -176,7 +176,7 @@ builder.AddAzureServiceBusClient("servicebus");
 
 AMQP and AMQPS must use different host ports. Repeated calls on the same emulator return the existing child only when the resource name and any specified ports match.
 
-The Service Bus reference helper resolves the proxyless AMQP endpoint from the consuming resource's network context. Host processes receive the loopback address, while container consumers receive Aspire's allocated IPv4 host address; no container-runtime host alias is required.
+The Service Bus reference helper resolves the proxyless AMQP endpoint from the consuming resource's network context. Host processes receive the loopback address, while container consumers receive the address Aspire allocates for the container network; no custom container-runtime host alias is added.
 
 Service Bus support is run-only. `WithServiceBus()` throws in publish mode because the Artemis sidecar has no deployable backing resource in the Aspire model. In an AppHost that also publishes, call it inside `if (builder.ExecutionContext.IsRunMode)` and reference a deployable Service Bus resource in the publish branch.
 

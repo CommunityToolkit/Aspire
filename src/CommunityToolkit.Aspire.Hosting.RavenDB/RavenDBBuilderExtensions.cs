@@ -201,9 +201,6 @@ public static class RavenDBBuilderExtensions
 
             if (securedServerSettings.CertificatePassword is not null)
                 environmentVariables.TryAdd("RAVEN_Security_Certificate_Password", securedServerSettings.CertificatePassword);
-
-            var publicUri = new Uri(securedServerSettings.PublicServerUrl);
-            environmentVariables.TryAdd("RAVEN_PublicServerUrl_Tcp", $"tcp://{publicUri.Host}:{serverSettings.TcpPort ?? 38888}");
         }
 
         return environmentVariables;
@@ -225,19 +222,12 @@ public static class RavenDBBuilderExtensions
                 context.EnvironmentVariables.TryAdd(environmentVariable.Key, environmentVariable.Value);
         }
 
-        if (serverResource.TcpEndpoint.IsAllocated)
-        {
-            context.EnvironmentVariables.TryAdd("RAVEN_PublicServerUrl_Tcp", serverResource.TcpEndpoint.Url);
-        }
-        // Tcp endpoint is not allocated yet when we're generating manifest (e.g. aspire plugins)
-        // In such a case, just check if the public server url isn't set manually by the user
-        // If it is, use it with the container target port explicitly to generate the correct manifest
-        else if (serverResource.PublicServerUrl is not null) 
-        {
-            string publicHost = new Uri(serverResource.PublicServerUrl).Host;
-            string publicServerUrlTcp = $"tcp://{publicHost}:{serverResource.TcpEndpoint.TargetPort}";
-            context.EnvironmentVariables.TryAdd("RAVEN_PublicServerUrl_Tcp", publicServerUrlTcp);
-        }
+        var publicTcpEndpoint = new EndpointReference(
+            serverResource,
+            tcpEndpoint.EndpointAnnotation,
+            KnownNetworkIdentifiers.LocalhostNetwork);
+        context.EnvironmentVariables["RAVEN_PublicServerUrl_Tcp"] =
+            publicTcpEndpoint.Property(EndpointProperty.Url);
     }
 
     /// <summary>

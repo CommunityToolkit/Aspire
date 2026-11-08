@@ -68,14 +68,35 @@ public class AddListmonkTests
     {
         using var appBuilder = TestDistributedApplicationBuilder.Create();
 
+#pragma warning disable CS0618 // Verify compatibility of the legacy API.
         var listmonk = appBuilder.AddListmonk("listmonk")
             .WithAppAddress("192.0.2.1");
+#pragma warning restore CS0618
 
         Assert.Equal("192.0.2.1", listmonk.Resource.PrimaryEndpoint.EndpointAnnotation.TargetHost);
 
         var config = await EvaluateEnvironmentVariablesAsync(listmonk.Resource, "192.0.2.1");
 
         Assert.Equal("192.0.2.1:9000", config["LISTMONK_app__address"]);
+    }
+
+    [Fact]
+    public async Task WithAppAddressPreservesHostAndPortConfiguration()
+    {
+        using var appBuilder = TestDistributedApplicationBuilder.Create();
+
+#pragma warning disable CS0618 // Verify compatibility of the legacy API.
+        var listmonk = appBuilder.AddListmonk("listmonk")
+            .WithAppAddress("0.0.0.0:9100");
+#pragma warning restore CS0618
+
+        var endpoint = listmonk.Resource.PrimaryEndpoint.EndpointAnnotation;
+        Assert.Equal("0.0.0.0", endpoint.TargetHost);
+        Assert.Equal(9100, endpoint.TargetPort);
+
+        var config = await EvaluateEnvironmentVariablesAsync(listmonk.Resource, "0.0.0.0");
+
+        Assert.Equal("0.0.0.0:9100", config["LISTMONK_app__address"]);
     }
 
     [Fact]

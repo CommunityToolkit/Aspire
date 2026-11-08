@@ -107,6 +107,11 @@ public static class DbxBuilderExtensions
         DbxContainerResource dbxContainer,
         CancellationToken cancellationToken)
     {
+        if (!string.IsNullOrWhiteSpace(connection.ConnectionString))
+        {
+            return;
+        }
+
         if (connection.Endpoint is not null)
         {
             ValueProviderContext valueProviderContext = new()

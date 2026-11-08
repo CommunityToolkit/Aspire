@@ -95,15 +95,48 @@ public static class ListmonkBuilderExtensions
     /// Configures the listmonk web server bind host, overriding the default which is derived from the resource's endpoint.
     /// </summary>
     /// <param name="builder">The listmonk resource builder.</param>
-    /// <param name="address">The host value to bind the listmonk web server to, for example <c>0.0.0.0</c>.</param>
+    /// <param name="address">The host or host and port value to bind the listmonk web server to, for example <c>0.0.0.0:9000</c>.</param>
     /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
     [AspireExport]
+    [Obsolete("Use WithHostPort to configure the host port and WithEndpoint(endpoint => endpoint.TargetHost = host) to configure the bind host.")]
     public static IResourceBuilder<ListmonkResource> WithAppAddress(this IResourceBuilder<ListmonkResource> builder, string address)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(address);
 
-        return builder.WithEndpoint(ListmonkResource.PrimaryEndpointName, endpoint => endpoint.TargetHost = address);
+        var host = address;
+        int? port = null;
+        var portSeparator = address.LastIndexOf(':');
+
+        if (portSeparator > 0 && portSeparator == address.IndexOf(':')
+            && int.TryParse(address[(portSeparator + 1)..], out var parsedPort)
+            && parsedPort is > 0 and <= ushort.MaxValue)
+        {
+            host = address[..portSeparator];
+            port = parsedPort;
+        }
+        else if (address.StartsWith('['))
+        {
+            var closingBracket = address.IndexOf(']');
+            if (closingBracket > 0
+                && closingBracket + 1 < address.Length
+                && address[closingBracket + 1] == ':'
+                && int.TryParse(address[(closingBracket + 2)..], out parsedPort)
+                && parsedPort is > 0 and <= ushort.MaxValue)
+            {
+                host = address[1..closingBracket];
+                port = parsedPort;
+            }
+        }
+
+        return builder.WithEndpoint(ListmonkResource.PrimaryEndpointName, endpoint =>
+        {
+            endpoint.TargetHost = host;
+            if (port is not null)
+            {
+                endpoint.TargetPort = port;
+            }
+        });
     }
 
     /// <summary>
