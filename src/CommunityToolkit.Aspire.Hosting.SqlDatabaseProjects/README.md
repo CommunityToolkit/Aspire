@@ -26,7 +26,7 @@ builder.AddSqlProject("schema", "../Database/Database.sqlproj", configuration: "
 builder.Build().Run();
 ```
 
-Relative project paths are resolved against the AppHost directory. The configuration defaults to `Debug` and is used for both `dotnet build` and output evaluation (`SqlTargetPath`, falling back to `TargetPath`). Each deployment request builds the project, including its restore, before resolving the DACPAC. Both `Microsoft.Build.Sql` and `MSBuild.Sdk.SqlProj` are supported; SSDT projects requiring other toolchains are not supported by this path-based workflow. The required .NET SDK must already be installed.
+Relative project paths are resolved against the AppHost directory. Relative DACPAC output paths (`SqlTargetPath`, falling back to `TargetPath`) are resolved against the SQL project directory. The configuration defaults to `Debug` and is used for both `dotnet build` and output evaluation. Each deployment request builds the project, including its restore, before resolving the DACPAC. Both `Microsoft.Build.Sql` and `MSBuild.Sdk.SqlProj` are supported; SSDT projects requiring other toolchains are not supported by this path-based workflow. The required .NET SDK must already be installed.
 
 ### NuGet packages by ID and version
 
