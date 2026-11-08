@@ -161,8 +161,6 @@ public static class McpInspectorResourceBuilderExtensions
             .WithHttpEndpoint(isProxied: false, port: options.ClientPort, env: "CLIENT_PORT", name: McpInspectorResource.ClientEndpointName)
             .WithHttpEndpoint(isProxied: false, port: options.ServerPort, env: "SERVER_PORT", name: McpInspectorResource.ServerProxyEndpointName)
             .WithHttpHealthCheck("/", endpointName: McpInspectorResource.ClientEndpointName)
-            // Concurrent npx processes otherwise share and race on the same package bin directory.
-            .WithEnvironment("npm_config_cache", $"{resource.ConfigPath}.npm-cache")
             .WithEnvironment("MCP_AUTO_OPEN_ENABLED", "false")
             .WithUrlForEndpoint(McpInspectorResource.ClientEndpointName, annotation =>
             {
