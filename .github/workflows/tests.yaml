@@ -119,13 +119,9 @@ jobs:
             throw "Development certificate trust check failed: $LASTEXITCODE"
           }
 
-      - name: Set up WSLC (Windows)
+      - name: WSL setup (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-          CUSTOM_CONTAINER_REGISTRY: ${{ secrets.CUSTOM_CONTAINER_REGISTRY }}
         run: |
           $dockerService = Get-Service -Name docker -ErrorAction SilentlyContinue
           if ($null -ne $dockerService) {
@@ -151,6 +147,14 @@ jobs:
             throw "WSLC runtime check failed: $LASTEXITCODE"
           }
 
+      - name: WSLC login (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          CUSTOM_CONTAINER_REGISTRY: ${{ secrets.CUSTOM_CONTAINER_REGISTRY }}
+        run: |
           if (![string]::IsNullOrWhiteSpace($env:CUSTOM_CONTAINER_REGISTRY) `
               -and ![string]::IsNullOrWhiteSpace($env:DOCKER_USERNAME) `
               -and ![string]::IsNullOrWhiteSpace($env:DOCKER_PASSWORD)) {
