@@ -262,9 +262,9 @@ public class AddDbGateTests
 
         Assert.Equal("mongodb1,mongodb2,postgres1,postgres2,redis1,redis2,sqlserver1,sqlserver2,mysql1,mysql2", CONNECTIONS);
         var redis1Password = await redisResource1.PasswordParameter!.GetValueAsync(default);
-        var expectedRedis1Uri = $"rediss://:{Uri.EscapeDataString(redis1Password!)}@redis1:6379";
+        var expectedRedis1Uri = $"rediss://:{Uri.EscapeDataString(redis1Password!)}@TEST.HOST:{redisResource1.PrimaryEndpoint.TargetPort}";
         var redis2Password = await redisResource2.PasswordParameter!.GetValueAsync(default);
-        var expectedRedis2Uri = $"rediss://:{Uri.EscapeDataString(redis2Password!)}@redis2:6379";
+        var expectedRedis2Uri = $"rediss://:{Uri.EscapeDataString(redis2Password!)}@TEST.HOST:{redisResource2.PrimaryEndpoint.TargetPort}";
 
         Assert.Collection(envs,
             item =>
@@ -521,7 +521,7 @@ public class AddDbGateTests
         static void UpdateResourceEndpoint(IResourceWithEndpoints resource)
         {
             var endpoint = resource.GetEndpoint("tcp").EndpointAnnotation;
-            var ae = new AllocatedEndpoint(endpoint, resource.Name, endpoint.TargetPort ?? 10000, EndpointBindingMode.SingleAddress, null, KnownNetworkIdentifiers.DefaultAspireContainerNetwork);
+            var ae = new AllocatedEndpoint(endpoint, "TEST.HOST", endpoint.TargetPort ?? 10000, EndpointBindingMode.SingleAddress, null, KnownNetworkIdentifiers.DefaultAspireContainerNetwork);
             endpoint.AllAllocatedEndpoints.AddOrUpdateAllocatedEndpoint(KnownNetworkIdentifiers.DefaultAspireContainerNetwork, ae);
             if (resource is RedisResource)
             {
