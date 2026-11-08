@@ -8,7 +8,7 @@ using System.Net.Http.Json;
 
 namespace CommunityToolkit.Aspire.Hosting.Umami.Tests;
 
-[RequiresDocker]
+[RequiresContainerRuntime]
 public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Umami_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Umami_AppHost>>
 {
     [Fact]

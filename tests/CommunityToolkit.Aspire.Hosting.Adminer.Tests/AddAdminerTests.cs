@@ -294,7 +294,7 @@ public class AddAdminerTests
     }
 
     [Fact]
-    [RequiresDocker]
+    [RequiresContainerRuntime]
     public async Task AddAdminerWithDefaultsAddsUrlAnnotations()
     {
         using var builder = TestDistributedApplicationBuilder.Create();

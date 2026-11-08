@@ -1,9 +1,9 @@
-﻿using Aspire.Components.Common.Tests;
+using Aspire.Components.Common.Tests;
 using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Logto.Tests;
 
-[RequiresDocker]
+[RequiresContainerRuntime]
 public class AppHostTest(
     AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Logto_AppHost> fixture
 ) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Logto_AppHost>>

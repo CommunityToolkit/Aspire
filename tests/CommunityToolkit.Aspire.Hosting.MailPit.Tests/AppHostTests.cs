@@ -7,7 +7,7 @@ using System.Text.Json;
 
 namespace CommunityToolkit.Aspire.Hosting.MailPit.Tests;
 
-[RequiresDocker]
+[RequiresContainerRuntime]
 public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_MailPit_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_MailPit_AppHost>>
 {
     private const string ResourceName = "mailpit";

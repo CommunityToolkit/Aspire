@@ -5,7 +5,7 @@ using MQTTnet;
 
 namespace CommunityToolkit.Aspire.Hosting.Mosquitto.Tests;
 
-[RequiresDocker]
+[RequiresContainerRuntime]
 public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Mosquitto_AppHost> fixture)
     : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Mosquitto_AppHost>>
 {

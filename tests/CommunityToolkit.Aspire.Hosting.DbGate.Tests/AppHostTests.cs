@@ -3,7 +3,7 @@ using Aspire.Components.Common.Tests;
 
 namespace CommunityToolkit.Aspire.Hosting.DbGate.Tests;
 
-[RequiresDocker]
+[RequiresContainerRuntime]
 public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_DbGate_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_DbGate_AppHost>>
 {
     [Fact]

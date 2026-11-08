@@ -7,7 +7,7 @@ using System.Security.Cryptography;
 
 namespace CommunityToolkit.Aspire.Hosting.MailPit.Tests;
 
-[RequiresDocker]
+[RequiresContainerRuntime]
 public sealed class AppHostHealthChecksTests(AppHostHealthChecksTests.MailPitAspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_MailPit_AppHost> fixture)
     : IClassFixture<AppHostHealthChecksTests.MailPitAspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_MailPit_AppHost>>
 {

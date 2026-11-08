@@ -11,7 +11,7 @@ using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.GoFeatureFlag.Tests;
 
-[RequiresDocker]
+[RequiresContainerRuntime]
 public class GoFeatureFlagFunctionalTests(ITestOutputHelper testOutputHelper)
 {
     private static readonly string SOURCE = Path.GetFullPath("./goff", Directory.GetCurrentDirectory());

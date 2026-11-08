@@ -10,7 +10,7 @@ using System.Text.Json;
 
 namespace CommunityToolkit.Aspire.Hosting.KurrentDB.Tests;
 
-[RequiresDocker]
+[RequiresContainerRuntime]
 public class KurrentDBFunctionalTests(ITestOutputHelper testOutputHelper)
 {
     public const string TestStreamNamePrefix = "account-";

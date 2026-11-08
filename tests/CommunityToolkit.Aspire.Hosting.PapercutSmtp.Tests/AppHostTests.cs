@@ -7,7 +7,7 @@ using System.Text.Json;
 
 namespace CommunityToolkit.Aspire.Hosting.PapercutSmtp.Tests;
 
-[RequiresDocker]
+[RequiresContainerRuntime]
 public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_PapercutSmtp_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_PapercutSmtp_AppHost>>
 {
     private const string ResourceName = "papercut";

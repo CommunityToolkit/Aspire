@@ -6,7 +6,7 @@ using OpenFeature.Providers.Ofrep.Configuration;
 
 namespace CommunityToolkit.Aspire.Hosting.Flagd.Tests;
 
-[RequiresDocker]
+[RequiresContainerRuntime]
 public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Flagd_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Flagd_AppHost>>
 {
     [Fact]

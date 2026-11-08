@@ -3,7 +3,7 @@ using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.Tests;
 
-[RequiresDocker]
+[RequiresContainerRuntime]
 public class TypeScriptAppHostTests
 {
     [Fact(Skip = "Test failing due to problem with SqlClient in the TypeScript app host. See https://github.com/microsoft/aspire/issues/17011 for details.")]

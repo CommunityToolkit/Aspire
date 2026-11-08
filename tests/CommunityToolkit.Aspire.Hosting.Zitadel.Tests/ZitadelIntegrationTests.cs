@@ -3,7 +3,7 @@ using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Zitadel.Tests;
 
-[RequiresDocker]
+[RequiresContainerRuntime]
 public class ZitadelIntegrationTests(
     AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Zitadel_AppHost> fixture
 ) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Zitadel_AppHost>>

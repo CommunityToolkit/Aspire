@@ -155,7 +155,7 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
     }
 
     [Fact]
-    [RequiresDocker]
+    [RequiresContainerRuntime]
     public async Task ContainerHasAspireEnvironmentVariables()
     {
         using var builder = TestDistributedApplicationBuilder.Create()

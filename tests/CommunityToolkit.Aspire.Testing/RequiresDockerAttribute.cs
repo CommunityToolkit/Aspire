@@ -18,10 +18,10 @@ public class RequiresDockerAttribute : Attribute, ITraitAttribute
     // to fail silently, which is not desirable.
     //
     // scenarios:
-    // - Windows and Linux - Local, or CI: always assume that a container runtime is installed
-    // - Other platforms - Local only: assume that a container runtime is installed
+    // - Windows: assume installed only for *local* runs as Docker is not supported on CI
+    // - Linux - Local, or CI: always assume that Docker is installed
     public static bool IsSupported =>
-        OperatingSystem.IsLinux() || OperatingSystem.IsWindows() || !PlatformDetection.IsRunningOnCI;
+        OperatingSystem.IsLinux() || !PlatformDetection.IsRunningOnCI; // non-Linux on CI does not support Docker
 
     public string? Reason { get; init; }
     public RequiresDockerAttribute(string? reason = null)

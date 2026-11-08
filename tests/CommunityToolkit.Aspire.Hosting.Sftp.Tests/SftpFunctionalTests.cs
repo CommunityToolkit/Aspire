@@ -10,7 +10,7 @@ using Renci.SshNet.Common;
 
 namespace CommunityToolkit.Aspire.Hosting.Sftp.Tests;
 
-[RequiresDocker]
+[RequiresContainerRuntime]
 public class SftpFunctionalTests : IDisposable
 {
     private readonly IDistributedApplicationTestingBuilder builder;

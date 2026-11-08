@@ -12,7 +12,7 @@ using CommunityToolkit.Aspire.Testing;
 using YamlDotNet.Core.Tokens;
 namespace CommunityToolkit.Aspire.Hosting.Meilisearch.Tests;
 
-[RequiresDocker]
+[RequiresContainerRuntime]
 public class MeilisearchFunctionalTests(ITestOutputHelper testOutputHelper)
 {
     private const string IndexName = "movies";
