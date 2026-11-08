@@ -92,10 +92,11 @@ runs:
       with:
         node-version: "22"
 
-    - name: Use the examples' pinned npm version
+    - name: Install npm 12.2.2
       shell: bash
       run: |
-        npm install --global npm@10.9.2
+        # Keep this version in sync with examples/javascript-ext/turborepo-demo/package.json.
+        npm install --global npm@12.2.2
         npm --version
 
     - uses: denoland/setup-deno@v2
