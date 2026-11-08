@@ -1,4 +1,5 @@
 using Aspire.Hosting.ApplicationModel;
+using System.Net;
 
 namespace Aspire.Hosting;
 
@@ -104,38 +105,23 @@ public static class ListmonkBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(address);
 
-        var host = address;
-        int? port = null;
-        var portSeparator = address.LastIndexOf(':');
-
-        if (portSeparator > 0 && portSeparator == address.IndexOf(':')
-            && int.TryParse(address[(portSeparator + 1)..], out var parsedPort)
-            && parsedPort is > 0 and <= ushort.MaxValue)
+        if (IPAddress.TryParse(address, out var ipAddress))
         {
-            host = address[..portSeparator];
-            port = parsedPort;
+            address = ipAddress.ToString();
         }
-        else if (address.StartsWith('['))
+        else if (IPEndPoint.TryParse(address, out var endpoint) && endpoint.Port > 0)
         {
-            var closingBracket = address.IndexOf(']');
-            if (closingBracket > 0
-                && closingBracket + 1 < address.Length
-                && address[closingBracket + 1] == ':'
-                && int.TryParse(address[(closingBracket + 2)..], out parsedPort)
-                && parsedPort is > 0 and <= ushort.MaxValue)
+            address = endpoint.Address.ToString();
+            return builder.WithEndpoint(ListmonkResource.PrimaryEndpointName, endpointAnnotation =>
             {
-                host = address[1..closingBracket];
-                port = parsedPort;
-            }
+                endpointAnnotation.TargetHost = address;
+                endpointAnnotation.TargetPort = endpoint.Port;
+            });
         }
 
-        return builder.WithEndpoint(ListmonkResource.PrimaryEndpointName, endpoint =>
+        return builder.WithEndpoint(ListmonkResource.PrimaryEndpointName, endpointAnnotation =>
         {
-            endpoint.TargetHost = host;
-            if (port is not null)
-            {
-                endpoint.TargetPort = port;
-            }
+            endpointAnnotation.TargetHost = address;
         });
     }
 
