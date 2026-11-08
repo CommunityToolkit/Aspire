@@ -220,6 +220,14 @@ public static partial class FlociHostingExtension
             throw new NotSupportedException("Floci Service Bus references are only supported in run mode.");
         }
 
+        if (builder.Resource is ContainerResource container)
+        {
+            builder.ApplicationBuilder.CreateResourceBuilder(container)
+                .WithContainerRuntimeArgs(
+                    "--add-host",
+                    $"{FlociAzureServiceBusResource.ContainerHost}:host-gateway");
+        }
+
         var endpoint = new EndpointReference(
             serviceBus.Resource.Parent,
             serviceBus.Resource.AmqpEndpoint.EndpointAnnotation);
