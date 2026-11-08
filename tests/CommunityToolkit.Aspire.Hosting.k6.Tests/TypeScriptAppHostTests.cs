@@ -13,7 +13,6 @@ public class TypeScriptAppHostTests
             packageName: "CommunityToolkit.Aspire.Hosting.k6",
             exampleName: "k6",
             waitForResources: ["k6-default", "k6-browser"],
-            waitStatus: "down",
             cancellationToken: TestContext.Current.CancellationToken);
     }
 }
