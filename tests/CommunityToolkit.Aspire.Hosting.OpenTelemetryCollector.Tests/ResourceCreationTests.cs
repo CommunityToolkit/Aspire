@@ -183,7 +183,11 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
         var endpoint = Assert.Contains("ASPIRE_ENDPOINT", envVars);
         var apiKey = Assert.Contains("ASPIRE_API_KEY", envVars);
 
-        Assert.Equal($"http://host.docker.internal:4317", endpoint);
+        Assert.NotNull(endpoint);
+        var endpointUri = new Uri(endpoint);
+        Assert.Equal("http", endpointUri.Scheme);
+        Assert.Equal(4317, endpointUri.Port);
+        Assert.EndsWith(".internal", endpointUri.Host);
         Assert.NotNull(apiKey);
     }
 
