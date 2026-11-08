@@ -4,7 +4,7 @@
     "language": "typescript/nodejs"
   },
   "sdk": {
-    "version": "17.1.0-preview.1.26556.8"
+    "version": "17.1.0-preview.1.26558.3"
   },
   "profiles": {
     "https": {
@@ -17,6 +17,6 @@
   },
   "packages": {
     "CommunityToolkit.Aspire.Hosting.DuckDB": "../../../src/CommunityToolkit.Aspire.Hosting.DuckDB/CommunityToolkit.Aspire.Hosting.DuckDB.csproj",
-    "Aspire.Hosting.Dotnet": "17.1.0-preview.1.26556.8"
+    "Aspire.Hosting.Dotnet": "17.1.0-preview.1.26558.3"
   }
 }
