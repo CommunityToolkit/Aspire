@@ -5,6 +5,7 @@ using Microsoft.Build.Locator;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.SqlServer.Dac;
+using NuGet.Packaging;
 using System.Collections.Immutable;
 
 namespace Aspire.Hosting;
@@ -179,10 +180,7 @@ public static class SqlProjectBuilderExtensions
 
     private static void ValidateNuGetPackageId(string packageId)
     {
-        if (packageId.Length > 100
-            || !char.IsAsciiLetterOrDigit(packageId[0])
-            || !char.IsAsciiLetterOrDigit(packageId[^1])
-            || packageId.Any(character => !char.IsAsciiLetterOrDigit(character) && character is not '.' and not '-' and not '_'))
+        if (!PackageIdValidator.IsValidPackageId(packageId))
         {
             throw new ArgumentException("The package ID must be a valid NuGet package ID.", nameof(packageId));
         }

@@ -15,23 +15,38 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksu
     {
         var logger = resourceLoggerService.GetLogger(resource);
         ResourceStateSnapshot? failureState = KnownResourceStates.FailedToStart;
+        string? temporaryDacpacDirectory = null;
 
         try
         {
             await resourceNotificationService.PublishUpdateAsync(resource,
                 state => state with { State = new ResourceStateSnapshot(KnownResourceStates.Starting, KnownResourceStateStyles.Error) });
 
+            string? dacpacPath = null;
             if (resource.TryGetLastAnnotation<SqlProjectBuildAnnotation>(out var buildAnnotation)
                 && resource.TryGetLastAnnotation<IProjectMetadata>(out var projectMetadata))
             {
-                await buildAnnotation.BuildLock.WaitAsync(cancellationToken);
+                var buildLock = SqlProjectBuildLock.Get(projectMetadata.ProjectPath);
+                await buildLock.WaitAsync(cancellationToken);
                 try
                 {
                     await BuildProjectAsync(projectMetadata.ProjectPath, buildAnnotation.Configuration, logger, cancellationToken);
+                    var builtDacpacPath = ResolveDacpacPath(resource.GetDacpacPath());
+                    if (File.Exists(builtDacpacPath))
+                    {
+                        temporaryDacpacDirectory = Path.Combine(Path.GetTempPath(), "CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects", Guid.NewGuid().ToString("N"));
+                        Directory.CreateDirectory(temporaryDacpacDirectory);
+                        dacpacPath = Path.Combine(temporaryDacpacDirectory, Path.GetFileName(builtDacpacPath));
+                        File.Copy(builtDacpacPath, dacpacPath);
+                    }
+                    else
+                    {
+                        dacpacPath = builtDacpacPath;
+                    }
                 }
                 finally
                 {
-                    buildAnnotation.BuildLock.Release();
+                    buildLock.Release();
                 }
             }
 
@@ -40,8 +55,8 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksu
                 await packageAnnotation.RestoreLock.WaitAsync(cancellationToken);
                 try
                 {
-                    var restoredDacpacPath = await RestoreNuGetPackageAsync(packageAnnotation, logger, cancellationToken);
-                    resource.Annotations.Add(new DacpacMetadataAnnotation(restoredDacpacPath));
+                    dacpacPath = await RestoreNuGetPackageAsync(packageAnnotation, logger, cancellationToken);
+                    resource.Annotations.Add(new DacpacMetadataAnnotation(dacpacPath));
                 }
                 finally
                 {
@@ -49,11 +64,7 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksu
                 }
             }
 
-            var dacpacPath = resource.GetDacpacPath();
-            if (!Path.IsPathRooted(dacpacPath))
-            {
-                dacpacPath = Path.Combine(hostEnvironment.ContentRootPath, dacpacPath);
-            }
+            dacpacPath ??= ResolveDacpacPath(resource.GetDacpacPath());
 
             if (!File.Exists(dacpacPath))
             {
@@ -131,7 +142,24 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksu
                     StopTimeStamp = DateTime.UtcNow
                 });
         }
+        finally
+        {
+            if (temporaryDacpacDirectory is not null)
+            {
+                try
+                {
+                    Directory.Delete(temporaryDacpacDirectory, recursive: true);
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    logger.LogWarning(ex, "Unable to remove temporary DACPAC directory {TemporaryDacpacDirectory}.", temporaryDacpacDirectory);
+                }
+            }
+        }
     }
+
+    private string ResolveDacpacPath(string dacpacPath)
+        => Path.IsPathRooted(dacpacPath) ? dacpacPath : Path.Combine(hostEnvironment.ContentRootPath, dacpacPath);
 
     private static async Task BuildProjectAsync(string projectPath, string configuration, ILogger logger, CancellationToken cancellationToken)
     {
