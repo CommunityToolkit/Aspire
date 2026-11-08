@@ -110,7 +110,7 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksu
                 if (result is null)
                 {
                     await resourceNotificationService.PublishUpdateAsync(resource,
-                        state => state with { State = KnownResourceStates.Finished });
+                        state => state with { State = KnownResourceStates.Finished, ExitCode = 0 });
                     return;
                 }
 

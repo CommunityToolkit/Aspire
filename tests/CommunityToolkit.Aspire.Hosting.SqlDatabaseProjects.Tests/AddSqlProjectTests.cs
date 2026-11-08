@@ -184,6 +184,28 @@ public class AddSqlProjectTests
         Assert.All(checksumService.DacpacPaths, path => Assert.False(File.Exists(path)));
     }
 
+    [Fact]
+    public async Task AddSqlProject_SkippedDeploymentPublishesSuccessfulExitCode()
+    {
+        var projectPath = Path.GetFullPath(TestProject.RelativePath, AppContext.BaseDirectory);
+        var checksumService = new RecordingChecksumService(alreadyDeployed: true);
+        var builder = DistributedApplication.CreateBuilder();
+        builder.Configuration["ConnectionStrings:Target"] = "Server=localhost;Database=Target;Integrated Security=True;TrustServerCertificate=True";
+        builder.Services.AddSingleton<IDacpacChecksumService>(checksumService);
+        var target = builder.AddConnectionString("Target");
+        var project = builder.AddSqlProject("schema", projectPath).WithReference(target).WithSkipWhenDeployed();
+
+        using var app = builder.Build();
+        var publishService = app.Services.GetRequiredService<SqlProjectPublishService>();
+
+        await publishService.PublishSqlProject(project.Resource, target.Resource, null, CancellationToken.None);
+
+        var resourceNotifications = app.Services.GetRequiredService<ResourceNotificationService>();
+        Assert.True(resourceNotifications.TryGetCurrentState(project.Resource.Name, out var resourceEvent));
+        Assert.Equal(KnownResourceStates.Finished, resourceEvent.Snapshot.State?.Text);
+        Assert.Equal(0, resourceEvent.Snapshot.ExitCode);
+    }
+
     [Theory]
     [InlineData("missing-project")]
     [InlineData("failed-build")]
@@ -439,6 +461,12 @@ public class AddSqlProjectTests
     private sealed class RecordingChecksumService : IDacpacChecksumService
     {
         private readonly HashSet<string> _deployedIdentities = [];
+        private readonly bool _alreadyDeployed;
+
+        public RecordingChecksumService(bool alreadyDeployed = false)
+        {
+            _alreadyDeployed = alreadyDeployed;
+        }
 
         public List<string> DacpacPaths { get; } = [];
 
@@ -453,7 +481,7 @@ public class AddSqlProjectTests
             DacpacPaths.Add(dacpacPath);
             DacpacIdentities.Add(dacpacIdentity);
             DacpacExistedDuringCheck[dacpacPath] = File.Exists(dacpacPath);
-            return Task.FromResult<string?>(_deployedIdentities.Contains(dacpacIdentity) ? null : "checksum");
+            return Task.FromResult<string?>(_alreadyDeployed || _deployedIdentities.Contains(dacpacIdentity) ? null : "checksum");
         }
 
         public Task SetChecksumAsync(string dacpacPath, string dacpacIdentity, string targetConnectionString, string dacpacChecksum, ILogger deploymentSkipLogger, CancellationToken cancellationToken)
