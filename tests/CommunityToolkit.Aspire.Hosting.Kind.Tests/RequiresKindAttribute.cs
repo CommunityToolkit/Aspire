@@ -16,7 +16,7 @@ public sealed class RequiresKindAttribute : Attribute, ITraitAttribute
 {
     private static readonly Lazy<bool> _isAvailable = new(CheckKindAvailable);
 
-    public static bool IsSupported => RequiresDockerAttribute.IsSupported && _isAvailable.Value;
+    public static bool IsSupported => RequiresTestcontainersAttribute.IsSupported && _isAvailable.Value;
 
     public IReadOnlyCollection<KeyValuePair<string, string>> GetTraits()
     {

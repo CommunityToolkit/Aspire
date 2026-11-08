@@ -25,7 +25,7 @@ public sealed class KurrentDBContainerFixture : IAsyncLifetime
 
     public async ValueTask InitializeAsync()
     {
-        if (RequiresDockerAttribute.IsSupported)
+        if (RequiresTestcontainersAttribute.IsSupported)
         {
             Container = new ContainerBuilder($"{TestContainerRegistry.Resolve(KurrentDBContainerImageTags.Registry)}/{KurrentDBContainerImageTags.Image}:{KurrentDBContainerImageTags.Tag}")
               .WithPortBinding(2113, true)

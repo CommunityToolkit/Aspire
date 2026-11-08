@@ -6,7 +6,7 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.Tests;
 
-[RequiresDocker]
+[RequiresTestcontainers]
 public class FunctionalTests(ITestOutputHelper testOutputHelper, SqlServerContainerFixture sqlServerContainerFixture) : IClassFixture<SqlServerContainerFixture>
 {
     [Fact(Skip = "Disabling at Aspire 9.1 changes some of how dependency waiting works so test needs to be re-evaluated")]

@@ -20,13 +20,13 @@ public class ConformanceTests(KurrentDBContainerFixture containerFixture) : Conf
 
     protected override string[] RequiredLogCategories => [];
 
-    protected override bool CanConnectToServer => RequiresDockerAttribute.IsSupported;
+    protected override bool CanConnectToServer => RequiresTestcontainersAttribute.IsSupported;
 
     protected override bool SupportsKeyedRegistrations => true;
 
     protected override void PopulateConfiguration(ConfigurationManager configuration, string? key = null)
     {
-        var connectionString = RequiresDockerAttribute.IsSupported
+        var connectionString = RequiresTestcontainersAttribute.IsSupported
             ? $"{_containerFixture.GetConnectionString()}"
             : "kurrentdb://localhost:22113?tls=false";
 

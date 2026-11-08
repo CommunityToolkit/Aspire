@@ -28,7 +28,7 @@ public sealed class MeilisearchContainerFixture : IAsyncLifetime
 
     public async ValueTask InitializeAsync()
     {
-        if (RequiresDockerAttribute.IsSupported)
+        if (RequiresTestcontainersAttribute.IsSupported)
         {
             var param = new GenerateParameterDefault
             {

@@ -31,7 +31,7 @@ public sealed class SurrealDbContainerFixture : IAsyncLifetime
     
     public async ValueTask InitializeAsync()
     {
-        if (RequiresDockerAttribute.IsSupported)
+        if (RequiresTestcontainersAttribute.IsSupported)
         {
             var paramGenerator = new GenerateParameterDefault
             {

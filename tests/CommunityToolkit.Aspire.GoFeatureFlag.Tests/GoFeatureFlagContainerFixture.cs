@@ -25,7 +25,7 @@ public sealed class GoFeatureFlagContainerFixture : IAsyncLifetime
 
     public async ValueTask InitializeAsync()
     {
-        if (RequiresDockerAttribute.IsSupported)
+        if (RequiresTestcontainersAttribute.IsSupported)
         {
             var source = Path.GetFullPath("./goff", Directory.GetCurrentDirectory());
             Container = new ContainerBuilder($"{TestContainerRegistry.Resolve(GoFeatureFlagContainerImageTags.Registry)}/{GoFeatureFlagContainerImageTags.Image}:{GoFeatureFlagContainerImageTags.Tag}")

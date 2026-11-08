@@ -17,12 +17,12 @@ public class AspireMeilisearchClientExtensionsTest(MeilisearchContainerFixture c
     private const string DefaultConnectionName = "meilisearch";
 
     private string DefaultConnectionString =>
-            RequiresDockerAttribute.IsSupported ? containerFixture.GetConnectionString() : "http://localhost:27011";
+            RequiresTestcontainersAttribute.IsSupported ? containerFixture.GetConnectionString() : "http://localhost:27011";
 
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    [RequiresDocker]
+    [RequiresTestcontainers]
     public async Task AddMeilisearchClient_HealthCheckShouldBeRegisteredWhenEnabled(bool useKeyed)
     {
         var key = DefaultConnectionName;

@@ -15,12 +15,12 @@ public class AspireGoFeatureFlagClientExtensionsTest(GoFeatureFlagContainerFixtu
     private const string DefaultConnectionName = "goff";
 
     private string DefaultConnectionString =>
-            RequiresDockerAttribute.IsSupported ? containerFixture.GetConnectionString() : "http://localhost:27011";
+            RequiresTestcontainersAttribute.IsSupported ? containerFixture.GetConnectionString() : "http://localhost:27011";
 
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    [RequiresDocker]
+    [RequiresTestcontainers]
     public async Task AddGoFeatureFlagClient_HealthCheckShouldBeRegisteredWhenEnabled(bool useKeyed)
     {
         var key = DefaultConnectionName;

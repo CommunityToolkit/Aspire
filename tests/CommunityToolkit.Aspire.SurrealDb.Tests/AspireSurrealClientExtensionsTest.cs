@@ -15,12 +15,12 @@ public class AspireSurrealClientExtensionsTest(SurrealDbContainerFixture contain
     private const string DefaultConnectionName = "db";
 
     private string DefaultConnectionString =>
-            RequiresDockerAttribute.IsSupported ? containerFixture.GetConnectionString() : "Endpoint=http://localhost:27011";
+            RequiresTestcontainersAttribute.IsSupported ? containerFixture.GetConnectionString() : "Endpoint=http://localhost:27011";
 
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    [RequiresDocker]
+    [RequiresTestcontainers]
     public async Task AddSurrealClient_HealthCheckShouldBeRegisteredWhenEnabled(bool useKeyed)
     {
         var key = DefaultConnectionName;

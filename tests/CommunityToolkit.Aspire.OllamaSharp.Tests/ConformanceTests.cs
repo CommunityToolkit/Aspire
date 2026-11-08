@@ -16,7 +16,7 @@ public class ConformanceTests(OllamaContainerFeature ollamaContainerFeature) : C
 
     protected override string[] RequiredLogCategories => [];
 
-    protected override bool CanConnectToServer => RequiresDockerAttribute.IsSupported;
+    protected override bool CanConnectToServer => RequiresTestcontainersAttribute.IsSupported;
 
     protected override bool SupportsKeyedRegistrations => true;
 
@@ -24,7 +24,7 @@ public class ConformanceTests(OllamaContainerFeature ollamaContainerFeature) : C
 
     protected override void PopulateConfiguration(ConfigurationManager configuration, string? key = null)
     {
-        var endpoint = RequiresDockerAttribute.IsSupported ?
+        var endpoint = RequiresTestcontainersAttribute.IsSupported ?
           $"{ollamaContainerFeature.GetContainerEndpoint()}" :
           "http://localhost:11434";
 

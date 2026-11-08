@@ -3,7 +3,7 @@ using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Kind.Tests;
 
-[RequiresDocker]
+[RequiresKind]
 public class TypeScriptAppHostTests
 {
     [Fact]

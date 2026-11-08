@@ -21,7 +21,7 @@ public class OllamaContainerFeature : IAsyncLifetime
 
     public async ValueTask InitializeAsync()
     {
-        if (RequiresDockerAttribute.IsSupported)
+        if (RequiresTestcontainersAttribute.IsSupported)
         {
             Container = new ContainerBuilder($"{TestContainerRegistry.Resolve(OllamaContainerImageTags.Registry)}/{OllamaContainerImageTags.Image}:{OllamaContainerImageTags.Tag}")
               .WithPortBinding(11434, true)
