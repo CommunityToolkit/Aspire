@@ -264,14 +264,14 @@ public class McpInspectorResourceBuilderExtensionsTests
         Assert.Equal("inspector", inspectorResource.Name);
         Assert.Equal("inspector-proxyToken", inspectorResource.ProxyTokenParameter.Name);
 
-        // Verify endpoints use default ports
+        // Verify endpoints use dynamically assigned ports
         var clientEndpoint = inspectorResource.Annotations.OfType<EndpointAnnotation>()
             .Single(e => e.Name == McpInspectorResource.ClientEndpointName);
         var serverEndpoint = inspectorResource.Annotations.OfType<EndpointAnnotation>()
             .Single(e => e.Name == McpInspectorResource.ServerProxyEndpointName);
 
-        Assert.Equal(6274, clientEndpoint.Port);
-        Assert.Equal(6277, serverEndpoint.Port);
+        Assert.Null(clientEndpoint.Port);
+        Assert.Null(serverEndpoint.Port);
     }
 
     [Fact]
