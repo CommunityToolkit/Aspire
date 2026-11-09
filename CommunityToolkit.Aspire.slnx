@@ -245,6 +245,11 @@
     <Project Path="examples/surrealdb/CommunityToolkit.Aspire.Hosting.SurrealDb.AppHost/CommunityToolkit.Aspire.Hosting.SurrealDb.AppHost.csproj" />
     <Project Path="examples/surrealdb/CommunityToolkit.Aspire.Hosting.SurrealDb.ServiceDefaults/CommunityToolkit.Aspire.Hosting.SurrealDb.ServiceDefaults.csproj" />
   </Folder>
+  <Folder Name="/examples/tempo/">
+    <Project Path="examples/tempo/CommunityToolkit.Aspire.Hosting.Tempo.Api/CommunityToolkit.Aspire.Hosting.Tempo.Api.csproj" />
+    <Project Path="examples/tempo/CommunityToolkit.Aspire.Hosting.Tempo.AppHost/CommunityToolkit.Aspire.Hosting.Tempo.AppHost.csproj" />
+    <Project Path="examples/tempo/CommunityToolkit.Aspire.Hosting.Tempo.ServiceDefaults/CommunityToolkit.Aspire.Hosting.Tempo.ServiceDefaults.csproj" />
+  </Folder>
   <Folder Name="/examples/umami/">
     <Project Path="examples\umami\CommunityToolkit.Aspire.Hosting.Umami.AppHost\CommunityToolkit.Aspire.Hosting.Umami.AppHost.csproj" />
   </Folder>
@@ -319,6 +324,7 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.StableDiffusionCpp/CommunityToolkit.Aspire.Hosting.StableDiffusionCpp.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Stripe/CommunityToolkit.Aspire.Hosting.Stripe.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.SurrealDb/CommunityToolkit.Aspire.Hosting.SurrealDb.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Tempo/CommunityToolkit.Aspire.Hosting.Tempo.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Zitadel/CommunityToolkit.Aspire.Hosting.Zitadel.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.DuckDB.NET.Data/CommunityToolkit.Aspire.DuckDB.NET.Data.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.KurrentDB/CommunityToolkit.Aspire.KurrentDB.csproj" />
@@ -401,6 +407,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.StableDiffusionCpp.Tests/CommunityToolkit.Aspire.Hosting.StableDiffusionCpp.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Stripe.Tests/CommunityToolkit.Aspire.Hosting.Stripe.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.SurrealDb.Tests/CommunityToolkit.Aspire.Hosting.SurrealDb.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Tempo.Tests/CommunityToolkit.Aspire.Hosting.Tempo.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Zitadel.Tests/CommunityToolkit.Aspire.Hosting.Zitadel.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.DuckDB.NET.Data.Tests/CommunityToolkit.Aspire.DuckDB.NET.Data.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.KurrentDB.Tests/CommunityToolkit.Aspire.KurrentDB.Tests.csproj" />
