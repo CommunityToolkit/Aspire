@@ -1,4 +1,5 @@
 using System.Net.Sockets;
+using System.Text.Json;
 using Aspire.Hosting;
 using Aspire.Hosting.Utils;
 using CommunityToolkit.Aspire.Testing;
@@ -177,6 +178,89 @@ public class AddDbxTests
     }
 
     [Fact]
+    public async Task ConnectionFileUsesCallerAwareEndpointAddress()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var database = builder.AddPostgres("database");
+        var endpoint = database.Resource.PrimaryEndpoint.EndpointAnnotation;
+        endpoint.AllocatedEndpoint = new AllocatedEndpoint(endpoint, "LOCALHOST-HOSTNAME", 15432);
+        endpoint.AllAllocatedEndpoints.AddOrUpdateAllocatedEndpoint(
+            KnownNetworkIdentifiers.DefaultAspireContainerNetwork,
+            new AllocatedEndpoint(
+                endpoint,
+                "CONTAINER-HOSTNAME",
+                5432,
+                EndpointBindingMode.SingleAddress,
+                networkId: KnownNetworkIdentifiers.DefaultAspireContainerNetwork));
+
+        var dbx = builder.AddDbx();
+        dbx.Resource.AddConnection(CreateConnection(endpoint: database.Resource.PrimaryEndpoint));
+
+        using var app = builder.Build();
+        var connection = await GetConnectionAsync(dbx.Resource, app.Services);
+
+        Assert.Equal("CONTAINER-HOSTNAME", connection.Host);
+        Assert.Equal(5432, connection.Port);
+    }
+
+    [Fact]
+    public async Task ConnectionFilePreservesExplicitEndpointValues()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var database = builder.AddPostgres("database");
+        var endpoint = database.Resource.PrimaryEndpoint.EndpointAnnotation;
+        endpoint.AllAllocatedEndpoints.AddOrUpdateAllocatedEndpoint(
+            KnownNetworkIdentifiers.DefaultAspireContainerNetwork,
+            new AllocatedEndpoint(
+                endpoint,
+                "CONTAINER-HOSTNAME",
+                5432,
+                EndpointBindingMode.SingleAddress,
+                networkId: KnownNetworkIdentifiers.DefaultAspireContainerNetwork));
+
+        var dbx = builder.AddDbx();
+        dbx.Resource.AddConnection(CreateConnection(
+            endpoint: database.Resource.PrimaryEndpoint,
+            host: "EXPLICIT-HOSTNAME",
+            port: 15432));
+
+        using var app = builder.Build();
+        var connection = await GetConnectionAsync(dbx.Resource, app.Services);
+
+        Assert.Equal("EXPLICIT-HOSTNAME", connection.Host);
+        Assert.Equal(15432, connection.Port);
+    }
+
+    [Fact]
+    public async Task ConnectionFilePreservesExplicitConnectionString()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var dbx = builder.AddDbx();
+        dbx.Resource.AddConnection(CreateConnection(connectionString: "Host=database;Port=5432"));
+
+        using var app = builder.Build();
+        var connection = await GetConnectionAsync(dbx.Resource, app.Services);
+
+        Assert.Equal("Host=database;Port=5432", connection.ConnectionString);
+        Assert.Empty(connection.Host);
+        Assert.Equal(0, connection.Port);
+    }
+
+    [Fact]
+    public async Task ConnectionFileRejectsMissingAddress()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var dbx = builder.AddDbx();
+        dbx.Resource.AddConnection(CreateConnection());
+
+        using var app = builder.Build();
+
+        var exception = await Assert.ThrowsAsync<DistributedApplicationException>(
+            () => GetConnectionAsync(dbx.Resource, app.Services));
+        Assert.Contains("must specify either an endpoint or explicit host and port values", exception.Message);
+    }
+
+    [Fact]
     [RequiresDocker]
     public async Task AddDbxWithDefaultsAddsUrlAnnotations()
     {
@@ -199,5 +283,44 @@ public class AddDbxTests
         Assert.Single(urls, u => u.DisplayText == "dbx Dashboard");
 
         await app.StopAsync();
+    }
+
+    private static DbxConnectionConfig CreateConnection(
+        EndpointReference? endpoint = null,
+        string host = "",
+        ushort port = 0,
+        string? connectionString = null) =>
+        new()
+        {
+            Id = "database",
+            Name = "Database",
+            DbType = DbxDatabaseType.Postgres,
+            Endpoint = endpoint,
+            Host = host,
+            Port = port,
+            Username = "postgres",
+            Password = "password",
+            Database = "postgres",
+            ConnectionString = connectionString
+        };
+
+    private static async Task<DbxConnectionConfig> GetConnectionAsync(
+        DbxContainerResource resource,
+        IServiceProvider services)
+    {
+        var annotation = Assert.Single(resource.Annotations.OfType<ContainerFileSystemCallbackAnnotation>());
+        var files = await annotation.Callback(new ContainerFileSystemCallbackContext
+        {
+            Services = services,
+            Model = resource
+        }, TestContext.Current.CancellationToken);
+        var file = Assert.IsType<ContainerFile>(Assert.Single(files, file => file.Name == "connections.json"));
+        Assert.NotNull(file.Contents);
+        var connections = JsonSerializer.Deserialize<DbxConnectionConfig[]>(file.Contents, new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.KebabCaseLower,
+            PropertyNameCaseInsensitive = true
+        });
+        return Assert.Single(connections!);
     }
 }

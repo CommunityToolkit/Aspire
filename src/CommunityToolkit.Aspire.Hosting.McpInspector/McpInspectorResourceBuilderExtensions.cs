@@ -12,6 +12,34 @@ namespace Aspire.Hosting;
 public static class McpInspectorResourceBuilderExtensions
 {
     /// <summary>
+    /// Configures the host port that the MCP Inspector client endpoint is exposed on instead of using a randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for MCP Inspector.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used a random port will be assigned.</param>
+    /// <returns>The resource builder for MCP Inspector.</returns>
+    [AspireExport]
+    public static IResourceBuilder<McpInspectorResource> WithClientHostPort(this IResourceBuilder<McpInspectorResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(McpInspectorResource.ClientEndpointName, endpoint => endpoint.Port = port);
+    }
+
+    /// <summary>
+    /// Configures the host port that the MCP Inspector server endpoint is exposed on instead of using a randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for MCP Inspector.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used a random port will be assigned.</param>
+    /// <returns>The resource builder for MCP Inspector.</returns>
+    [AspireExport]
+    public static IResourceBuilder<McpInspectorResource> WithServerHostPort(this IResourceBuilder<McpInspectorResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(McpInspectorResource.ServerProxyEndpointName, endpoint => endpoint.Port = port);
+    }
+
+    /// <summary>
     /// Adds a MCP Inspector container resource to the <see cref="IDistributedApplicationBuilder"/>.
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to which the MCP Inspector resource will be added.</param>

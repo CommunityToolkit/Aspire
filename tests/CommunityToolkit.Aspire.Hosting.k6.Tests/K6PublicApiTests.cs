@@ -83,7 +83,7 @@ public class K6PublicApiTests
     
         resourceBuilder.WithScript("scripts/main.js");
     
-        Assert.Equal(["run", "--address", "0.0.0.0:6565", "scripts/main.js"], await GetArgsAsync(resourceBuilder));
+        Assert.Equal(["run", "--address", "{k6.bindings.http.host}:{k6.bindings.http.targetPort}", "scripts/main.js"], await GetArgsAsync(resourceBuilder));
     }
     
     [Fact]
@@ -94,7 +94,7 @@ public class K6PublicApiTests
     
         resourceBuilder.WithScript("scripts/main.js", duration: "1m");
     
-        Assert.Equal(["run", "--address", "0.0.0.0:6565", "--duration", "1m", "scripts/main.js"], await GetArgsAsync(resourceBuilder));
+        Assert.Equal(["run", "--address", "{k6.bindings.http.host}:{k6.bindings.http.targetPort}", "--duration", "1m", "scripts/main.js"], await GetArgsAsync(resourceBuilder));
     }
     
     [Fact]
@@ -105,7 +105,7 @@ public class K6PublicApiTests
     
         resourceBuilder.WithScript("scripts/main.js", 5, "30s");
     
-        Assert.Equal(["run", "--address", "0.0.0.0:6565", "--vus", "5", "--duration", "30s", "scripts/main.js"], await GetArgsAsync(resourceBuilder));
+        Assert.Equal(["run", "--address", "{k6.bindings.http.host}:{k6.bindings.http.targetPort}", "--vus", "5", "--duration", "30s", "scripts/main.js"], await GetArgsAsync(resourceBuilder));
     }
     
     private static async Task<List<string>> GetArgsAsync(IResourceBuilder<K6Resource> resourceBuilder)
@@ -116,7 +116,7 @@ public class K6PublicApiTests
         {
             await annotation.Callback(context);
         }
-        return [.. args.Cast<string>()];
+        return [.. args.Select(a => a is ReferenceExpression expression ? expression.ValueExpression : (string)a)];
     }
     
     [Fact]

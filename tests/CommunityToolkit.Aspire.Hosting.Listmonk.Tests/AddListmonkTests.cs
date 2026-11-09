@@ -36,9 +36,9 @@ public class AddListmonkTests
         Assert.Equal(ListmonkContainerImageTags.Image, containerAnnotation.Image);
         Assert.Equal(ListmonkContainerImageTags.Registry, containerAnnotation.Registry);
 
-        var config = await listmonk.Resource.GetEnvironmentVariablesAsync();
+        var config = await EvaluateEnvironmentVariablesAsync(listmonk.Resource);
 
-        Assert.Equal("0.0.0.0:9000", config["LISTMONK_app__address"]);
+        Assert.Equal("192.0.2.1:9000", config["LISTMONK_app__address"]);
     }
 
     [Fact]
@@ -46,14 +46,15 @@ public class AddListmonkTests
     {
         using var appBuilder = TestDistributedApplicationBuilder.Create();
 
-        var database = appBuilder.AddPostgres("mailing-postgres")
-            .AddDatabase("listmonkdb");
+        var postgres = appBuilder.AddPostgres("mailing-postgres");
+        AllocateContainerEndpoint(postgres.Resource.PrimaryEndpoint.EndpointAnnotation, "mailing-postgres.dev.internal", 15432);
+
+        var database = postgres.AddDatabase("listmonkdb");
         var listmonk = appBuilder.AddListmonk("listmonk")
             .WithReference(database);
+        var config = await EvaluateEnvironmentVariablesAsync(listmonk.Resource);
 
-        var config = await listmonk.Resource.GetEnvironmentVariablesAsync();
-
-        Assert.Equal("mailing-postgres", config["LISTMONK_db__host"]);
+        Assert.Equal("mailing-postgres.dev.internal", config["LISTMONK_db__host"]);
         Assert.Equal("5432", config["LISTMONK_db__port"]);
         Assert.Equal("postgres", config["LISTMONK_db__user"]);
         Assert.Equal("listmonkdb", config["LISTMONK_db__database"]);
@@ -67,10 +68,33 @@ public class AddListmonkTests
     {
         using var appBuilder = TestDistributedApplicationBuilder.Create();
 
+#pragma warning disable CS0618 // Verify compatibility of the legacy API.
+        var listmonk = appBuilder.AddListmonk("listmonk")
+            .WithAppAddress("192.0.2.1");
+#pragma warning restore CS0618
+
+        Assert.Equal("192.0.2.1", listmonk.Resource.PrimaryEndpoint.EndpointAnnotation.TargetHost);
+
+        var config = await EvaluateEnvironmentVariablesAsync(listmonk.Resource, "192.0.2.1");
+
+        Assert.Equal("192.0.2.1:9000", config["LISTMONK_app__address"]);
+    }
+
+    [Fact]
+    public async Task WithAppAddressPreservesHostAndPortConfiguration()
+    {
+        using var appBuilder = TestDistributedApplicationBuilder.Create();
+
+#pragma warning disable CS0618 // Verify compatibility of the legacy API.
         var listmonk = appBuilder.AddListmonk("listmonk")
             .WithAppAddress("0.0.0.0:9100");
+#pragma warning restore CS0618
 
-        var config = await listmonk.Resource.GetEnvironmentVariablesAsync();
+        var endpoint = listmonk.Resource.PrimaryEndpoint.EndpointAnnotation;
+        Assert.Equal("0.0.0.0", endpoint.TargetHost);
+        Assert.Equal(9100, endpoint.TargetPort);
+
+        var config = await EvaluateEnvironmentVariablesAsync(listmonk.Resource, "0.0.0.0");
 
         Assert.Equal("0.0.0.0:9100", config["LISTMONK_app__address"]);
     }
@@ -80,8 +104,10 @@ public class AddListmonkTests
     {
         using var appBuilder = TestDistributedApplicationBuilder.Create();
 
-        var database = appBuilder.AddPostgres("postgres")
-            .AddDatabase("listmonkdb");
+        var postgres = appBuilder.AddPostgres("postgres");
+        AllocateContainerEndpoint(postgres.Resource.PrimaryEndpoint.EndpointAnnotation, "postgres.dev.internal", 15432);
+
+        var database = postgres.AddDatabase("listmonkdb");
         var listmonk = appBuilder.AddListmonk("listmonk")
             .WithReference(database)
             .WithDatabaseSslMode("require")
@@ -89,8 +115,7 @@ public class AddListmonkTests
             .WithDatabaseMaxIdleConnections(10)
             .WithDatabaseMaxLifetime("600s")
             .WithDatabaseParameters("application_name=listmonk gssencmode=disable");
-
-        var config = await listmonk.Resource.GetEnvironmentVariablesAsync();
+        var config = await EvaluateEnvironmentVariablesAsync(listmonk.Resource);
 
         Assert.Equal("require", config["LISTMONK_db__ssl_mode"]);
         Assert.Equal("50", config["LISTMONK_db__max_open"]);
@@ -106,8 +131,7 @@ public class AddListmonkTests
 
         var listmonk = appBuilder.AddListmonk("listmonk")
             .WithTimeZone("Europe/Kiev");
-
-        var config = await listmonk.Resource.GetEnvironmentVariablesAsync();
+        var config = await EvaluateEnvironmentVariablesAsync(listmonk.Resource);
 
         Assert.Equal("Europe/Kiev", config["TZ"]);
     }
@@ -120,8 +144,7 @@ public class AddListmonkTests
         var listmonk = appBuilder.AddListmonk("listmonk")
             .WithUserId(1000)
             .WithGroupId(1001);
-
-        var config = await listmonk.Resource.GetEnvironmentVariablesAsync();
+        var config = await EvaluateEnvironmentVariablesAsync(listmonk.Resource);
 
         Assert.Equal("1000", config["PUID"]);
         Assert.Equal("1001", config["PGID"]);
@@ -135,8 +158,7 @@ public class AddListmonkTests
         var adminPassword = appBuilder.AddParameter("admin-password", "SuperSecret123!", secret: true);
         var listmonk = appBuilder.AddListmonk("listmonk")
             .WithAdminCredentials("admin", adminPassword);
-
-        var config = await listmonk.Resource.GetEnvironmentVariablesAsync();
+        var config = await EvaluateEnvironmentVariablesAsync(listmonk.Resource);
 
         Assert.Equal("admin", config["LISTMONK_ADMIN_USER"]);
         Assert.Equal("SuperSecret123!", config["LISTMONK_ADMIN_PASSWORD"]);
@@ -151,11 +173,44 @@ public class AddListmonkTests
         var listmonk = appBuilder.AddListmonk("listmonk")
             .WithAdminUser("admin")
             .WithAdminPassword(adminPassword);
-
-        var config = await listmonk.Resource.GetEnvironmentVariablesAsync();
+        var config = await EvaluateEnvironmentVariablesAsync(listmonk.Resource);
 
         Assert.Equal("admin", config["LISTMONK_ADMIN_USER"]);
         Assert.Equal("SuperSecret123!", config["LISTMONK_ADMIN_PASSWORD"]);
+    }
+
+    private static ValueTask<Dictionary<string, string>> EvaluateEnvironmentVariablesAsync(
+        ListmonkResource resource,
+        string host = "192.0.2.1")
+    {
+        resource.PrimaryEndpoint.EndpointAnnotation.AllocatedEndpoint =
+            new AllocatedEndpoint(
+                resource.PrimaryEndpoint.EndpointAnnotation,
+                "localhost",
+                19000);
+        resource.PrimaryEndpoint.EndpointAnnotation.AllAllocatedEndpoints.AddOrUpdateAllocatedEndpoint(
+            KnownNetworkIdentifiers.DefaultAspireContainerNetwork,
+            new AllocatedEndpoint(
+                resource.PrimaryEndpoint.EndpointAnnotation,
+                host,
+                resource.PrimaryEndpoint.EndpointAnnotation.TargetPort!.Value,
+                EndpointBindingMode.SingleAddress,
+                networkId: KnownNetworkIdentifiers.DefaultAspireContainerNetwork));
+
+        return resource.GetEnvironmentVariablesAsync();
+    }
+
+    private static void AllocateContainerEndpoint(EndpointAnnotation endpoint, string containerHost, int hostPort)
+    {
+        endpoint.AllocatedEndpoint = new AllocatedEndpoint(endpoint, "localhost", hostPort);
+        endpoint.AllAllocatedEndpoints.AddOrUpdateAllocatedEndpoint(
+            KnownNetworkIdentifiers.DefaultAspireContainerNetwork,
+            new AllocatedEndpoint(
+                endpoint,
+                containerHost,
+                endpoint.TargetPort!.Value,
+                EndpointBindingMode.SingleAddress,
+                networkId: KnownNetworkIdentifiers.DefaultAspireContainerNetwork));
     }
 
     [Fact]

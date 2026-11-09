@@ -1,4 +1,7 @@
 ﻿using Aspire.Hosting;
+using Aspire.Hosting.Utils;
+using CommunityToolkit.Aspire.Hosting.RavenDB;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.RavenDB.Tests;
 
@@ -180,6 +183,46 @@ public class AddRavenDBTests
 
         var tcpEndpoint = serverResource.Annotations.OfType<EndpointAnnotation>().FirstOrDefault(e => e.Name == "tcp");
         Assert.Equal(settings.TcpPort, tcpEndpoint?.Port);
+    }
+
+    [Fact]
+    public async Task PublicTcpUrlPreservesLocalhostEndpointContext()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var raven = builder.AddRavenDB("raven")
+            .WithTcpHostPort(40000);
+
+        using var app = builder.Build();
+        var endpoint = raven.Resource.TcpEndpoint.EndpointAnnotation;
+        endpoint.AllocatedEndpoint = new AllocatedEndpoint(endpoint, "LOCALHOST-HOSTNAME", 40000);
+        endpoint.AllAllocatedEndpoints.AddOrUpdateAllocatedEndpoint(
+            KnownNetworkIdentifiers.DefaultAspireContainerNetwork,
+            new AllocatedEndpoint(
+                endpoint,
+                "CONTAINER-HOSTNAME",
+                endpoint.TargetPort!.Value,
+                EndpointBindingMode.SingleAddress,
+                networkId: KnownNetworkIdentifiers.DefaultAspireContainerNetwork));
+
+        var environment = new Dictionary<string, object>();
+        var callback = Assert.Single(raven.Resource.Annotations.OfType<EnvironmentCallbackAnnotation>());
+        await callback.Callback(new EnvironmentCallbackContext(builder.ExecutionContext, environment));
+        var publicTcpUrl = Assert.IsAssignableFrom<IValueProvider>(
+            environment["RAVEN_PublicServerUrl_Tcp"]);
+
+        var localhostUrl = await publicTcpUrl.GetValueAsync(new ValueProviderContext
+        {
+            ExecutionContext = builder.ExecutionContext,
+            Network = KnownNetworkIdentifiers.LocalhostNetwork
+        }, TestContext.Current.CancellationToken);
+        var containerUrl = await publicTcpUrl.GetValueAsync(new ValueProviderContext
+        {
+            ExecutionContext = builder.ExecutionContext,
+            Network = KnownNetworkIdentifiers.DefaultAspireContainerNetwork
+        }, TestContext.Current.CancellationToken);
+
+        Assert.Equal("tcp://LOCALHOST-HOSTNAME:40000", localhostUrl);
+        Assert.Equal("tcp://LOCALHOST-HOSTNAME:40000", containerUrl);
     }
 
     [Fact]

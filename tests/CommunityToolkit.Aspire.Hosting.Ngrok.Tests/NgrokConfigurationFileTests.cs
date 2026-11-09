@@ -12,7 +12,7 @@ public class NgrokConfigurationFileTests
 
         Assert.Contains("  api-http:", configuration);
         Assert.Contains("    proto: http", configuration);
-        Assert.Contains("    addr: http://", configuration);
+        Assert.Contains("    addr: http://CONTAINER-HOSTNAME:8080", configuration);
     }
 
     [Fact]
@@ -21,7 +21,7 @@ public class NgrokConfigurationFileTests
         var configuration = await WriteConfigurationAsync(2, new Dictionary<string, string> { ["edge"] = "edghts_123" });
 
         Assert.Contains("      - edge=edghts_123", configuration);
-        Assert.Contains("    addr: http://", configuration);
+        Assert.Contains("    addr: http://CONTAINER-HOSTNAME:8080", configuration);
         Assert.DoesNotContain("proto:", configuration);
     }
 
@@ -41,7 +41,15 @@ public class NgrokConfigurationFileTests
             using var app = builder.Build();
 
             var endpointAnnotation = api.Resource.Annotations.OfType<EndpointAnnotation>().Single();
-            endpointAnnotation.AllocatedEndpoint = new AllocatedEndpoint(endpointAnnotation, "api", 8080);
+            endpointAnnotation.AllocatedEndpoint = new AllocatedEndpoint(endpointAnnotation, "LOCALHOST-HOSTNAME", 18080);
+            endpointAnnotation.AllAllocatedEndpoints.AddOrUpdateAllocatedEndpoint(
+                KnownNetworkIdentifiers.DefaultAspireContainerNetwork,
+                new AllocatedEndpoint(
+                    endpointAnnotation,
+                    "CONTAINER-HOSTNAME",
+                    8080,
+                    EndpointBindingMode.SingleAddress,
+                    networkId: KnownNetworkIdentifiers.DefaultAspireContainerNetwork));
 
             var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
             var resource = Assert.Single(appModel.Resources.OfType<NgrokResource>());

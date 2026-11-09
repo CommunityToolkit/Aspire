@@ -47,6 +47,22 @@ public static partial class FlociHostingExtension
     }
 
     /// <summary>
+    /// Configures the host port that the Floci Azure resource is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for Floci Azure.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
+    /// <returns>The resource builder for Floci Azure.</returns>
+    [AspireExport("withHostPortAzure", MethodName = "withHostPort")]
+    public static IResourceBuilder<FlociAzureContainerResource> WithHostPort(
+        this IResourceBuilder<FlociAzureContainerResource> builder,
+        int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(builder.Resource.EndpointName, endpoint => endpoint.Port = port);
+    }
+
+    /// <summary>
     /// Adds a reference to a Floci Azure emulator resource, injecting the standard
     /// <c>ConnectionStrings__{name}</c> entry plus <c>AZURE_STORAGE_CONNECTION_STRING</c> — a
     /// development storage connection string carrying the <c>Blob</c>, <c>Queue</c> and <c>Table</c>
@@ -181,7 +197,7 @@ public static partial class FlociHostingExtension
     }
 
     /// <summary>
-    /// Adds a Service Bus connection string reference, using the Docker host gateway for container consumers.
+    /// Adds a Service Bus connection string reference.
     /// </summary>
     /// <ats-summary>Adds a Floci Azure Service Bus reference</ats-summary>
     /// <typeparam name="TDestination">The type of the resource receiving the reference.</typeparam>
@@ -207,19 +223,19 @@ public static partial class FlociHostingExtension
         if (builder.Resource is ContainerResource container)
         {
             builder.ApplicationBuilder.CreateResourceBuilder(container)
-                .WithContainerRuntimeArgs("--add-host", $"{FlociAzureServiceBusResource.ContainerHost}:host-gateway");
-
-            // Artemis publishes directly on the Docker host, outside Aspire's container network.
-            // Use the sidecar's host port and make dependency discovery follow its owner.
-            var endpoint = new EndpointReference(
-                serviceBus.Resource.Parent, serviceBus.Resource.AmqpEndpoint.EndpointAnnotation);
-            return builder.WithEnvironment($"ConnectionStrings__{connectionName ?? serviceBus.Resource.Name}",
-                ReferenceExpression.Create(
-                    $"Endpoint=sb://{FlociAzureServiceBusResource.ContainerHost}:{endpoint.Property(EndpointProperty.TargetPort)};SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey={FlociAzureServiceBusResource.DefaultSasKey};UseDevelopmentEmulator=true;"))
-                .WithRelationship(serviceBus.Resource, "Reference");
+                .WithContainerRuntimeArgs(
+                    "--add-host",
+                    $"{FlociAzureServiceBusResource.ContainerHost}:host-gateway");
         }
 
-        return ResourceBuilderExtensions.WithReference(builder, serviceBus, connectionName);
+        var endpoint = new EndpointReference(
+            serviceBus.Resource.Parent,
+            serviceBus.Resource.AmqpEndpoint.EndpointAnnotation);
+        return builder.WithEnvironment(
+                $"ConnectionStrings__{connectionName ?? serviceBus.Resource.Name}",
+                ReferenceExpression.Create(
+                    $"Endpoint={endpoint.Property(EndpointProperty.Url)};SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey={FlociAzureServiceBusResource.DefaultSasKey};UseDevelopmentEmulator=true;"))
+            .WithRelationship(serviceBus.Resource, "Reference");
     }
 
     /// <summary>
@@ -347,4 +363,3 @@ public static partial class FlociHostingExtension
         return builder;
     }
 }
-

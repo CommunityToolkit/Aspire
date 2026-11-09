@@ -44,6 +44,17 @@ public class ChromaPublicApiTests
         Assert.Equal(nameof(builder), exception.ParamName);
     }
 
+    [Fact]
+    public void WithHostPortShouldThrowWhenBuilderIsNull()
+    {
+        IResourceBuilder<ChromaResource> builder = null!;
+
+        var action = () => builder.WithHostPort(8123);
+
+        var exception = Assert.Throws<ArgumentNullException>(action);
+        Assert.Equal(nameof(builder), exception.ParamName);
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]

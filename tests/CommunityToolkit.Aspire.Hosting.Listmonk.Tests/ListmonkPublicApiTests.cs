@@ -49,7 +49,9 @@ public class ListmonkPublicApiTests
         var listmonk = builder.AddListmonk("listmonk");
         string address = null!;
 
+#pragma warning disable CS0618 // Verify validation of the legacy API.
         var action = () => listmonk.WithAppAddress(address);
+#pragma warning restore CS0618
 
         var exception = Assert.Throws<ArgumentNullException>(action);
         Assert.Equal(nameof(address), exception.ParamName);
