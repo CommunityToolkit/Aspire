@@ -160,7 +160,7 @@ public static class FlareBuilderExtensions
     /// ClickHouse and Redis keep their own data volumes; configure them on those resources.
     /// </remarks>
     [AspireExport]
-    public static IResourceBuilder<FlareResource> WithDataVolumes(
+    public static IResourceBuilder<FlareResource> WithDataVolume(
         this IResourceBuilder<FlareResource> builder,
         string? name = null)
     {

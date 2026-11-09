@@ -166,11 +166,11 @@ public class AddFlareTests
     }
 
     [Fact]
-    public void WithDataVolumesMountsOneVolumeIntoIngestAndApi()
+    public void WithDataVolumeMountsOneVolumeIntoIngestAndApi()
     {
         using var builder = TestDistributedApplicationBuilder.Create();
 
-        var flare = CreateFlare(builder).WithDataVolumes("flare-identity");
+        var flare = CreateFlare(builder).WithDataVolume("flare-identity");
 
         var ingestMount = Assert.Single(flare.Resource.Annotations.OfType<ContainerMountAnnotation>());
         var apiMount = Assert.Single(flare.Resource.Api.Annotations.OfType<ContainerMountAnnotation>());

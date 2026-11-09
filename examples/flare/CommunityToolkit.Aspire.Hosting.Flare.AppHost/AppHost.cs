@@ -4,7 +4,7 @@ var clickhouse = builder.AddClickHouse("clickhouse");
 var redis = builder.AddRedis("redis");
 
 var flare = builder.AddFlare("flare", clickhouse, redis)
-    .WithDataVolumes();
+    .WithDataVolume();
 
 // A small service that places an order every couple of seconds. Its logs, traces (including failed
 // orders) and metrics go to Flare: open the flare-dashboard URL to explore them.

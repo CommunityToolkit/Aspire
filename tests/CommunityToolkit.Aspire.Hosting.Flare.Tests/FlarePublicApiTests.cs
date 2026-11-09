@@ -63,11 +63,11 @@ public class FlarePublicApiTests
     }
 
     [Fact]
-    public void WithDataVolumesShouldThrowWhenBuilderIsNull()
+    public void WithDataVolumeShouldThrowWhenBuilderIsNull()
     {
         IResourceBuilder<FlareResource> builder = null!;
 
-        var action = () => builder.WithDataVolumes();
+        var action = () => builder.WithDataVolume();
 
         var exception = Assert.Throws<ArgumentNullException>(action);
         Assert.Equal(nameof(builder), exception.ParamName);

@@ -29,7 +29,7 @@ var clickhouse = builder.AddClickHouse("clickhouse");
 var redis = builder.AddRedis("redis");
 
 var flare = builder.AddFlare("flare", clickhouse, redis)
-                   .WithDataVolumes();
+                   .WithDataVolume();
 
 builder.AddProject<Projects.Api>("api")
        .WithOtlpExporter(flare)
@@ -44,7 +44,7 @@ A resource wired with `WithOtlpExporter(flare)` sends its telemetry to Flare **i
 
 ### Persistence
 
-ClickHouse and Redis keep their data in the volumes you configure on those resources. `WithDataVolumes()` persists Flare's own identity database (dashboard users, sessions and ingest API keys) in a volume shared by the ingest service and the query API. Without it, both keep a private database that is lost when their containers are recreated.
+ClickHouse and Redis keep their data in the volumes you configure on those resources. `WithDataVolume()` persists Flare's own identity database (dashboard users, sessions and ingest API keys) in a volume shared by the ingest service and the query API. Without it, both keep a private database that is lost when their containers are recreated.
 
 ### Other options
 
