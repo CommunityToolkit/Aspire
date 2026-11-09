@@ -22,6 +22,9 @@ public static class FlareBuilderExtensions
     private const string ClickHouseDatabaseName = "clickhousedb";
     private const string RedisConnectionName = "redis";
 
+    private const string OtlpHeadersVariable = "OTEL_EXPORTER_OTLP_HEADERS";
+    private const string DashboardApiKeyHeader = "x-otlp-api-key";
+
     private const string IdentityMountPath = "/data/identity";
     private const string IdentityDbPath = "/data/identity/flare-identity.db";
 
@@ -205,7 +208,8 @@ public static class FlareBuilderExtensions
     /// <summary>
     /// Requires an API key on the ingest service. OTLP clients must send it as
     /// <c>Authorization: Bearer &lt;key&gt;</c>, for example through
-    /// <c>OTEL_EXPORTER_OTLP_HEADERS=Authorization=Bearer &lt;key&gt;</c>.
+    /// <c>OTEL_EXPORTER_OTLP_HEADERS=Authorization=Bearer &lt;key&gt;</c>. Resources wired with
+    /// <see cref="WithOtlpExporter{T}(IResourceBuilder{T}, IResourceBuilder{FlareResource}, bool)"/> send it automatically.
     /// </summary>
     /// <param name="builder">The Flare resource builder.</param>
     /// <param name="apiKey">The parameter holding the API key.</param>
@@ -217,6 +221,8 @@ public static class FlareBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(apiKey);
+
+        builder.Resource.IngestApiKey = apiKey.Resource;
 
         return builder
             .WithEnvironment("Auth__IngestKeyRequired", "true")
@@ -293,6 +299,12 @@ public static class FlareBuilderExtensions
     /// Points a resource's OpenTelemetry exporter at a Flare ingest service by setting
     /// <c>OTEL_EXPORTER_OTLP_ENDPOINT</c> and <c>OTEL_EXPORTER_OTLP_PROTOCOL</c>.
     /// </summary>
+    /// <remarks>
+    /// The resource's telemetry goes to Flare instead of the Aspire dashboard, so it no longer appears in the
+    /// dashboard's logs, traces and metrics views. The Aspire dashboard's OTLP API key is removed from
+    /// <c>OTEL_EXPORTER_OTLP_HEADERS</c> so it is not sent to Flare; other headers are kept. When the Flare resource
+    /// has an API key (see <see cref="WithApiKey"/>), an <c>Authorization=Bearer &lt;key&gt;</c> header is added.
+    /// </remarks>
     /// <typeparam name="T">The type of the resource that will export telemetry.</typeparam>
     /// <param name="builder">The resource builder.</param>
     /// <param name="flare">The Flare resource builder.</param>
@@ -310,11 +322,72 @@ public static class FlareBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(flare);
 
-        var endpoint = useHttp ? flare.Resource.OtlpHttpEndpoint : flare.Resource.OtlpGrpcEndpoint;
+        var flareResource = flare.Resource;
+        var endpoint = useHttp ? flareResource.OtlpHttpEndpoint : flareResource.OtlpGrpcEndpoint;
 
         return builder
             .WithEnvironment("OTEL_EXPORTER_OTLP_ENDPOINT", endpoint)
-            .WithEnvironment("OTEL_EXPORTER_OTLP_PROTOCOL", useHttp ? "http/protobuf" : "grpc");
+            .WithEnvironment("OTEL_EXPORTER_OTLP_PROTOCOL", useHttp ? "http/protobuf" : "grpc")
+            .WithEnvironment(context => SetOtlpHeaders(context, flareResource));
+    }
+
+    // Aspire adds its dashboard's OTLP key to OTEL_EXPORTER_OTLP_HEADERS; once the exporter points at Flare
+    // that key must not travel with it. Keeps any other headers and adds Flare's own key when one is set.
+    private static void SetOtlpHeaders(EnvironmentCallbackContext context, FlareResource flare)
+    {
+        var headers = new List<string>();
+        object? untouched = null;
+
+        if (context.EnvironmentVariables.TryGetValue(OtlpHeadersVariable, out var existing))
+        {
+            if (existing is string text)
+            {
+                headers.AddRange(text
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Where(header => !header.StartsWith(DashboardApiKeyHeader + "=", StringComparison.OrdinalIgnoreCase)));
+            }
+            else
+            {
+                // A value the user built from parameters or expressions: leave it as it is.
+                untouched = existing;
+            }
+        }
+
+        // A user-built value is only combined with Flare's key when Aspire can render it inside an expression.
+        if (untouched is not null && (flare.IngestApiKey is null || untouched is not (IValueProvider and IManifestExpressionProvider)))
+        {
+            return;
+        }
+
+        if (flare.IngestApiKey is null)
+        {
+            if (headers.Count == 0)
+            {
+                context.EnvironmentVariables.Remove(OtlpHeadersVariable);
+            }
+            else
+            {
+                context.EnvironmentVariables[OtlpHeadersVariable] = string.Join(',', headers);
+            }
+
+            return;
+        }
+
+        var value = new ReferenceExpressionBuilder();
+        if (untouched is not null)
+        {
+            value.AppendValueProvider(untouched);
+            value.AppendLiteral(",");
+        }
+
+        foreach (var header in headers)
+        {
+            value.AppendLiteral(header + ",");
+        }
+
+        value.AppendLiteral("Authorization=Bearer ");
+        value.AppendValueProvider(flare.IngestApiKey);
+        context.EnvironmentVariables[OtlpHeadersVariable] = value.Build();
     }
 
     /// <summary>

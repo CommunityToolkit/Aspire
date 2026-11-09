@@ -1,4 +1,4 @@
-import { createBuilder, refExpr } from "./.aspire/modules/aspire.mjs";
+import { createBuilder } from "./.aspire/modules/aspire.mjs";
 
 const builder = await createBuilder();
 
@@ -21,7 +21,8 @@ await flare.withIngestPorts({ grpcPort: 4317, httpPort: 4318 });
 await flare.withFlareImageTag("0.6");
 await flare.withPublicUrls({ dashboardUrl });
 
-// withApiKey: OTLP clients must send the key as "Authorization: Bearer <key>"
+// withApiKey: OTLP clients must send the key as "Authorization: Bearer <key>";
+// withFlareOtlpExporter below adds that header automatically
 await flare.withApiKey(ingestKey);
 
 // Property access on FlareResource (ExposeProperties = true)
@@ -34,7 +35,6 @@ const apiService = await builder.addDotnetProject(
     "../CommunityToolkit.Aspire.Hosting.Flare.ApiService/CommunityToolkit.Aspire.Hosting.Flare.ApiService.csproj",
 );
 await apiService.withFlareOtlpExporter(flare, { useHttp: true });
-await apiService.withEnvironment("OTEL_EXPORTER_OTLP_HEADERS", refExpr`Authorization=Bearer ${ingestKey}`);
 await apiService.waitFor(flare);
 
 await builder.build().run();

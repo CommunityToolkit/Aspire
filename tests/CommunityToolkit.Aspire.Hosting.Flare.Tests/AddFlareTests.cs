@@ -266,4 +266,56 @@ public class AddFlareTests
         Assert.Equal($"{{flare.bindings.{endpointName}.url}}", config["OTEL_EXPORTER_OTLP_ENDPOINT"]);
         Assert.Equal(protocol, config["OTEL_EXPORTER_OTLP_PROTOCOL"]);
     }
+
+    // Stands in for the header Aspire adds for its own dashboard in run mode.
+    private const string DashboardHeaders = "x-otlp-api-key=dashboard-secret,x-tenant=shop";
+
+    [Fact]
+    public async Task WithOtlpExporterDropsTheDashboardKeyAndKeepsOtherHeaders()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var flare = CreateFlare(builder);
+
+        var app = builder.AddContainer("app", "image")
+            .WithEnvironment("OTEL_EXPORTER_OTLP_HEADERS", DashboardHeaders)
+            .WithOtlpExporter(flare);
+
+        var config = await app.Resource.GetEnvironmentVariablesAsync(DistributedApplicationOperation.Publish);
+
+        Assert.Equal("x-tenant=shop", config["OTEL_EXPORTER_OTLP_HEADERS"]);
+    }
+
+    [Fact]
+    public async Task WithOtlpExporterRemovesTheHeadersVariableWhenOnlyTheDashboardKeyWasSet()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var flare = CreateFlare(builder);
+
+        var app = builder.AddContainer("app", "image")
+            .WithEnvironment("OTEL_EXPORTER_OTLP_HEADERS", "x-otlp-api-key=dashboard-secret")
+            .WithOtlpExporter(flare);
+
+        var config = await app.Resource.GetEnvironmentVariablesAsync(DistributedApplicationOperation.Publish);
+
+        Assert.False(config.ContainsKey("OTEL_EXPORTER_OTLP_HEADERS"));
+    }
+
+    [Fact]
+    public async Task WithOtlpExporterSendsFlaresApiKeyAsBearer()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var apiKey = builder.AddParameter("flare-key", "secret-value", secret: true);
+        var flare = CreateFlare(builder);
+
+        var app = builder.AddContainer("app", "image")
+            .WithEnvironment("OTEL_EXPORTER_OTLP_HEADERS", DashboardHeaders)
+            .WithOtlpExporter(flare);
+
+        // Set after the exporter on purpose: the header is resolved when the environment is built.
+        flare.WithApiKey(apiKey);
+
+        var config = await app.Resource.GetEnvironmentVariablesAsync(DistributedApplicationOperation.Publish);
+
+        Assert.Equal("x-tenant=shop,Authorization=Bearer {flare-key.value}", config["OTEL_EXPORTER_OTLP_HEADERS"]);
+    }
 }

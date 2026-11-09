@@ -40,6 +40,8 @@ builder.AddProject<Projects.Api>("api")
 
 `WithOtlpExporter(flare)` sets `OTEL_EXPORTER_OTLP_ENDPOINT` and `OTEL_EXPORTER_OTLP_PROTOCOL` on the consuming resource. Pass `useHttp: true` to export over OTLP/HTTP instead of gRPC. `WithReference(flare)` is also supported and injects the OTLP/gRPC URL as a connection string.
 
+A resource wired with `WithOtlpExporter(flare)` sends its telemetry to Flare **instead of** the Aspire dashboard, so its logs, traces and metrics no longer appear in the dashboard's telemetry views (the resource itself, its console output and its state still do). To see the same telemetry in both, export to an OpenTelemetry Collector that forwards to each. `WithOtlpExporter` also removes the Aspire dashboard's OTLP API key from `OTEL_EXPORTER_OTLP_HEADERS`, so that key is not sent to Flare, and adds `Authorization=Bearer <key>` when Flare has an API key (see `WithApiKey`).
+
 ### Persistence
 
 ClickHouse and Redis keep their data in the volumes you configure on those resources. `WithDataVolumes()` persists Flare's own identity database (dashboard users, sessions and ingest API keys) in a volume shared by the ingest service and the query API. Without it, both keep a private database that is lost when their containers are recreated.
@@ -49,7 +51,7 @@ ClickHouse and Redis keep their data in the volumes you configure on those resou
 | Method | Purpose |
 | --- | --- |
 | `WithIngestPorts(grpcPort, httpPort)` | Change the host ports of the OTLP endpoints. |
-| `WithApiKey(parameter)` | Require an API key on the ingest service. OTLP clients send it as `Authorization: Bearer <key>` (for example `OTEL_EXPORTER_OTLP_HEADERS=Authorization=Bearer <key>`). |
+| `WithApiKey(parameter)` | Require an API key on the ingest service. OTLP clients send it as `Authorization: Bearer <key>` (for example `OTEL_EXPORTER_OTLP_HEADERS=Authorization=Bearer <key>`); resources wired with `WithOtlpExporter(flare)` send it automatically. |
 | `WithPublicUrls(apiUrl, dashboardUrl)` | Set the URLs a browser uses once the stack is published and no longer reachable on localhost. `dashboardUrl` is also the API's allowed CORS origin, so pass an origin only (`https://flare.example.com`, no path or trailing slash). |
 | `WithFlareImageTag(tag)` | Change the image tag of all four containers. |
 

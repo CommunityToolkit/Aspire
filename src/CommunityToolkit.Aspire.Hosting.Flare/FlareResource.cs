@@ -51,6 +51,9 @@ public class FlareResource : ContainerResource, IResourceWithConnectionString
     [AspireExportIgnore(Reason = "Child resources are reached through the resource tree; they are not exported as handles.")]
     public FlareDashboardResource Dashboard { get; internal set; } = default!;
 
+    // The ingest API key set by WithApiKey, so WithOtlpExporter can send it from the consuming resource.
+    internal ParameterResource? IngestApiKey { get; set; }
+
     /// <summary>
     /// Gets the connection string expression for the ingest service: the OTLP/gRPC URL, for example
     /// <c>http://localhost:4317</c>.
