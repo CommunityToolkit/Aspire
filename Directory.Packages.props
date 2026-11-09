@@ -146,8 +146,7 @@
     <PackageVersion Include="Testcontainers" Version="4.16.0" />
     <PackageVersion Include="Testcontainers.MsSql" Version="4.16.0" />
     <PackageVersion Include="Polly" Version="8.8.0" />
-    <!-- Keep Verify on the MIT-licensed version until a new license is agreed. -->
-    <PackageVersion Include="Verify.XunitV3" Version="[32.0.1,32.0.1]" />
+    <PackageVersion Include="Verify.XunitV3" Version="31.13.5" />
   </ItemGroup>
   <ItemGroup Label="Overrides">
     <PackageVersion Include="Microsoft.Bcl.Memory" Version="10.0.14" />
