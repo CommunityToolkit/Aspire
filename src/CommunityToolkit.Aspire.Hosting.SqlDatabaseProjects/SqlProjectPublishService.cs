@@ -6,6 +6,8 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Text.Json;
 using System.Xml.Linq;
+using NuGet.Packaging;
+using NuGet.Versioning;
 
 namespace CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects;
 
@@ -236,28 +238,18 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksu
             using var assets = JsonDocument.Parse(await File.ReadAllTextAsync(assetsPath, cancellationToken));
             ValidateRestoredPackage(assets.RootElement, packageAnnotation);
 
-            var cachePath = Path.Combine(temporaryDirectory, "obj", "project.nuget.cache");
-            using var cache = JsonDocument.Parse(await File.ReadAllTextAsync(cachePath, cancellationToken));
-            var expectedPackageFiles = cache.RootElement
-                .GetProperty("expectedPackageFiles")
-                .EnumerateArray()
-                .Select(file => file.GetString())
-                .Where(file => !string.IsNullOrWhiteSpace(file))
-                .ToArray();
+            var packageVersion = NuGetVersion.Parse(packageAnnotation.Version);
+            var packageDirectory = assets.RootElement
+                .GetProperty("packageFolders")
+                .EnumerateObject()
+                .Select(folder => new VersionFolderPathResolver(folder.Name, isLowercase: true).GetInstallPath(packageAnnotation.PackageId, packageVersion))
+                .FirstOrDefault(Directory.Exists);
 
-            if (expectedPackageFiles.Length != 1 || !Path.IsPathRooted(expectedPackageFiles[0]!))
+            if (packageDirectory is null)
             {
-                throw new InvalidOperationException($"NuGet restore did not report one absolute package path for '{packageAnnotation.PackageId}' version '{packageAnnotation.Version}'.");
+                throw new InvalidOperationException($"NuGet restore did not install package '{packageAnnotation.PackageId}' version '{packageAnnotation.Version}' in a reported package folder.");
             }
 
-            var packageMetadataPath = expectedPackageFiles[0]!;
-            if (!Path.GetFileName(packageMetadataPath).EndsWith(".nupkg.sha512", StringComparison.OrdinalIgnoreCase))
-            {
-                throw new InvalidOperationException($"NuGet restore reported an unexpected package metadata file for '{packageAnnotation.PackageId}' version '{packageAnnotation.Version}'.");
-            }
-
-            var packageDirectory = Path.GetDirectoryName(packageMetadataPath)
-                ?? throw new InvalidOperationException($"NuGet restore did not report a package directory for '{packageAnnotation.PackageId}' version '{packageAnnotation.Version}'.");
             var relativeDacpacPath = packageAnnotation.DacpacRelativePath ?? Path.Combine("tools", $"{packageAnnotation.PackageId}.dacpac");
             var dacpacPath = ResolvePackageFilePath(packageDirectory, relativeDacpacPath);
 
