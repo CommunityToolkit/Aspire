@@ -25,8 +25,8 @@ public static class JavaScriptHostingExtensions
         {
             var resource = builder.Resource;
 
-            // monorepo tools launched without a package manager and npm (from Aspire.Hosting.JavaScript) need `--`, but yarn and pnpm don't
-            if (!resource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var executionAnnotation) || executionAnnotation.ExecutableName == "npm")
+            // Turborepo needs `--` to forward arguments, whatever launches it. npm (from Aspire.Hosting.JavaScript) and tools launched without a package manager need it too. Yarn and pnpm don't.
+            if (resource is TurborepoAppResource || !resource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var executionAnnotation) || executionAnnotation.ExecutableName == "npm")
             {
                 ctx.Args.Add("--");
             }

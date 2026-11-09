@@ -401,10 +401,10 @@ public class TurborepoResourceCreationTests
     }
 
     [Theory]
-    [InlineData("npm", true)]
-    [InlineData("yarn", false)]
-    [InlineData("pnpm", false)]
-    public async Task Turborepo_WithMappedEndpointPort_AddsSeparatorOnlyForNpm(string packageManager, bool expectSeparator)
+    [InlineData("npm")]
+    [InlineData("yarn")]
+    [InlineData("pnpm")]
+    public async Task Turborepo_WithMappedEndpointPort_AlwaysAddsSeparator(string packageManager)
     {
         var builder = DistributedApplication.CreateBuilder();
 
@@ -423,8 +423,8 @@ public class TurborepoResourceCreationTests
         Assert.Equal(packageManager, pm.ExecutableName);
 
         var args = await turboApp.GetArgumentListAsync();
-        // Yarn 1 drops the arguments between the script and `--` (e.g. `-C apps/web`), and pnpm passes `--` through to the script, so neither wants the separator
-        Assert.Equal(expectSeparator, args.Contains("--"));
+        // Turbo rejects `--port` unless it comes after `--`
+        Assert.Contains("--", args);
         Assert.Contains("--port", args);
     }
 
