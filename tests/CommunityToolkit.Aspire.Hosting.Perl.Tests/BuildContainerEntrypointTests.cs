@@ -12,7 +12,7 @@ public class BuildContainerEntrypointTests
             EntrypointType.Script,
             "app.pl",
             apiSubcommand: null,
-            useLocalLibPath: false);
+            localLibRoot: null);
 
         Assert.Equal(["perl", "app.pl"], args);
     }
@@ -24,7 +24,7 @@ public class BuildContainerEntrypointTests
             EntrypointType.API,
             "app.pl",
             apiSubcommand: "daemon",
-            useLocalLibPath: false);
+            localLibRoot: null);
 
         Assert.Equal(["perl", "app.pl", "daemon"], args);
     }
@@ -36,7 +36,7 @@ public class BuildContainerEntrypointTests
             EntrypointType.Module,
             "MyApp::Worker",
             apiSubcommand: null,
-            useLocalLibPath: false);
+            localLibRoot: null);
 
         Assert.Equal(["perl", "-MMyApp::Worker", "-e", "MyApp::Worker->run()"], args);
     }
@@ -48,21 +48,24 @@ public class BuildContainerEntrypointTests
             EntrypointType.Executable,
             "myapp",
             apiSubcommand: null,
-            useLocalLibPath: false);
+            localLibRoot: "/app/vendor/perl5");
 
         Assert.Equal(["myapp"], args);
     }
 
-    [Fact]
-    public void BuildContainerEntrypointArguments_ModuleWithLocalLib_IncludesIncludePath()
+    [Theory]
+    [InlineData("/app/local")]
+    [InlineData("/app/vendor/perl5")]
+    [InlineData("/app/vendor lib/$perl")]
+    public void BuildContainerEntrypointArguments_ModuleWithLocalLib_IncludesConfiguredPath(string localLibRoot)
     {
         var args = PerlAppResourceBuilderExtensions.BuildContainerEntrypointArguments(
             EntrypointType.Module,
             "MyApp::Worker",
             apiSubcommand: null,
-            useLocalLibPath: true);
+            localLibRoot);
 
-        Assert.Equal(["perl", "-Ilocal/lib/perl5", "-MMyApp::Worker", "-e", "MyApp::Worker->run()"], args);
+        Assert.Equal(["perl", $"-I{localLibRoot}/lib/perl5", "-MMyApp::Worker", "-e", "MyApp::Worker->run()"], args);
     }
 
 }

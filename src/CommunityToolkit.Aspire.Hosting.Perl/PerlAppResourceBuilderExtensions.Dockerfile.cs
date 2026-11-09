@@ -18,13 +18,13 @@ public static partial class PerlAppResourceBuilderExtensions
     /// <param name="entrypointType">The entrypoint invocation mode.</param>
     /// <param name="entrypoint">The script/module/executable entrypoint.</param>
     /// <param name="apiSubcommand">Optional API subcommand, defaults to <c>daemon</c> for API mode.</param>
-    /// <param name="useLocalLibPath">Whether to include local::lib include-path arguments.</param>
+    /// <param name="localLibRoot">Optional local::lib root used for include-path arguments.</param>
     /// <returns>The argument vector for Docker <c>ENTRYPOINT</c>.</returns>
     internal static string[] BuildContainerEntrypointArguments(
         EntrypointType entrypointType,
         string entrypoint,
         string? apiSubcommand,
-        bool useLocalLibPath)
+        string? localLibRoot)
     {
         ArgumentException.ThrowIfNullOrEmpty(entrypoint);
 
@@ -34,9 +34,9 @@ public static partial class PerlAppResourceBuilderExtensions
         }
 
         List<string> args = ["perl"];
-        if (useLocalLibPath)
+        if (localLibRoot is not null)
         {
-            args.Add("-Ilocal/lib/perl5");
+            args.Add($"-I{localLibRoot}/lib/perl5");
         }
 
         switch (entrypointType)
@@ -179,7 +179,35 @@ public static partial class PerlAppResourceBuilderExtensions
     private static string GetContainerLocalLibRoot(string localLibPath)
     {
         ThrowIfLocalLibPathHasControlCharacters(localLibPath);
-        return $"/app/{NormalizeRelativeLocalLibPath(localLibPath) ?? localLibPath}";
+
+        // Resolve container paths independently of the host OS.
+        var normalized = localLibPath.Replace('\\', '/').Trim();
+        List<string> segments = [];
+        foreach (var segment in normalized.Split('/', StringSplitOptions.RemoveEmptyEntries))
+        {
+            if (segment == ".")
+            {
+                continue;
+            }
+
+            if (segment == "..")
+            {
+                if (segments.Count == 0)
+                {
+                    throw new InvalidOperationException(
+                        $"The local::lib path '{localLibPath}' configured with WithLocalLib escapes /app. " +
+                        "Use a path within the application directory for generated Dockerfiles.");
+                }
+
+                segments.RemoveAt(segments.Count - 1);
+            }
+            else
+            {
+                segments.Add(segment);
+            }
+        }
+
+        return segments.Count == 0 ? "/app" : $"/app/{string.Join('/', segments)}";
     }
 
     private static bool IsShellSafe(string value) =>
@@ -335,7 +363,7 @@ public static partial class PerlAppResourceBuilderExtensions
         IReadOnlyList<PerlRequiredModuleAnnotation>? requiredModules = null)
     {
         var localLibRoot = localLibPath is null ? null : GetContainerLocalLibRoot(localLibPath);
-        var entrypointArgs = BuildContainerEntrypointArguments(entrypointType, entrypoint, apiSubcommand, useLocalLibPath: localLibRoot is not null);
+        var entrypointArgs = BuildContainerEntrypointArguments(entrypointType, entrypoint, apiSubcommand, localLibRoot);
 
         var stage = builder.From(baseImage)
             .WorkDir("/app");
@@ -400,7 +428,7 @@ public static partial class PerlAppResourceBuilderExtensions
     /// <param name="buildImage">The build-stage image.</param>
     /// <param name="hasCpanfile">Whether the application directory contains a cpanfile.</param>
     /// <param name="hasSnapshot">Whether the application directory contains a cpanfile.snapshot.</param>
-    /// <param name="localLibPath">Optional local::lib path to expose in the runtime stage.</param>
+    /// <param name="localLibPath">Optional dependency install and runtime local::lib path, defaulting to <c>local</c>.</param>
     /// <param name="cartonDeployment">Whether to use <c>carton install --deployment</c>.</param>
     internal static void BuildCartonDockerfile(
         this DockerfileBuilder builder,
@@ -422,8 +450,8 @@ public static partial class PerlAppResourceBuilderExtensions
                 "or use WithProjectDependencies(cartonDeployment: false).");
         }
 
-        var localLibRoot = localLibPath is null ? null : GetContainerLocalLibRoot(localLibPath);
-        var entrypointArgs = BuildContainerEntrypointArguments(entrypointType, entrypoint, apiSubcommand, useLocalLibPath: true);
+        var localLibRoot = GetContainerLocalLibRoot(localLibPath ?? "local");
+        var entrypointArgs = BuildContainerEntrypointArguments(entrypointType, entrypoint, apiSubcommand, localLibRoot);
 
         var cartonInstallCommand = cartonDeployment
             ? "carton install --deployment"
@@ -435,6 +463,7 @@ public static partial class PerlAppResourceBuilderExtensions
         if (hasCpanfile)
         {
             buildStage.Run("cpanm Carton")
+                .Env("PERL_CARTON_PATH", QuoteDockerfileEnvValue(localLibRoot))
                 .Copy("cpanfile", "./");
 
             if (hasSnapshot)
@@ -449,13 +478,9 @@ public static partial class PerlAppResourceBuilderExtensions
 
         var runtimeStage = builder.From(runtimeImage)
             .WorkDir("/app")
-            .CopyFrom("build", "/app", "/app");
-
-        if (localLibRoot is not null)
-        {
-            runtimeStage.Env("PERL5LIB", QuoteDockerfileEnvValue($"{localLibRoot}/lib/perl5"))
-                .Env("PERL_LOCAL_LIB_ROOT", QuoteDockerfileEnvValue(localLibRoot));
-        }
+            .CopyFrom("build", "/app", "/app")
+            .Env("PERL5LIB", QuoteDockerfileEnvValue($"{localLibRoot}/lib/perl5"))
+            .Env("PERL_LOCAL_LIB_ROOT", QuoteDockerfileEnvValue(localLibRoot));
 
         runtimeStage.Entrypoint(entrypointArgs);
     }
