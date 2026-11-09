@@ -252,14 +252,15 @@ public class AddFlareTests
     }
 
     [Theory]
-    [InlineData(false, "grpc", "otlp-grpc")]
-    [InlineData(true, "http/protobuf", "otlp-http")]
-    public async Task WithOtlpExporterPointsTheConsumerAtFlare(bool useHttp, string protocol, string endpointName)
+    [InlineData(OtlpProtocol.Grpc, "grpc", "otlp-grpc")]
+    [InlineData(OtlpProtocol.HttpProtobuf, "http/protobuf", "otlp-http")]
+    [InlineData(OtlpProtocol.HttpJson, "http/json", "otlp-http")]
+    public async Task WithOtlpExporterPointsTheConsumerAtFlare(OtlpProtocol otlpProtocol, string protocol, string endpointName)
     {
         using var builder = TestDistributedApplicationBuilder.Create();
         var flare = CreateFlare(builder);
 
-        var app = builder.AddContainer("app", "image").WithOtlpExporter(flare, useHttp);
+        var app = builder.AddContainer("app", "image").WithOtlpExporter(flare, otlpProtocol);
 
         var config = await app.Resource.GetEnvironmentVariablesAsync(DistributedApplicationOperation.Publish);
 

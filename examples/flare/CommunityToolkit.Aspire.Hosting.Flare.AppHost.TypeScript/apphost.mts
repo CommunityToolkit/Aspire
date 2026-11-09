@@ -1,4 +1,4 @@
-import { createBuilder } from "./.aspire/modules/aspire.mjs";
+import { createBuilder, OtlpProtocol } from "./.aspire/modules/aspire.mjs";
 
 const builder = await createBuilder();
 
@@ -34,7 +34,7 @@ const apiService = await builder.addDotnetProject(
     "apiservice",
     "../CommunityToolkit.Aspire.Hosting.Flare.ApiService/CommunityToolkit.Aspire.Hosting.Flare.ApiService.csproj",
 );
-await apiService.withFlareOtlpExporter(flare, { useHttp: true });
+await apiService.withFlareOtlpExporter(flare, { protocol: OtlpProtocol.HttpProtobuf });
 await apiService.waitFor(flare);
 
 await builder.build().run();

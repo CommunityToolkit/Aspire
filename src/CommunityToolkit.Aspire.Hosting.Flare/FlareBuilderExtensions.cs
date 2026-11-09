@@ -209,7 +209,7 @@ public static class FlareBuilderExtensions
     /// Requires an API key on the ingest service. OTLP clients must send it as
     /// <c>Authorization: Bearer &lt;key&gt;</c>, for example through
     /// <c>OTEL_EXPORTER_OTLP_HEADERS=Authorization=Bearer &lt;key&gt;</c>. Resources wired with
-    /// <see cref="WithOtlpExporter{T}(IResourceBuilder{T}, IResourceBuilder{FlareResource}, bool)"/> send it automatically.
+    /// <see cref="WithOtlpExporter{T}(IResourceBuilder{T}, IResourceBuilder{FlareResource}, OtlpProtocol)"/> send it automatically.
     /// </summary>
     /// <param name="builder">The Flare resource builder.</param>
     /// <param name="apiKey">The parameter holding the API key.</param>
@@ -308,26 +308,33 @@ public static class FlareBuilderExtensions
     /// <typeparam name="T">The type of the resource that will export telemetry.</typeparam>
     /// <param name="builder">The resource builder.</param>
     /// <param name="flare">The Flare resource builder.</param>
-    /// <param name="useHttp">
-    /// <see langword="true"/> to export over OTLP/HTTP (protobuf) instead of OTLP/gRPC.
+    /// <param name="protocol">
+    /// The OTLP protocol to export with. <see cref="OtlpProtocol.Grpc"/> uses the ingest service's gRPC endpoint;
+    /// <see cref="OtlpProtocol.HttpProtobuf"/> and <see cref="OtlpProtocol.HttpJson"/> use its HTTP endpoint.
     /// </param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     [AspireExportIgnore(Reason = "Generic receiver; the polyglot overload is withFlareOtlpExporter.")]
     public static IResourceBuilder<T> WithOtlpExporter<T>(
         this IResourceBuilder<T> builder,
         IResourceBuilder<FlareResource> flare,
-        bool useHttp = false)
+        OtlpProtocol protocol = OtlpProtocol.Grpc)
         where T : IResourceWithEnvironment
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(flare);
 
         var flareResource = flare.Resource;
-        var endpoint = useHttp ? flareResource.OtlpHttpEndpoint : flareResource.OtlpGrpcEndpoint;
+        var (endpoint, protocolName) = protocol switch
+        {
+            OtlpProtocol.Grpc => (flareResource.OtlpGrpcEndpoint, "grpc"),
+            OtlpProtocol.HttpProtobuf => (flareResource.OtlpHttpEndpoint, "http/protobuf"),
+            OtlpProtocol.HttpJson => (flareResource.OtlpHttpEndpoint, "http/json"),
+            _ => throw new ArgumentOutOfRangeException(nameof(protocol), protocol, "Unsupported OTLP protocol."),
+        };
 
         return builder
             .WithEnvironment("OTEL_EXPORTER_OTLP_ENDPOINT", endpoint)
-            .WithEnvironment("OTEL_EXPORTER_OTLP_PROTOCOL", useHttp ? "http/protobuf" : "grpc")
+            .WithEnvironment("OTEL_EXPORTER_OTLP_PROTOCOL", protocolName)
             .WithEnvironment(context => SetOtlpHeaders(context, flareResource));
     }
 
@@ -396,15 +403,16 @@ public static class FlareBuilderExtensions
     /// </summary>
     /// <param name="builder">The resource builder.</param>
     /// <param name="flare">The Flare resource builder.</param>
-    /// <param name="useHttp">
-    /// <see langword="true"/> to export over OTLP/HTTP (protobuf) instead of OTLP/gRPC.
+    /// <param name="protocol">
+    /// The OTLP protocol to export with. <see cref="OtlpProtocol.Grpc"/> uses the ingest service's gRPC endpoint;
+    /// <see cref="OtlpProtocol.HttpProtobuf"/> and <see cref="OtlpProtocol.HttpJson"/> use its HTTP endpoint.
     /// </param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     [AspireExport("withFlareOtlpExporter", MethodName = "withFlareOtlpExporter")]
     internal static IResourceBuilder<IResourceWithEnvironment> WithFlareOtlpExporterPolyglot(
         this IResourceBuilder<IResourceWithEnvironment> builder,
         IResourceBuilder<FlareResource> flare,
-        bool useHttp = false) => builder.WithOtlpExporter(flare, useHttp);
+        OtlpProtocol protocol = OtlpProtocol.Grpc) => builder.WithOtlpExporter(flare, protocol);
 
     // Groups a resource under the Flare resource in the dashboard. This is the only parent a Flare
     // child may have, so the parent is typed as FlareResource rather than any IResource.

@@ -121,4 +121,17 @@ public class FlarePublicApiTests
         var exception = Assert.Throws<ArgumentNullException>(action);
         Assert.Equal(nameof(flare), exception.ParamName);
     }
+
+    [Fact]
+    public void WithOtlpExporterShouldThrowWhenProtocolIsUndefined()
+    {
+        var builder = TestDistributedApplicationBuilder.Create();
+        var container = builder.AddContainer("app", "image");
+        var flare = builder.AddFlare("flare", builder.AddClickHouse("clickhouse"), builder.AddRedis("redis"));
+
+        var action = () => container.WithOtlpExporter(flare, (OtlpProtocol)42);
+
+        var exception = Assert.Throws<ArgumentOutOfRangeException>(action);
+        Assert.Equal("protocol", exception.ParamName);
+    }
 }
