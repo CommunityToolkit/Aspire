@@ -65,7 +65,7 @@ var bunRepo = builder.AddTurborepoApp("bun-repo", workingDirectory: "../frontend
 
 // Generated commands:
 // Nx with yarn: yarn nx serve app1
-// Turborepo with pnpm: pnpm turbo run dev --filter app1
+// Turborepo with pnpm: pnpm exec turbo run dev --filter app1
 // Turborepo with bun: bunx turbo run dev --filter app1
 // Vite+ with npm: npx vp -C apps/website dev
 ```

@@ -94,15 +94,15 @@ public class NxResourceCreationTests
         {
             "npm" => "npx",
             "yarn" => "yarn",
-            "pnpm" => "pnpx",
+            "pnpm" => "pnpm",
             "bun" => "bunx",
             _ => packageManager
         }, nxAppResource.Command);
         var nxAppArgs = await nxAppResource.GetArgumentListAsync();
-        Assert.Collection(nxAppArgs,
-                arg => Assert.Equal("nx", arg),
-                arg => Assert.Equal("serve", arg),
-                arg => Assert.Equal("app1", arg));
+        string[] expectedArgs = packageManager == "pnpm"
+            ? ["exec", "nx", "serve", "app1"]
+            : ["nx", "serve", "app1"];
+        Assert.Equal(expectedArgs, nxAppArgs);
     }
 
     [Fact]
@@ -135,9 +135,10 @@ public class NxResourceCreationTests
         Assert.Equal("pnpm", pmPnpm.ExecutableName);
 
         var nxPnpmApp = appModel.Resources.OfType<NxAppResource>().Single(r => r.Name == "app1-pnpm");
-        Assert.Equal("pnpx", nxPnpmApp.Command);
+        Assert.Equal("pnpm", nxPnpmApp.Command);
         var pnpmArgs = await nxPnpmApp.GetArgumentListAsync();
         Assert.Collection(pnpmArgs,
+            arg => Assert.Equal("exec", arg),
             arg => Assert.Equal("nx", arg),
             arg => Assert.Equal("serve", arg),
             arg => Assert.Equal("app1-pnpm", arg));
@@ -310,17 +311,17 @@ public class NxResourceCreationTests
             {
                 "npm" => "npx",
                 "yarn" => "yarn",
-                "pnpm" => "pnpx",
+                "pnpm" => "pnpm",
                 "bun" => "bunx",
                 _ => throw new ArgumentOutOfRangeException(nameof(packageManager))
             };
 
             Assert.Equal(launcherName, nxApp.Command);
             var args = await nxApp.GetArgumentListAsync();
-            Assert.Collection(args,
-                arg => Assert.Equal("nx", arg),
-                arg => Assert.Equal("serve", arg),
-                arg => Assert.Equal(nxApp.Name, arg));
+            string[] expectedArgs = packageManager == "pnpm"
+                ? ["exec", "nx", "serve", nxApp.Name]
+                : ["nx", "serve", nxApp.Name];
+            Assert.Equal(expectedArgs, args);
         }
     }
 
@@ -392,5 +393,54 @@ public class NxResourceCreationTests
         Assert.True(nxApp.TryGetAnnotationsOfType<WaitAnnotation>(out var waitAnnotations));
         var waitAnnotation = Assert.Single(waitAnnotations);
         Assert.Equal(installer, waitAnnotation.Resource);
+    }
+
+    [Theory]
+    [InlineData("npm", true)]
+    [InlineData("yarn", false)]
+    [InlineData("pnpm", false)]
+    public async Task Nx_WithMappedEndpointPort_AddsSeparatorOnlyForNpm(string packageManager, bool expectSeparator)
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddNxApp("nx-separator").WithPackageManagerLaunch(packageManager)
+            .AddApp("app1")
+            .WithHttpEndpoint(targetPort: 8000)
+            .WithMappedEndpointPort();
+
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var nxApp = Assert.Single(appModel.Resources.OfType<NxAppResource>());
+
+        // AddApp forwards the workspace package manager annotation to the app
+        Assert.True(nxApp.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var pm));
+        Assert.Equal(packageManager, pm.ExecutableName);
+
+        var args = await nxApp.GetArgumentListAsync();
+        // Yarn 1 drops the arguments between the script and `--` (e.g. `-C apps/web`), and pnpm passes `--` through to the script, so neither wants the separator
+        Assert.Equal(expectSeparator, args.Contains("--"));
+        Assert.Contains("--port", args);
+    }
+
+    [Fact]
+    public async Task Nx_WithMappedEndpointPort_WithoutPackageManager_AddsSeparator()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddNxApp("nx-separator-default")
+            .AddApp("app1")
+            .WithHttpEndpoint(targetPort: 8000)
+            .WithMappedEndpointPort();
+
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var nxApp = Assert.Single(appModel.Resources.OfType<NxAppResource>());
+        Assert.False(nxApp.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out _));
+
+        var args = await nxApp.GetArgumentListAsync();
+        Assert.Contains("--", args);
+        Assert.Contains("--port", args);
     }
 }

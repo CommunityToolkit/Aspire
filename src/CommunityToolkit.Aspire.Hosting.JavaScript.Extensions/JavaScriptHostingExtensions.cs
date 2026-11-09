@@ -25,7 +25,7 @@ public static class JavaScriptHostingExtensions
         {
             var resource = builder.Resource;
 
-            // monorepo tools and npm (from Aspire.Hosting.JavaScript) need `--`, but yarn and pnpm don't
+            // monorepo tools launched without a package manager and npm (from Aspire.Hosting.JavaScript) need `--`, but yarn and pnpm don't
             if (!resource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var executionAnnotation) || executionAnnotation.ExecutableName == "npm")
             {
                 ctx.Args.Add("--");

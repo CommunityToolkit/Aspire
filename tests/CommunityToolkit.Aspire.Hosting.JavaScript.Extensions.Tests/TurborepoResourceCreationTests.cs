@@ -93,17 +93,15 @@ public class TurborepoResourceCreationTests
         {
             "npm" => "npx",
             "yarn" => "yarn",
-            "pnpm" => "pnpx",
+            "pnpm" => "pnpm",
             "bun" => "bunx",
             _ => packageManager
         }, turboApp.Command);
         var turboArgs = await turboApp.GetArgumentListAsync();
-        Assert.Collection(turboArgs,
-            arg => Assert.Equal("turbo", arg),
-            arg => Assert.Equal("run", arg),
-            arg => Assert.Equal("dev", arg),
-            arg => Assert.Equal("--filter", arg),
-            arg => Assert.Equal("app1", arg));
+        string[] expectedArgs = packageManager == "pnpm"
+            ? ["exec", "turbo", "run", "dev", "--filter", "app1"]
+            : ["turbo", "run", "dev", "--filter", "app1"];
+        Assert.Equal(expectedArgs, turboArgs);
     }
 
     [Fact]
@@ -126,9 +124,10 @@ public class TurborepoResourceCreationTests
         Assert.Equal("pnpm", tpmPnpm.ExecutableName);
 
         var turboPnpmApp = appModel.Resources.OfType<TurborepoAppResource>().Single(r => r.Name == "app1-pnpm");
-        Assert.Equal("pnpx", turboPnpmApp.Command);
+        Assert.Equal("pnpm", turboPnpmApp.Command);
         var tpnpmArgs = await turboPnpmApp.GetArgumentListAsync();
         Assert.Collection(tpnpmArgs,
+            arg => Assert.Equal("exec", arg),
             arg => Assert.Equal("turbo", arg),
             arg => Assert.Equal("run", arg),
             arg => Assert.Equal("dev", arg),
@@ -317,19 +316,17 @@ public class TurborepoResourceCreationTests
             {
                 "npm" => "npx",
                 "yarn" => "yarn",
-                "pnpm" => "pnpx",
+                "pnpm" => "pnpm",
                 "bun" => "bunx",
                 _ => throw new ArgumentOutOfRangeException(nameof(packageManager))
             };
 
             Assert.Equal(launcherName, turboApp.Command);
             var args = await turboApp.GetArgumentListAsync();
-            Assert.Collection(args,
-                arg => Assert.Equal("turbo", arg),
-                arg => Assert.Equal("run", arg),
-                arg => Assert.Equal("dev", arg),
-                arg => Assert.Equal("--filter", arg),
-                arg => Assert.Equal(turboApp.Name, arg));
+            string[] expectedArgs = packageManager == "pnpm"
+                ? ["exec", "turbo", "run", "dev", "--filter", turboApp.Name]
+                : ["turbo", "run", "dev", "--filter", turboApp.Name];
+            Assert.Equal(expectedArgs, args);
         }
     }
 
@@ -401,5 +398,54 @@ public class TurborepoResourceCreationTests
         Assert.True(turboApp.TryGetAnnotationsOfType<WaitAnnotation>(out var waitAnnotations));
         var waitAnnotation = Assert.Single(waitAnnotations);
         Assert.Equal(installer, waitAnnotation.Resource);
+    }
+
+    [Theory]
+    [InlineData("npm", true)]
+    [InlineData("yarn", false)]
+    [InlineData("pnpm", false)]
+    public async Task Turborepo_WithMappedEndpointPort_AddsSeparatorOnlyForNpm(string packageManager, bool expectSeparator)
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddTurborepoApp("turbo-separator").WithPackageManagerLaunch(packageManager)
+            .AddApp("app1")
+            .WithHttpEndpoint(targetPort: 8000)
+            .WithMappedEndpointPort();
+
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var turboApp = Assert.Single(appModel.Resources.OfType<TurborepoAppResource>());
+
+        // AddApp forwards the workspace package manager annotation to the app
+        Assert.True(turboApp.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var pm));
+        Assert.Equal(packageManager, pm.ExecutableName);
+
+        var args = await turboApp.GetArgumentListAsync();
+        // Yarn 1 drops the arguments between the script and `--` (e.g. `-C apps/web`), and pnpm passes `--` through to the script, so neither wants the separator
+        Assert.Equal(expectSeparator, args.Contains("--"));
+        Assert.Contains("--port", args);
+    }
+
+    [Fact]
+    public async Task Turborepo_WithMappedEndpointPort_WithoutPackageManager_AddsSeparator()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddTurborepoApp("turbo-separator-default")
+            .AddApp("app1")
+            .WithHttpEndpoint(targetPort: 8000)
+            .WithMappedEndpointPort();
+
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var turboApp = Assert.Single(appModel.Resources.OfType<TurborepoAppResource>());
+        Assert.False(turboApp.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out _));
+
+        var args = await turboApp.GetArgumentListAsync();
+        Assert.Contains("--", args);
+        Assert.Contains("--port", args);
     }
 }
