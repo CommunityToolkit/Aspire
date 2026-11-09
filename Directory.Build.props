@@ -12,7 +12,7 @@
     <Nullable>enable</Nullable>
 
     <AspireMajorVersion>17</AspireMajorVersion>
-    <AspireVersion>$(AspireMajorVersion).0.0-preview.1.26555.3</AspireVersion>
+    <AspireVersion>$(AspireMajorVersion).1.0-preview.1.26558.3</AspireVersion>
     <AspireUseCliBundle>true</AspireUseCliBundle>
     <AspirePreviewSuffix></AspirePreviewSuffix> <!-- The nightly AspireVersion already includes its prerelease suffix. -->
     <AspNetCoreVersion>9.0.0</AspNetCoreVersion>
