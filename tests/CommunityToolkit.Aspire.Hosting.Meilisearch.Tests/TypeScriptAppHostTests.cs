@@ -3,7 +3,7 @@ using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Meilisearch.Tests;
 
-[RequiresDocker]
+[RequiresContainerRuntime]
 public class TypeScriptAppHostTests
 {
     [Fact]

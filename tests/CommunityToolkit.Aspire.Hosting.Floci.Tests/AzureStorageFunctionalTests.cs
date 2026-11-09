@@ -6,7 +6,7 @@ using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Floci.Tests;
 
-[RequiresDocker]
+[RequiresContainerRuntime]
 public class AzureStorageFunctionalTests(ITestOutputHelper testOutputHelper)
 {
     [Fact]

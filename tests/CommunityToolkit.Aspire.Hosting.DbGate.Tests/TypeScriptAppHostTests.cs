@@ -3,7 +3,7 @@ using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.DbGate.Tests;
 
-[RequiresDocker]
+[RequiresContainerRuntime]
 public class TypeScriptAppHostTests
 {
     [Fact]

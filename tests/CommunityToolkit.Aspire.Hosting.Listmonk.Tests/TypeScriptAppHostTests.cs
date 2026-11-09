@@ -2,7 +2,7 @@ using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Listmonk.Tests;
 
-[RequiresDocker]
+[RequiresContainerRuntime]
 public class TypeScriptAppHostTests
 {
     [Fact]

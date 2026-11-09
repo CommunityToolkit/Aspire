@@ -2,7 +2,7 @@ using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Ngrok.Tests;
 
-[RequiresDocker]
+[RequiresContainerRuntime]
 [RequiresAuthenticatedTool("ngrok")]
 public class TypeScriptAppHostTests
 {

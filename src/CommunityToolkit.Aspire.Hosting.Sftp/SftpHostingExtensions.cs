@@ -133,11 +133,21 @@ public static class SftpHostingExtensions
         switch (keyType)
         {
             case KeyType.Ed25519:
-                builder.WithBindMount(fileInfo.FullName, "/etc/ssh/ssh_host_ed25519_key");
+                builder.WithContainerFiles("/etc/ssh", [new ContainerFile
+                {
+                    Name = "ssh_host_ed25519_key",
+                    SourcePath = fileInfo.FullName,
+                    Mode = UnixFileMode.UserRead,
+                }]);
                 break;
 
             case KeyType.Rsa:
-                builder.WithBindMount(fileInfo.FullName, "/etc/ssh/ssh_host_rsa_key");
+                builder.WithContainerFiles("/etc/ssh", [new ContainerFile
+                {
+                    Name = "ssh_host_rsa_key",
+                    SourcePath = fileInfo.FullName,
+                    Mode = UnixFileMode.UserRead,
+                }]);
                 break;
         }
 

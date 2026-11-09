@@ -83,8 +83,8 @@ var inspector = builder.AddMcpInspector("inspector", options =>
 
 The `McpInspectorOptions` class provides the following configuration properties:
 
--   `ClientPort`: Port for the client application (default: 6274)
--   `ServerPort`: Port for the server proxy application (default: 6277)
+-   `ClientPort`: Optional port for the client application (default: dynamically assigned)
+-   `ServerPort`: Optional port for the server proxy application (default: dynamically assigned)
 -   `InspectorVersion`: Version of the Inspector app to use (default: latest supported version)
 -   `ProxyToken`: Custom authentication token parameter (default: auto-generated)
 

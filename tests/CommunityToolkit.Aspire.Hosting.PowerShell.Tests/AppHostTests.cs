@@ -2,7 +2,7 @@ using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.PowerShell.Tests;
 
-[RequiresDocker]
+[RequiresContainerRuntime]
 public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_PowerShell_AppHost> fixture) :
     IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_PowerShell_AppHost>>
 {

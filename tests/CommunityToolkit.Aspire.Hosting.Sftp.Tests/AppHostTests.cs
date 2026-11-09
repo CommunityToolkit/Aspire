@@ -6,7 +6,7 @@ using Renci.SshNet;
 
 namespace CommunityToolkit.Aspire.Hosting.Sftp.Tests;
 
-[RequiresDocker]
+[RequiresContainerRuntime]
 public class AppHostTests(ITestOutputHelper log, AspireIntegrationTestFixture<CommunityToolkit_Aspire_Hosting_Sftp_AppHost> fix)
     : IClassFixture<AspireIntegrationTestFixture<CommunityToolkit_Aspire_Hosting_Sftp_AppHost>>
 {

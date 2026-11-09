@@ -1,8 +1,8 @@
-﻿using CommunityToolkit.Aspire.Testing;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.SeaweedFS.Tests;
 
-[RequiresDocker]
+[RequiresContainerRuntime]
 public class TypeScriptAppHostTests
 {
     [Fact]

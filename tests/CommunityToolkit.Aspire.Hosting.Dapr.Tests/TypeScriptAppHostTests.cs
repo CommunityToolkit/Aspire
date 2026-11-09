@@ -3,7 +3,7 @@ using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Dapr.Tests;
 
-[RequiresDocker]
+[RequiresContainerRuntime]
 public class TypeScriptAppHostTests
 {
     [Fact(Skip = "TypeScript apphost currently fails with capability error when referencing Dapr components from project resources.")]

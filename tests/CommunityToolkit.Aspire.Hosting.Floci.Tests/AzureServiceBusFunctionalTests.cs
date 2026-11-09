@@ -7,7 +7,7 @@ using System.Net.Sockets;
 
 namespace CommunityToolkit.Aspire.Hosting.Floci.Tests;
 
-[RequiresDocker]
+[RequiresTestcontainers]
 public class AzureServiceBusFunctionalTests(ITestOutputHelper testOutputHelper)
 {
     [Theory]

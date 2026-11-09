@@ -15,7 +15,7 @@ public class PublishDockerfileArtifactsTests
 {
     private const string ResourceName = "perl-app";
 
-    [Theory, RequiresDocker]
+    [Theory, RequiresTestcontainers]
     [InlineData(false)]
     [InlineData(true)]
     public async Task Publish_WithoutManifest_GeneratedImageRuns(bool useCarton)
@@ -35,7 +35,7 @@ public class PublishDockerfileArtifactsTests
         await BuildAndRunImageAsync(result, appDir);
     }
 
-    [Theory, RequiresDocker]
+    [Theory, RequiresTestcontainers]
     [InlineData(false)]
     [InlineData(true)]
     public async Task Publish_WithDependencies_GeneratedImageLoadsInstalledModules(bool useCarton)
@@ -61,7 +61,7 @@ public class PublishDockerfileArtifactsTests
         await BuildAndRunImageAsync(result, appDir);
     }
 
-    [Theory, RequiresDocker]
+    [Theory, RequiresTestcontainers]
     [InlineData("Makefile.PL")]
     [InlineData("Build.PL")]
     public async Task Publish_WithExecutableManifestLoadingProjectFile_GeneratedImageRuns(string manifestName)

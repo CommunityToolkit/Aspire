@@ -15,12 +15,12 @@ public class AspireKurrentDBClientExtensionsTest(KurrentDBContainerFixture conta
     private const string DefaultConnectionName = "kurrentdb";
 
     private string DefaultConnectionString =>
-            RequiresDockerAttribute.IsSupported ? containerFixture.GetConnectionString() : "kurrentdb://localhost:2113?tls=false";
+            RequiresTestcontainersAttribute.IsSupported ? containerFixture.GetConnectionString() : "kurrentdb://localhost:2113?tls=false";
 
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    [RequiresDocker]
+    [RequiresTestcontainers]
     public async Task AddKurrentDBClient_HealthCheckShouldBeRegisteredWhenEnabled(bool useKeyed)
     {
         var key = DefaultConnectionName;

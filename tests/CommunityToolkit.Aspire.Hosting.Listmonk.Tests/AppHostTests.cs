@@ -3,7 +3,7 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace CommunityToolkit.Aspire.Hosting.Listmonk.Tests;
 
-[RequiresDocker]
+[RequiresContainerRuntime]
 public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Listmonk_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Listmonk_AppHost>>
 {
     [Fact]

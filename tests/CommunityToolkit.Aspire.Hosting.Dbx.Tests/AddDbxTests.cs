@@ -261,7 +261,7 @@ public class AddDbxTests
     }
 
     [Fact]
-    [RequiresDocker]
+    [RequiresContainerRuntime]
     public async Task AddDbxWithDefaultsAddsUrlAnnotations()
     {
         using var builder = TestDistributedApplicationBuilder.Create();

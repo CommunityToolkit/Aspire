@@ -4,7 +4,7 @@ using OllamaSharp;
 
 namespace CommunityToolkit.Aspire.Hosting.Ollama.Tests;
 
-[RequiresDocker]
+[RequiresContainerRuntime]
 public class AppHostTests(AspireIntegrationTestFixture<Projects.Ollama_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.Ollama_AppHost>>
 {
     [Fact]

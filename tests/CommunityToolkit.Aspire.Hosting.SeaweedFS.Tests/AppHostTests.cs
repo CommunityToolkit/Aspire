@@ -1,10 +1,10 @@
-﻿using CommunityToolkit.Aspire.Testing;
+using CommunityToolkit.Aspire.Testing;
 using System.Net.Http.Json;
 using System.Text;
 
 namespace CommunityToolkit.Aspire.Hosting.SeaweedFS.Tests;
 
-[RequiresDocker]
+[RequiresContainerRuntime]
 public class AppHostTests(AspireIntegrationTestFixture<Projects.SeaweedFS_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.SeaweedFS_AppHost>>
 {
     [Fact]

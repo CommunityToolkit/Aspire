@@ -4,7 +4,7 @@ using System.Net.Http.Json;
 
 namespace CommunityToolkit.Aspire.Hosting.Meilisearch.Tests;
 
-[RequiresDocker]
+[RequiresContainerRuntime]
 public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Meilisearch_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Meilisearch_AppHost>>
 {
     [Fact]

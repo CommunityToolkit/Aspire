@@ -264,14 +264,14 @@ public class McpInspectorResourceBuilderExtensionsTests
         Assert.Equal("inspector", inspectorResource.Name);
         Assert.Equal("inspector-proxyToken", inspectorResource.ProxyTokenParameter.Name);
 
-        // Verify endpoints use default ports
+        // Verify endpoints use dynamically assigned ports
         var clientEndpoint = inspectorResource.Annotations.OfType<EndpointAnnotation>()
             .Single(e => e.Name == McpInspectorResource.ClientEndpointName);
         var serverEndpoint = inspectorResource.Annotations.OfType<EndpointAnnotation>()
             .Single(e => e.Name == McpInspectorResource.ServerProxyEndpointName);
 
-        Assert.Equal(6274, clientEndpoint.Port);
-        Assert.Equal(6277, serverEndpoint.Port);
+        Assert.Null(clientEndpoint.Port);
+        Assert.Null(serverEndpoint.Port);
     }
 
     [Fact]
@@ -687,7 +687,7 @@ public class McpInspectorResourceBuilderExtensionsTests
         var args = await inspectorResource.GetArgumentListAsync();
         var argsList = args.ToList();
 
-        Assert.Equal(new[] { "-y", "@modelcontextprotocol/inspector@0.15.0" }, args);
+        Assert.Equal(new[] { "-y", "--package", "@modelcontextprotocol/inspector@0.15.0", "mcp-inspector" }, args);
     }
 
     [Fact]
@@ -713,7 +713,7 @@ public class McpInspectorResourceBuilderExtensionsTests
         var args = await inspectorResource.GetArgumentListAsync();
         var argsList = args.ToList();
 
-        Assert.Equal("@modelcontextprotocol/inspector@1.2.3", args[1]);
+        Assert.Equal("@modelcontextprotocol/inspector@1.2.3", args[2]);
     }
 
     private static async Task<IReadOnlyList<string>> GetArgsAsync(McpInspectorResource resource)

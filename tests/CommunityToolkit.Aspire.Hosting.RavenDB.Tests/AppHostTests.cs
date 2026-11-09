@@ -1,4 +1,4 @@
-﻿using Aspire.Components.Common.Tests;
+using Aspire.Components.Common.Tests;
 using CommunityToolkit.Aspire.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
@@ -6,7 +6,7 @@ using Raven.Client.Documents;
 
 namespace CommunityToolkit.Aspire.Hosting.RavenDB.Tests;
 
-[RequiresDocker]
+[RequiresContainerRuntime]
 public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_RavenDB_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_RavenDB_AppHost>>
 {
     [Fact]

@@ -8,7 +8,7 @@ using Microsoft.Extensions.Hosting;
 
 namespace CommunityToolkit.Aspire.Hosting.Chroma.Tests;
 
-[RequiresDocker]
+[RequiresContainerRuntime]
 public class ChromaFunctionalTests(ITestOutputHelper testOutputHelper)
 {
     private const string CollectionName = "persisted";

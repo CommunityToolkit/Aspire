@@ -44,11 +44,11 @@ public static class McpInspectorResourceBuilderExtensions
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to which the MCP Inspector resource will be added.</param>
     /// <param name="name">The name of the MCP Inspector container resource.</param>
-    /// <param name="clientPort">The port for the client application. Defaults to 6274.</param>
-    /// <param name="serverPort">The port for the server proxy application. Defaults to 6277.</param>
+    /// <param name="clientPort">The port for the client application. By default, a random port is assigned.</param>
+    /// <param name="serverPort">The port for the server proxy application. By default, a random port is assigned.</param>
     /// <param name="inspectorVersion">The version of the Inspector app to use</param>
     [Obsolete("Use the overload with McpInspectorOptions instead. This overload will be removed in the next version.")]
-    public static IResourceBuilder<McpInspectorResource> AddMcpInspector(this IDistributedApplicationBuilder builder, [ResourceName] string name, int clientPort = 6274, int serverPort = 6277, string inspectorVersion = McpInspectorResource.InspectorVersion)
+    public static IResourceBuilder<McpInspectorResource> AddMcpInspector(this IDistributedApplicationBuilder builder, [ResourceName] string name, int? clientPort = null, int? serverPort = null, string inspectorVersion = McpInspectorResource.InspectorVersion)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
@@ -66,8 +66,8 @@ public static class McpInspectorResourceBuilderExtensions
     /// <ats-summary>Adds a MCP Inspector container resource</ats-summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to which the MCP Inspector resource will be added.</param>
     /// <param name="name">The name of the MCP Inspector container resource.</param>
-    /// <param name="clientPort">The port for the client application. Defaults to 6274.</param>
-    /// <param name="serverPort">The port for the server proxy application. Defaults to 6277.</param>
+    /// <param name="clientPort">The port for the client application. By default, a random port is assigned.</param>
+    /// <param name="serverPort">The port for the server proxy application. By default, a random port is assigned.</param>
     /// <param name="inspectorVersion">The version of the Inspector app to use. Defaults to <see cref="McpInspectorResource.InspectorVersion"/>.</param>
     /// <param name="proxyToken">The parameter used to provide the proxy authentication token. If <see langword="null"/> a random token will be generated.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{McpInspectorResource}"/> for further configuration.</returns>
@@ -82,8 +82,8 @@ public static class McpInspectorResourceBuilderExtensions
     internal static IResourceBuilder<McpInspectorResource> AddMcpInspectorPolyglot(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
-        int clientPort = 6274,
-        int serverPort = 6277,
+        int? clientPort = null,
+        int? serverPort = null,
         string inspectorVersion = McpInspectorResource.InspectorVersion,
         IResourceBuilder<ParameterResource>? proxyToken = null)
     {
@@ -124,8 +124,9 @@ public static class McpInspectorResourceBuilderExtensions
         var proxyTokenParameter = options.ProxyToken?.Resource ?? ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder, $"{name}-proxyToken");
 
         var packageName = $"@modelcontextprotocol/inspector@{options.InspectorVersion}";
+        var resource = new McpInspectorResource(name, packageName);
 
-        var resourceBuilder = builder.AddResource(new McpInspectorResource(name, packageName))
+        var resourceBuilder = builder.AddResource(resource)
             .WithCommand("npx")
             .WithCertificateTrustConfiguration(ctx =>
             {
@@ -400,7 +401,9 @@ public static class McpInspectorResourceBuilderExtensions
                     ctx.Args.Insert(0, packageName);
                     break;
                 default: // npm/npx
+                    ctx.Args.Insert(0, "mcp-inspector");
                     ctx.Args.Insert(0, packageName);
+                    ctx.Args.Insert(0, "--package");
                     ctx.Args.Insert(0, "-y");
                     break;
             }

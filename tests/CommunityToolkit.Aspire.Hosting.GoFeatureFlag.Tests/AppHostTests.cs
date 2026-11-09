@@ -5,7 +5,7 @@ using System.Net.Http.Json;
 
 namespace CommunityToolkit.Aspire.Hosting.GoFeatureFlag.Tests;
 
-[RequiresDocker]
+[RequiresContainerRuntime]
 public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_GoFeatureFlag_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_GoFeatureFlag_AppHost>>
 {
     [Fact]

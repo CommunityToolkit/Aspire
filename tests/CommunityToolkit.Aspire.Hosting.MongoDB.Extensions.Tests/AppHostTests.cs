@@ -3,7 +3,7 @@ using Aspire.Components.Common.Tests;
 
 namespace CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.Tests;
 
-[RequiresDocker]
+[RequiresContainerRuntime]
 public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_MongoDB_Extensions_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_MongoDB_Extensions_AppHost>>
 {
     [Fact]

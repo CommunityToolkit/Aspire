@@ -1,4 +1,4 @@
-﻿using Amazon.S3;
+using Amazon.S3;
 using Amazon.S3.Model;
 using Aspire.Hosting;
 using Aspire.Hosting.Utils;
@@ -7,7 +7,7 @@ using System.Text;
 
 namespace CommunityToolkit.Aspire.Hosting.SeaweedFS.Tests;
 
-[RequiresDocker]
+[RequiresContainerRuntime]
 public class SeaweedFSFunctionalTests(ITestOutputHelper testOutputHelper)
 {
     [Fact]

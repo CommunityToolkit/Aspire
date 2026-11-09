@@ -283,7 +283,7 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
     }
 
     [Fact]
-    [RequiresDocker]
+    [RequiresContainerRuntime]
     public async Task ResourceStartsAndStoresLogs()
     {
         using var cancellation = new CancellationTokenSource(TimeSpan.FromMinutes(5));

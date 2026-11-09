@@ -8,14 +8,14 @@ namespace Aspire.Hosting;
 public class McpInspectorOptions
 {
     /// <summary>
-    /// Gets or sets the port for the client application. Defaults to "6274".
+    /// Gets or sets the port for the client application. By default, a random port is assigned.
     /// </summary>
-    public int ClientPort { get; set; } = 6274;
+    public int? ClientPort { get; set; }
 
     /// <summary>
-    /// Gets or sets the port for the server proxy application. Defaults to "6277".
+    /// Gets or sets the port for the server proxy application. By default, a random port is assigned.
     /// </summary>
-    public int ServerPort { get; set; } = 6277;
+    public int? ServerPort { get; set; }
 
     /// <summary>
     /// Gets or sets the version of the Inspector app to use. Defaults to <see cref="McpInspectorResource.InspectorVersion"/>.

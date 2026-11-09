@@ -6,7 +6,7 @@ using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Kind.Tests;
 
-[RequiresKind]
+[RequiresDocker]
 public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Kind_AppHost> fixture)
     : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Kind_AppHost>>
 {
