@@ -369,7 +369,7 @@ public class K3sReadinessHealthCheckTests
                 .Setup(c => c.ListNodeWithHttpMessagesAsync(
                     It.IsAny<bool?>(), It.IsAny<string>(), It.IsAny<string>(),
                     It.IsAny<string>(), It.IsAny<int?>(), It.IsAny<string>(),
-                    It.IsAny<string>(), It.IsAny<bool?>(), It.IsAny<int?>(),
+                    It.IsAny<string>(), It.IsAny<bool?>(), It.IsAny<string>(), It.IsAny<int?>(),
                     It.IsAny<bool?>(), It.IsAny<bool?>(),
                     It.IsAny<IReadOnlyDictionary<string, IReadOnlyList<string>>>(),
                     It.IsAny<CancellationToken>()))
@@ -391,7 +391,7 @@ public class K3sReadinessHealthCheckTests
                 .Setup(c => c.ListNodeWithHttpMessagesAsync(
                     It.IsAny<bool?>(), It.IsAny<string>(), It.IsAny<string>(),
                     It.IsAny<string>(), It.IsAny<int?>(), It.IsAny<string>(),
-                    It.IsAny<string>(), It.IsAny<bool?>(), It.IsAny<int?>(),
+                    It.IsAny<string>(), It.IsAny<bool?>(), It.IsAny<string>(), It.IsAny<int?>(),
                     It.IsAny<bool?>(), It.IsAny<bool?>(),
                     It.IsAny<IReadOnlyDictionary<string, IReadOnlyList<string>>>(),
                     It.IsAny<CancellationToken>()))
