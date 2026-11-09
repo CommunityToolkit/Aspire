@@ -9,7 +9,7 @@ public class BuildCartonDockerfileLocalLibTests
     [Fact]
     public void BuildCartonDockerfile_WithLocalLib_RuntimeStageProducesExpectedStatementSequence()
     {
-#pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+#pragma warning disable ASPIREDOCKERFILEBUILDER001
         var builder = new DockerfileBuilder();
 
         builder.BuildCartonDockerfile(
@@ -18,8 +18,10 @@ public class BuildCartonDockerfileLocalLibTests
             apiSubcommand: null,
             "perl:5-slim",
             "perl:5",
+            hasCpanfile: true,
+            hasSnapshot: true,
             localLibPath: "local");
-#pragma warning restore ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+#pragma warning restore ASPIREDOCKERFILEBUILDER001
 
         string[] expected =
         [
@@ -41,7 +43,7 @@ public class BuildCartonDockerfileLocalLibTests
     [Fact]
     public async Task BuildCartonDockerfile_WithSpecialCharactersInLocalLibPath_QuotesEnvValues()
     {
-#pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+#pragma warning disable ASPIREDOCKERFILEBUILDER001
         var builder = new DockerfileBuilder();
 
         builder.BuildCartonDockerfile(
@@ -50,6 +52,8 @@ public class BuildCartonDockerfileLocalLibTests
             apiSubcommand: null,
             "perl:5-slim",
             "perl:5",
+            hasCpanfile: true,
+            hasSnapshot: true,
             localLibPath: "my lib");
 
         using var stream = new MemoryStream();
@@ -57,7 +61,7 @@ public class BuildCartonDockerfileLocalLibTests
         {
             await builder.WriteAsync(writer, TestContext.Current.CancellationToken);
         }
-#pragma warning restore ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+#pragma warning restore ASPIREDOCKERFILEBUILDER001
 
         var dockerfile = System.Text.Encoding.UTF8.GetString(stream.ToArray()).ReplaceLineEndings("\n");
 

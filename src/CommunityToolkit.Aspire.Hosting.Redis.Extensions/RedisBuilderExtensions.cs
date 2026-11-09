@@ -42,6 +42,7 @@ public static class RedisBuilderExtensions
         containerName ??= "dbgate";
 
         var dbGateBuilder = builder.ApplicationBuilder.AddDbGate(containerName);
+        ConfigureDbGateCertificateTrust(dbGateBuilder);
 
         dbGateBuilder
             .WithEnvironment(context => ConfigureDbGateContainer(context, builder))
@@ -116,17 +117,11 @@ public static class RedisBuilderExtensions
     {
         var redisResource = builder.Resource;
 
-        var name = redisResource.Name;
-        var connectionId = DbGateBuilderExtensions.SanitizeConnectionId(name);
+        var connectionId = DbGateBuilderExtensions.SanitizeConnectionId(redisResource.Name);
         var label = $"LABEL_{connectionId}";
 
-        // DbGate assumes Redis is being accessed over a default Aspire container network and hardcodes the resource address
-        var redisUrl = redisResource.PasswordParameter is not null ?
-            ReferenceExpression.Create($"rediss://:{redisResource.PasswordParameter}@{name}:{redisResource.PrimaryEndpoint.TargetPort?.ToString()}") :
-            ReferenceExpression.Create($"rediss://{name}:{redisResource.PrimaryEndpoint.TargetPort?.ToString()}");
-
-        context.EnvironmentVariables.Add(label, name);
-        context.EnvironmentVariables.Add($"URL_{connectionId}", redisUrl);
+        context.EnvironmentVariables.Add(label, redisResource.Name);
+        context.EnvironmentVariables.Add($"URL_{connectionId}", redisResource.UriExpression);
         context.EnvironmentVariables.Add($"ENGINE_{connectionId}", "redis@dbgate-plugin-redis");
 
         if (context.EnvironmentVariables.GetValueOrDefault("CONNECTIONS") is string { Length: > 0 } connections)
@@ -139,6 +134,39 @@ public static class RedisBuilderExtensions
         }
     }
 
+    private static void ConfigureDbGateCertificateTrust(IResourceBuilder<DbGateContainerResource> builder)
+    {
+        if (builder.Resource.Annotations.OfType<DbGateRedisCertificateTrustAnnotation>().Any())
+        {
+            return;
+        }
+
+        builder.WithCertificateTrustConfiguration(context =>
+        {
+            if (context.Scope == CertificateTrustScope.Append)
+            {
+                context.EnvironmentVariables["NODE_EXTRA_CA_CERTS"] = context.CertificateBundlePath;
+            }
+            else if (context.EnvironmentVariables.TryGetValue("NODE_OPTIONS", out var existingOptions))
+            {
+                context.EnvironmentVariables["NODE_OPTIONS"] = existingOptions switch
+                {
+                    string options when !string.IsNullOrEmpty(options) => $"{options} --use-openssl-ca",
+                    ReferenceExpression expression => ReferenceExpression.Create($"{expression} --use-openssl-ca"),
+                    _ => "--use-openssl-ca",
+                };
+            }
+            else
+            {
+                context.EnvironmentVariables["NODE_OPTIONS"] = "--use-openssl-ca";
+            }
+
+            return Task.CompletedTask;
+        });
+
+        builder.WithAnnotation(new DbGateRedisCertificateTrustAnnotation());
+    }
+
     private static async Task ConfigureDbxContainer(
         EnvironmentCallbackContext context,
         IResourceBuilder<DbxContainerResource> dbxBuilder, 
@@ -146,15 +174,15 @@ public static class RedisBuilderExtensions
     )
     {
         var redisResource = builder.Resource;
-        
+        var endpoint = redisResource.GetEndpoint("secondary");
+
         dbxBuilder.Resource.AddConnection(
             new DbxConnectionConfig
             {
                 Id = redisResource.Name,
                 Name = redisResource.Name,
                 DbType = DbxDatabaseType.Redis,
-                Host = redisResource.Name,
-                Port = ushort.Parse(redisResource.GetEndpoint("secondary").TargetPort!.Value.ToString()),
+                Endpoint = endpoint,
                 Username = string.Empty,
                 Password = redisResource.PasswordParameter is not null 
                     ? await redisResource.PasswordParameter.GetValueAsync(context.CancellationToken) ?? string.Empty 
@@ -162,6 +190,8 @@ public static class RedisBuilderExtensions
             }    
         );
     }
+
+    private sealed record DbGateRedisCertificateTrustAnnotation : IResourceAnnotation;
 }
 
 #pragma warning restore ASPIREATS001 // AspireExport is experimental

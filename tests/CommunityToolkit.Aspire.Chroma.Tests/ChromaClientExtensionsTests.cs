@@ -288,7 +288,7 @@ public class ChromaClientExtensionsTests
     }
 
     [Fact]
-    public async Task KeyedClientsUseTheirOwnConnectionsAndHealthChecks()
+    public void KeyedClientsUseTheirOwnConnectionsAndHealthChecks()
     {
         var builder = Host.CreateApplicationBuilder();
         builder.Configuration.AddInMemoryCollection([
@@ -356,5 +356,120 @@ public class ChromaClientExtensionsTests
 
         using var host = builder.Build();
         Assert.Equal(expectedHost, host.Services.GetRequiredService<ChromaClient>().Options.Uri.Host);
+    }
+
+    // Distributed=true says that the server is distributed Chroma, the one Chroma Cloud runs on; false, or no value, does not.
+    [Theory]
+    [InlineData("Endpoint=http://chroma.example:8000;Distributed=true", true)]
+    [InlineData("Endpoint=http://chroma.example:8000;Distributed=TRUE", true)]
+    [InlineData("Endpoint=http://chroma.example:8000;Distributed=false", false)]
+    [InlineData("Endpoint=http://chroma.example:8000;Distributed=", false)]
+    [InlineData("Endpoint=http://chroma.example:8000", false)]
+    public void ConnectionStringWithDistributed(string connectionString, bool expected)
+    {
+        var builder = Host.CreateApplicationBuilder();
+        builder.Configuration.AddInMemoryCollection([
+            new KeyValuePair<string, string?>($"ConnectionStrings:{DefaultConnectionName}", connectionString)
+        ]);
+
+        builder.AddChromaClient(DefaultConnectionName);
+
+        using var host = builder.Build();
+        Assert.Equal(expected, host.Services.GetRequiredService<ChromaClient>().Options.IsDistributedChroma);
+    }
+
+    // Another value of Distributed gets the error of the client.
+    [Fact]
+    public void ConnectionStringWithADistributedThatIsNotTrueOrFalseThrows()
+    {
+        const string connectionString = "Endpoint=http://chroma.example:8000;Distributed=yes";
+        var builder = Host.CreateApplicationBuilder();
+        builder.Configuration.AddInMemoryCollection([
+            new KeyValuePair<string, string?>($"ConnectionStrings:{DefaultConnectionName}", connectionString)
+        ]);
+
+        var exception = Assert.Throws<ArgumentException>(() => builder.AddChromaClient(DefaultConnectionName));
+        var fromTheClient = Assert.Throws<ArgumentException>(() => ChromaConfigurationOptions.FromConnectionString(connectionString));
+        Assert.Equal(fromTheClient.Message, exception.Message);
+    }
+
+    // The setting Distributed is read from Aspire:Chroma:Client, and from Aspire:Chroma:Client:{name} for a keyed client.
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void DistributedIsReadFromTheConfiguration(bool useKeyed)
+    {
+        var builder = Host.CreateApplicationBuilder();
+        var section = useKeyed ? $"Aspire:Chroma:Client:{DefaultConnectionName}" : "Aspire:Chroma:Client";
+        builder.Configuration.AddInMemoryCollection([
+            new KeyValuePair<string, string?>($"ConnectionStrings:{DefaultConnectionName}", DefaultConnectionString),
+            new KeyValuePair<string, string?>($"{section}:Distributed", "true")
+        ]);
+
+        if (useKeyed)
+        {
+            builder.AddKeyedChromaClient(DefaultConnectionName);
+        }
+        else
+        {
+            builder.AddChromaClient(DefaultConnectionName);
+        }
+
+        using var host = builder.Build();
+
+        var client = useKeyed
+            ? host.Services.GetRequiredKeyedService<ChromaClient>(DefaultConnectionName)
+            : host.Services.GetRequiredService<ChromaClient>();
+        Assert.True(client.Options.IsDistributedChroma);
+    }
+
+    // Distributed=true of the connection string sets the setting, false or no value leaves the one of the configuration, and the
+    // settings given in code win over both.
+    [Theory]
+    [InlineData(";Distributed=true", null, null, true)]
+    [InlineData(";Distributed=false", "true", null, true)]
+    [InlineData("", "true", null, true)]
+    [InlineData(";Distributed=true", null, false, false)]
+    [InlineData("", "true", false, false)]
+    [InlineData(";Distributed=false", null, true, true)]
+    public void DistributedFromTheConnectionStringTheConfigurationAndTheCode(string inConnectionString, string? inConfiguration, bool? inCode, bool expected)
+    {
+        var builder = Host.CreateApplicationBuilder();
+        builder.Configuration.AddInMemoryCollection([
+            new KeyValuePair<string, string?>($"ConnectionStrings:{DefaultConnectionName}", $"Endpoint=http://chroma.example:8000{inConnectionString}"),
+            new KeyValuePair<string, string?>("Aspire:Chroma:Client:Distributed", inConfiguration)
+        ]);
+
+        builder.AddChromaClient(DefaultConnectionName, settings =>
+        {
+            if (inCode is bool distributed)
+            {
+                settings.Distributed = distributed;
+            }
+        });
+
+        using var host = builder.Build();
+        Assert.Equal(expected, host.Services.GetRequiredService<ChromaClient>().Options.IsDistributedChroma);
+    }
+
+    // An address of Chroma Cloud is distributed Chroma for the client in any case, and does not set Distributed: another Endpoint
+    // given in code is distributed Chroma only with Distributed=true.
+    [Theory]
+    [InlineData("Endpoint=https://api.trychroma.com", false)]
+    [InlineData("Endpoint=https://api.trychroma.com;Distributed=true", true)]
+    public void AnAddressOfChromaCloudSetsDistributedOnlyWithDistributedTrue(string connectionString, bool expected)
+    {
+        var builder = Host.CreateApplicationBuilder();
+        builder.Configuration.AddInMemoryCollection([
+            new KeyValuePair<string, string?>($"ConnectionStrings:{DefaultConnectionName}", connectionString),
+            new KeyValuePair<string, string?>("ConnectionStrings:local", connectionString)
+        ]);
+
+        builder.AddChromaClient(DefaultConnectionName);
+        builder.AddKeyedChromaClient("local", settings => settings.Endpoint = new Uri("http://localhost:8000"));
+
+        using var host = builder.Build();
+        Assert.True(host.Services.GetRequiredService<ChromaClient>().Options.IsDistributedChroma);
+        Assert.Equal(expected, host.Services.GetRequiredKeyedService<ChromaClient>("local").Options.IsDistributedChroma);
     }
 }

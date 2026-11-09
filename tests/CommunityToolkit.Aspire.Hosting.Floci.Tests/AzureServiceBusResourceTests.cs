@@ -391,7 +391,7 @@ public class AzureServiceBusResourceTests
         var consumer = builder.AddContainer("api", "my-api-image")
             .WithReference(serviceBus, connectionName: "messages");
 
-        // The sidecar is configured by its owner and is already reachable through the host gateway.
+        // The sidecar is configured by its owner and resolved through the consuming resource's endpoint context.
         var dependencies = await consumer.Resource.GetResourceDependenciesAsync(builder.ExecutionContext,
             new ResourceDependencyDiscoveryOptions { DiscoveryMode = ResourceDependencyDiscoveryMode.DirectOnly });
         Assert.Contains(azure.Resource, dependencies);

@@ -1,4 +1,4 @@
-﻿using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Utils;
 using CommunityToolkit.Aspire.Hosting.Ollama;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,6 +15,34 @@ namespace Aspire.Hosting;
 /// </summary>
 public static partial class OllamaResourceBuilderExtensions
 {
+    /// <summary>
+    /// Configures the host port that the Ollama resource is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for Ollama.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
+    /// <returns>The resource builder for Ollama.</returns>
+    [AspireExport("withOllamaHostPort", MethodName = "withHostPort")]
+    public static IResourceBuilder<OllamaResource> WithHostPort(this IResourceBuilder<OllamaResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(OllamaResource.OllamaEndpointName, endpoint => endpoint.Port = port);
+    }
+
+    /// <summary>
+    /// Configures the host port that the Ollama local resource is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for Ollama local.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
+    /// <returns>The resource builder for Ollama local.</returns>
+    [AspireExport("withOllamaLocalHostPort", MethodName = "withHostPort")]
+    public static IResourceBuilder<OllamaExecutableResource> WithHostPort(this IResourceBuilder<OllamaExecutableResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(OllamaExecutableResource.OllamaEndpointName, endpoint => endpoint.Port = port);
+    }
+
     /// <summary>
     /// Adds an Ollama container resource to the application model.
     /// </summary>

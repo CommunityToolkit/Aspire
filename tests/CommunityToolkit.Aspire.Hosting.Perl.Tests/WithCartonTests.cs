@@ -81,11 +81,13 @@ public class WithCartonTests
     }
 
     [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void WithCartonAndWithPackage_ThrowsRegardlessOfOrder(bool cartonFirst)
+    [InlineData(true, false)]
+    [InlineData(false, false)]
+    [InlineData(true, true)]
+    [InlineData(false, true)]
+    public void WithCartonAndWithPackage_ThrowsRegardlessOfOrder(bool cartonFirst, bool publishMode)
     {
-        var builder = DistributedApplication.CreateBuilder();
+        var builder = DistributedApplication.CreateBuilder(publishMode ? ["--publisher", "manifest"] : []);
 
         var ex = Assert.Throws<NotSupportedException>(() =>
         {

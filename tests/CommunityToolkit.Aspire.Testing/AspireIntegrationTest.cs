@@ -23,8 +23,7 @@ public class AspireIntegrationTestFixture<TEntryPoint>() : DistributedApplicatio
                     builder.SetMinimumLevel(LogLevel.Trace);
                 else
                     builder.SetMinimumLevel(LogLevel.Information);
-            })
-            .ConfigureHttpClientDefaults(clientBuilder => clientBuilder.AddStandardResilienceHandler());
+            });
 
         if (Environment.GetEnvironmentVariable("CUSTOM_CONTAINER_REGISTRY") is not null)
         {

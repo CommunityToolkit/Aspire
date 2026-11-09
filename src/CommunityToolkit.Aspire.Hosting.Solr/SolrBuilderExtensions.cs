@@ -12,6 +12,20 @@ namespace Aspire.Hosting;
 public static class SolrBuilderExtensions
 {
     /// <summary>
+    /// Configures the host port that the Solr resource is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for Solr.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
+    /// <returns>The resource builder for Solr.</returns>
+    [AspireExport]
+    public static IResourceBuilder<SolrResource> WithHostPort(this IResourceBuilder<SolrResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(SolrResource.PrimaryEndpointName, endpoint => endpoint.Port = port);
+    }
+
+    /// <summary>
     /// Adds an Apache Solr container resource to the distributed application.
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>

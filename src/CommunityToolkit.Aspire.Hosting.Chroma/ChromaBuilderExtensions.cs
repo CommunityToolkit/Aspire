@@ -19,6 +19,23 @@ public static class ChromaBuilderExtensions
     private const string StdoutTracingVariable = "CHROMA_STDOUT_TRACING";
 
     /// <summary>
+    /// Configures the host port that the ChromaDB resource is exposed on instead of using a randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The ChromaDB resource builder.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used, a random port will be assigned.</param>
+    /// <returns>The ChromaDB resource builder.</returns>
+    [AspireExport]
+    public static IResourceBuilder<ChromaResource> WithHostPort(this IResourceBuilder<ChromaResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(ChromaResource.PrimaryEndpointName, endpoint =>
+        {
+            endpoint.Port = port;
+        });
+    }
+
+    /// <summary>
     /// Adds a ChromaDB container resource to the application model.
     /// The default image is "chromadb/chroma" and the tag is "1.5.9".
     /// </summary>

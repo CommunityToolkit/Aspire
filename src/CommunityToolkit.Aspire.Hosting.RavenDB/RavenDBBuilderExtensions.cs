@@ -1,4 +1,4 @@
-﻿using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.RavenDB;
 using Microsoft.Extensions.DependencyInjection;
 using Raven.Client.Documents;
@@ -15,6 +15,34 @@ namespace Aspire.Hosting;
 /// </summary>
 public static class RavenDBBuilderExtensions
 {
+    /// <summary>
+    /// Configures the host port that the RavenDB resource is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for RavenDB.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
+    /// <returns>The resource builder for RavenDB.</returns>
+    [AspireExport]
+    public static IResourceBuilder<RavenDBServerResource> WithHostPort(this IResourceBuilder<RavenDBServerResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(builder.Resource.PrimaryEndpointName, endpoint => endpoint.Port = port);
+    }
+
+    /// <summary>
+    /// Configures the host port that the RavenDB TCP endpoint is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for RavenDB.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
+    /// <returns>The resource builder for RavenDB.</returns>
+    [AspireExport]
+    public static IResourceBuilder<RavenDBServerResource> WithTcpHostPort(this IResourceBuilder<RavenDBServerResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(builder.Resource.TcpEndpointName, endpoint => endpoint.Port = port);
+    }
+
     /// <summary>
     /// Adds a RavenDB server resource to the application model. A container is used for local development.
     /// This overload simplifies the configuration by creating an unsecured RavenDB server resource with default settings.
@@ -173,9 +201,6 @@ public static class RavenDBBuilderExtensions
 
             if (securedServerSettings.CertificatePassword is not null)
                 environmentVariables.TryAdd("RAVEN_Security_Certificate_Password", securedServerSettings.CertificatePassword);
-
-            var publicUri = new Uri(securedServerSettings.PublicServerUrl);
-            environmentVariables.TryAdd("RAVEN_PublicServerUrl_Tcp", $"tcp://{publicUri.Host}:{serverSettings.TcpPort ?? 38888}");
         }
 
         return environmentVariables;
@@ -183,8 +208,8 @@ public static class RavenDBBuilderExtensions
 
     private static void ConfigureEnvironmentVariables(EnvironmentCallbackContext context, RavenDBServerResource serverResource, Dictionary<string, object>? environmentVariables = null)
     {
-        var tcpPort = serverResource.TcpEndpoint.IsAllocated ? serverResource.TcpEndpoint.Port : serverResource.TcpEndpoint.TargetPort;
-        context.EnvironmentVariables.TryAdd("RAVEN_ServerUrl_Tcp", $"{serverResource.TcpEndpoint.Scheme}://0.0.0.0:{tcpPort}");
+        EndpointReference tcpEndpoint = serverResource.TcpEndpoint;
+        context.EnvironmentVariables.TryAdd("RAVEN_ServerUrl_Tcp", ReferenceExpression.Create($"{tcpEndpoint.Scheme}://{tcpEndpoint.Property(EndpointProperty.IPV4Host)}:{tcpEndpoint.Property(EndpointProperty.TargetPort)}"));
 
         if (environmentVariables is null)
         {
@@ -197,19 +222,12 @@ public static class RavenDBBuilderExtensions
                 context.EnvironmentVariables.TryAdd(environmentVariable.Key, environmentVariable.Value);
         }
 
-        if (serverResource.TcpEndpoint.IsAllocated)
-        {
-            context.EnvironmentVariables.TryAdd("RAVEN_PublicServerUrl_Tcp", serverResource.TcpEndpoint.Url);
-        }
-        // Tcp endpoint is not allocated yet when we're generating manifest (e.g. aspire plugins)
-        // In such a case, just check if the public server url isn't set manually by the user
-        // If it is, use it with the container target port explicitly to generate the correct manifest
-        else if (serverResource.PublicServerUrl is not null) 
-        {
-            string publicHost = new Uri(serverResource.PublicServerUrl).Host;
-            string publicServerUrlTcp = $"tcp://{publicHost}:{serverResource.TcpEndpoint.TargetPort}";
-            context.EnvironmentVariables.TryAdd("RAVEN_PublicServerUrl_Tcp", publicServerUrlTcp);
-        }
+        var publicTcpEndpoint = new EndpointReference(
+            serverResource,
+            tcpEndpoint.EndpointAnnotation,
+            KnownNetworkIdentifiers.LocalhostNetwork);
+        context.EnvironmentVariables["RAVEN_PublicServerUrl_Tcp"] =
+            publicTcpEndpoint.Property(EndpointProperty.Url);
     }
 
     /// <summary>

@@ -1,0 +1,6 @@
+@CommunityToolkit.Aspire.Hosting.Loki.Api_HostAddress = http://localhost:5000
+
+GET {{CommunityToolkit.Aspire.Hosting.Loki.Api_HostAddress}}/weatherforecast
+Accept: application/json
+
+###

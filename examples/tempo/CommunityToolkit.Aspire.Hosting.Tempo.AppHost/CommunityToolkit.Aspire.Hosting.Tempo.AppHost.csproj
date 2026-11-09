@@ -1,0 +1,18 @@
+<Project Sdk="Aspire.AppHost.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Tempo.Api\CommunityToolkit.Aspire.Hosting.Tempo.Api.csproj" />
+    <ProjectReference Include="../../../src/CommunityToolkit.Aspire.Hosting.Tempo/CommunityToolkit.Aspire.Hosting.Tempo.csproj" IsAspireProjectResource="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.Dotnet" />
+  </ItemGroup>
+
+</Project>

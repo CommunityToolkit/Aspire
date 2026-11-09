@@ -12,13 +12,13 @@
     <Nullable>enable</Nullable>
 
     <AspireMajorVersion>17</AspireMajorVersion>
-    <AspireVersion>$(AspireMajorVersion).0.0-preview.1.26552.6</AspireVersion>
+    <AspireVersion>$(AspireMajorVersion).1.0-preview.1.26558.3</AspireVersion>
     <AspireUseCliBundle>true</AspireUseCliBundle>
     <AspirePreviewSuffix></AspirePreviewSuffix> <!-- The nightly AspireVersion already includes its prerelease suffix. -->
     <AspNetCoreVersion>9.0.0</AspNetCoreVersion>
-    <DotNetExtensionsVersion>10.0.13</DotNetExtensionsVersion>
+    <DotNetExtensionsVersion>10.0.14</DotNetExtensionsVersion>
     <TestContainersVersion>4.14.0</TestContainersVersion>
-    <MEAIVersion>10.6.0</MEAIVersion>
+    <MEAIVersion>10.11.0</MEAIVersion>
     <ServiceDiscoveryVersion>10.0.0</ServiceDiscoveryVersion>
     <IsPackable>false</IsPackable>
     <MoqVersion>4.20.72</MoqVersion>

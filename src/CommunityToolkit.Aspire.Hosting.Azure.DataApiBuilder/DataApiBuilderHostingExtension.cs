@@ -95,6 +95,22 @@ public static class DataApiBuilderHostingExtension
         int? httpPort = null) =>
         builder.AddDataAPIBuilder(name, httpPort, configFilePaths ?? []);
 
+    /// <summary>
+    /// Configures the host port that the Data API Builder resource is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for Data API Builder.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
+    /// <returns>The resource builder for Data API Builder.</returns>
+    [AspireExport]
+    public static IResourceBuilder<DataApiBuilderContainerResource> WithHostPort(
+        this IResourceBuilder<DataApiBuilderContainerResource> builder,
+        int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(DataApiBuilderContainerResource.HttpEndpointName, endpoint => endpoint.Port = port);
+    }
+
     private static IResourceBuilder<DataApiBuilderContainerResource> WithDataApiBuilderDefaults(
         this IResourceBuilder<DataApiBuilderContainerResource> builder) =>
         builder.WithOtlpExporter()

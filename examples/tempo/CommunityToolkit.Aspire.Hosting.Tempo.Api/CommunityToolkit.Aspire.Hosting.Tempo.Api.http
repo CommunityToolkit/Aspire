@@ -1,0 +1,6 @@
+@Api_HostAddress = http://localhost:15203
+
+GET {{Api_HostAddress}}/trace
+Accept: application/json
+
+###

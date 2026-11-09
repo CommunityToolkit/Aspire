@@ -37,15 +37,21 @@ See notes about the appDirectory parameter below.
 
 ## Core Concepts
 
-The integration provides two entry points for adding Perl resources:
+The integration provides four entry points for adding Perl resources:
 
-| Method | Purpose |
-|--------|---------|
-| `AddPerlScript(name, appDirectory, scriptName)` | Adds a Perl script (worker, CLI tool, etc.) |
-| `AddPerlApi(name, appDirectory, scriptName)` | Adds a Perl API server (e.g., Mojolicious `daemon`) |
+| Method | Purpose | Runs |
+|--------|---------|------|
+| `AddPerlScript(name, appDirectory, scriptName)` | Adds a Perl script (worker, CLI tool, etc.) | `perl -s <scriptName>` |
+| `AddPerlApi(name, appDirectory, scriptName)` | Adds a Perl API server (e.g., Mojolicious `daemon`) | `perl <scriptName> daemon` |
+| `AddPerlModule(name, appDirectory, moduleName)` | Runs a module's `run` method | `perl -M<moduleName> -e "<moduleName>->run()"` |
+| `AddPerlExecutable(name, appDirectory, executablePath)` | Runs a compiled binary or PAR-packed app without the `perl` interpreter | `<executablePath>` |
 
-Both create a `PerlAppResource` that appears in the Aspire dashboard. All subsequent configuration
-methods (`.WithCpanMinus()`, `.WithLocalLib()`, etc.) chain off the resource builder.
+All four create a `PerlAppResource` that appears in the Aspire dashboard and runs with `appDirectory`
+as its working directory. All subsequent configuration methods (`.WithCpanMinus()`, `.WithLocalLib()`,
+etc.) chain off the resource builder.
+
+`AddPerlModule` doesn't add `appDirectory` to `@INC`. The module must provide a `run` method and be
+installed, under a `WithLocalLib` path, or in a directory you add to `PERL5LIB`.
 
 ---
 
@@ -95,8 +101,9 @@ scripts/                   ← working directory
     └── lib/perl5/...
 ```
 
-> **Key insight:** The script path in `AddPerlScript` / `AddPerlApi` is relative to `AppHost.cs`,
-> and so is everything else — `WithLocalLib`, cpanfile discovery, and the process working directory.
+> **Key insight:** The script path in `AddPerlScript` / `AddPerlApi` is relative to `appDirectory`,
+> not to `AppHost.cs`. So are `WithLocalLib` and cpanfile discovery, and the process runs in
+> `appDirectory`. Only `appDirectory` itself is resolved against the AppHost project directory.
 
 ---
 
@@ -116,6 +123,13 @@ Implementation note: `WithLocalLib` path resolution uses `Path.IsPathRooted(conf
 If `true`, the value is used directly. If `false`, it is combined with the resource working
 directory and converted to an absolute path.
 
+With Carton, `WithLocalLib` also sets `PERL_CARTON_PATH` for the application and its
+dependency installer. Carton installs into the same directory used by `PERL5LIB` and
+`PERL_LOCAL_LIB_ROOT`; without `WithLocalLib`, that directory defaults to `local`.
+The integration leaves `PERL_MM_OPT` and `PERL_MB_OPT` unset for Carton because
+Carton manages its own installer options.
+Carton's underlying Perl build tools can fail when the local::lib path contains
+spaces, even with correct Dockerfile quoting. Prefer a path such as `vendor/perl5`.
 
 ### Resolution examples
 
@@ -140,6 +154,9 @@ While I highly recommend you use cpanm or Carton, the integration aims to suppor
 
 > The default package manager is `cpan`, but it is automatically switched to `cpanm` when
 > `WithProjectDependencies()` is called, since `cpan` does not support `--installdeps`.
+> In run mode, every `AddPerl*` method calls `WithProjectDependencies()` for you when `appDirectory`
+> contains a `cpanfile`, `Makefile.PL`, or `Build.PL`. Those resources switch to `cpanm` and require it
+> to be installed, even if you never call a package-manager method.
 > `WithLocalLib()` will also currently swap to `cpanm` because it wasn't clear to me at time of release how to integrate it with cpan.
 
 In run mode, `cpan` is required only by individual-package installers that use the default
@@ -158,6 +175,10 @@ For example, `Foo88Bar` and `Foo::Bar` both map to `app-Foo88Bar-installer` on a
 `app`. Case-only differences also collide because Aspire resource names are case-insensitive.
 An installer belonging to another resource is never reused. These checks apply only in run mode;
 publish mode retains the module requests without creating local installers.
+
+`WithCarton()` and `WithPackage()` cannot be combined in run or publish mode, in either
+call order. Carton dependencies must be declared in `cpanfile`; use `WithProjectDependencies()`
+to install them. Individual module installation is supported with cpan or cpanm instead.
 
 ---
 
@@ -191,15 +212,43 @@ apply to Perl. Set an `OTEL_PERL_*` variable explicitly to override only the Per
 
 ---
 
-## Publishing
+## Publishing (preview)
 
-When publishing, Perl resources are built as container images.
+When publishing, Perl resources are built as container images. Generated Dockerfile publishing
+remains preview until Docker build-and-run smoke tests validate both cpanm and Carton images in CI.
 
 - If the app directory contains a `Dockerfile`, it is used as-is.
 - Otherwise, a Dockerfile is generated: cpanm (single-stage) by default, or Carton (multi-stage)
   when `WithCarton()` is used. Base images can be changed with `WithDockerfileBaseImage`.
 
-Generated Dockerfiles install dependencies inside the image and then copy the app with `COPY . .`.
+Generated cpanm Dockerfiles run `cpanm --installdeps --notest .` when the app directory contains
+`cpanfile`, `Makefile.PL`, or `Build.PL`. Projects with `Makefile.PL` or `Build.PL` copy the full
+application context before installation because these executable manifests can load project-local
+files. Projects with only `cpanfile` copy that manifest first, install dependencies, and then copy
+the application context, preserving the dependency cache layer when application code changes.
+Apps without a dependency manifest skip project dependency installation.
+Modules requested with `WithPackage()` are installed with cpanm after project dependencies,
+respecting `force`, `skipTest`, and `WithLocalLib()`. Repeated requests for the same module
+use the first request's options, matching run mode.
+
+Carton installs dependencies only when a `cpanfile` exists. An existing `cpanfile.snapshot`
+is copied; a missing snapshot fails publishing only when deployment mode is enabled.
+Deployment mode is the publish default; use `.WithCarton().WithProjectDependencies(cartonDeployment: false)`
+to allow installation without a snapshot. Carton requires a `cpanfile` for project dependencies;
+use `WithCpanMinus()` for projects with only `Makefile.PL` or `Build.PL`.
+
+Generated Carton Dockerfiles set `PERL_CARTON_PATH` before installing dependencies,
+using `/app/local` by default or `/app/<WithLocalLib path>` for a relative custom path.
+The runtime image and published environment use the same root for `PERL5LIB` and
+`PERL_LOCAL_LIB_ROOT`, so executable entrypoints and child Perl processes can load
+installed modules. Generated Perl entrypoint `-I` arguments also use that root.
+
+Generated Dockerfiles normalize local::lib paths within `/app` and reject parent-relative
+paths that escape it, such as `../vendor/perl5`. Authored Dockerfiles keep the existing
+path resolution instead: rooted paths such as `/opt/perl-libs` are preserved, not remapped
+under `/app`. Configure `WithLocalLib` to match the image's dependency installation path.
+
+Generated Dockerfiles install dependencies inside the image and copy the app with `COPY . .`.
 To keep host-built modules out of the image, a `<name>.Dockerfile.dockerignore` is emitted next
 to the generated Dockerfile. It excludes `local`, any relative `WithLocalLib` path, `blib`, `_build`,
 `.git`, `.env` files (at any depth), and Dockerfiles. If the app directory contains an authored `.dockerignore`, no

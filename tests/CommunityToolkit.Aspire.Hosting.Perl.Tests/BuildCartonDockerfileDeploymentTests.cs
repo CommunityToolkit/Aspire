@@ -11,7 +11,7 @@ public class BuildCartonDockerfileDeploymentTests
     [InlineData(false)]
     public void BuildCartonDockerfile_DeploymentFlag_ProducesRunStatements(bool cartonDeployment)
     {
-#pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+#pragma warning disable ASPIREDOCKERFILEBUILDER001
         var builder = new DockerfileBuilder();
 
         builder.BuildCartonDockerfile(
@@ -20,9 +20,11 @@ public class BuildCartonDockerfileDeploymentTests
             apiSubcommand: null,
             "perl:5-slim",
             "perl:5",
+            hasCpanfile: true,
+            hasSnapshot: true,
             localLibPath: null,
             cartonDeployment: cartonDeployment);
-#pragma warning restore ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+#pragma warning restore ASPIREDOCKERFILEBUILDER001
 
         var buildStatements = builder.Stages[0].Statements;
         var runStatements = buildStatements
