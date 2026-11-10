@@ -77,7 +77,9 @@ public static class VitePlusHostingExtensions
                   {
                       context.Args.Insert(0, "exec");
                   }
-              });
+              })
+              // Forward the annotation so WithMappedEndpointPort knows how the app is launched
+              .WithAnnotation(executionAnnotation);
         }
 
         // If the workspace has an installer annotation, wait for the installer to complete

@@ -65,14 +65,21 @@ public static class NxHostingExtensions
             {
                 "npm" => "npx",
                 "yarn" => "yarn",
-                "pnpm" => "pnpx",
+                "pnpm" => "pnpm",
                 "bun" => "bunx",
                 _ => executionAnnotation.ExecutableName
             })
               .WithArgs(context =>
               {
                   context.Args.Insert(0, executionAnnotation.ScriptCommand ?? CliName);
-              });
+                  // pnpx/dlx always downloads from the registry; pnpm exec runs the workspace-local binary
+                  if (executionAnnotation.ExecutableName == "pnpm")
+                  {
+                      context.Args.Insert(0, "exec");
+                  }
+              })
+              // Forward the annotation so WithMappedEndpointPort knows how the app is launched
+              .WithAnnotation(executionAnnotation);
         }
 
         // If the workspace has an installer annotation, wait for the installer to complete

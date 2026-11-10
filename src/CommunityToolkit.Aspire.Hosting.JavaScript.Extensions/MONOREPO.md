@@ -89,7 +89,7 @@ nxDefault.AddApp("app1"); // Runs: nx serve app1 (no package manager prefix)
 **Command Generation Examples:**
 
 -   `WithPackageManagerLaunch("yarn")` → `yarn nx serve app1`, `yarn turbo run dev --filter app1`, or `yarn vp -C apps/web dev`
--   `WithPackageManagerLaunch("pnpm")` → `pnpm nx serve app1`, `pnpm turbo run dev --filter app1`, or `pnpm exec vp -C apps/web dev`
+-   `WithPackageManagerLaunch("pnpm")` → `pnpm exec nx serve app1`, `pnpm exec turbo run dev --filter app1`, or `pnpm exec vp -C apps/web dev`
 -   No `WithPackageManagerLaunch()` → `nx serve app1`, `turbo run dev --filter app1`, or `vp -C apps/web dev`
 
 ## How It Works

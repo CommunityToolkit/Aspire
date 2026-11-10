@@ -440,4 +440,53 @@ public class VitePlusResourceCreationTests
         var waitAnnotation = Assert.Single(waitAnnotations);
         Assert.Equal(installer, waitAnnotation.Resource);
     }
+
+    [Theory]
+    [InlineData("npm", true)]
+    [InlineData("yarn", false)]
+    [InlineData("pnpm", false)]
+    public async Task VitePlus_WithMappedEndpointPort_AddsSeparatorOnlyForNpm(string packageManager, bool expectSeparator)
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddVitePlusApp("vp-separator").WithPackageManagerLaunch(packageManager)
+            .AddApp("app1")
+            .WithHttpEndpoint(targetPort: 8000)
+            .WithMappedEndpointPort();
+
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var vpApp = Assert.Single(appModel.Resources.OfType<VitePlusAppResource>());
+
+        // AddApp forwards the workspace package manager annotation to the app
+        Assert.True(vpApp.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var pm));
+        Assert.Equal(packageManager, pm.ExecutableName);
+
+        var args = await vpApp.GetArgumentListAsync();
+        // Yarn 1 drops the arguments between the script and `--` (e.g. `-C apps/web`), and pnpm passes `--` through to the script, so neither wants the separator
+        Assert.Equal(expectSeparator, args.Contains("--"));
+        Assert.Contains("--port", args);
+    }
+
+    [Fact]
+    public async Task VitePlus_WithMappedEndpointPort_WithoutPackageManager_AddsSeparator()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddVitePlusApp("vp-separator-default")
+            .AddApp("app1")
+            .WithHttpEndpoint(targetPort: 8000)
+            .WithMappedEndpointPort();
+
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var vpApp = Assert.Single(appModel.Resources.OfType<VitePlusAppResource>());
+        Assert.False(vpApp.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out _));
+
+        var args = await vpApp.GetArgumentListAsync();
+        Assert.Contains("--", args);
+        Assert.Contains("--port", args);
+    }
 }
