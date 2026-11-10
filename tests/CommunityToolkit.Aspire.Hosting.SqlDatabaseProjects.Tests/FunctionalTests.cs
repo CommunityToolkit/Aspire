@@ -50,6 +50,7 @@ public class FunctionalTests(ITestOutputHelper testOutputHelper, SqlServerContai
         using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
         cancellation.CancelAfter(TimeSpan.FromMinutes(5));
         var appHostDirectory = Path.Combine(Path.GetTempPath(), $"sql-package-deploy-{Guid.NewGuid():N}");
+        var packageId = AddSqlPackageTests.CreateUniquePackageId();
         Directory.CreateDirectory(appHostDirectory);
 
         try
@@ -59,7 +60,6 @@ public class FunctionalTests(ITestOutputHelper testOutputHelper, SqlServerContai
             builder.Services.AddSingleton<IDacpacDeployer>(deployer);
             var artifact = builder.AddSqlProject<TestProject>("artifact");
             var dacpacPath = ((IResourceWithDacpac)artifact.Resource).GetDacpacPath();
-            var packageId = "Company.Database";
             var relativePath = Path.Combine("schema", "custom.dacpac");
             var feedDirectory = Path.Combine(appHostDirectory, "feed");
             AddSqlPackageTests.CreateNuGetPackage(feedDirectory, packageId, "1.2.3-preview.1", relativePath, dacpacPath);
@@ -106,6 +106,7 @@ public class FunctionalTests(ITestOutputHelper testOutputHelper, SqlServerContai
         finally
         {
             Directory.Delete(appHostDirectory, recursive: true);
+            AddSqlPackageTests.DeleteRestoredTestPackage(packageId);
         }
     }
 
