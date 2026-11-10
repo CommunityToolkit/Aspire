@@ -370,6 +370,7 @@ public class AddSqlProjectTests
 
         // Assert
         Assert.Single(app.Services.GetServices<SqlProjectPublishService>());
+        Assert.Single(app.Services.GetServices<SqlProjectDacpacResolver>());
         Assert.Single(app.Services.GetServices<IDacpacDeployer>());
         Assert.Single(app.Services.GetServices<IDacpacChecksumService>());
     }
