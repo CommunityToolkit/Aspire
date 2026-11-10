@@ -14,6 +14,8 @@
     <PackageVersion Include="Aspire.Hosting.Azure.Redis" Version="$(AspireVersion)" />
     <!-- Aspire.Hosting.Elasticsearch does not ship a 17 nightly; retain its last stable package. -->
     <PackageVersion Include="Aspire.Hosting.Elasticsearch" Version="13.3.0" />
+    <!-- Aspire.Hosting.ClickHouse (published by ClickHouse, not the Aspire team) does not ship a 17 nightly; retain its last stable package. -->
+    <PackageVersion Include="Aspire.Hosting.ClickHouse" Version="13.5.3" />
     <PackageVersion Include="Aspire.Hosting.Keycloak" Version="$(AspireVersion)$(AspirePreviewSuffix)" />
     <PackageVersion Include="Aspire.Keycloak.Authentication" Version="$(AspireVersion)$(AspirePreviewSuffix)" />
     <PackageVersion Include="Aspire.Hosting.JavaScript" Version="$(AspireVersion)" />
