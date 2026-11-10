@@ -35,7 +35,7 @@ public class AddSqlPackageTests
     [InlineData("2.3.4.0-preview.1", false)]
     public async Task AddSqlPackage_FromIdAndVersionRestoresExactPackageBeforeDeploying(string requestedVersion, bool useCustomPath)
     {
-        var packageId = "Company.Database";
+        var packageId = CreateUniquePackageId();
         var version = "2.3.4-preview.1";
         var relativeDacpacPath = useCustomPath ? Path.Combine("schema", "custom.dacpac") : Path.Combine("tools", $"{packageId}.dacpac");
         var appHostDirectory = Path.Combine(Path.GetTempPath(), $"sql package test {Guid.NewGuid():N}");
@@ -81,6 +81,7 @@ public class AddSqlPackageTests
         finally
         {
             Directory.Delete(appHostDirectory, recursive: true);
+            DeleteRestoredTestPackage(packageId);
         }
     }
 
@@ -151,7 +152,7 @@ public class AddSqlPackageTests
     {
         var appHostDirectory = Path.Combine(Path.GetTempPath(), $"sql-package-error-{Guid.NewGuid():N}");
         var feedDirectory = Path.Combine(appHostDirectory, "feed");
-        var packageId = "Company.Database";
+        var packageId = CreateUniquePackageId();
         var version = "1.0.0";
         CreateNuGetPackage(feedDirectory, packageId, version, Path.Combine("tools", $"{packageId}.dacpac"));
         CreateNuGetConfig(appHostDirectory, feedDirectory, Path.Combine(appHostDirectory, "packages"));
@@ -195,6 +196,7 @@ public class AddSqlPackageTests
         finally
         {
             Directory.Delete(appHostDirectory, recursive: true);
+            DeleteRestoredTestPackage(packageId);
         }
     }
 
@@ -340,6 +342,24 @@ public class AddSqlPackageTests
         var dacpacEntry = archive.CreateEntry(dacpacRelativePath.Replace(Path.DirectorySeparatorChar, '/'));
         using var dacpacStream = dacpacEntry.Open();
         dacpacStream.Write([1, 2, 3]);
+    }
+
+    internal static string CreateUniquePackageId() => $"Company.Database.T{Guid.NewGuid():N}";
+
+    internal static void DeleteRestoredTestPackage(string packageId)
+    {
+        // NuGet stores packages here instead of the test's temporary globalPackagesFolder when this is set.
+        var globalPackagesFolder = Environment.GetEnvironmentVariable("NUGET_PACKAGES");
+        if (string.IsNullOrEmpty(globalPackagesFolder))
+        {
+            return;
+        }
+
+        var packageDirectory = Path.Combine(globalPackagesFolder, packageId.ToLowerInvariant());
+        if (Directory.Exists(packageDirectory))
+        {
+            Directory.Delete(packageDirectory, recursive: true);
+        }
     }
 
     internal static void CreateNuGetConfig(string appHostDirectory, string feedDirectory, string packagesDirectory)
