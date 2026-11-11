@@ -22,7 +22,7 @@ If you prefer not to use `devcontainer`, you can manually set up your developmen
     -   You'll also need [Gradle](https://gradle.org/install/) and [Apache Maven](https://maven.apache.org/download.cgi)
 -   [Bun](https://bun.sh)
 -   [Deno 2](https://deno.land/)
--   [Go 1.23](https://golang.org/)
+-   [Go 1.26 or later](https://go.dev/dl/) (required for Go AppHosts)
 -   [Python 3](https://www.python.org/downloads/)
     -   [Uvicorn](https://www.uvicorn.org/)
 -   [Rust](https://www.rust-lang.org/tools/install)
@@ -40,3 +40,5 @@ The repository currently targets Aspire **17.1.0-preview.1.26559.8**, an unsuppo
 The C# AppHosts that host .NET projects now reference `Aspire.Hosting.Dotnet` and use `AddDotnetProject`; the TypeScript equivalents use `addDotnetProject`. `Aspire.Hosting.Dotnet` is centrally pinned to the same nightly version. The AppHosts still use `Aspire.AppHost.Sdk` for staged compatibility; Aspire 17 emits `ASPIRE012` for that obsolete SDK, and migrating to explicit `Aspire.Hosting.AppHost` references remains separate from this project-resource migration.
 
 Install the matching CLI with `aspire.dev`'s installer and its explicit version option (`-Version 17.1.0-preview.1.26559.8` on Windows or `--version 17.1.0-preview.1.26559.8` on Linux/macOS), rather than selecting a moving daily channel. See the [upstream daily-build guide](https://github.com/microsoft/aspire/blob/main/docs/using-latest-daily.md) for installer instructions.
+
+Go AppHosts are a preview feature. In a Go AppHost directory, run `aspire restore` to generate the SDK in `.aspire/modules`, then `go test ./...` to check compilation. Run the application with `aspire run`, rather than `go run`, so the CLI starts the AppHost server.
