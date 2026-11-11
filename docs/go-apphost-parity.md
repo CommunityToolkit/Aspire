@@ -42,9 +42,13 @@ repository's pinned Aspire SDK (`17.1.0-preview.1.26559.8`):
   `proxyToken` and the same `IResourceBuilder\`1` deserialization error.
 - **Zitadel:** `AddZitadelOptions.Username`, `Password`, and `MasterKey` are
   optional parameter-resource pointers. Supplying the credentials used by the
-  TypeScript example fails ATS model construction with `INVALID_ARGUMENT` due
-  to the same pointer-to-interface serialization defect. Omitting them would
-  change the example.
+  TypeScript example fails `CommunityToolkit.Aspire.Hosting.Zitadel/addZitadel`
+  with `INVALID_ARGUMENT` for `username` due to the same pointer-to-interface
+  serialization defect. Omitting them would change the example.
+- **ActiveMQ:** `AddActiveMQOptions.UserName` is a pointer to a parameter
+  interface. `addActiveMQ` fails with `INVALID_ARGUMENT` for `userName` during
+  model construction when the TypeScript example's explicit credentials are
+  supplied. Its Go counterpart retains those credentials and is compile-tested.
 - **Flare:** `WithPublicUrlsOptions.DashboardUrl` is a pointer to a parameter
   interface. Passing the example's `flare-dashboard-url` fails model
   construction because of the same serialization defect; omitting it changes
@@ -64,3 +68,8 @@ publish-model check; fixing the integration is outside this example-only work.
 Floci's `WithServiceBus` is run-only by design and throws in publish mode, as
 documented in the Floci README. Validate the example's Service Bus graph in run
 mode rather than treating its publish-mode rejection as a Go SDK parity gap.
+
+On Windows, the SQL Database Projects Go example compiles but its model fails
+when `MSBuildLocator.RegisterDefaults()` cannot load native `hostfxr`. Its
+publish-model test is disabled on Windows; this is an environment/native-loading
+issue, not the parameter serialization issue above.
