@@ -1,0 +1,13 @@
+{
+  "appHost": {
+    "path": "apphost.go",
+    "language": "go"
+  },
+  "sdk": {
+    "version": "17.1.0-preview.1.26559.8"
+  },
+  "packages": {
+    "Aspire.Hosting.SqlServer": "",
+    "CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects": "../../../src/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.csproj"
+  }
+}

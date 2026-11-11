@@ -1,0 +1,12 @@
+{
+  "appHost": {
+    "path": "apphost.go",
+    "language": "go"
+  },
+  "sdk": {
+    "version": "17.1.0-preview.1.26559.8"
+  },
+  "packages": {
+    "CommunityToolkit.Aspire.Hosting.PowerShell": "../../../src/CommunityToolkit.Aspire.Hosting.PowerShell/CommunityToolkit.Aspire.Hosting.PowerShell.csproj"
+  }
+}
