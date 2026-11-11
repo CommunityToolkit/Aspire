@@ -10,6 +10,7 @@ public class GoAppHostTests
         await GoAppHostTest.Run(
             appHostProject: "CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.AppHost.Go",
             exampleName: "sql-database-projects",
+            // The prebuilt Windows AppHost server fails to load hostfxr for MSBuildLocator.
             validatePublish: !OperatingSystem.IsWindows(),
             cancellationToken: TestContext.Current.CancellationToken);
     }

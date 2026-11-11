@@ -10,6 +10,7 @@ public class GoAppHostTests
         await GoAppHostTest.Run(
             appHostProject: "CommunityToolkit.Aspire.Hosting.Zitadel.AppHost.Go",
             exampleName: "zitadel",
+            // The preview SDK cannot serialize the optional credential handles.
             validatePublish: false,
             cancellationToken: TestContext.Current.CancellationToken);
     }

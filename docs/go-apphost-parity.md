@@ -50,13 +50,15 @@ repository's pinned Aspire SDK (`17.1.0-preview.1.26559.8`):
   model construction when the TypeScript example's explicit credentials are
   supplied. Its Go counterpart retains those credentials and is compile-tested.
 - **Flare:** `WithPublicUrlsOptions.DashboardUrl` is a pointer to a parameter
-  interface. Passing the example's `flare-dashboard-url` fails model
-  construction because of the same serialization defect; omitting it changes
-  the configured public URL.
+  interface. Passing the example's `flare-dashboard-url` causes
+  `CommunityToolkit.Aspire.Hosting.Flare/withPublicUrls` to fail with
+  `INVALID_ARGUMENT` for `dashboardUrl`; omitting it changes the configured
+  public URL.
 - **Keycloak extensions:** The example's PostgreSQL `userName` and `password`
   are parameter handles supplied to `addPostgres`. The generated Go options use
-  parameter-interface pointers, which fail model construction with the same
-  serialization defect. Replacing the explicit credentials changes the example.
+  parameter-interface pointers; `Aspire.Hosting.PostgreSQL/addPostgres` fails
+  with `INVALID_ARGUMENT` for `userName`. Replacing the explicit credentials
+  changes the example.
 
 The Python extensions Go example runs, but its publish-mode model fails:
 `AddStreamlitApp` removes the Python resource before adding its Streamlit
