@@ -96,6 +96,7 @@ jobs:
         uses: ./.github/actions/setup-runtimes-caching
         with:
           name: ${{ matrix.name }}
+          dotnet-version: 10.0.x
           docker-username: ${{ secrets.DOCKER_USERNAME }}
           docker-password: ${{ secrets.DOCKER_PASSWORD }}
           docker-registry: ${{ secrets.CUSTOM_CONTAINER_REGISTRY }}
