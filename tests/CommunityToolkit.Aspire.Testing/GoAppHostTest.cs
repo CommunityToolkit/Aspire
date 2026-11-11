@@ -19,11 +19,13 @@ public static class GoAppHostTest
 
         string repoRoot = Path.GetFullPath(Path.Combine("..", "..", "..", "..", ".."));
         string appHostDirectory = Path.Combine(repoRoot, "examples", exampleName, appHostProject);
-        await ProcessTestUtilities.RunProcessAsync("aspire", ["restore", "--apphost", "apphost.go", "--non-interactive"], appHostDirectory, cancellationToken);
+        string aspire = OperatingSystem.IsWindows() ? "cmd.exe" : "aspire";
+        string[] aspirePrefix = OperatingSystem.IsWindows() ? ["/d", "/c", "aspire"] : [];
+        await ProcessTestUtilities.RunProcessAsync(aspire, [.. aspirePrefix, "restore", "--apphost", "apphost.go", "--non-interactive"], appHostDirectory, cancellationToken);
         await ProcessTestUtilities.RunProcessAsync("go", ["test", "./..."], appHostDirectory, cancellationToken);
         if (validatePublish)
         {
-            await ProcessTestUtilities.RunProcessAsync("aspire", ["publish", "--apphost", "apphost.go", "--list-steps", "--non-interactive"], appHostDirectory, cancellationToken);
+            await ProcessTestUtilities.RunProcessAsync(aspire, [.. aspirePrefix, "publish", "--apphost", "apphost.go", "--list-steps", "--non-interactive"], appHostDirectory, cancellationToken);
         }
     }
 }

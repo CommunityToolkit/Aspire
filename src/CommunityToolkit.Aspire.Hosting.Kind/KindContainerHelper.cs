@@ -38,7 +38,11 @@ internal static class KindContainerHelper
         ArgumentException.ThrowIfNullOrEmpty(kubeconfigYaml);
         ArgumentException.ThrowIfNullOrEmpty(clusterName);
 
+#if NET11_0_OR_GREATER
+        using StringStream stream = new(kubeconfigYaml, Encoding.UTF8);
+#else
         using MemoryStream stream = new(Encoding.UTF8.GetBytes(kubeconfigYaml));
+#endif
         K8SConfiguration kubeConfig = KubernetesClientConfiguration.LoadKubeConfig(stream);
 
         string targetClusterName = ResolveTargetClusterName(kubeConfig, clusterName);

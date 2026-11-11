@@ -4,7 +4,7 @@
     "language": "go"
   },
   "sdk": {
-    "version": "17.1.0-preview.1.26559.8"
+    "version": "17.0.0-preview.1.26555.11"
   },
   "packages": {
     "CommunityToolkit.Aspire.Hosting.Keycloak.Extensions": "../../../src/CommunityToolkit.Aspire.Hosting.Keycloak.Extensions/CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.csproj"

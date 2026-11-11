@@ -1,7 +1,10 @@
 # Go AppHost parity gaps
 
-These TypeScript examples cannot currently be translated faithfully using the
-repository's pinned Aspire SDK (`17.1.0-preview.1.26559.8`):
+These limitations were observed with Aspire SDK
+`17.1.0-preview.1.26559.8`. The repository now pins
+`17.0.0-preview.1.26555.11`; the ActiveMQ, Flare, Keycloak, and Zitadel
+failures have also been confirmed with that version. The other cases have not
+yet been revalidated against it:
 
 - **RustFs:** `AddRustFsOptions.AccessKey` and `SecretKey` are generated as
   `*aspire.ParameterResource` (pointers to interfaces). Passing addresses of

@@ -8,6 +8,23 @@ namespace CommunityToolkit.Aspire.Hosting.Kind.Tests;
 
 public class KindContainerHelperTests
 {
+    [Theory]
+    [InlineData(1)]
+    [InlineData(4096)]
+    public void RewriteClusterEndpointForContainerAccess_PreservesMultibyteContent(int repetitions)
+    {
+        var token = string.Concat(Enumerable.Repeat("\u00e9\u4e2d\U0001F680", repetitions));
+        var yaml = SampleKubeconfig.Replace("kind-token", token, StringComparison.Ordinal);
+
+        var rewritten = KindContainerHelper.RewriteClusterEndpointForContainerAccess(yaml, "kind-cluster");
+        var kubeConfig = LoadKubeConfig(rewritten);
+
+        var user = Assert.Single(kubeConfig.Users, user => user.Name == "kind-kind-cluster");
+        Assert.Equal(token, user.UserCredentials.Token);
+        var cluster = Assert.Single(kubeConfig.Clusters, cluster => cluster.Name == "kind-kind-cluster");
+        Assert.Equal("https://kind-cluster-control-plane:6443", cluster.ClusterEndpoint.Server);
+    }
+
     [Fact]
     public void RewriteClusterEndpointForContainerAccess_RewritesCurrentContextCluster()
     {

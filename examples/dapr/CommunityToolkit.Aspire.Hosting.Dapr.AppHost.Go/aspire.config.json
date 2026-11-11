@@ -4,10 +4,10 @@
     "language": "go"
   },
   "sdk": {
-    "version": "17.1.0-preview.1.26559.8"
+    "version": "17.0.0-preview.1.26555.11"
   },
   "packages": {
     "CommunityToolkit.Aspire.Hosting.Dapr": "../../../src/CommunityToolkit.Aspire.Hosting.Dapr/CommunityToolkit.Aspire.Hosting.Dapr.csproj",
-    "Aspire.Hosting.Dotnet": "17.1.0-preview.1.26559.8"
+    "Aspire.Hosting.Dotnet": "17.0.0-preview.1.26555.11"
   }
 }
