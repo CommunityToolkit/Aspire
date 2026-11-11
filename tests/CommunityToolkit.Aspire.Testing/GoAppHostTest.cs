@@ -10,8 +10,9 @@ public static class GoAppHostTest
     /// </summary>
     /// <param name="appHostProject">The AppHost directory name under the example folder.</param>
     /// <param name="exampleName">The example folder name.</param>
+    /// <param name="validatePublish">Whether to validate the publish-mode model.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
-    public static async Task Run(string appHostProject, string exampleName, CancellationToken cancellationToken = default)
+    public static async Task Run(string appHostProject, string exampleName, bool validatePublish = true, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(appHostProject);
         ArgumentException.ThrowIfNullOrWhiteSpace(exampleName);
@@ -20,6 +21,9 @@ public static class GoAppHostTest
         string appHostDirectory = Path.Combine(repoRoot, "examples", exampleName, appHostProject);
         await ProcessTestUtilities.RunProcessAsync("aspire", ["restore", "--apphost", "apphost.go", "--non-interactive"], appHostDirectory, cancellationToken);
         await ProcessTestUtilities.RunProcessAsync("go", ["test", "./..."], appHostDirectory, cancellationToken);
-        await ProcessTestUtilities.RunProcessAsync("aspire", ["publish", "--apphost", "apphost.go", "--list-steps", "--non-interactive"], appHostDirectory, cancellationToken);
+        if (validatePublish)
+        {
+            await ProcessTestUtilities.RunProcessAsync("aspire", ["publish", "--apphost", "apphost.go", "--list-steps", "--non-interactive"], appHostDirectory, cancellationToken);
+        }
     }
 }
