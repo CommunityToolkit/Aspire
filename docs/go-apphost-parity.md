@@ -11,6 +11,13 @@ repository's pinned Aspire SDK (`17.1.0-preview.1.26559.8`):
   'IResourceBuilder\`1' must have [AspireDto] attribute to be deserialized from
   JSON` for `accessKey`. The TypeScript example explicitly supplies both
   credentials, so omitting them would not preserve its resource graph.
+- **Umami:** `AddUmamiOptions.Secret` is likewise a `*aspire.ParameterResource`.
+  Passing the address of the explicitly configured `umami-secret` compiles,
+  but `aspire publish --apphost apphost.go --list-steps --non-interactive`
+  fails while constructing the model: `CommunityToolkit.Aspire.Hosting.Umami/addUmami`
+  reports `INVALID_ARGUMENT` for `secret`, with the same `IResourceBuilder\`1`
+  deserialization error as RustFs. Omitting the secret would not preserve the
+  TypeScript example.
 
 The Python extensions Go example runs, but its publish-mode model fails:
 `AddStreamlitApp` removes the Python resource before adding its Streamlit
