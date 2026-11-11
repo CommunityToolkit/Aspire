@@ -30,6 +30,11 @@ repository's pinned Aspire SDK (`17.1.0-preview.1.26559.8`):
   `INVALID_ARGUMENT` for `password` and the same `IResourceBuilder\`1`
   deserialization error. Generating a different password would change the
   TypeScript example.
+- **SQL Server extensions:** `AddSqlServerOptions.Password` has the same
+  pointer-to-parameter shape. The explicit `sql-password` compiles, but
+  `Aspire.Hosting.SqlServer/addSqlServer` reports `INVALID_ARGUMENT` for
+  `password` and the same `IResourceBuilder\`1` deserialization error during
+  publish-model construction. Omitting it changes the TypeScript example.
 
 The Python extensions Go example runs, but its publish-mode model fails:
 `AddStreamlitApp` removes the Python resource before adding its Streamlit
