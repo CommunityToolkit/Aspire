@@ -57,7 +57,8 @@ static class App
             var packageToTests = BuildPackageToTests(packageRefs, nodeToTests);
             var packageToProjects = BuildPackageToProjects(packageRefs);
             var testInfraPackages = LoadTestInfraPackages(repoRoot);
-            var typeScriptAppHostToTests = BuildTypeScriptAppHostToTests(repoRoot, projectPaths);
+            var typeScriptAppHostToTests = BuildAppHostToTests(repoRoot, projectPaths, "TypeScriptAppHostTests.cs");
+            var goAppHostToTests = BuildAppHostToTests(repoRoot, projectPaths, "GoAppHostTests.cs");
 
             foreach (var filePath in diffFiles)
             {
@@ -165,10 +166,17 @@ static class App
                     continue;
                 }
 
-                if (TryGetTypeScriptAppHostTests(filePath, typeScriptAppHostToTests, out impactedTypeScriptTests))
+                if (TryGetAppHostTests(filePath, typeScriptAppHostToTests, out impactedTypeScriptTests))
                 {
                     selected.UnionWith(impactedTypeScriptTests);
                     reasons.Add($"Selected {impactedTypeScriptTests.Count} tests because {filePath} belongs to a TypeScript app host test fixture.");
+                    continue;
+                }
+
+                if (TryGetAppHostTests(filePath, goAppHostToTests, out var impactedGoTests))
+                {
+                    selected.UnionWith(impactedGoTests);
+                    reasons.Add($"Selected {impactedGoTests.Count} tests because {filePath} belongs to a Go app host test fixture.");
                     continue;
                 }
 
@@ -521,7 +529,7 @@ static class App
         return appHostProjects.Count == 1 ? appHostProjects[0] : null;
     }
 
-    private static Dictionary<string, HashSet<string>> BuildTypeScriptAppHostToTests(string repoRoot, List<string> projectPaths)
+    private static Dictionary<string, HashSet<string>> BuildAppHostToTests(string repoRoot, List<string> projectPaths, string testFileName)
     {
         var appHostToTests = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
         var testsRoot = Path.Combine(repoRoot, "tests");
@@ -530,7 +538,7 @@ static class App
             return appHostToTests;
         }
 
-        foreach (var testFilePath in Directory.EnumerateFiles(testsRoot, "TypeScriptAppHostTests.cs", SearchOption.AllDirectories).OrderBy(static path => path, StringComparer.Ordinal))
+        foreach (var testFilePath in Directory.EnumerateFiles(testsRoot, testFileName, SearchOption.AllDirectories).OrderBy(static path => path, StringComparer.Ordinal))
         {
             var relativeTestFilePath = RelativePath(repoRoot, testFilePath);
             var testProjectPath = NearestProject(relativeTestFilePath, projectPaths);
@@ -560,7 +568,7 @@ static class App
         return appHostToTests;
     }
 
-    private static bool TryGetTypeScriptAppHostTests(
+    private static bool TryGetAppHostTests(
         string filePath,
         Dictionary<string, HashSet<string>> appHostToTests,
         out HashSet<string> tests)
