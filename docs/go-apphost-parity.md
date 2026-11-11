@@ -35,6 +35,11 @@ repository's pinned Aspire SDK (`17.1.0-preview.1.26559.8`):
   `Aspire.Hosting.SqlServer/addSqlServer` reports `INVALID_ARGUMENT` for
   `password` and the same `IResourceBuilder\`1` deserialization error during
   publish-model construction. Omitting it changes the TypeScript example.
+- **MCP Inspector:** `AddMcpInspectorOptions.ProxyToken` is a pointer to a
+  parameter interface. Passing the explicit `proxy-token` compiles, but
+  `CommunityToolkit.Aspire.Hosting.McpInspector/addMcpInspectorPolyglot` fails
+  during publish-model construction with `INVALID_ARGUMENT` for
+  `proxyToken` and the same `IResourceBuilder\`1` deserialization error.
 
 The Python extensions Go example runs, but its publish-mode model fails:
 `AddStreamlitApp` removes the Python resource before adding its Streamlit
