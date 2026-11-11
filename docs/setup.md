@@ -31,7 +31,7 @@ If you prefer not to use `devcontainer`, you can manually set up your developmen
 
 And of course, an editor such as Visual Studio, JetBrains Rider or emacs.
 
-Toolkit packages and tests target both `net10.0` and `net11.0`; examples remain on `net10.0`. CI installs both supported SDKs and runs the test matrix for each target framework.
+Toolkit packages target both `net10.0` and `net11.0`; tests and examples use the default `net10.0` target. CI installs both SDKs, builds and packages both target frameworks, and runs the full integration-test matrix on `net10.0`.
 
 ### Aspire nightly builds
 
