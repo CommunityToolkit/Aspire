@@ -1,0 +1,13 @@
+{
+  "appHost": {
+    "path": "apphost.go",
+    "language": "go"
+  },
+  "sdk": {
+    "version": "17.1.0-preview.1.26559.8"
+  },
+  "packages": {
+    "CommunityToolkit.Aspire.Hosting.Floci": "../../../src/CommunityToolkit.Aspire.Hosting.Floci/CommunityToolkit.Aspire.Hosting.Floci.csproj",
+    "Aspire.Hosting.Dotnet": "17.1.0-preview.1.26559.8"
+  }
+}
