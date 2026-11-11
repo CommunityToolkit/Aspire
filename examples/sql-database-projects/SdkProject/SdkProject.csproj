@@ -1,6 +1,8 @@
 <Project Sdk="MSBuild.Sdk.SqlProj/4.2.0">
     <PropertyGroup>
         <TargetFramework>$(DefaultTargetFramework)</TargetFramework>
+        <!-- SqlProj currently bundles its DAC tool for .NET 10, even when built with the .NET 11 SDK. -->
+        <BundledNETCoreAppTargetFrameworkVersion Condition="'$(BundledNETCoreAppTargetFrameworkVersion)' == '11.0'">10.0</BundledNETCoreAppTargetFrameworkVersion>
         <SqlServerVersion>Sql160</SqlServerVersion>
         <RunSqlCodeAnalysis>true</RunSqlCodeAnalysis>
         <!-- For additional properties that can be set here, please refer to https://github.com/rr-wfm/MSBuild.Sdk.SqlProj#model-properties -->

@@ -10,7 +10,9 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  DEFAULT_DOTNET_VERSION: "10.0.x"
+  DEFAULT_DOTNET_VERSIONS: |
+    10.0.x
+    11.0.x
 
 permissions:
   contents: read
@@ -60,10 +62,10 @@ jobs:
       id-token: write # Required for requesting the JWT
 
     steps:
-      - name: Install .NET SDK v${{ env.DEFAULT_DOTNET_VERSION }}
+      - name: Install .NET SDKs
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: ${{ env.DEFAULT_DOTNET_VERSION }}
+          dotnet-version: ${{ env.DEFAULT_DOTNET_VERSIONS }}
 
       - name: Download Package List
         uses: actions/download-artifact@v8

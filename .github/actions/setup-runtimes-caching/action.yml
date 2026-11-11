@@ -21,6 +21,7 @@ runs:
       with:
         dotnet-version: |
           10.0.x
+          11.0.x
 
     - name: Resolve Aspire version
       id: aspire-version
@@ -34,7 +35,7 @@ runs:
       env:
         ASPIRE_VERSION: ${{ steps.aspire-version.outputs.version }}
       run: |
-        $toolPath = Join-Path $HOME ".dotnet/tools"
+        $toolPath = Join-Path $env:RUNNER_TEMP "aspire-tools"
         dotnet tool install --tool-path $toolPath Aspire.Cli --version $env:ASPIRE_VERSION --configfile (Join-Path $env:GITHUB_WORKSPACE "nuget.config")
         if ($LASTEXITCODE -ne 0) {
           exit $LASTEXITCODE
