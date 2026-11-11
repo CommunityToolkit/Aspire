@@ -40,6 +40,19 @@ repository's pinned Aspire SDK (`17.1.0-preview.1.26559.8`):
   `CommunityToolkit.Aspire.Hosting.McpInspector/addMcpInspectorPolyglot` fails
   during publish-model construction with `INVALID_ARGUMENT` for
   `proxyToken` and the same `IResourceBuilder\`1` deserialization error.
+- **Zitadel:** `AddZitadelOptions.Username`, `Password`, and `MasterKey` are
+  optional parameter-resource pointers. Supplying the credentials used by the
+  TypeScript example fails ATS model construction with `INVALID_ARGUMENT` due
+  to the same pointer-to-interface serialization defect. Omitting them would
+  change the example.
+- **Flare:** `WithPublicUrlsOptions.DashboardUrl` is a pointer to a parameter
+  interface. Passing the example's `flare-dashboard-url` fails model
+  construction because of the same serialization defect; omitting it changes
+  the configured public URL.
+- **Keycloak extensions:** The example's PostgreSQL `userName` and `password`
+  are parameter handles supplied to `addPostgres`. The generated Go options use
+  parameter-interface pointers, which fail model construction with the same
+  serialization defect. Replacing the explicit credentials changes the example.
 
 The Python extensions Go example runs, but its publish-mode model fails:
 `AddStreamlitApp` removes the Python resource before adding its Streamlit
@@ -47,3 +60,7 @@ replacement, while the publish-mode executable container with the same name
 remains in the model. The resulting duplicate `dashboard` resource causes
 `AddStreamlitApp` to fail. Its Go compilation test therefore does not run the
 publish-model check; fixing the integration is outside this example-only work.
+
+Floci's `WithServiceBus` is run-only by design and throws in publish mode, as
+documented in the Floci README. Validate the example's Service Bus graph in run
+mode rather than treating its publish-mode rejection as a Go SDK parity gap.
