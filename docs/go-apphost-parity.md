@@ -18,6 +18,12 @@ repository's pinned Aspire SDK (`17.1.0-preview.1.26559.8`):
   reports `INVALID_ARGUMENT` for `secret`, with the same `IResourceBuilder\`1`
   deserialization error as RustFs. Omitting the secret would not preserve the
   TypeScript example.
+- **Meilisearch:** `AddMeilisearchOptions.MasterKey` is also a pointer to a
+  parameter interface. An explicit `search-master-key` compiles but
+  `CommunityToolkit.Aspire.Hosting.Meilisearch/addMeilisearch` fails during
+  publish-model construction with `INVALID_ARGUMENT` for `masterKey` and
+  the same `IResourceBuilder\`1` deserialization error. The TypeScript
+  example explicitly supplies the key.
 
 The Python extensions Go example runs, but its publish-mode model fails:
 `AddStreamlitApp` removes the Python resource before adding its Streamlit
