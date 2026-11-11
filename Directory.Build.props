@@ -5,7 +5,8 @@
     
     <DefaultTargetFramework>net10.0</DefaultTargetFramework>
     <TargetFrameworks>$(DefaultTargetFramework)</TargetFrameworks>
-    <AllTargetFrameworks>$(DefaultTargetFramework)</AllTargetFrameworks>
+    <!-- Source packages and tests add net11.0 through this property; examples retain the default net10.0 target. -->
+    <AllTargetFrameworks>$(DefaultTargetFramework);net11.0</AllTargetFrameworks>
     <LangVersion>latest</LangVersion>
 
     <ImplicitUsings>enable</ImplicitUsings>
@@ -17,6 +18,7 @@
     <AspirePreviewSuffix></AspirePreviewSuffix> <!-- The nightly AspireVersion already includes its prerelease suffix. -->
     <AspNetCoreVersion>9.0.0</AspNetCoreVersion>
     <DotNetExtensionsVersion>10.0.14</DotNetExtensionsVersion>
+    <DotNetExtensionsVersion Condition="'$(TargetFramework)' == 'net11.0'">11.0.0</DotNetExtensionsVersion>
     <TestContainersVersion>4.14.0</TestContainersVersion>
     <MEAIVersion>10.11.0</MEAIVersion>
     <ServiceDiscoveryVersion>10.0.0</ServiceDiscoveryVersion>

@@ -81,11 +81,12 @@ jobs:
       NPM_CONFIG_PACKAGE_LOCK: false
     runs-on: "${{ matrix.os }}"
     timeout-minutes: 60
-    name: ${{ matrix.name }}-${{ matrix.os }}
+    name: ${{ matrix.name }}-${{ matrix.framework }}-${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
+        framework: [net10.0, net11.0]
         name: ${{ fromJson(needs.resolve-test-matrix.outputs.tests) }}
 
     steps:
@@ -108,13 +109,14 @@ jobs:
         env:
           CI: false
         run: |
-          dotnet build ${{ github.workspace }}/${{ env.TEST_PROJECT_PATH }} /bl --configuration ${{ env.DOTNET_CONFIGURATION }}
+          dotnet build ${{ github.workspace }}/${{ env.TEST_PROJECT_PATH }} --framework ${{ matrix.framework }} /bl --configuration ${{ env.DOTNET_CONFIGURATION }}
 
       - name: Run tests
         id: run-tests
         run: >-
           dotnet run
           --project "${{ github.workspace }}/${{ env.TEST_PROJECT_PATH }}"
+          --framework "${{ matrix.framework }}"
           --no-build
           --configuration ${{ env.DOTNET_CONFIGURATION }}
           --crashdump
@@ -123,7 +125,7 @@ jobs:
           --results-directory "${{ github.workspace }}/testresults"
           --filter-not-trait "category=failing"
           --report-trx
-          --report-trx-filename "${{ matrix.name }}-${{ matrix.os }}.trx"
+          --report-trx-filename "${{ matrix.name }}-${{ matrix.framework }}-${{ matrix.os }}.trx"
           --coverage
           --coverage-output-format cobertura
           --coverage-output coverage.cobertura.xml
@@ -145,7 +147,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: binlog-${{ matrix.name }}-${{ matrix.os }}
+          name: binlog-${{ matrix.name }}-${{ matrix.framework }}-${{ matrix.os }}
           path: "**/*.binlog"
         continue-on-error: true
 
@@ -153,14 +155,14 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: testresults-${{ matrix.name }}-${{ matrix.os }}
+          name: testresults-${{ matrix.name }}-${{ matrix.framework }}-${{ matrix.os }}
           path: testresults/**
 
       - name: Upload npm logs if failed
         if: failure() && steps.run-tests.outcome != 'skipped'
         uses: actions/upload-artifact@v7
         with:
-          name: npm-logs-${{ matrix.name }}-${{ matrix.os }}
+          name: npm-logs-${{ matrix.name }}-${{ matrix.framework }}-${{ matrix.os }}
           path: ${{ runner.os == 'Windows' && 'C:\\npm\\cache\\_logs\\**' || '~/.npm/cache/_logs/**' }}
 
       - name: Resolve Aspire CLI log directory
@@ -187,7 +189,7 @@ jobs:
         if: failure() && steps.run-tests.outcome != 'skipped'
         uses: actions/upload-artifact@v7
         with:
-          name: ts-app-host-logs-${{ matrix.name }}-${{ matrix.os }}
+          name: ts-app-host-logs-${{ matrix.name }}-${{ matrix.framework }}-${{ matrix.os }}
           path: |
             ${{ steps.aspire-log-dir.outputs.dir }}/**
             ${{ runner.os == 'Windows' && 'C:\\Users\\runneradmin\\.aspire\\logs\\**' || '/home/runner/.aspire/logs/**' }}

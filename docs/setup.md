@@ -14,7 +14,7 @@ If an AppHost endpoint is not reachable from the host machine, use VS Code's [po
 
 If you prefer not to use `devcontainer`, you can manually set up your development environment by installing the following tools:
 
--   [.NET 10](https://dotnet.microsoft.com/download/dotnet/10.0)
+-   [.NET 10](https://dotnet.microsoft.com/download/dotnet/10.0) and [.NET 11](https://dotnet.microsoft.com/download/dotnet/11.0) SDKs
 -   [Node.js LTS](https://nodejs.org/en/)
     -   [Yarn 2](https://yarnpkg.com/getting-started/install)
     -   [pnpm](https://pnpm.io/)
@@ -30,6 +30,8 @@ If you prefer not to use `devcontainer`, you can manually set up your developmen
     -   Podman is also supported, but Docker is recommended for consistency.
 
 And of course, an editor such as Visual Studio, JetBrains Rider or emacs.
+
+Toolkit packages and tests target both `net10.0` and `net11.0`; examples remain on `net10.0`. CI installs both supported SDKs and runs the test matrix for each target framework.
 
 ### Aspire nightly builds
 
