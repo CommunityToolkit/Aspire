@@ -24,6 +24,12 @@ repository's pinned Aspire SDK (`17.1.0-preview.1.26559.8`):
   publish-model construction with `INVALID_ARGUMENT` for `masterKey` and
   the same `IResourceBuilder\`1` deserialization error. The TypeScript
   example explicitly supplies the key.
+- **Redis extensions:** `AddRedisOptions.Password` is a pointer to a parameter
+  interface. Passing the explicit `redis-password` compiles, but
+  `Aspire.Hosting.Redis/addRedis` fails during publish-model construction with
+  `INVALID_ARGUMENT` for `password` and the same `IResourceBuilder\`1`
+  deserialization error. Generating a different password would change the
+  TypeScript example.
 
 The Python extensions Go example runs, but its publish-mode model fails:
 `AddStreamlitApp` removes the Python resource before adding its Streamlit
