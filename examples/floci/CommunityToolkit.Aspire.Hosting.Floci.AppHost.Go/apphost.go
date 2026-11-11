@@ -24,8 +24,8 @@ func main() {
 	}
 	azure.WithDockerSocket().WithEnvironment("FLOCI_AZ_DOCKER_RESOURCE_NAMESPACE", fmt.Sprintf("sample-%x", namespace))
 	serviceBus := azure.WithServiceBus(&aspire.WithServiceBusOptions{Name: aspire.StringPtr("servicebus")})
-	_ = serviceBus.AmqpEndpoint()
-	_ = serviceBus.AmqpTlsEndpoint()
+	check(serviceBus.AmqpEndpoint().Err())
+	check(serviceBus.AmqpTlsEndpoint().Err())
 	_ = serviceBus.ConnectionStringExpression()
 	storage := azure.WithStorage(&aspire.WithStorageOptions{Name: aspire.StringPtr("storage")})
 	if _, err := storage.AccountName(); err != nil {
@@ -112,17 +112,17 @@ func main() {
 		builder.AddFlociAws("floci-tls").WithHttpsDeveloperCertificate()
 		builder.AddFlociAzure("floci-az-tls").WithHttpsDeveloperCertificate()
 		builder.AddFlociAws("floci-configured").WithConfigFile("./floci.yml")
-		_ = aws.PrimaryEndpoint()
-		_ = aws.Host()
-		_ = aws.Port()
+		check(aws.PrimaryEndpoint().Err())
+		check(aws.Host().Err())
+		check(aws.Port().Err())
 		_ = aws.ConnectionStringExpression()
-		_ = azure.PrimaryEndpoint()
-		_ = azure.Host()
-		_ = azure.Port()
+		check(azure.PrimaryEndpoint().Err())
+		check(azure.Host().Err())
+		check(azure.Port().Err())
 		_ = azure.ConnectionStringExpression()
-		_ = gcp.PrimaryEndpoint()
-		_ = gcp.Host()
-		_ = gcp.Port()
+		check(gcp.PrimaryEndpoint().Err())
+		check(gcp.Host().Err())
+		check(gcp.Port().Err())
 		_ = gcp.ConnectionStringExpression()
 		builder.AddDotnetProject("api", "../FlociApi/FlociApi.csproj").
 			WithFlociAwsReference(aws).WithFlociAzureReference(azure).WithFlociGcpReference(gcp)
@@ -139,6 +139,12 @@ func main() {
 		log.Fatal(aspire.FormatError(err))
 	}
 	if err := app.Run(); err != nil {
+		log.Fatal(aspire.FormatError(err))
+	}
+}
+
+func check(err error) {
+	if err != nil {
 		log.Fatal(aspire.FormatError(err))
 	}
 }

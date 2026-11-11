@@ -27,8 +27,8 @@ func main() {
 		WithFlareImageTag("0.6").
 		WithPublicUrls(&aspire.WithPublicUrlsOptions{DashboardUrl: &dashboardURL}).
 		WithApiKey(ingestKey)
-	_ = flare.OtlpGrpcEndpoint()
-	_ = flare.OtlpHttpEndpoint()
+	check(flare.OtlpGrpcEndpoint().Err())
+	check(flare.OtlpHttpEndpoint().Err())
 	protocol := aspire.OtlpProtocolHttpProtobuf
 	api := builder.AddDotnetProject("apiservice", "../CommunityToolkit.Aspire.Hosting.Flare.ApiService/CommunityToolkit.Aspire.Hosting.Flare.ApiService.csproj").
 		WithFlareOtlpExporter(flare, &aspire.WithFlareOtlpExporterOptions{Protocol: &protocol}).
@@ -45,6 +45,12 @@ func main() {
 		log.Fatal(aspire.FormatError(err))
 	}
 	if err := app.Run(); err != nil {
+		log.Fatal(aspire.FormatError(err))
+	}
+}
+
+func check(err error) {
+	if err != nil {
 		log.Fatal(aspire.FormatError(err))
 	}
 }

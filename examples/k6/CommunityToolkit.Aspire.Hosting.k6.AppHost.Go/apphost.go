@@ -22,9 +22,10 @@ func main() {
 	browserK6.WithScript("/scripts/main.js", &aspire.WithScriptOptions{
 		VirtualUsers: aspire.Float64Ptr(5), Duration: aspire.StringPtr("45s"),
 	}).WithK6OtlpEnvironment()
-	_ = defaultK6.PrimaryEndpoint()
-	_ = browserK6.PrimaryEndpoint()
 	for _, resource := range []aspire.K6Resource{defaultK6, browserK6} {
+		if err := resource.PrimaryEndpoint().Err(); err != nil {
+			log.Fatal(aspire.FormatError(err))
+		}
 		if err := resource.Err(); err != nil {
 			log.Fatal(aspire.FormatError(err))
 		}
