@@ -13,9 +13,9 @@ func main() {
 
 	mqtt := builder.AddMosquitto("mqtt")
 	mqtt.WithDataVolume(&aspire.WithDataVolumeOptions{Name: aspire.StringPtr("mosquitto-data")})
-	_ = mqtt.PrimaryEndpoint()
-	_ = mqtt.Host()
-	_ = mqtt.Port()
+	check(mqtt.PrimaryEndpoint().Err())
+	check(mqtt.Host().Err())
+	check(mqtt.Port().Err())
 	_ = mqtt.ConnectionStringExpression()
 	_ = mqtt.UriExpression()
 	if err := mqtt.Err(); err != nil {
@@ -27,6 +27,12 @@ func main() {
 		log.Fatal(aspire.FormatError(err))
 	}
 	if err := app.Run(); err != nil {
+		log.Fatal(aspire.FormatError(err))
+	}
+}
+
+func check(err error) {
+	if err != nil {
 		log.Fatal(aspire.FormatError(err))
 	}
 }

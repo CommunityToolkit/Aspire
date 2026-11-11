@@ -15,8 +15,8 @@ func main() {
 		HttpPort: aspire.Float64Ptr(8080),
 		SmtpPort: aspire.Float64Ptr(2525),
 	})
-	_ = papercut.Host()
-	_ = papercut.Port()
+	check(papercut.Host().Err())
+	check(papercut.Port().Err())
 	_ = papercut.UriExpression()
 	_ = papercut.ConnectionStringExpression()
 	if err := papercut.Err(); err != nil {
@@ -24,8 +24,8 @@ func main() {
 	}
 
 	defaults := builder.AddPapercutSmtp("papercut-default")
-	_ = defaults.Host()
-	_ = defaults.Port()
+	check(defaults.Host().Err())
+	check(defaults.Port().Err())
 	_ = defaults.UriExpression()
 	_ = defaults.ConnectionStringExpression()
 	if err := defaults.Err(); err != nil {
@@ -37,6 +37,12 @@ func main() {
 		log.Fatal(aspire.FormatError(err))
 	}
 	if err := app.Run(); err != nil {
+		log.Fatal(aspire.FormatError(err))
+	}
+}
+
+func check(err error) {
+	if err != nil {
 		log.Fatal(aspire.FormatError(err))
 	}
 }

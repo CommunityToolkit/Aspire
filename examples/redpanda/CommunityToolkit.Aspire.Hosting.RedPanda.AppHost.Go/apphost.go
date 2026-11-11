@@ -13,9 +13,9 @@ func main() {
 
 	redpanda := builder.AddRedPanda("redpanda")
 	redpanda.WithDataVolume(&aspire.WithDataVolumeOptions{Name: aspire.StringPtr("redpanda-data")})
-	_ = redpanda.PrimaryEndpoint()
-	_ = redpanda.Host()
-	_ = redpanda.Port()
+	check(redpanda.PrimaryEndpoint().Err())
+	check(redpanda.Host().Err())
+	check(redpanda.Port().Err())
 	_ = redpanda.ConnectionStringExpression()
 	if err := redpanda.Err(); err != nil {
 		log.Fatal(aspire.FormatError(err))
@@ -31,6 +31,12 @@ func main() {
 		log.Fatal(aspire.FormatError(err))
 	}
 	if err := app.Run(); err != nil {
+		log.Fatal(aspire.FormatError(err))
+	}
+}
+
+func check(err error) {
+	if err != nil {
 		log.Fatal(aspire.FormatError(err))
 	}
 }

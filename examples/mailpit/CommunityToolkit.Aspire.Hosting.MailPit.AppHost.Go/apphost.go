@@ -21,9 +21,9 @@ func main() {
 		SmtpPort: aspire.Float64Ptr(11025),
 	})
 	mailpit.WithDataVolume("mailpit-data")
-	_ = mailpit.PrimaryEndpoint()
-	_ = mailpit.Host()
-	_ = mailpit.Port()
+	check(mailpit.PrimaryEndpoint().Err())
+	check(mailpit.Host().Err())
+	check(mailpit.Port().Err())
 	_ = mailpit.UriExpression()
 	_ = mailpit.ConnectionStringExpression()
 	if err := mailpit.Err(); err != nil {
@@ -32,9 +32,9 @@ func main() {
 
 	defaults := builder.AddMailPit("mailpit-default")
 	defaults.WithDataBindMount(bindMountPath)
-	_ = defaults.PrimaryEndpoint()
-	_ = defaults.Host()
-	_ = defaults.Port()
+	check(defaults.PrimaryEndpoint().Err())
+	check(defaults.Host().Err())
+	check(defaults.Port().Err())
 	_ = defaults.UriExpression()
 	_ = defaults.ConnectionStringExpression()
 	if err := defaults.Err(); err != nil {
@@ -46,6 +46,12 @@ func main() {
 		log.Fatal(aspire.FormatError(err))
 	}
 	if err := app.Run(); err != nil {
+		log.Fatal(aspire.FormatError(err))
+	}
+}
+
+func check(err error) {
+	if err != nil {
 		log.Fatal(aspire.FormatError(err))
 	}
 }

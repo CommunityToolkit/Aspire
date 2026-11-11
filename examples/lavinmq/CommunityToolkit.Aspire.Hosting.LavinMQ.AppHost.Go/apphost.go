@@ -21,9 +21,9 @@ func main() {
 		ManagementPort: aspire.Float64Ptr(35673),
 	})
 	volume.WithDataVolume("lavinmq-volume")
-	_ = volume.PrimaryEndpoint()
-	_ = volume.Host()
-	_ = volume.Port()
+	check(volume.PrimaryEndpoint().Err())
+	check(volume.Host().Err())
+	check(volume.Port().Err())
 	_ = volume.UriExpression()
 	_ = volume.ConnectionStringExpression()
 	if err := volume.Err(); err != nil {
@@ -44,6 +44,12 @@ func main() {
 		log.Fatal(aspire.FormatError(err))
 	}
 	if err := app.Run(); err != nil {
+		log.Fatal(aspire.FormatError(err))
+	}
+}
+
+func check(err error) {
+	if err != nil {
 		log.Fatal(aspire.FormatError(err))
 	}
 }
