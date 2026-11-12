@@ -18,6 +18,9 @@ namespace Aspire.Hosting
 
         [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.ChromaResource> WithDataVolume(this ApplicationModel.IResourceBuilder<ApplicationModel.ChromaResource> builder, string? name = null) { throw null; }
+
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.ChromaResource> WithHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.ChromaResource> builder, int? port) { throw null; }
     }
 }
 

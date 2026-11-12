@@ -18,6 +18,9 @@ namespace Aspire.Hosting
 
         [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.KurrentDBResource> WithDataVolume(this ApplicationModel.IResourceBuilder<ApplicationModel.KurrentDBResource> builder, string? name = null) { throw null; }
+
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.KurrentDBResource> WithHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.KurrentDBResource> builder, int? port) { throw null; }
     }
 }
 

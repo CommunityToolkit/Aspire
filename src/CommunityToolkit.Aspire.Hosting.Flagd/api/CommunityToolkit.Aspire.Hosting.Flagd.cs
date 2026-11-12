@@ -16,8 +16,14 @@ namespace Aspire.Hosting
         [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.FlagdResource> WithBindFileSync(this ApplicationModel.IResourceBuilder<ApplicationModel.FlagdResource> builder, string fileSource, string filename = "flagd.json") { throw null; }
 
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.FlagdResource> WithHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.FlagdResource> builder, int? port) { throw null; }
+
         [AspireExportIgnore(Reason = "Microsoft.Extensions.Logging.LogLevel is defined in an external assembly and is not compatible with ATS.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.FlagdResource> WithLogLevel(this ApplicationModel.IResourceBuilder<ApplicationModel.FlagdResource> builder, Microsoft.Extensions.Logging.LogLevel logLevel) { throw null; }
+
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.FlagdResource> WithOfrepHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.FlagdResource> builder, int? port) { throw null; }
     }
 }
 

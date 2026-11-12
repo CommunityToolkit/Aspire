@@ -14,10 +14,16 @@ namespace Aspire.Hosting
         public static ApplicationModel.IResourceBuilder<ApplicationModel.LavinMQContainerResource> AddLavinMQ(this IDistributedApplicationBuilder builder, string name, int amqpPort = 5672, int managementPort = 15672) { throw null; }
 
         [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.LavinMQContainerResource> WithAmqpHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.LavinMQContainerResource> builder, int? port) { throw null; }
+
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.LavinMQContainerResource> WithDataBindMount(this ApplicationModel.IResourceBuilder<ApplicationModel.LavinMQContainerResource> builder, string source, bool isReadOnly = false) { throw null; }
 
         [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.LavinMQContainerResource> WithDataVolume(this ApplicationModel.IResourceBuilder<ApplicationModel.LavinMQContainerResource> builder, string name, bool isReadOnly = false) { throw null; }
+
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.LavinMQContainerResource> WithManagementHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.LavinMQContainerResource> builder, int? port) { throw null; }
     }
 }
 

@@ -61,6 +61,15 @@ namespace Aspire.Hosting
         [AspireExport("withFlociUIGcp", MethodName = "withFlociUI", RunSyncOnBackgroundThread = true)]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.FlociGcpContainerResource> WithFlociUI(this ApplicationModel.IResourceBuilder<ApplicationModel.FlociGcpContainerResource> builder, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.FlociUIContainerResource>>? configureContainer = null, string? containerName = null) { throw null; }
 
+        [AspireExport("withHostPortAws", MethodName = "withHostPort")]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.FlociAwsContainerResource> WithHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.FlociAwsContainerResource> builder, int? port) { throw null; }
+
+        [AspireExport("withHostPortAzure", MethodName = "withHostPort")]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.FlociAzureContainerResource> WithHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.FlociAzureContainerResource> builder, int? port) { throw null; }
+
+        [AspireExport("withHostPortGcp", MethodName = "withHostPort")]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.FlociGcpContainerResource> WithHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.FlociGcpContainerResource> builder, int? port) { throw null; }
+
         [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.FlociUIContainerResource> WithHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.FlociUIContainerResource> builder, int? port) { throw null; }
 

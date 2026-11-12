@@ -40,7 +40,13 @@ namespace Aspire.Hosting
         [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.OllamaResource> WithGPUSupport(this ApplicationModel.IResourceBuilder<ApplicationModel.OllamaResource> builder, OllamaGpuVendor vendor = OllamaGpuVendor.Nvidia) { throw null; }
 
-        [AspireExport]
+        [AspireExport("withOllamaLocalHostPort", MethodName = "withHostPort")]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.OllamaExecutableResource> WithHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.OllamaExecutableResource> builder, int? port) { throw null; }
+
+        [AspireExport("withOllamaHostPort", MethodName = "withHostPort")]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.OllamaResource> WithHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.OllamaResource> builder, int? port) { throw null; }
+
+        [AspireExport("withOpenWebUIHostPort", MethodName = "withHostPort")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.OpenWebUIResource> WithHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.OpenWebUIResource> builder, int? port) { throw null; }
 
         [AspireExport(RunSyncOnBackgroundThread = true)]

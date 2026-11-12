@@ -18,6 +18,8 @@ namespace CommunityToolkit.Aspire.Chroma
 
         public bool DisableTracing { get { throw null; } set { } }
 
+        public bool Distributed { get { throw null; } set { } }
+
         public System.Uri? Endpoint { get { throw null; } set { } }
 
         public int? HealthCheckTimeout { get { throw null; } set { } }
