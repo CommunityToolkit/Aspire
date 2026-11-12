@@ -40,12 +40,12 @@
     <PackageVersion Include="AspNetCore.HealthChecks.SqlServer" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.SurrealDb" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.Uris" Version="9.0.0" />
-    <PackageVersion Include="Dapr.AspNetCore" Version="1.19.0" />
-    <PackageVersion Include="Dapr.Client" Version="1.19.0" />
-    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.14" />
-    <PackageVersion Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.14" />
+    <PackageVersion Include="Dapr.AspNetCore" Version="1.19.1" />
+    <PackageVersion Include="Dapr.Client" Version="1.19.1" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.15" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.15" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.QuickGrid" Version="$(AspNetCoreVersion)" />
-    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.14" />
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.15" />
     <PackageVersion Include="Microsoft.DotNet.PlatformAbstractions" Version="3.1.6" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.14">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -79,7 +79,7 @@
   </ItemGroup>
   <ItemGroup Label="Integration Packages">
     <!-- External packages -->
-    <PackageVersion Include="AWSSDK.S3" Version="4.0.104.8" />
+    <PackageVersion Include="AWSSDK.S3" Version="4.0.104.12" />
     <PackageVersion Include="Azure.AI.OpenAI" Version="2.9.0-beta.1" />
     <PackageVersion Include="Azure.Identity" Version="1.21.0" />
     <PackageVersion Include="Azure.Messaging.ServiceBus" Version="7.21.0" />
@@ -91,7 +91,7 @@
          fix) depends on SDK 1.0.20 and MAF 1.24.0+, and its buildTransitive bridge points
          MAF 1.26.0 at the SDK 1.0.20 build targets.
          Keep the Squad sample's direct SDK reference aligned with those build targets. -->
-    <PackageVersion Include="GitHub.Copilot.SDK" Version="1.0.20" />
+    <PackageVersion Include="GitHub.Copilot.SDK" Version="1.0.31" />
     <PackageVersion Include="JsonSchema.Net" Version="9.6.0" />
     <PackageVersion Include="KubernetesClient" Version="19.0.2" />
     <PackageVersion Include="OllamaSharp" Version="5.4.12" />
@@ -117,7 +117,7 @@
     <PackageVersion Include="RavenDB.TestDriver" Version="6.2.1" />
     <PackageVersion Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.12" />
     <PackageVersion Include="YamlDotNet" Version="18.1.0" />
-    <PackageVersion Include="Microsoft.Agents.AI.GitHub.Copilot" Version="1.27.0" />
+    <PackageVersion Include="Microsoft.Agents.AI.GitHub.Copilot" Version="1.28.0" />
     <PackageVersion Include="Microsoft.Agents.AI.Hosting.OpenAI" Version="1.7.0-alpha.260526.1" />
     <PackageVersion Include="Squad.Agents.AI" Version="1.0.0-preview.43" />
     <PackageVersion Include="SurrealDb.MinimalApis.Extensions" Version="1.0.0" />

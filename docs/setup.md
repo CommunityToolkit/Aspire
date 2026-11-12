@@ -33,6 +33,8 @@ And of course, an editor such as Visual Studio, JetBrains Rider or emacs.
 
 Toolkit packages target both `net10.0` and `net11.0`; tests and examples use the default `net10.0` target. CI installs both SDKs, builds and packages both target frameworks, and runs the full integration-test matrix on `net10.0`.
 
+`global.json` requires the .NET 11 SDK, allowing roll-forward to newer .NET 11 feature bands. It also lets GitHub's automatic dependency submission install an SDK that can restore both target frameworks.
+
 ### Aspire nightly builds
 
 The repository currently targets Aspire **17.0.0-preview.1.26555.11**, an unsupported nightly build from the public `dotnet9` feed. `nuget.config` maps `Aspire.*` packages to that feed; Elasticsearch remains on its last stable package because no Aspire 17 nightly is published for it.
