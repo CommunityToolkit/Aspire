@@ -1,6 +1,9 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography.X509Certificates;
+using CommunityToolkit.Aspire.Hosting.RavenDB;
 
 #pragma warning disable ASPIREATS001 // AspireExport is experimental
+#pragma warning disable CTASPIRERAVENDB001 // The deployment packages' API is this package's own
 
 namespace Aspire.Hosting.ApplicationModel;
 
@@ -66,6 +69,9 @@ public class RavenDBServerResource(string name, bool isSecured) : ContainerResou
     {
         get
         {
+            if (PublishStrategy is { } strategy)
+                return ReferenceExpression.Create($"URL={strategy.Url}");
+
             if (IsSecured && !string.IsNullOrEmpty(PublicServerUrl))
                 return ReferenceExpression.Create($"URL={PublicServerUrl}");
 
@@ -80,9 +86,40 @@ public class RavenDBServerResource(string name, bool isSecured) : ContainerResou
     /// <remarks>
     /// Format: <c>http://{host}:{port}</c> or <c>https://{host}:{port}</c> depending on security settings.
     /// </remarks>
-    public ReferenceExpression UriExpression => ReferenceExpression.Create($"{(IsSecured ? "https://" : "http://")}{Host}:{Port}");
+    public ReferenceExpression UriExpression =>
+        PublishStrategy?.Url ?? ReferenceExpression.Create($"{(IsSecured ? "https://" : "http://")}{Host}:{Port}");
+
+    /// <summary>
+    /// For deployment packages: the strategy that publishes the server somewhere else than its container, such as
+    /// RavenDB Cloud. <see langword="null"/> means the container itself is published.
+    /// </summary>
+    /// <remarks>
+    /// While it is set, the connection string and <see cref="UriExpression"/> point at the strategy's URL. The endpoint
+    /// properties (<see cref="PrimaryEndpoint"/>, <see cref="Host"/>, <see cref="Port"/>) still describe the local
+    /// container, which <c>aspire run</c> starts.
+    /// </remarks>
+    [Experimental("CTASPIRERAVENDB001")]
+    [AspireExportIgnore(Reason = "For deployment packages, not AppHosts.")]
+    public RavenDBPublishStrategy? PublishStrategy { get; private set; }
+
+    /// <summary>
+    /// Publishes the server with <paramref name="strategy"/> instead of its container. A server has one strategy.
+    /// </summary>
+    internal void UsePublishStrategy(RavenDBPublishStrategy strategy)
+    {
+        if (PublishStrategy is { } existing)
+        {
+            throw new DistributedApplicationException(
+                $"RavenDB server '{Name}' is already published with {existing.Name}, so it cannot also be published with " +
+                $"{strategy.Name}. A server has one publish strategy; to use a different one per environment, choose it " +
+                "with an if in the AppHost.");
+        }
+
+        PublishStrategy = strategy;
+    }
 
     private readonly Dictionary<string, string> _databases = new();
+    private readonly HashSet<string> _databasesToCreate = new(StringComparer.Ordinal);
 
     /// <summary>
     /// Gets a read-only dictionary of databases associated with this server resource.
@@ -95,13 +132,34 @@ public class RavenDBServerResource(string name, bool isSecured) : ContainerResou
     /// </summary>
     /// <param name="name">The name of the resource to associate with the database.</param>
     /// <param name="databaseName">The name of the database to add.</param>
-    internal void AddDatabase(string name, string databaseName)
+    /// <param name="ensureCreated">Whether the database is created when the server starts.</param>
+    internal void AddDatabase(string name, string databaseName, bool ensureCreated = false)
     {
         _databases.TryAdd(name, databaseName);
+
+        if (ensureCreated)
+        {
+            _databasesToCreate.Add(databaseName);
+        }
     }
+
+    /// <summary>
+    /// For deployment packages: the names of the databases declared with <c>ensureCreated: true</c>. The AppHost creates
+    /// them in run mode; a publish strategy that deploys the server creates them where it deploys it.
+    /// </summary>
+    [Experimental("CTASPIRERAVENDB001")]
+    [AspireExportIgnore(Reason = "For deployment packages, not AppHosts.")]
+    public IReadOnlyCollection<string> DatabasesToCreate => _databasesToCreate;
 
     IEnumerable<KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties()
     {
+        if (PublishStrategy is { } strategy)
+        {
+            // Host and port of a server published elsewhere are not known separately.
+            yield return new("Uri", strategy.Url);
+            yield break;
+        }
+
         yield return new("Host", ReferenceExpression.Create($"{Host}"));
         yield return new("Port", ReferenceExpression.Create($"{Port}"));
         yield return new("Uri", UriExpression);
