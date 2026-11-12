@@ -6,6 +6,7 @@ using NuGet.Packaging;
 using NuGet.Versioning;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Runtime.Versioning;
 using System.Text.Json;
 using System.Xml.Linq;
 
@@ -112,16 +113,7 @@ internal sealed class SqlProjectDacpacResolver(IHostEnvironment hostEnvironment)
         try
         {
             var projectPath = Path.Combine(temporaryDirectory, "PackageDownload.csproj");
-            var project = new XDocument(
-                new XElement("Project",
-                    new XAttribute("Sdk", "Microsoft.NET.Sdk"),
-                    new XElement("PropertyGroup",
-                        new XElement("TargetFramework", "net8.0"),
-                        new XElement("DisableImplicitFrameworkReferences", "true")),
-                    new XElement("ItemGroup",
-                        new XElement("PackageDownload",
-                            new XAttribute("Include", packageAnnotation.PackageId),
-                            new XAttribute("Version", $"[{packageAnnotation.Version}]")))));
+            var project = CreatePackageDownloadProject(packageAnnotation, AppContext.TargetFrameworkName);
             await File.WriteAllTextAsync(projectPath, project.ToString(SaveOptions.DisableFormatting), cancellationToken);
 
             var processStartInfo = new ProcessStartInfo
@@ -182,6 +174,32 @@ internal sealed class SqlProjectDacpacResolver(IHostEnvironment hostEnvironment)
                 logger.LogWarning(ex, "Unable to remove temporary NuGet restore directory {TemporaryDirectory}.", temporaryDirectory);
             }
         }
+    }
+
+    internal static XDocument CreatePackageDownloadProject(SqlPackageRestoreAnnotation packageAnnotation, string? targetFrameworkName)
+    {
+        if (string.IsNullOrEmpty(targetFrameworkName))
+        {
+            throw new InvalidOperationException("The AppHost target framework is unavailable; cannot restore the NuGet package.");
+        }
+
+        var framework = new FrameworkName(targetFrameworkName);
+        if (framework.Identifier != ".NETCoreApp" || framework.Version.Major < 5)
+        {
+            throw new InvalidOperationException($"The AppHost target framework '{targetFrameworkName}' is not supported for NuGet package restore.");
+        }
+
+        var targetFramework = $"net{framework.Version.Major}.{framework.Version.Minor}";
+        return new XDocument(
+            new XElement("Project",
+                new XAttribute("Sdk", "Microsoft.NET.Sdk"),
+                new XElement("PropertyGroup",
+                    new XElement("TargetFramework", targetFramework),
+                    new XElement("DisableImplicitFrameworkReferences", "true")),
+                new XElement("ItemGroup",
+                    new XElement("PackageDownload",
+                        new XAttribute("Include", packageAnnotation.PackageId),
+                        new XAttribute("Version", $"[{packageAnnotation.Version}]")))));
     }
 
     private static void ValidateRestoredPackage(JsonElement assets, SqlPackageRestoreAnnotation packageAnnotation)

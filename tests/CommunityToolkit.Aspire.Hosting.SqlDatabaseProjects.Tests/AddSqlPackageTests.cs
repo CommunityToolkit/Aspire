@@ -3,12 +3,47 @@ using Microsoft.Extensions.Logging;
 using Microsoft.SqlServer.Dac;
 using System.Collections.Concurrent;
 using System.IO.Compression;
+using System.Runtime.Versioning;
 using System.Xml.Linq;
 
 namespace CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.Tests;
 
 public class AddSqlPackageTests
 {
+    [Theory]
+    [InlineData(".NETCoreApp,Version=v10.0", "net10.0")]
+    [InlineData(".NETCoreApp,Version=v11.0", "net11.0")]
+    public void PackageDownloadProject_TargetsAppHostFramework(string frameworkName, string expectedTargetFramework)
+    {
+        var package = new SqlPackageRestoreAnnotation("Company.Database", "1.2.3", Path.GetTempPath());
+
+        var project = SqlProjectDacpacResolver.CreatePackageDownloadProject(package, frameworkName);
+
+        Assert.Equal(expectedTargetFramework, project.Root?.Element("PropertyGroup")?.Element("TargetFramework")?.Value);
+    }
+
+    [Fact]
+    public void PackageDownloadProject_TargetsRunningAppHostFramework()
+    {
+        var targetAttribute = Assert.Single(typeof(AddSqlPackageTests).Assembly.GetCustomAttributes(typeof(TargetFrameworkAttribute), inherit: false).Cast<TargetFrameworkAttribute>());
+        var version = new FrameworkName(targetAttribute.FrameworkName).Version;
+        var package = new SqlPackageRestoreAnnotation("Company.Database", "1.2.3", Path.GetTempPath());
+
+        var project = SqlProjectDacpacResolver.CreatePackageDownloadProject(package, AppContext.TargetFrameworkName);
+
+        Assert.Equal($"net{version.Major}.{version.Minor}", project.Root?.Element("PropertyGroup")?.Element("TargetFramework")?.Value);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData(".NETFramework,Version=v4.8")]
+    public void PackageDownloadProject_RejectsUnavailableOrUnsupportedFramework(string? frameworkName)
+    {
+        var package = new SqlPackageRestoreAnnotation("Company.Database", "1.2.3", Path.GetTempPath());
+
+        Assert.Throws<InvalidOperationException>(() => SqlProjectDacpacResolver.CreatePackageDownloadProject(package, frameworkName));
+    }
+
     [Fact]
     public void AddSqlPackage_WithPackageMetadata()
     {
