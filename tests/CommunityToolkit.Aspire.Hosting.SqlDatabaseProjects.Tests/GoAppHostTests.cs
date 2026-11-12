@@ -7,7 +7,7 @@ public class GoAppHostTests
     [Fact]
     public async Task GoAppHostCompiles()
     {
-        await SqlPolyglotRestoreDiagnostics.Run("CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.AppHost.Go", () => GoAppHostTest.Run(
+        await SqlPolyglotAppHostTest.Run(() => GoAppHostTest.Run(
             appHostProject: "CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.AppHost.Go",
             exampleName: "sql-database-projects",
             // The prebuilt Windows AppHost server fails to load hostfxr for MSBuildLocator.
