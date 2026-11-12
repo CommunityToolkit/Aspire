@@ -20,10 +20,16 @@ namespace Aspire.Hosting
         public static ApplicationModel.IResourceBuilder<ApplicationModel.RustFsResource> AddRustFs(this IDistributedApplicationBuilder builder, string name, ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource>? accessKey = null, ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource>? secretKey = null, int? port = null, int? consolePort = null) { throw null; }
 
         [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.RustFsResource> WithConsoleHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.RustFsResource> builder, int? port) { throw null; }
+
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.RustFsResource> WithDataBindMount(this ApplicationModel.IResourceBuilder<ApplicationModel.RustFsResource> builder, string source) { throw null; }
 
         [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.RustFsResource> WithDataVolume(this ApplicationModel.IResourceBuilder<ApplicationModel.RustFsResource> builder, string? name = null) { throw null; }
+
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.RustFsResource> WithHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.RustFsResource> builder, int? port) { throw null; }
 
         [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.RustFsResource> WithSigningRegion(this ApplicationModel.IResourceBuilder<ApplicationModel.RustFsResource> builder, string region) { throw null; }

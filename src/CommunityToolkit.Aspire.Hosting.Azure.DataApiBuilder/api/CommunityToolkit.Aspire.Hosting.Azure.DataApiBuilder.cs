@@ -15,6 +15,9 @@ namespace Aspire.Hosting
 
         [AspireExportIgnore(Reason = "Polyglot app hosts use the overload that makes both configFilePaths and httpPort optional.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.DataApiBuilderContainerResource> AddDataAPIBuilder(this IDistributedApplicationBuilder builder, string name, params string[] configFilePaths) { throw null; }
+
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.DataApiBuilderContainerResource> WithHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.DataApiBuilderContainerResource> builder, int? port) { throw null; }
     }
 }
 

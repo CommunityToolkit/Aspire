@@ -23,10 +23,16 @@ namespace Aspire.Hosting
         public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> WithDisabledComponent(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, string component) { throw null; }
 
         [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> WithEnabledComponent(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, string component) { throw null; }
+
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> WithExtraArg(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, string arg) { throw null; }
 
         [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> WithHelmImage(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, string? tag = null, string? image = null, string? registry = null) { throw null; }
+
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> WithHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, int? port) { throw null; }
 
         [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> WithK3sVersion(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, string tag) { throw null; }
@@ -44,12 +50,37 @@ namespace Aspire.Hosting
         public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> WithServiceSubnet(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, string cidr) { throw null; }
     }
 
+    public static partial class K3sCertificateBuilderExtensions
+    {
+        public const string DeveloperCertificateSecretName = "aspire-developer-certificate";
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> WithIngressDeveloperCertificate(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder) { throw null; }
+    }
+
+    public static partial class K3sDnsBuilderExtensions
+    {
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> WithCoreDnsCustomization(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, string fileName, string content) { throw null; }
+
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> WithHostAlias(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, ApplicationModel.IResourceBuilder<ApplicationModel.ContainerResource> resource, string? hostName = null) { throw null; }
+    }
+
     public static partial class K3sHelmBuilderExtensions
     {
         [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.HelmReleaseResource> AddHelmRelease(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, string name, string chart, string? repo = null, string? version = null, string @namespace = "default") { throw null; }
 
-        [AspireExport]
+        [AspireExportIgnore(Reason = "Covered by the withHelmValue export, whose value accepts a string, a parameter, an expression or an endpoint.")]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.HelmReleaseResource> WithHelmValue(this ApplicationModel.IResourceBuilder<ApplicationModel.HelmReleaseResource> builder, string key, ApplicationModel.EndpointReference value) { throw null; }
+
+        [AspireExportIgnore(Reason = "Covered by the withHelmValue export, whose value accepts a string, a parameter, an expression or an endpoint.")]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.HelmReleaseResource> WithHelmValue(this ApplicationModel.IResourceBuilder<ApplicationModel.HelmReleaseResource> builder, string key, ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource> value) { throw null; }
+
+        [AspireExportIgnore(Reason = "Covered by the withHelmValue export, whose value accepts a string, a parameter, an expression or an endpoint.")]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.HelmReleaseResource> WithHelmValue(this ApplicationModel.IResourceBuilder<ApplicationModel.HelmReleaseResource> builder, string key, ApplicationModel.ReferenceExpression value) { throw null; }
+
+        [AspireExportIgnore(Reason = "Covered by the withHelmValue export, whose value accepts a string, a parameter, an expression or an endpoint.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.HelmReleaseResource> WithHelmValue(this ApplicationModel.IResourceBuilder<ApplicationModel.HelmReleaseResource> builder, string key, string value) { throw null; }
 
         [AspireExport]

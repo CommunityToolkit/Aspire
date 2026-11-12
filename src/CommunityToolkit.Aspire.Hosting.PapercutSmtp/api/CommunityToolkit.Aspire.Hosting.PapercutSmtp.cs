@@ -12,6 +12,12 @@ namespace Aspire.Hosting
     {
         [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.PapercutSmtpContainerResource> AddPapercutSmtp(this IDistributedApplicationBuilder builder, string name, int? httpPort = null, int? smtpPort = null) { throw null; }
+
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.PapercutSmtpContainerResource> WithHttpHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.PapercutSmtpContainerResource> builder, int? port) { throw null; }
+
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.PapercutSmtpContainerResource> WithSmtpHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.PapercutSmtpContainerResource> builder, int? port) { throw null; }
     }
 }
 

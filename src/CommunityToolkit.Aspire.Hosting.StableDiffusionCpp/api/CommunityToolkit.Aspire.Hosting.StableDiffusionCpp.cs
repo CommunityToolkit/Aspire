@@ -32,6 +32,9 @@ namespace Aspire.Hosting
         public static ApplicationModel.IResourceBuilder<ApplicationModel.StableDiffusionCppResource> WithGPUSupport(this ApplicationModel.IResourceBuilder<ApplicationModel.StableDiffusionCppResource> builder) { throw null; }
 
         [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.StableDiffusionCppResource> WithHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.StableDiffusionCppResource> builder, int? port) { throw null; }
+
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.StableDiffusionCppResource> WithHuggingFaceToken(this ApplicationModel.IResourceBuilder<ApplicationModel.StableDiffusionCppResource> builder, ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource> token) { throw null; }
 
         [AspireExport]

@@ -36,12 +36,18 @@ namespace Aspire.Hosting
         [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> WithBun(this ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> builder) { throw null; }
 
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> WithClientHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> builder, int? port) { throw null; }
+
         [AspireExport("withInspectedMcpServer", MethodName = "withInspectedMcpServer")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> WithMcpServer<TResource>(this ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> builder, ApplicationModel.IResourceBuilder<TResource> mcpServer, bool isDefault = true, McpTransportType transportType = McpTransportType.StreamableHttp, string path = "/mcp")
             where TResource : ApplicationModel.IResourceWithEndpoints { throw null; }
 
         [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> WithPnpm(this ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> builder) { throw null; }
+
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> WithServerHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> builder, int? port) { throw null; }
 
         [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> WithYarn(this ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> builder) { throw null; }

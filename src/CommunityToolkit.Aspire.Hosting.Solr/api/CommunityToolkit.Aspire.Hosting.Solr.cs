@@ -21,6 +21,9 @@ namespace Aspire.Hosting
 
         [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SolrResource> WithDataVolume(this ApplicationModel.IResourceBuilder<ApplicationModel.SolrResource> builder, string? name = null, bool isReadOnly = false) { throw null; }
+
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.SolrResource> WithHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.SolrResource> builder, int? port) { throw null; }
     }
 
     public sealed partial class SolrConfigSetAnnotation : ApplicationModel.IResourceAnnotation

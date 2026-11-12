@@ -19,6 +19,9 @@ namespace Aspire.Hosting
         [AspireExport("withAuthTokenValue", MethodName = "withAuthTokenValue")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.NgrokResource> WithAuthToken(this ApplicationModel.IResourceBuilder<ApplicationModel.NgrokResource> builder, string ngrokAuthToken) { throw null; }
 
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.NgrokResource> WithHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.NgrokResource> builder, int? port) { throw null; }
+
         [AspireExportIgnore(Reason = "IDictionary<string, string> is not ATS-compatible. Use the IReadOnlyDictionary<string, string> overload instead.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.NgrokResource> WithTunnelEndpoint<TResource>(this ApplicationModel.IResourceBuilder<ApplicationModel.NgrokResource> builder, ApplicationModel.IResourceBuilder<TResource> resource, string endpointName, string? ngrokUrl = null, System.Collections.Generic.IDictionary<string, string>? labels = null)
             where TResource : ApplicationModel.IResourceWithEndpoints { throw null; }

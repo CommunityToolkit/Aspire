@@ -18,6 +18,9 @@ namespace Aspire.Hosting
 
         [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.MosquittoServerResource> WithDataVolume(this ApplicationModel.IResourceBuilder<ApplicationModel.MosquittoServerResource> builder, string? name = null, bool isReadOnly = false) { throw null; }
+
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.MosquittoServerResource> WithHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.MosquittoServerResource> builder, int? port) { throw null; }
     }
 }
 
