@@ -91,7 +91,7 @@
          fix) depends on SDK 1.0.20 and MAF 1.24.0+, and its buildTransitive bridge points
          MAF 1.26.0 at the SDK 1.0.20 build targets.
          Keep the Squad sample's direct SDK reference aligned with those build targets. -->
-    <PackageVersion Include="GitHub.Copilot.SDK" Version="1.0.20" />
+    <PackageVersion Include="GitHub.Copilot.SDK" Version="1.0.31" />
     <PackageVersion Include="JsonSchema.Net" Version="9.6.0" />
     <PackageVersion Include="KubernetesClient" Version="19.0.2" />
     <PackageVersion Include="OllamaSharp" Version="5.4.12" />
