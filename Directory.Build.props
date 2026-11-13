@@ -4,7 +4,8 @@
   <PropertyGroup>
     
     <DefaultTargetFramework>net10.0</DefaultTargetFramework>
-    <TargetFrameworks>$(DefaultTargetFramework)</TargetFrameworks>
+    <!-- File-based apps (the eng/**/*.cs scripts) keep the target framework of the SDK that runs them. -->
+    <TargetFrameworks Condition="'$(FileBasedProgram)' != 'true'">$(DefaultTargetFramework)</TargetFrameworks>
     <!-- Source packages target both frameworks; tests and examples retain the default net10.0 target. -->
     <AllTargetFrameworks>$(DefaultTargetFramework);net11.0</AllTargetFrameworks>
     <LangVersion>latest</LangVersion>
