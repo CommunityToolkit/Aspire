@@ -1,0 +1,13 @@
+{
+  "appHost": {
+    "path": "apphost.go",
+    "language": "go"
+  },
+  "sdk": {
+    "version": "17.0.0-preview.1.26555.11"
+  },
+  "packages": {
+    "CommunityToolkit.Aspire.Hosting.Logto": "../../../src/CommunityToolkit.Aspire.Hosting.Logto/CommunityToolkit.Aspire.Hosting.Logto.csproj",
+    "Aspire.Hosting.Dotnet": "17.0.0-preview.1.26555.11"
+  }
+}

@@ -9,11 +9,11 @@ public class TypeScriptAppHostTests
     [Fact]
     public async Task TypeScriptAppHostCompilesAndStarts()
     {
-        await TypeScriptAppHostTest.Run(
+        await SqlPolyglotAppHostTest.Run(() => TypeScriptAppHostTest.Run(
             appHostProject: "CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.AppHost.TypeScript",
             packageName: "CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects",
             exampleName: "sql-database-projects",
             waitForResources: [],
-            cancellationToken: TestContext.Current.CancellationToken);
+            cancellationToken: TestContext.Current.CancellationToken));
     }
 }

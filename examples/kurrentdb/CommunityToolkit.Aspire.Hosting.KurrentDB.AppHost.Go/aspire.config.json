@@ -1,0 +1,12 @@
+{
+  "appHost": {
+    "path": "apphost.go",
+    "language": "go"
+  },
+  "sdk": {
+    "version": "17.0.0-preview.1.26555.11"
+  },
+  "packages": {
+    "CommunityToolkit.Aspire.Hosting.KurrentDB": "../../../src/CommunityToolkit.Aspire.Hosting.KurrentDB/CommunityToolkit.Aspire.Hosting.KurrentDB.csproj"
+  }
+}

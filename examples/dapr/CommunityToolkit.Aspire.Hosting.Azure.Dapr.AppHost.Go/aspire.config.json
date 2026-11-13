@@ -1,0 +1,13 @@
+{
+  "appHost": {
+    "path": "apphost.go",
+    "language": "go"
+  },
+  "sdk": {
+    "version": "17.0.0-preview.1.26555.11"
+  },
+  "packages": {
+    "CommunityToolkit.Aspire.Hosting.Azure.Dapr": "../../../src/CommunityToolkit.Aspire.Hosting.Azure.Dapr/CommunityToolkit.Aspire.Hosting.Azure.Dapr.csproj",
+    "Aspire.Hosting.Dotnet": "17.0.0-preview.1.26555.11"
+  }
+}

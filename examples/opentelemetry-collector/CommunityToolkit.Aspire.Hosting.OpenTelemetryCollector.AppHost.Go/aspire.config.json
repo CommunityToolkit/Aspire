@@ -1,0 +1,12 @@
+{
+  "appHost": {
+    "path": "apphost.go",
+    "language": "go"
+  },
+  "sdk": {
+    "version": "17.0.0-preview.1.26555.11"
+  },
+  "packages": {
+    "CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector": "../../../src/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.csproj"
+  }
+}
