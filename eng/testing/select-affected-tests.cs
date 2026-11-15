@@ -1,5 +1,7 @@
 #!/usr/bin/env dotnet run
 
+#:property TargetFramework=net10.0
+
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Text;

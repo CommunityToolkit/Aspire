@@ -19,6 +19,8 @@ public class AffectedGoAppHostSelectionTests
 
         try
         {
+            // Reproduce the repository's restore target even when the selected SDK defaults to a newer framework.
+            WriteFile(fixture, "Directory.Build.props", "<Project><PropertyGroup><TargetFrameworks>net10.0</TargetFrameworks></PropertyGroup></Project>");
             WriteFile(fixture, "tests/Directory.Build.props", "<Project />");
             WriteFile(fixture, "tests/CommunityToolkit.Aspire.Hosting.One.Tests/CommunityToolkit.Aspire.Hosting.One.Tests.csproj", "<Project />");
             WriteFile(fixture, "tests/CommunityToolkit.Aspire.Hosting.One.Tests/GoAppHostTests.cs",
