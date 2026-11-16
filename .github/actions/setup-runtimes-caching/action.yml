@@ -81,12 +81,6 @@ runs:
         go-version: "^1.26"
         cache: false
 
-    - uses: actions/setup-java@v6
-      name: Set up Java
-      with:
-        distribution: "microsoft"
-        java-version: "21"
-
     - uses: actions/setup-node@v7
       name: Set up Node.js
       with:
