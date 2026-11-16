@@ -11,6 +11,8 @@ namespace Microsoft.Extensions.Hosting;
 /// </summary>
 public static class AspireVLLMExtensions
 {
+    private static readonly object s_healthCheckNamesKey = new();
+
     /// <summary>
     /// The configuration section used for shared and per-connection vLLM settings.
     /// </summary>
@@ -93,7 +95,7 @@ public static class AspireVLLMExtensions
 
         if (!settings.DisableHealthChecks)
         {
-            var healthCheckName = serviceKey is null ? "VLLM" : $"VLLM_{serviceKey}";
+            var healthCheckName = GetHealthCheckName(builder, serviceKey);
             var httpClientName = $"{connectionName}_vllm_healthcheck";
             var endpoint = settings.Endpoint;
 
@@ -107,5 +109,36 @@ public static class AspireVLLMExtensions
         }
 
         return new AspireVLLMClientBuilder(builder, connectionName, serviceKey, settings);
+    }
+
+    private static string GetHealthCheckName(IHostApplicationBuilder builder, object? serviceKey)
+    {
+        if (serviceKey is null)
+        {
+            return "VLLM";
+        }
+
+        if (!builder.Properties.TryGetValue(s_healthCheckNamesKey, out var value))
+        {
+            value = new Dictionary<object, string>();
+            builder.Properties.Add(s_healthCheckNamesKey, value);
+        }
+
+        var names = (Dictionary<object, string>)value;
+        if (names.TryGetValue(serviceKey, out var name))
+        {
+            return name;
+        }
+
+        var baseName = $"VLLM_{serviceKey}";
+        name = baseName;
+        var suffix = 2;
+        while (names.Values.Contains(name, StringComparer.OrdinalIgnoreCase))
+        {
+            name = $"{baseName}_{suffix++}";
+        }
+
+        names.Add(serviceKey, name);
+        return name;
     }
 }

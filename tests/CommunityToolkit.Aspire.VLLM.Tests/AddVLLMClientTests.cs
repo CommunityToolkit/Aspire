@@ -184,17 +184,55 @@ public class AddVLLMClientTests
     }
 
     [Fact]
-    public void KeyedVLLMClientsWithSameConnectionNameRegisterIndependentHealthChecks()
+    public async Task KeyedVLLMClientsWithSameConnectionNameRegisterIndependentHealthChecks()
     {
         var builder = CreateBuilder();
-        builder.AddKeyedVLLMClient("first", ConnectionName, s => s.Endpoint = new Uri("http://localhost:8001"));
-        builder.AddKeyedVLLMClient("second", ConnectionName, s => s.Endpoint = new Uri("http://localhost:8002"));
+        builder.AddKeyedVLLMClient("first", ConnectionName, s => s.Endpoint = new Uri("http://first"));
+        builder.AddKeyedVLLMClient("second", ConnectionName, s => s.Endpoint = new Uri("http://second"));
+        ConfigureHealthCheckHandler(builder);
 
         using var host = builder.Build();
 
-        var registrations = GetHealthCheckRegistrations(host);
-        Assert.Contains(registrations, registration => registration.Name == "VLLM_first");
-        Assert.Contains(registrations, registration => registration.Name == "VLLM_second");
+        var report = await host.Services.GetRequiredService<HealthCheckService>().CheckHealthAsync(TestContext.Current.CancellationToken);
+        Assert.Equal(2, report.Entries.Count);
+        Assert.Equal(HealthStatus.Healthy, report.Entries["VLLM_first"].Status);
+        Assert.Equal(HealthStatus.Unhealthy, report.Entries["VLLM_second"].Status);
+    }
+
+    [Theory]
+    [InlineData("same", "SAME")]
+    [InlineData("1", 1)]
+    public async Task DistinctServiceKeysWithCollidingNamesHaveIndependentHealthChecks(object firstKey, object secondKey)
+    {
+        var builder = CreateBuilder();
+        builder.AddKeyedVLLMClient(firstKey, ConnectionName, s => s.Endpoint = new Uri("http://first"));
+        builder.AddKeyedVLLMClient(secondKey, ConnectionName, s => s.Endpoint = new Uri("http://second"));
+        builder.AddKeyedVLLMClient(firstKey, ConnectionName, s => s.Endpoint = new Uri("http://first"));
+        ConfigureHealthCheckHandler(builder);
+
+        using var host = builder.Build();
+
+        var report = await host.Services.GetRequiredService<HealthCheckService>().CheckHealthAsync(TestContext.Current.CancellationToken);
+        Assert.Equal(2, report.Entries.Count);
+        Assert.Single(report.Entries.Values, entry => entry.Status == HealthStatus.Healthy);
+        Assert.Single(report.Entries.Values, entry => entry.Status == HealthStatus.Unhealthy);
+    }
+
+    [Fact]
+    public async Task ServiceKeyMatchingGeneratedSuffixHasIndependentHealthCheck()
+    {
+        var builder = CreateBuilder();
+        builder.AddKeyedVLLMClient("first", ConnectionName, s => s.Endpoint = new Uri("http://first"));
+        builder.AddKeyedVLLMClient("FIRST", ConnectionName, s => s.Endpoint = new Uri("http://second"));
+        builder.AddKeyedVLLMClient("FIRST_2", ConnectionName, s => s.Endpoint = new Uri("http://third"));
+        ConfigureHealthCheckHandler(builder);
+
+        using var host = builder.Build();
+
+        var report = await host.Services.GetRequiredService<HealthCheckService>().CheckHealthAsync(TestContext.Current.CancellationToken);
+        Assert.Equal(3, report.Entries.Count);
+        Assert.Equal(2, report.Entries.Values.Count(entry => entry.Status == HealthStatus.Healthy));
+        Assert.Single(report.Entries.Values, entry => entry.Status == HealthStatus.Unhealthy);
     }
 
     [Fact]
@@ -224,4 +262,24 @@ public class AddVLLMClientTests
 
     private static ICollection<HealthCheckRegistration> GetHealthCheckRegistrations(IHost host) =>
         host.Services.GetRequiredService<IOptions<HealthCheckServiceOptions>>().Value.Registrations;
+
+    private static void ConfigureHealthCheckHandler(HostApplicationBuilder builder) =>
+        builder.Services.AddHttpClient($"{ConnectionName}_vllm_healthcheck")
+            .ConfigurePrimaryHttpMessageHandler(() => new HealthCheckHandler());
+
+    private sealed class HealthCheckHandler : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            var statusCode = request.RequestUri?.AbsoluteUri switch
+            {
+                "http://first/health" => HttpStatusCode.OK,
+                "http://second/health" => HttpStatusCode.ServiceUnavailable,
+                "http://third/health" => HttpStatusCode.OK,
+                _ => throw new InvalidOperationException($"Unexpected health check URI: {request.RequestUri}"),
+            };
+
+            return Task.FromResult(new HttpResponseMessage(statusCode));
+        }
+    }
 }
