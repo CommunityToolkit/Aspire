@@ -4,7 +4,6 @@ using CommunityToolkit.Aspire.Testing;
 namespace CommunityToolkit.Aspire.Hosting.VLLM.Tests;
 
 [RequiresDocker]
-[Collection("VLLM Docker AppHosts")]
 public class AppHostTests(AspireIntegrationTestFixture<Projects.VLLM_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.VLLM_AppHost>>
 {
     [Fact]

@@ -3,7 +3,6 @@ using CommunityToolkit.Aspire.Testing;
 namespace CommunityToolkit.Aspire.Hosting.VLLM.Tests;
 
 [RequiresDocker]
-[Collection("VLLM Docker AppHosts")]
 public class TypeScriptAppHostTests
 {
     [Fact]
