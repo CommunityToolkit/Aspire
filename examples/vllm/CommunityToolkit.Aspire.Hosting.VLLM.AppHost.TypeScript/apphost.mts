@@ -10,8 +10,8 @@ await vllm.withImage("vllm/vllm-openai-cpu", { tag: "v0.33.0" });
 await vllm.withDataVolume();
 await vllm.withModel("facebook/opt-125m");
 await vllm.withServedModelName("opt");
-// Limit warmup and concurrency for this CPU-only example.
-await vllm.withArgs(["--max-num-seqs", "1"]);
+// Avoid JIT warmup for this CPU-only example.
+await vllm.withArgs(["--enforce-eager"]);
 // The CPU build otherwise reserves most of the host memory for the KV cache (in GiB).
 await vllm.withEnvironment("VLLM_CPU_KVCACHE_SPACE", "1");
 

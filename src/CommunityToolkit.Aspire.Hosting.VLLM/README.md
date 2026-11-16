@@ -38,7 +38,7 @@ vLLM's engine processes communicate through shared memory, so the container star
 
 To run without a GPU, use vLLM's CPU image, for example `.WithImage("vllm/vllm-openai-cpu", "v0.33.0")`. The CPU image reserves most of the host memory for the KV cache by default; set `VLLM_CPU_KVCACHE_SPACE` (in GiB) with `.WithEnvironment("VLLM_CPU_KVCACHE_SPACE", "1")` to limit it.
 
-For low-resource CPU development or smoke tests, `.WithArgs("--max-num-seqs", "1")` limits concurrent sequences and can reduce startup warmup. Increase it for workloads that need more concurrency.
+For low-resource CPU development or smoke tests, `.WithArgs("--enforce-eager")` can reduce startup time by disabling graph compilation and JIT warmup. This may reduce inference throughput compared with compiled execution.
 
 ## Additional Information
 

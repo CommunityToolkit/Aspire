@@ -4,8 +4,8 @@ var builder = DistributedApplication.CreateBuilder(args);
 builder.AddVLLM("vllm")
     .WithImage("vllm/vllm-openai-cpu", "v0.33.0")
     .WithModel("facebook/opt-125m")
-    // Keep CPU warmup practical on small CI runners; the smoke test uses one sequence.
-    .WithArgs("--max-model-len", "512", "--max-num-seqs", "1")
+    // Avoid CPU JIT warmup on small CI runners.
+    .WithArgs("--max-model-len", "512", "--enforce-eager")
     // The CPU build otherwise reserves most of the host memory for the KV cache (in GiB).
     .WithEnvironment("VLLM_CPU_KVCACHE_SPACE", "1");
 
