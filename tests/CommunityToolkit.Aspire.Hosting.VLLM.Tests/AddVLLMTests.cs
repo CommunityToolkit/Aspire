@@ -161,6 +161,22 @@ public class AddVLLMTests
         Assert.Equal(["Qwen/Qwen3-0.6B", "--dtype", "bfloat16", "--served-model-name", "my-model"], args);
     }
 
+    [Fact]
+    public async Task WithModelReplacesPreviousValue()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        builder.AddVLLM("vllm")
+            .WithModel("model-a")
+            .WithArgs("--dtype", "bfloat16")
+            .WithModel("model-b");
+
+        using var app = builder.Build();
+
+        var args = await ArgumentEvaluator.GetArgumentListAsync(AssertSingleResource(app));
+
+        Assert.Equal(["model-b", "--dtype", "bfloat16"], args);
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("hf-cache")]

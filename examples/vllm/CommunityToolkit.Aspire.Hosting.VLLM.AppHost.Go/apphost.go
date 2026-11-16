@@ -11,14 +11,9 @@ func main() {
 		log.Fatal(aspire.FormatError(err))
 	}
 
-	hfToken := builder.AddParameter("hf-token", &aspire.AddParameterOptions{
-		Value: aspire.StringPtr("hf-token-value"), Secret: aspire.BoolPtr(true),
-	})
-
 	vllm := builder.AddVLLM("vllm").
 		WithGPUSupport().
 		WithDataVolume().
-		WithHuggingFaceToken(hfToken).
 		WithModel("Qwen/Qwen3-0.6B").
 		WithServedModelName("qwen")
 	_ = vllm.ConnectionStringExpression()

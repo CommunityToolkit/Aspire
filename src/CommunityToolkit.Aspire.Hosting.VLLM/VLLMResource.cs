@@ -23,6 +23,11 @@ public class VLLMResource(string name) : ContainerResource(name), IResourceWithC
     private EndpointReference? _primaryEndpoint;
 
     /// <summary>
+    /// Gets or sets the model to pass as the resource's positional argument.
+    /// </summary>
+    internal string? Model { get; set; }
+
+    /// <summary>
     /// Gets the primary HTTP endpoint that exposes the OpenAI-compatible API.
     /// </summary>
     public EndpointReference PrimaryEndpoint => _primaryEndpoint ??= new(this, PrimaryEndpointName);

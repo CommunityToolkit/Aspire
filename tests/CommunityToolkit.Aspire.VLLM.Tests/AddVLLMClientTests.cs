@@ -184,6 +184,20 @@ public class AddVLLMClientTests
     }
 
     [Fact]
+    public void KeyedVLLMClientsWithSameConnectionNameRegisterIndependentHealthChecks()
+    {
+        var builder = CreateBuilder();
+        builder.AddKeyedVLLMClient("first", ConnectionName, s => s.Endpoint = new Uri("http://localhost:8001"));
+        builder.AddKeyedVLLMClient("second", ConnectionName, s => s.Endpoint = new Uri("http://localhost:8002"));
+
+        using var host = builder.Build();
+
+        var registrations = GetHealthCheckRegistrations(host);
+        Assert.Contains(registrations, registration => registration.Name == "VLLM_first");
+        Assert.Contains(registrations, registration => registration.Name == "VLLM_second");
+    }
+
+    [Fact]
     public void AddKeyedChatClientOnNonKeyedClientThrows()
     {
         var builder = CreateBuilder();

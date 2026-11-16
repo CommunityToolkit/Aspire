@@ -93,7 +93,7 @@ public static class AspireVLLMExtensions
 
         if (!settings.DisableHealthChecks)
         {
-            var healthCheckName = serviceKey is null ? "VLLM" : $"VLLM_{connectionName}";
+            var healthCheckName = serviceKey is null ? "VLLM" : $"VLLM_{serviceKey}";
             var httpClientName = $"{connectionName}_vllm_healthcheck";
             var endpoint = settings.Endpoint;
 

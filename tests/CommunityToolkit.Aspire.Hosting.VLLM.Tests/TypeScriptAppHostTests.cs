@@ -13,6 +13,7 @@ public class TypeScriptAppHostTests
             packageName: "CommunityToolkit.Aspire.Hosting.VLLM",
             exampleName: "vllm",
             waitForResources: ["vllm"],
+            waitStatus: "up",
             waitTimeoutSeconds: 900,
             cancellationToken: TestContext.Current.CancellationToken);
     }

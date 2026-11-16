@@ -100,6 +100,7 @@ public static class VLLMResourceBuilderExtensions
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     /// <remarks>
     /// The model is passed as the first positional argument to <c>vllm serve</c>, regardless of when other arguments are added.
+    /// Calling this method again replaces the previously selected model.
     /// </remarks>
     [AspireExport("withVLLMModel", MethodName = "withModel")]
     public static IResourceBuilder<VLLMResource> WithModel(this IResourceBuilder<VLLMResource> builder, string model)
@@ -107,7 +108,13 @@ public static class VLLMResourceBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(model);
 
-        return builder.WithArgs(context => context.Args.Insert(0, model));
+        var resource = builder.Resource;
+        var isFirstModel = resource.Model is null;
+        resource.Model = model;
+
+        return isFirstModel
+            ? builder.WithArgs(context => context.Args.Insert(0, resource.Model!))
+            : builder;
     }
 
     /// <summary>
