@@ -7,6 +7,13 @@ namespace Microsoft.Extensions.Hosting;
 /// </summary>
 public sealed class AspireVLLMClientBuilder
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AspireVLLMClientBuilder"/> class.
+    /// </summary>
+    /// <param name="hostBuilder">The application builder on which clients are registered.</param>
+    /// <param name="connectionName">The name of the vLLM connection.</param>
+    /// <param name="serviceKey">The key for keyed registrations, or <see langword="null"/> for unkeyed registrations.</param>
+    /// <param name="settings">The resolved client settings.</param>
     internal AspireVLLMClientBuilder(IHostApplicationBuilder hostBuilder, string connectionName, object? serviceKey, VLLMClientSettings settings)
     {
         HostBuilder = hostBuilder;

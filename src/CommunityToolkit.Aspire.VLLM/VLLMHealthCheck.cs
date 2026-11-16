@@ -5,10 +5,13 @@ namespace CommunityToolkit.Aspire.VLLM;
 /// <summary>
 /// A health check that probes the vLLM <c>/health</c> endpoint, which succeeds once the model is loaded.
 /// </summary>
+/// <param name="httpClient">The HTTP client used to probe the server.</param>
+/// <param name="endpoint">The base endpoint of the vLLM server.</param>
 internal sealed class VLLMHealthCheck(HttpClient httpClient, Uri endpoint) : IHealthCheck
 {
     private readonly Uri _healthUri = new(new Uri(endpoint.AbsoluteUri.TrimEnd('/') + "/"), "health");
 
+    /// <inheritdoc />
     public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
     {
         try

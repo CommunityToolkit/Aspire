@@ -11,6 +11,9 @@ namespace Microsoft.Extensions.Hosting;
 /// </summary>
 public static class AspireVLLMExtensions
 {
+    /// <summary>
+    /// The configuration section used for shared and per-connection vLLM settings.
+    /// </summary>
     internal const string DefaultConfigSectionName = "Aspire:VLLM";
 
     /// <summary>

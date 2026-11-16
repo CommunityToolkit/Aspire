@@ -7,7 +7,9 @@ namespace CommunityToolkit.Aspire.VLLM;
 /// </summary>
 public sealed class VLLMClientSettings
 {
-    // vLLM ignores the API key unless started with --api-key, but the OpenAI client requires a non-empty credential.
+    /// <summary>
+    /// A non-secret placeholder required by the OpenAI client when vLLM authentication is not configured.
+    /// </summary>
     internal const string PlaceholderApiKey = "not-used";
 
     /// <summary>
@@ -55,6 +57,10 @@ public sealed class VLLMClientSettings
     /// </value>
     public bool EnableSensitiveTelemetryData { get; set; }
 
+    /// <summary>
+    /// Applies a base HTTP URI or the endpoint, key, and model values from a connection string.
+    /// </summary>
+    /// <param name="connectionString">The connection string, or <see langword="null"/> to leave the settings unchanged.</param>
     internal void ParseConnectionString(string? connectionString)
     {
         if (string.IsNullOrWhiteSpace(connectionString))

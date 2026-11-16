@@ -10,7 +10,14 @@ namespace Aspire.Hosting.ApplicationModel;
 [AspireExport(ExposeProperties = true)]
 public class VLLMResource(string name) : ContainerResource(name), IResourceWithConnectionString
 {
+    /// <summary>
+    /// The name of the HTTP endpoint that exposes the vLLM API.
+    /// </summary>
     internal const string PrimaryEndpointName = "http";
+
+    /// <summary>
+    /// The default HTTP port inside the vLLM container.
+    /// </summary>
     internal const int DefaultContainerPort = 8000;
 
     private EndpointReference? _primaryEndpoint;
@@ -46,6 +53,7 @@ public class VLLMResource(string name) : ContainerResource(name), IResourceWithC
     public ReferenceExpression UriExpression =>
         ReferenceExpression.Create($"{PrimaryEndpoint.Property(EndpointProperty.Scheme)}://{Host}:{Port}");
 
+    /// <inheritdoc />
     IEnumerable<KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties()
     {
         yield return new("Host", ReferenceExpression.Create($"{Host}"));
