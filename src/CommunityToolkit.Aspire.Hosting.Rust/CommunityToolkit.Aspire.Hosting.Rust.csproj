@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <AdditionalPackageTags>hosting Rust</AdditionalPackageTags>
-    <Description>An Aspire integration for hosting Rust apps.</Description>
+    <AdditionalPackageTags>hosting Rust Bacon</AdditionalPackageTags>
+    <Description>An Aspire integration for running Rust applications with Bacon.</Description>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting" />
+    <PackageReference Include="Aspire.Hosting.Rust" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" VersionOverride="10.0.14" />
   </ItemGroup>
 

@@ -2,18 +2,6 @@
 
 -   @aaronpowell
 
-# CommunityToolkit.Aspire.Hosting.Java
-
-/examples/java/ @justinyoo
-/src/CommunityToolkit.Aspire.Hosting.Java/ @justinyoo
-/tests/CommunityToolkit.Aspire.Hosting.Java/ @justinyoo
-
-# CommunityToolkit.Aspire.Hosting.Golang
-
-/examples/golang/ @tommasodotNET
-/src/CommunityToolkit.Aspire.Hosting.Golang/ @tommasodotNET
-/tests/CommunityToolkit.Aspire.Hosting.Golang/ @tommasodotNET
-
 # CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder
 
 /examples/data-api-builder/ @tommasodotNET @FBoucher

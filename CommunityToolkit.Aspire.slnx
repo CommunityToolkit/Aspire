@@ -72,12 +72,6 @@
     <Project Path="examples/goff/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.AppHost/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.AppHost.csproj" />
     <Project Path="examples/goff/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.ServiceDefaults/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.ServiceDefaults.csproj" />
   </Folder>
-  <Folder Name="/examples/java/">
-    <Project Path="examples/java/CommunityToolkit.Aspire.Hosting.Java.ApiApp/CommunityToolkit.Aspire.Hosting.Java.ApiApp.csproj" />
-    <Project Path="examples/java/CommunityToolkit.Aspire.Hosting.Java.AppHost/CommunityToolkit.Aspire.Hosting.Java.AppHost.csproj" />
-    <Project Path="examples/java/CommunityToolkit.Aspire.Hosting.Java.ServiceDefaults/CommunityToolkit.Aspire.Hosting.Java.ServiceDefaults.csproj" />
-    <Project Path="examples/java/CommunityToolkit.Aspire.Hosting.Java.WebApp/CommunityToolkit.Aspire.Hosting.Java.WebApp.csproj" />
-  </Folder>
   <Folder Name="/examples/k3s/">
     <Project Path="examples/k3s/CommunityToolkit.Aspire.Hosting.K3s.AppHost/CommunityToolkit.Aspire.Hosting.K3s.AppHost.csproj" />
   </Folder>
@@ -288,8 +282,6 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Floci/CommunityToolkit.Aspire.Hosting.Floci.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Flyway/CommunityToolkit.Aspire.Hosting.Flyway.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.GoFeatureFlag/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.csproj" />
-    <Project Path="src/CommunityToolkit.Aspire.Hosting.Golang/CommunityToolkit.Aspire.Hosting.Golang.csproj" />
-    <Project Path="src/CommunityToolkit.Aspire.Hosting.Java/CommunityToolkit.Aspire.Hosting.Java.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.JavaScript.Extensions/CommunityToolkit.Aspire.Hosting.JavaScript.Extensions.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.K3s/CommunityToolkit.Aspire.Hosting.K3s.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.k6/CommunityToolkit.Aspire.Hosting.k6.csproj" />
@@ -373,7 +365,6 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Floci.Tests/CommunityToolkit.Aspire.Hosting.Floci.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Flyway.Tests/CommunityToolkit.Aspire.Hosting.Flyway.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.Tests/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.Tests.csproj" />
-    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Java.Tests/CommunityToolkit.Aspire.Hosting.Java.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.JavaScript.Extensions.Tests/CommunityToolkit.Aspire.Hosting.JavaScript.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.K3s.Tests/CommunityToolkit.Aspire.Hosting.K3s.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.k6.Tests/CommunityToolkit.Aspire.Hosting.k6.Tests.csproj" />

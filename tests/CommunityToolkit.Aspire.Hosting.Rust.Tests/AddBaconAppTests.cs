@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Aspire.Hosting;
+using Aspire.Hosting.Rust;
 using CommunityToolkit.Aspire.Utils;
 using CommunityToolkit.Aspire.Testing;
 
@@ -20,7 +21,7 @@ public class AddBaconAppTests
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var resource = Assert.Single(appModel.Resources.OfType<RustAppExecutableResource>());
+        var resource = Assert.Single(appModel.Resources.OfType<RustAppResource>());
         workingDirectory = Path.Combine(appBuilder.AppHostDirectory, workingDirectory).NormalizePathForCurrentPlatform();
         Assert.Equal("bacon-app", resource.Name);
         Assert.Equal(workingDirectory, resource.WorkingDirectory);
@@ -42,7 +43,7 @@ public class AddBaconAppTests
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var resource = Assert.Single(appModel.Resources.OfType<RustAppExecutableResource>());
+        var resource = Assert.Single(appModel.Resources.OfType<RustAppResource>());
         workingDirectory = Path.Combine(appBuilder.AppHostDirectory, workingDirectory).NormalizePathForCurrentPlatform();
         Assert.Equal("bacon-app", resource.Name);
         Assert.Equal(workingDirectory, resource.WorkingDirectory);
@@ -50,5 +51,19 @@ public class AddBaconAppTests
         var args = await resource.GetArgumentListAsync();
         Assert.Collection(args,
             arg => Assert.Equal("check", arg));
+    }
+
+    [Fact]
+    public async Task BaconAndUpstreamRustAppsCanCoexist()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        var rust = appBuilder.AddRustApp("rust-app", "../../examples/rust/actix_api");
+        var bacon = appBuilder.AddBaconApp("bacon-app", "../../examples/rust/actix_api", []);
+
+        await using var app = appBuilder.Build();
+
+        Assert.Equal("cargo", rust.Resource.Command);
+        Assert.Equal("bacon", bacon.Resource.Command);
+        Assert.Equal(["run"], await bacon.Resource.GetArgumentListAsync());
     }
 }
