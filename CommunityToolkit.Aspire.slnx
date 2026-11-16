@@ -163,6 +163,10 @@
     <Project Path="examples/ollama/CommunityToolkit.Aspire.Hosting.Ollama.ServiceDefaults/CommunityToolkit.Aspire.Hosting.Ollama.ServiceDefaults.csproj" />
     <Project Path="examples/ollama/CommunityToolkit.Aspire.Hosting.Ollama.Web/CommunityToolkit.Aspire.Hosting.Ollama.Web.csproj" />
   </Folder>
+  <Folder Name="/examples/vllm/">
+    <Project Path="examples/vllm/CommunityToolkit.Aspire.Hosting.VLLM.AppHost/CommunityToolkit.Aspire.Hosting.VLLM.AppHost.csproj" />
+    <Project Path="examples/vllm/CommunityToolkit.Aspire.Hosting.VLLM.ConsumerApp/CommunityToolkit.Aspire.Hosting.VLLM.ConsumerApp.csproj" />
+  </Folder>
   <Folder Name="/examples/opentelemetry-collector/">
     <Project Path="examples/opentelemetry-collector/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.Api/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.Api.csproj" />
     <Project Path="examples/opentelemetry-collector/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.AppHost/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.AppHost.csproj" />
@@ -330,6 +334,7 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Stripe/CommunityToolkit.Aspire.Hosting.Stripe.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.SurrealDb/CommunityToolkit.Aspire.Hosting.SurrealDb.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Tempo/CommunityToolkit.Aspire.Hosting.Tempo.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.VLLM/CommunityToolkit.Aspire.Hosting.VLLM.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Zitadel/CommunityToolkit.Aspire.Hosting.Zitadel.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.DuckDB.NET.Data/CommunityToolkit.Aspire.DuckDB.NET.Data.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.KurrentDB/CommunityToolkit.Aspire.KurrentDB.csproj" />
@@ -344,6 +349,7 @@
     <Project Path="src/CommunityToolkit.Aspire.SeaweedFS.Client/CommunityToolkit.Aspire.SeaweedFS.Client.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Sftp/CommunityToolkit.Aspire.Sftp.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.SurrealDb/CommunityToolkit.Aspire.SurrealDb.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.VLLM/CommunityToolkit.Aspire.VLLM.csproj" />
     <Project Path="src\CommunityToolkit.Aspire.Hosting.Keycloak.Extensions\CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.csproj" />
     <Project Path="src\CommunityToolkit.Aspire.Hosting.Umami\CommunityToolkit.Aspire.Hosting.Umami.csproj" />
   </Folder>
@@ -414,6 +420,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Stripe.Tests/CommunityToolkit.Aspire.Hosting.Stripe.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.SurrealDb.Tests/CommunityToolkit.Aspire.Hosting.SurrealDb.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Tempo.Tests/CommunityToolkit.Aspire.Hosting.Tempo.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.VLLM.Tests/CommunityToolkit.Aspire.Hosting.VLLM.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Zitadel.Tests/CommunityToolkit.Aspire.Hosting.Zitadel.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.DuckDB.NET.Data.Tests/CommunityToolkit.Aspire.DuckDB.NET.Data.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.KurrentDB.Tests/CommunityToolkit.Aspire.KurrentDB.Tests.csproj" />
@@ -429,6 +436,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.Sftp.Tests/CommunityToolkit.Aspire.Sftp.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.SurrealDb.Tests/CommunityToolkit.Aspire.SurrealDb.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Testing/CommunityToolkit.Aspire.Testing.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.VLLM.Tests/CommunityToolkit.Aspire.VLLM.Tests.csproj" />
     <Project Path="tests\CommunityToolkit.Aspire.Hosting.Umami.Tests\CommunityToolkit.Aspire.Hosting.Umami.Tests.csproj" />
   </Folder>
   <Folder Name="/tests/Dapr/">
@@ -438,5 +446,6 @@
   </Folder>
   <Folder Name="/tests/tests-app-hosts/">
     <Project Path="tests-app-hosts/Ollama.AppHost/Ollama.AppHost.csproj" />
+    <Project Path="tests-app-hosts/VLLM.AppHost/VLLM.AppHost.csproj" />
   </Folder>
 </Solution>
