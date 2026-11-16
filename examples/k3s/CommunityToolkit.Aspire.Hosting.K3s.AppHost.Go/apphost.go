@@ -21,39 +21,42 @@ func main() {
 	// by the compile-time section below.
 	cluster := builder.AddK3sCluster("k8s")
 
-	_ = cluster.ApiEndpoint()
+	check(cluster.ApiEndpoint().Err())
+	check(cluster.Err())
 
 	setupPodinfo := cluster.AddHelmRelease("podinfo", "podinfo", &aspire.AddHelmReleaseOptions{
 		Repo:      aspire.StringPtr("https://stefanprodan.github.io/podinfo"),
 		Version:   aspire.StringPtr("6.7.1"),
 		Namespace: aspire.StringPtr("podinfo"),
 	})
+	check(setupPodinfo.Err())
 
-	cluster.AddServiceEndpoint("podinfo-web", "podinfo", 9898, &aspire.AddServiceEndpointOptions{
+	endpoint := cluster.AddServiceEndpoint("podinfo-web", "podinfo", 9898, &aspire.AddServiceEndpointOptions{
 		Namespace: aspire.StringPtr("podinfo"),
 	}).WaitForCompletion(setupPodinfo)
+	check(endpoint.Err())
 
 	// ── Compile-time coverage ─────────────────────────────────────────────────────
 	// Guards with false so these are type-checked but never executed.
 	// Covers the full exported API surface without requiring Docker/k3s in CI.
 	const includeCompileOnlyScenarios = false
 
-	if (includeCompileOnlyScenarios) {
+	if includeCompileOnlyScenarios {
 		// ── Cluster configuration ────────────────────────────────────────────────
 		// All K3sClusterOptions are now available as fluent builder methods.
-		configuredCluster := builder.AddK3sCluster("k8s-configured", 
+		configuredCluster := builder.AddK3sCluster("k8s-configured",
 			&aspire.AddK3sClusterOptions{
 				ApiServerPort: aspire.Float64Ptr(6443),
-				AgentCount: aspire.Float64Ptr(2),
+				AgentCount:    aspire.Float64Ptr(2),
 			}).
 			WithK3sVersion("v1.32.3-k3s1").
 			WithPodSubnet("10.42.0.0/16").
 			WithServiceSubnet("10.43.0.0/16").
 			WithDisabledComponent("traefik").
 			WithExtraArg("--write-kubeconfig-mode=644").
-			WithDataVolume(&aspire.WithDataVolumeOptions{ Name: aspire.StringPtr("k8s-data") }).
-			WithHelmImage(&aspire.WithHelmImageOptions{ Tag: aspire.StringPtr("3.18.0") }).
-			WithKubectlImage(&aspire.WithKubectlImageOptions{ Tag: aspire.StringPtr("1.37.0") }).
+			WithDataVolume(&aspire.WithDataVolumeOptions{Name: aspire.StringPtr("k8s-data")}).
+			WithHelmImage(&aspire.WithHelmImageOptions{Tag: aspire.StringPtr("3.18.0")}).
+			WithKubectlImage(&aspire.WithKubectlImageOptions{Tag: aspire.StringPtr("1.37.0")}).
 			WithLifetime(aspire.ContainerLifetimePersistent)
 
 		_ = configuredCluster.ApiEndpoint()
@@ -66,7 +69,7 @@ func main() {
 		})
 
 		_ = podinfo.Parent()
-		
+
 		_, _ = podinfo.ReleaseName()
 		_, _ = podinfo.Namespace()
 
@@ -107,7 +110,7 @@ func main() {
 		//   • Project/executable: KUBECONFIG=<host>/.k3s/k8s/local/kubeconfig.yaml
 		//   • Container: KUBECONFIG=/tmp/k3s-kubeconfig.yaml + bind-mount
 		_ = builder.
-			AddProject("operator", "../WidgetOperator/WidgetOperator.csproj").
+			AddDotnetProject("operator", "../WidgetOperator/WidgetOperator.csproj").
 			WithReference(configuredCluster)
 
 		_ = builder.
@@ -115,9 +118,9 @@ func main() {
 			WithReference(configuredCluster)
 
 		// ── WithReference — service endpoint URL injection ────────────────────────
-		
+
 		_ = builder.
-			AddProject("api", "../WidgetApi/WidgetApi.csproj").
+			AddDotnetProject("api", "../WidgetApi/WidgetApi.csproj").
 			WithReference(podinfoWeb)
 	}
 
@@ -126,6 +129,12 @@ func main() {
 		log.Fatal(aspire.FormatError(err))
 	}
 	if err := app.Run(); err != nil {
+		log.Fatal(aspire.FormatError(err))
+	}
+}
+
+func check(err error) {
+	if err != nil {
 		log.Fatal(aspire.FormatError(err))
 	}
 }
