@@ -24,6 +24,14 @@ internal static class LoggingTestHelper
         string resourceName,
         TimeSpan? timeout = null)
     {
+        await PublishBeforeStartAsync(builder, app);
+        return await CollectLogsAsync(app, resourceName, timeout);
+    }
+
+    internal static async Task PublishBeforeStartAsync(
+        IDistributedApplicationBuilder builder,
+        DistributedApplication app)
+    {
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var eventing = (DistributedApplicationEventing)builder.Eventing;
 
@@ -41,7 +49,13 @@ internal static class LoggingTestHelper
         {
             // Expected: DCP CLI / dashboard paths not configured in unit tests.
         }
+    }
 
+    internal static async Task<List<string>> CollectLogsAsync(
+        DistributedApplication app,
+        string resourceName,
+        TimeSpan? timeout = null)
+    {
         var loggerService = app.Services.GetRequiredService<ResourceLoggerService>();
         List<string> logs = [];
         using var cts = new CancellationTokenSource(timeout ?? TimeSpan.FromSeconds(3));
