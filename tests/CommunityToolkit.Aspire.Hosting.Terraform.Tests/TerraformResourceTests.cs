@@ -75,4 +75,58 @@ public class TerraformResourceTests
         Assert.Equal(["plan", "-out=review.tfplan"], cli.Resource.SelectedArguments);
         Assert.Equal(Path.GetFullPath("./module", builder.AppHostDirectory), cli.Resource.WorkingDirectory);
     }
+
+    [Fact]
+    public async Task ReconfiguringPlanPreservesItsPathAndApplyAppendsItAfterOptions()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var environment = builder.AddTerraformEnvironment("infra", "./module")
+            .WithApply(apply => apply.WithArgs("-lock-timeout=60s"))
+            .WithPlan("./artifacts/review.tfplan")
+            .WithPlan(configure: plan => plan.WithArgs("-lock-timeout=30s"))
+            .WithApply(apply => apply.WithArgs("-parallelism=2"));
+        var path = Path.GetFullPath("./artifacts/review.tfplan", builder.AppHostDirectory);
+        Assert.Equal(path, environment.Resource.GetPlanPath());
+
+        var apply = environment.Resource.GetCommandResource(TerraformCommand.Apply)!;
+        var context = new CommandLineArgsCallbackContext([]) { ExecutionContext = builder.ExecutionContext };
+        foreach (var annotation in apply.Annotations.OfType<CommandLineArgsCallbackAnnotation>())
+        {
+            await annotation.Callback(context);
+        }
+        Assert.Equal(["apply", "-input=false", "-lock-timeout=60s", "-parallelism=2", path], context.Args);
+
+        environment.WithPlan("./artifacts/replacement.tfplan");
+        Assert.Equal(Path.GetFullPath("./artifacts/replacement.tfplan", builder.AppHostDirectory), environment.Resource.GetPlanPath());
+    }
+
+    [Theory]
+    [InlineData(new[] { "review.tfplan" }, false)]
+    [InlineData(new[] { "-lock-timeout=60s", "review.tfplan" }, false)]
+    [InlineData(new[] { "-lock-timeout", "60s", "review.tfplan" }, false)]
+    [InlineData(new[] { "--", "review.tfplan" }, false)]
+    [InlineData(new[] { "-lock-timeout", "60s" }, true)]
+    [InlineData(new[] { "-var", "name=value" }, true)]
+    [InlineData(new[] { "-auto-approve" }, true)]
+    public async Task StandaloneVariableFileIsOmittedOnlyForSavedPlan(string[] arguments, bool expectVariableFile)
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var cli = builder.AddTerraformCli("cli", "./module")
+            .WithEnvironment("TF_CLI_ARGS_apply", "-compact-warnings")
+            .WithTfVarsFile("./inputs.tfvars")
+            .WithApply(args: arguments);
+        var values = new Dictionary<string, object>();
+        var context = new EnvironmentCallbackContext(builder.ExecutionContext, cli.Resource, values, TestContext.Current.CancellationToken);
+        foreach (var annotation in cli.Resource.Annotations.OfType<EnvironmentCallbackAnnotation>())
+        {
+            await annotation.Callback(context);
+        }
+
+        var value = values["TF_CLI_ARGS_apply"];
+        var resolved = value is IValueProvider provider
+            ? await provider.GetValueAsync(TestContext.Current.CancellationToken)
+            : (string)value;
+        Assert.Contains("-compact-warnings", resolved);
+        Assert.Equal(expectVariableFile, resolved!.Contains("-var-file=", StringComparison.Ordinal));
+    }
 }

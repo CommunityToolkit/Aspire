@@ -46,6 +46,7 @@ public class TerraformPipelineExecutionTests
                     $"'-var-file={Path.Combine(directory.FullName, "variables with spaces.tfvars")}'",
                     commands[1].RootElement.GetProperty("PlanOptions").GetString());
                 Assert.Equal("-lock-timeout=60s", commands[2].RootElement.GetProperty("ApplyOptions").GetString());
+                Assert.Contains("-lock-timeout=60s", commands[2].RootElement.GetProperty("Arguments").EnumerateArray().Select(arg => arg.GetString()));
                 Assert.Equal(plan, commands[2].RootElement.GetProperty("Arguments").EnumerateArray().Last().GetString());
             }
             finally
@@ -65,6 +66,12 @@ public class TerraformPipelineExecutionTests
             Assert.Contains("exit code 17", failure, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("[REDACTED]", failure);
             Assert.DoesNotContain("sensitive-test-value", failure);
+            Assert.Contains("prefix-[REDACTED]-suffix", failure);
+            Assert.DoesNotContain("parameter-value-to-mask", failure);
+            Assert.Contains("Last stdout:", failure);
+            Assert.Contains("Last stderr:", failure);
+            using var failedCommand = JsonDocument.Parse((await File.ReadAllLinesAsync(trace, TestContext.Current.CancellationToken)).Last());
+            Assert.Equal("prefix-parameter-value-to-mask-suffix", failedCommand.RootElement.GetProperty("Probe").GetString());
         }
         finally
         {
@@ -98,6 +105,8 @@ public class TerraformPipelineExecutionTests
             {
                 info.Environment["TERRAFORM_TEST_FAIL"] = "true";
                 info.Environment["TERRAFORM_TEST_SECRET"] = "sensitive-test-value";
+                info.Environment["TerraformTestSecretEnabled"] = "true";
+                info.Environment["Parameters__pipeline-value"] = "parameter-value-to-mask";
             }
             using var process = Process.Start(info) ?? throw new InvalidOperationException("Failed to start Aspire CLI.");
             var stdout = process.StandardOutput.ReadToEndAsync(TestContext.Current.CancellationToken);

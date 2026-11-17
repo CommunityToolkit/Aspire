@@ -57,6 +57,7 @@ public static class TerraformConfigurationExtensions
     }
 
     /// <summary>Loads Terraform variables from a file for plan, apply, and destroy.</summary>
+    /// <remarks>The file is omitted for an apply using a saved plan specified through <c>WithApply</c>.</remarks>
     /// <typeparam name="TResource">The Terraform resource type.</typeparam>
     /// <param name="builder">The Terraform resource builder.</param>
     /// <param name="path">The path relative to the AppHost directory or an absolute path.</param>
@@ -191,8 +192,9 @@ public static class TerraformConfigurationExtensions
         {
             foreach (var command in commands)
             {
-                if (variableFile && command == "apply" && context.Resource is TerraformCliResource
-                    { Operation: TerraformCommand.Apply, Environment: { } environment } && environment.GetPlanPath() is not null)
+                if (variableFile && command == "apply" && context.Resource is TerraformCliResource cli &&
+                    (cli is { Operation: TerraformCommand.Apply, Environment: { } environment } && environment.GetPlanPath() is not null ||
+                     cli.Environment is null && HasStandaloneSavedPlan(cli.SelectedArguments)))
                 {
                     continue;
                 }
@@ -218,5 +220,35 @@ public static class TerraformConfigurationExtensions
                 context.EnvironmentVariables[key] = expression.Build();
             }
         });
+    }
+
+    private static bool HasStandaloneSavedPlan(string[] arguments)
+    {
+        if (arguments.Length == 0 || arguments[0] != "apply")
+        {
+            return false;
+        }
+
+        for (var i = 1; i < arguments.Length; i++)
+        {
+            var argument = arguments[i];
+            if (argument == "--")
+            {
+                return i + 1 < arguments.Length;
+            }
+
+            if (!argument.StartsWith('-'))
+            {
+                return true;
+            }
+
+            if (argument.TrimStart('-') is "backup" or "generate-config-out" or "lock-timeout" or "out" or "parallelism"
+                or "replace" or "state" or "state-out" or "target" or "var" or "var-file")
+            {
+                i++;
+            }
+        }
+
+        return false;
     }
 }

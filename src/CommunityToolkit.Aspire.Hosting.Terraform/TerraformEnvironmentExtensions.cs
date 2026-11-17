@@ -86,7 +86,8 @@ public static class TerraformEnvironmentExtensions
     /// </remarks>
     /// <param name="builder">The environment builder.</param>
     /// <param name="outputPath">
-    /// The saved plan path, relative to the AppHost directory or absolute; defaults to <c>{name}.tfplan</c> in the module.
+    /// The saved plan path, relative to the AppHost directory or absolute. If omitted, an existing path is retained;
+    /// otherwise it defaults to <c>{name}.tfplan</c> in the module.
     /// </param>
     /// <param name="configure">Optional configuration of the command resource.</param>
     /// <returns>The environment builder.</returns>
@@ -98,7 +99,7 @@ public static class TerraformEnvironmentExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
         var path = outputPath is null
-            ? Path.Combine(builder.Resource.WorkingDirectory, $"{builder.Resource.Name}.tfplan")
+            ? builder.Resource.GetPlanPath() ?? Path.Combine(builder.Resource.WorkingDirectory, $"{builder.Resource.Name}.tfplan")
             : Path.GetFullPath(outputPath, builder.ApplicationBuilder.AppHostDirectory);
         builder.WithAnnotation(new TerraformPlanAnnotation(path), ResourceAnnotationMutationBehavior.Replace);
         return builder.WithTerraformCommand(TerraformCommand.Plan, configure);
@@ -184,7 +185,7 @@ public static class TerraformEnvironmentExtensions
         {
             TerraformCommand.Init => ["init", "-input=false"],
             TerraformCommand.Plan => ["plan", "-input=false", $"-out={planPath}"],
-            TerraformCommand.Apply when planPath is not null => ["apply", "-input=false", planPath],
+            TerraformCommand.Apply when planPath is not null => ["apply", "-input=false"],
             TerraformCommand.Apply => ["apply", "-input=false", "-auto-approve"],
             TerraformCommand.Destroy => ["destroy", "-input=false", "-auto-approve"],
             _ => throw new ArgumentOutOfRangeException(nameof(command))
@@ -203,7 +204,22 @@ public static class TerraformEnvironmentExtensions
             : builder.ApplicationBuilder.CreateResourceBuilder(resource);
 
         WireLocalDependencies(builder);
+        if (command == TerraformCommand.Apply && commandBuilder.Resource.SavedPlanArgsAnnotation is { } previous)
+        {
+            commandBuilder.Resource.Annotations.Remove(previous);
+        }
         configure?.Invoke(commandBuilder);
+        if (command == TerraformCommand.Apply)
+        {
+            commandBuilder.WithArgs(context =>
+            {
+                if (environment.GetPlanPath() is { } planPath)
+                {
+                    context.Args.Add(planPath);
+                }
+            });
+            commandBuilder.Resource.SavedPlanArgsAnnotation = commandBuilder.Resource.Annotations.OfType<CommandLineArgsCallbackAnnotation>().Last();
+        }
         return builder;
     }
 

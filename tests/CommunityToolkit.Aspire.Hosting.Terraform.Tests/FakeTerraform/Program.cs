@@ -12,6 +12,7 @@ File.AppendAllText(trace, JsonSerializer.Serialize(new
     Input = Environment.GetEnvironmentVariable("TF_INPUT"),
     Automation = Environment.GetEnvironmentVariable("TF_IN_AUTOMATION"),
     Message = Environment.GetEnvironmentVariable("TF_VAR_message"),
+    Probe = Environment.GetEnvironmentVariable("TF_VAR_probe"),
     PlanOptions = Environment.GetEnvironmentVariable("TF_CLI_ARGS_plan"),
     ApplyOptions = Environment.GetEnvironmentVariable("TF_CLI_ARGS_apply")
 }) + Environment.NewLine);
@@ -19,6 +20,8 @@ File.AppendAllText(trace, JsonSerializer.Serialize(new
 if (Environment.GetEnvironmentVariable("TERRAFORM_TEST_FAIL") == "true")
 {
     Console.Error.WriteLine($"Error: {Environment.GetEnvironmentVariable("TERRAFORM_TEST_SECRET")}");
+    Console.WriteLine($"Output: {Environment.GetEnvironmentVariable("TF_VAR_probe")}");
+    Console.Error.WriteLine($"Error: {Environment.GetEnvironmentVariable("TF_VAR_probe")}");
     return 17;
 }
 

@@ -35,6 +35,8 @@ builder.AddTerraformCli("plan", "./terraform")
 
 Initialize the module before running the standalone plan. See the [examples](../../examples/terraform/) for C#, TypeScript, and Go AppHosts.
 
+For a standalone apply of a saved plan, pass the plan path through `WithApply(args: ["review.tfplan"])`. Variable files configured with `WithTfVarsFile` are omitted for that apply; unrelated `TF_CLI_ARGS_apply` settings remain in effect. Reconfiguring an environment with `WithPlan()` without an output path retains its previously selected path.
+
 ## Deployment pipeline
 
 Declared operations register `terraform-init-{name}`, `terraform-plan-{name}`, `terraform-apply-{name}`, and `terraform-destroy-{name}` steps. Steps are independent by default; apply is required by `aspire deploy` and destroy by `aspire destroy`. Explicit local startup is not an approval gate for pipeline operations.

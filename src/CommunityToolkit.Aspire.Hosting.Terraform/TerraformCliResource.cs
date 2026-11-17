@@ -22,4 +22,7 @@ public sealed class TerraformCliResource(string name, string workingDirectory)
 
     /// <summary>Gets or sets the selected standalone command and its arguments.</summary>
     internal string[] SelectedArguments { get; set; } = [];
+
+    /// <summary>Gets or sets the callback that appends the environment's saved plan argument.</summary>
+    internal CommandLineArgsCallbackAnnotation? SavedPlanArgsAnnotation { get; set; }
 }
