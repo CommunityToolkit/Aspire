@@ -5,7 +5,7 @@ namespace CommunityToolkit.Aspire.Hosting.Perl;
 /// <summary>
 /// Resolves a Perl-specific OpenTelemetry variable from the final value of its standard variable.
 /// </summary>
-/// <param name="environmentVariables">The environment variables shared by the resource's environment callbacks.</param>
+/// <param name="environmentVariables">The shared environment variables for the current configuration stage.</param>
 /// <param name="sourceName">The standard OpenTelemetry variable to read.</param>
 internal sealed class PerlOtelEnvironmentVariableMirror(
     IReadOnlyDictionary<string, object> environmentVariables,

@@ -133,6 +133,26 @@ public class WithCertificateTrustTests
     }
 
     [Fact]
+    public async Task DefaultCertificateTrust_LaterCertificateCallback_PerlOtlpCertificateUsesFinalValue()
+    {
+        var customCertificate = Path.Combine(Path.GetTempPath(), "custom-otlp-ca.pem");
+        var builder = CreateOtlpBuilder();
+        var perlApp = builder.AddPerlScript("perl-app", "scripts", "app.pl")
+            .WithAnnotation(new CertificateTrustConfigurationCallbackAnnotation(context =>
+            {
+                context.EnvironmentVariables[OtlpCertificate] = customCertificate;
+                return Task.CompletedTask;
+            }));
+
+        using var app = builder.Build();
+
+        var (environment, _) = await BuildCertificateTrustConfigurationAsync(perlApp.Resource, app.Services);
+
+        AssertVariable(environment, OtlpCertificate, customCertificate);
+        AssertVariable(environment, PerlOtlpCertificate, customCertificate);
+    }
+
+    [Fact]
     public async Task DefaultCertificateTrust_ExplicitPerlOtlpCertificate_IsPreserved()
     {
         const string customCertificate = "/custom/ca.pem";

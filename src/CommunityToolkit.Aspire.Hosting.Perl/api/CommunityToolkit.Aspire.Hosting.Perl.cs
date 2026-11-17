@@ -46,6 +46,7 @@ namespace Aspire.Hosting
         public static ApplicationModel.IResourceBuilder<T> WithPerlbrewEnvironment<T>(this ApplicationModel.IResourceBuilder<T> builder, string version, string? perlbrewRoot = null)
             where T : ApplicationModel.PerlAppResource { throw null; }
 
+        [System.Obsolete("Certificate trust is configured by default for Perl resources. Use WithCertificateTrustScope to change or disable it.")]
         [System.Diagnostics.CodeAnalysis.Experimental("CTASPIREPERL001")]
         [AspireExport]
         public static ApplicationModel.IResourceBuilder<TResource> WithPerlCertificateTrust<TResource>(this ApplicationModel.IResourceBuilder<TResource> builder)

@@ -213,6 +213,9 @@ public static partial class PerlAppResourceBuilderExtensions
 
         resourceBuilder.WithOtlpExporterIfEndpointAvailable(OtlpProtocol.HttpJson);
         resourceBuilder.WithRequiredCommand("perl", "https://www.perl.org/get.html");
+        resourceBuilder
+            .WithCertificateTrustScope(CertificateTrustScope.System)
+            .WithCertificateTrustConfiguration(ConfigurePerlCertificateTrust);
 
         // OpenTelemetry::Exporter::OTLP supports HTTP/JSON and HTTP/protobuf, not gRPC.
         // HTTP/JSON avoids requiring Google::ProtocolBuffers::Dynamic for protobuf encoding, which can be difficult (though not impossible)to get on windows, specifically.
@@ -502,33 +505,19 @@ public static partial class PerlAppResourceBuilderExtensions
     }
 
     /// <summary>
-    /// Configures certificate trust for the Perl application by setting SSL/TLS environment
-    /// variables that common Perl HTTP libraries respect.
-    /// Sets <c>SSL_CERT_FILE</c> (IO::Socket::SSL / LWP), <c>PERL_LWP_SSL_CA_FILE</c> (LWP::UserAgent),
-    /// and <c>MOJO_CA_FILE</c> (Mojolicious) to the certificate bundle path provided by Aspire.
-    /// Also configures package and project dependency installers using each resource's own certificate trust context.
+    /// Retained for compatibility. Certificate trust is configured by default for Perl resources.
     /// </summary>
     /// <typeparam name="TResource">The type of the Perl application resource.</typeparam>
     /// <param name="builder">The resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{TResource}"/>.</returns>
+    /// <remarks>Use <c>WithCertificateTrustScope</c> to change or disable certificate trust.</remarks>
+    [Obsolete("Certificate trust is configured by default for Perl resources. Use WithCertificateTrustScope to change or disable it.")]
     [Experimental("CTASPIREPERL001")]
     [AspireExport]
     public static IResourceBuilder<TResource> WithPerlCertificateTrust<TResource>(
         this IResourceBuilder<TResource> builder) where TResource : PerlAppResource
     {
         ArgumentNullException.ThrowIfNull(builder);
-
-        if (builder.Resource.Annotations.OfType<PerlCertificateTrustAnnotation>().Any())
-        {
-            return builder;
-        }
-
-        builder.Resource.Annotations.Add(new PerlCertificateTrustAnnotation());
-
-        builder.WithCertificateTrustConfiguration(ConfigurePerlCertificateTrust);
-
-        // Propagate cert trust env vars to any existing installer child resources
-        TryAttachCertificateTrustToExistingInstallers(builder);
 
         return builder;
     }
@@ -540,9 +529,27 @@ public static partial class PerlAppResourceBuilderExtensions
     {
         if (context.CertificateBundlePath is { } bundlePath)
         {
-            context.EnvironmentVariables["SSL_CERT_FILE"] = bundlePath;
-            context.EnvironmentVariables["PERL_LWP_SSL_CA_FILE"] = bundlePath;
-            context.EnvironmentVariables["MOJO_CA_FILE"] = bundlePath;
+            if (context.Scope == CertificateTrustScope.Append)
+            {
+                var logger = context.ExecutionContext.Services.GetRequiredService<ResourceLoggerService>()
+                    .GetLogger(context.Resource);
+                logger.LogInformation("Certificate trust scope is set to 'Append', but Perl resources do not support appending to the default certificate authorities; only OTLP certificate trust will be applied.");
+            }
+            else
+            {
+                context.EnvironmentVariables["SSL_CERT_FILE"] = bundlePath;
+                context.EnvironmentVariables["PERL_LWP_SSL_CA_FILE"] = bundlePath;
+                context.EnvironmentVariables["MOJO_CA_FILE"] = bundlePath;
+            }
+
+            context.EnvironmentVariables["OTEL_EXPORTER_OTLP_CERTIFICATE"] = bundlePath;
+
+            if (context.EnvironmentVariables.ContainsKey("OTEL_EXPORTER_OTLP_ENDPOINT"))
+            {
+                // Environment callbacks use a copy; bind here to observe final certificate-trust writes.
+                context.EnvironmentVariables.TryAdd("OTEL_PERL_EXPORTER_OTLP_CERTIFICATE",
+                    new PerlOtelEnvironmentVariableMirror(context.EnvironmentVariables, "OTEL_EXPORTER_OTLP_CERTIFICATE"));
+            }
         }
 
         return Task.CompletedTask;
