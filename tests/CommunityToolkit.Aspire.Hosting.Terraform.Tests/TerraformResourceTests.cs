@@ -104,9 +104,13 @@ public class TerraformResourceTests
     [InlineData(new[] { "review.tfplan" }, false)]
     [InlineData(new[] { "-lock-timeout=60s", "review.tfplan" }, false)]
     [InlineData(new[] { "-lock-timeout", "60s", "review.tfplan" }, false)]
+    [InlineData(new[] { "-invoke", "action.aws_lambda_invoke.test", "review.tfplan" }, false)]
+    [InlineData(new[] { "-invoke=action.aws_lambda_invoke.test", "review.tfplan" }, false)]
     [InlineData(new[] { "--", "review.tfplan" }, false)]
     [InlineData(new[] { "-lock-timeout", "60s" }, true)]
     [InlineData(new[] { "-var", "name=value" }, true)]
+    [InlineData(new[] { "-invoke", "action.aws_lambda_invoke.test" }, true)]
+    [InlineData(new[] { "-invoke=action.aws_lambda_invoke.test" }, true)]
     [InlineData(new[] { "-auto-approve" }, true)]
     public async Task StandaloneVariableFileIsOmittedOnlyForSavedPlan(string[] arguments, bool expectVariableFile)
     {

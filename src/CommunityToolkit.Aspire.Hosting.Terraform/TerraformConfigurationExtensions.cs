@@ -242,7 +242,7 @@ public static class TerraformConfigurationExtensions
                 return true;
             }
 
-            if (argument.TrimStart('-') is "backup" or "generate-config-out" or "lock-timeout" or "out" or "parallelism"
+            if (argument.TrimStart('-') is "backup" or "generate-config-out" or "invoke" or "lock-timeout" or "out" or "parallelism"
                 or "replace" or "state" or "state-out" or "target" or "var" or "var-file")
             {
                 i++;
