@@ -254,6 +254,10 @@
     <Project Path="examples/tempo/CommunityToolkit.Aspire.Hosting.Tempo.AppHost/CommunityToolkit.Aspire.Hosting.Tempo.AppHost.csproj" />
     <Project Path="examples/tempo/CommunityToolkit.Aspire.Hosting.Tempo.ServiceDefaults/CommunityToolkit.Aspire.Hosting.Tempo.ServiceDefaults.csproj" />
   </Folder>
+  <Folder Name="/examples/terraform/">
+    <Project Path="examples/terraform/CommunityToolkit.Aspire.Hosting.Terraform.AppHost/CommunityToolkit.Aspire.Hosting.Terraform.AppHost.csproj" />
+    <Project Path="examples/terraform/CommunityToolkit.Aspire.Hosting.Terraform.Standalone.AppHost/CommunityToolkit.Aspire.Hosting.Terraform.Standalone.AppHost.csproj" />
+  </Folder>
   <Folder Name="/examples/umami/">
     <Project Path="examples\umami\CommunityToolkit.Aspire.Hosting.Umami.AppHost\CommunityToolkit.Aspire.Hosting.Umami.AppHost.csproj" />
   </Folder>
@@ -330,6 +334,7 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Stripe/CommunityToolkit.Aspire.Hosting.Stripe.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.SurrealDb/CommunityToolkit.Aspire.Hosting.SurrealDb.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Tempo/CommunityToolkit.Aspire.Hosting.Tempo.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Terraform/CommunityToolkit.Aspire.Hosting.Terraform.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Zitadel/CommunityToolkit.Aspire.Hosting.Zitadel.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.DuckDB.NET.Data/CommunityToolkit.Aspire.DuckDB.NET.Data.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.KurrentDB/CommunityToolkit.Aspire.KurrentDB.csproj" />
@@ -414,6 +419,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Stripe.Tests/CommunityToolkit.Aspire.Hosting.Stripe.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.SurrealDb.Tests/CommunityToolkit.Aspire.Hosting.SurrealDb.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Tempo.Tests/CommunityToolkit.Aspire.Hosting.Tempo.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Terraform.Tests/CommunityToolkit.Aspire.Hosting.Terraform.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Zitadel.Tests/CommunityToolkit.Aspire.Hosting.Zitadel.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.DuckDB.NET.Data.Tests/CommunityToolkit.Aspire.DuckDB.NET.Data.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.KurrentDB.Tests/CommunityToolkit.Aspire.KurrentDB.Tests.csproj" />

@@ -1,0 +1,5 @@
+{
+  "appHost": {
+    "path": "CommunityToolkit.Aspire.Hosting.Terraform.AppHost.csproj"
+  }
+}

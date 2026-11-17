@@ -1,0 +1,8 @@
+<Project Sdk="Aspire.AppHost.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Terraform\CommunityToolkit.Aspire.Hosting.Terraform.csproj" IsAspireProjectResource="false" />
+  </ItemGroup>
+</Project>

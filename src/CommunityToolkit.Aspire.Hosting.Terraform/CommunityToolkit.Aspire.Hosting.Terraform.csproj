@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>An Aspire hosting integration for Terraform modules and deployment pipelines.</Description>
+    <AdditionalPackageTags>hosting terraform infrastructure iac</AdditionalPackageTags>
+    <IsPreview>true</IsPreview>
+    <NoWarn>$(NoWarn);ASPIREPIPELINES001</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
+    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.Terraform.Tests" />
+  </ItemGroup>
+</Project>
