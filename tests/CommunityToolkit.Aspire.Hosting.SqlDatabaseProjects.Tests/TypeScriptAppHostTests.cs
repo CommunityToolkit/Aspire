@@ -15,6 +15,6 @@ public class TypeScriptAppHostTests
             exampleName: "sql-database-projects",
             waitForResources: ["database-project", "package-project"],
             waitStatus: "finished",
-            cancellationToken: TestContext.Current.CancellationToken);
+            cancellationToken: TestContext.Current.CancellationToken));
     }
 }
