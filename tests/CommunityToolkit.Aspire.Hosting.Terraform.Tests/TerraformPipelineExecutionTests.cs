@@ -93,7 +93,7 @@ public class TerraformPipelineExecutionTests
                 info.ArgumentList.Add("/c");
                 info.ArgumentList.Add("aspire");
             }
-            foreach (var argument in new[] { "do", $"terraform-{operation}-sample", "--apphost", appHost, "--no-build", "--non-interactive", "--nologo" })
+            foreach (var argument in new[] { "do", $"terraform-{operation}-sample", "--apphost", appHost, "--non-interactive", "--nologo" })
             {
                 info.ArgumentList.Add(argument);
             }
