@@ -29,6 +29,12 @@ func main() {
 	project.WithReference(database)
 	check(project.Err())
 
+	packageDatabase := sql.AddDatabase("PackageDatabase")
+	packageProject := builder.AddSqlPackage("package-project", "ErikEJ.Dacpac.Chinook", "1.0.0")
+	check(packageDatabase.Err())
+	packageProject.WithReference(packageDatabase)
+	check(packageProject.Err())
+
 	connectionProject := builder.AddSqlProject("connection-project")
 	connectionProject.WithDacpac(projectPath)
 	connectionProject.WithConnectionReference(existingConnection)
