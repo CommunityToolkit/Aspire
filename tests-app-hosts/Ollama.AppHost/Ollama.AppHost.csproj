@@ -1,4 +1,4 @@
-<Project Sdk="Aspire.AppHost.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -9,5 +9,8 @@
     <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.Ollama\CommunityToolkit.Aspire.Hosting.Ollama.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
-
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.AppHost" />
+    <PackageReference Include="Aspire.Hosting.Dotnet" />
+  </ItemGroup>
 </Project>

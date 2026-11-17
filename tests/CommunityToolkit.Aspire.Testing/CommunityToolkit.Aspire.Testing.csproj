@@ -1,8 +1,12 @@
-<Project Sdk="Aspire.AppHost.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <IsTestProject>false</IsTestProject>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Using Include="Aspire.Hosting" />
+  </ItemGroup>
 
   <ItemGroup>
     <!--

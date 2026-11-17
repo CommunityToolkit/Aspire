@@ -1,4 +1,4 @@
-<Project Sdk="Aspire.AppHost.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -7,14 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.AppHost" />
     <PackageReference Include="Aspire.Hosting.Dotnet" />
     <PackageReference Include="Aspire.Hosting.Foundry" />
     <PackageReference Include="Aspire.Hosting.JavaScript" />
     <PackageReference Include="Aspire.Hosting.Python" />
     <ProjectReference Include="../../../src/CommunityToolkit.Aspire.Hosting.Agents/CommunityToolkit.Aspire.Hosting.Agents.csproj" IsAspireProjectResource="false" />
-    <ProjectReference Include="..\AgentEnvDump\AgentEnvDump.csproj" />
-    <ProjectReference Include="..\McpAgent\McpAgent.csproj" />
-    <ProjectReference Include="..\ResponsesAgent\ResponsesAgent.csproj" />
+    <ProjectReference Include="..\AgentEnvDump\AgentEnvDump.csproj" IsAspireProjectResource="true" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" ExcludeAssets="all" Private="false" />
+    <ProjectReference Include="..\McpAgent\McpAgent.csproj" IsAspireProjectResource="true" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" ExcludeAssets="all" Private="false" />
+    <ProjectReference Include="..\ResponsesAgent\ResponsesAgent.csproj" IsAspireProjectResource="true" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" ExcludeAssets="all" Private="false" />
   </ItemGroup>
 
 </Project>

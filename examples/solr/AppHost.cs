@@ -11,6 +11,6 @@ var solrWithConfigset = builder.AddSolr("solr-configset")
     .WithConfigset("myconfigset", "/path/to/configset");
 
 // Reference the Solr resources in a project (example)
-// var exampleProject = builder.AddProject<Projects.ExampleProject>()
+// var exampleProject = builder.AddDotnetProject("example", "../ExampleProject/ExampleProject.csproj")
 //                             .WithReference(solr);
 builder.Build().Run();

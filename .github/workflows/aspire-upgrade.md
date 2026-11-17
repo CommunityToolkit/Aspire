@@ -29,12 +29,12 @@ You are responsible for updating the Aspire version in our repo to the latest ni
 
 You are to use the NuGet feed https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet9/nuget/v3/index.json
 
-Look for the latest nightly version that starts with the target version prefix above. To do this, you will need to use the .NET CLI package search feature with the `--prerelease` and `--exact-match` flags (and probably best to specify the feed with `--source` to avoid confusion with any stable versions from nuget.org). Query for the `Aspire.AppHost.Sdk` package as it is a dependency of all our AppHost projects and will be the most reliable way to find the correct version string.
+Look for the latest nightly version that starts with the target version prefix above. Query `Aspire.Hosting.AppHost`, which all C# AppHosts reference, on the specified feed.
 
 Here is an example command to find the latest version:
 
 ```bash
-dotnet package search Aspire.AppHost.Sdk --prerelease --exact-match --source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet9/nuget/v3/index.json --format json
+dotnet package search Aspire.Hosting.AppHost --prerelease --exact-match --source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet9/nuget/v3/index.json --format json
 ```
 
 Parse the result for the latest version that matches the target version prefix. This will be the version you update to in the next steps.
@@ -53,21 +53,9 @@ Where MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION, and PREVIEW_VERSION are the r
 
 When using a nightly build, we want to blank out the `AspirePreviewSuffix` to avoid confusion with the actual preview versions.
 
-## Step 2: Configure the AppHost SDK version in `global.json`
+## Step 2: Verify the C# AppHost package pins
 
-Set the `Aspire.AppHost.Sdk` version in the root `global.json` under `msbuild-sdks`. This keeps the SDK package version in one place while preserving the standard project SDK reference.
-
-```json
-"msbuild-sdks": {
-  "Aspire.AppHost.Sdk": "VERSION"
-}
-```
-
-Search the repository for all `.csproj` files that reference `Aspire.AppHost.Sdk`. Each AppHost project should use the standard SDK reference with no version in the project file:
-
-```xml
-<Project Sdk="Aspire.AppHost.Sdk">
-```
+C# AppHosts use `Microsoft.NET.Sdk`. Verify that `Aspire.Hosting.AppHost` and `Aspire.Hosting.Dotnet` in `Directory.Packages.props` both use `$(AspireVersion)`; do not add SDK pins to `global.json` or package versions to individual projects.
 
 ## Step 3: Update TypeScript AppHost `aspire.config.json` files
 

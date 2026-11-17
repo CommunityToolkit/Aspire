@@ -1,4 +1,4 @@
-<Project Sdk="Aspire.AppHost.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -7,11 +7,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.SeaweedFS\CommunityToolkit.Aspire.Hosting.SeaweedFS.csproj" IsAspireProjectResource="false" />
-    <ProjectReference Include="..\SeaweedFS.ApiService\SeaweedFS.ApiService.csproj" />
+    <ProjectReference Include="..\SeaweedFS.ApiService\SeaweedFS.ApiService.csproj" IsAspireProjectResource="true" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" ExcludeAssets="all" Private="false" />
     
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.AppHost" />
     <PackageReference Include="Aspire.Hosting.Dotnet" />
   </ItemGroup>
 </Project>
