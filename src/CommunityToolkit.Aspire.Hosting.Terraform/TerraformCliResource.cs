@@ -14,7 +14,12 @@ public interface ITerraformConfigurableResource : IResource, IResourceWithEnviro
 public sealed class TerraformCliResource(string name, string workingDirectory)
     : ExecutableResource(name, "terraform", workingDirectory), ITerraformConfigurableResource
 {
+    /// <summary>Gets or sets the environment that owns this command, if any.</summary>
     internal TerraformEnvironmentResource? Environment { get; set; }
+
+    /// <summary>Gets or sets the environment operation represented by this command, if any.</summary>
     internal TerraformCommand? Operation { get; set; }
+
+    /// <summary>Gets or sets the selected standalone command and its arguments.</summary>
     internal string[] SelectedArguments { get; set; } = [];
 }

@@ -24,38 +24,41 @@ internal static class TerraformPipelineExtensions
         return builder.WithPipelineStepFactory(_ => CreateSteps(builder.Resource));
     }
 
+    /// <summary>Creates pipeline steps for the commands declared on an environment.</summary>
+    /// <param name="environment">The Terraform environment.</param>
+    /// <returns>The configured pipeline steps.</returns>
     internal static PipelineStep[] CreateSteps(TerraformEnvironmentResource environment)
     {
-            var options = environment.GetPipelineOptions();
-            var steps = environment.Annotations.OfType<TerraformCommandAnnotation>()
-                .ToDictionary(annotation => annotation.Command, annotation => CreateStep(environment, annotation));
+        var options = environment.GetPipelineOptions();
+        var steps = environment.Annotations.OfType<TerraformCommandAnnotation>()
+            .ToDictionary(annotation => annotation.Command, annotation => CreateStep(environment, annotation));
 
-            if (options.ChainSteps)
+        if (options.ChainSteps)
+        {
+            DependsOn(TerraformCommand.Plan, TerraformCommand.Init);
+            DependsOn(TerraformCommand.Apply, steps.ContainsKey(TerraformCommand.Plan) ? TerraformCommand.Plan : TerraformCommand.Init);
+            DependsOn(TerraformCommand.Destroy, TerraformCommand.Init);
+        }
+
+        if (options.RequiredByDeploy && steps.TryGetValue(TerraformCommand.Apply, out var apply))
+        {
+            apply.RequiredBy(WellKnownPipelineSteps.Deploy);
+        }
+
+        if (options.RequiredByDestroy && steps.TryGetValue(TerraformCommand.Destroy, out var destroy))
+        {
+            destroy.RequiredBy(WellKnownPipelineSteps.Destroy);
+        }
+
+        return steps.Values.ToArray();
+
+        void DependsOn(TerraformCommand command, TerraformCommand dependency)
+        {
+            if (steps.TryGetValue(command, out var step) && steps.TryGetValue(dependency, out var dependencyStep))
             {
-                DependsOn(TerraformCommand.Plan, TerraformCommand.Init);
-                DependsOn(TerraformCommand.Apply, steps.ContainsKey(TerraformCommand.Plan) ? TerraformCommand.Plan : TerraformCommand.Init);
-                DependsOn(TerraformCommand.Destroy, TerraformCommand.Init);
+                step.DependsOn(dependencyStep);
             }
-
-            if (options.RequiredByDeploy && steps.TryGetValue(TerraformCommand.Apply, out var apply))
-            {
-                apply.RequiredBy(WellKnownPipelineSteps.Deploy);
-            }
-
-            if (options.RequiredByDestroy && steps.TryGetValue(TerraformCommand.Destroy, out var destroy))
-            {
-                destroy.RequiredBy(WellKnownPipelineSteps.Destroy);
-            }
-
-            return steps.Values.ToArray();
-
-            void DependsOn(TerraformCommand command, TerraformCommand dependency)
-            {
-                if (steps.TryGetValue(command, out var step) && steps.TryGetValue(dependency, out var dependencyStep))
-                {
-                    step.DependsOn(dependencyStep);
-                }
-            }
+        }
     }
 
     private static PipelineStep CreateStep(TerraformEnvironmentResource environment, TerraformCommandAnnotation annotation)
@@ -305,4 +308,3 @@ internal static class TerraformPipelineExtensions
         return line;
     }
 }
-

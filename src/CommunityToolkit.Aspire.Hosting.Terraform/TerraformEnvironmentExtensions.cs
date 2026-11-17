@@ -143,6 +143,9 @@ public static class TerraformEnvironmentExtensions
         return builder;
     }
 
+    /// <summary>Gets or creates the pipeline options for an environment.</summary>
+    /// <param name="resource">The Terraform environment.</param>
+    /// <returns>The environment's pipeline options.</returns>
     internal static TerraformPipelineOptions GetPipelineOptions(this TerraformEnvironmentResource resource)
     {
         if (resource.Annotations.OfType<TerraformPipelineOptionsAnnotation>().LastOrDefault() is { } existing)
@@ -155,15 +158,25 @@ public static class TerraformEnvironmentExtensions
         return options;
     }
 
+    /// <summary>Gets the resource for a declared Terraform command.</summary>
+    /// <param name="resource">The Terraform environment.</param>
+    /// <param name="command">The command to find.</param>
+    /// <returns>The command resource, or <see langword="null"/> if it has not been declared.</returns>
     internal static TerraformCliResource? GetCommandResource(
         this TerraformEnvironmentResource resource, TerraformCommand command)
         => resource.Annotations.OfType<TerraformCommandAnnotation>()
             .FirstOrDefault(annotation => annotation.Command == command)?.Resource;
 
+    /// <summary>Gets the path of the saved plan for an environment.</summary>
+    /// <param name="resource">The Terraform environment.</param>
+    /// <returns>The plan path, or <see langword="null"/> if no plan has been declared.</returns>
     internal static string? GetPlanPath(this TerraformEnvironmentResource resource)
         => resource.Annotations.OfType<TerraformPlanAnnotation>().LastOrDefault()?.OutputPath;
 
     /// <summary>Gets the arguments computed by the integration, before user arguments.</summary>
+    /// <param name="resource">The Terraform environment.</param>
+    /// <param name="command">The command to execute.</param>
+    /// <returns>The command and its integration-provided arguments.</returns>
     internal static List<object> GetBaseArguments(this TerraformEnvironmentResource resource, TerraformCommand command)
     {
         var planPath = resource.GetPlanPath();

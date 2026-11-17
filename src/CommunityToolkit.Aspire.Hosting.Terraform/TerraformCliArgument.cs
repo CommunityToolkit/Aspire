@@ -10,9 +10,12 @@ namespace Aspire.Hosting.ApplicationModel;
 /// Terraform splits these variables with shell-like rules, so the resolved value is single-quoted to preserve
 /// spaces, backslashes, and quotes in paths or secrets.
 /// </remarks>
+/// <param name="prefix">The argument prefix preceding the value.</param>
+/// <param name="value">The literal or deferred argument value.</param>
 internal sealed class TerraformCliArgument(string prefix, object value)
     : IValueProvider, IManifestExpressionProvider, IValueWithReferences
 {
+    /// <inheritdoc />
     public string ValueExpression => value switch
     {
         string literal => Quote(prefix + literal),
@@ -20,8 +23,10 @@ internal sealed class TerraformCliArgument(string prefix, object value)
         _ => throw new InvalidOperationException("Unsupported Terraform argument value.")
     };
 
+    /// <inheritdoc />
     public IEnumerable<object> References => value is string ? [] : [value];
 
+    /// <inheritdoc />
     public async ValueTask<string?> GetValueAsync(CancellationToken cancellationToken = default)
     {
         var resolved = value switch
@@ -35,5 +40,8 @@ internal sealed class TerraformCliArgument(string prefix, object value)
     }
 
     // Terraform's parser does not unescape \' outside quotes, so embedded single quotes are double-quoted instead.
+    /// <summary>Quotes an argument using the rules accepted by Terraform's environment argument parser.</summary>
+    /// <param name="argument">The argument to quote.</param>
+    /// <returns>The quoted argument.</returns>
     internal static string Quote(string argument) => $"'{argument.Replace("'", "'\"'\"'", StringComparison.Ordinal)}'";
 }
