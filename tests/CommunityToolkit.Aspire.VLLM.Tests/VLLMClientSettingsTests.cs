@@ -24,6 +24,15 @@ public class VLLMClientSettingsTests
         Assert.Equal("my-model", settings.Model);
     }
 
+    [Fact]
+    public void ParseConnectionStringPreservesExplicitModel()
+    {
+        var settings = new VLLMClientSettings { Model = "configured" };
+        settings.ParseConnectionString("Endpoint=http://localhost:8000;Model=from-connection");
+
+        Assert.Equal("configured", settings.Model);
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]

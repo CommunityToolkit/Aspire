@@ -4,13 +4,14 @@ var builder = DistributedApplication.CreateBuilder(args);
 // only after its /health check passes, which happens once the model has finished loading.
 var vllm = builder.AddVLLM("vllm")
     .WithGPUSupport()
-    .WithDataVolume()
-    .WithModel("Qwen/Qwen3-0.6B");
+    .WithDataVolume();
+
+var model = vllm.AddModel(name: "qwen", model: "Qwen/Qwen3-0.6B");
 
 #pragma warning disable ASPIREDOTNETPROJECT001
 builder.AddDotnetProject("consumer", new Projects.CommunityToolkit_Aspire_Hosting_VLLM_ConsumerApp().ProjectPath)
 #pragma warning restore ASPIREDOTNETPROJECT001
-    .WithReference(vllm)
-    .WaitFor(vllm);
+    .WithReference(model)
+    .WaitFor(model);
 
 builder.Build().Run();

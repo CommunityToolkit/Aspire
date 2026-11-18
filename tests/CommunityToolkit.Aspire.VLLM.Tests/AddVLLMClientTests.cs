@@ -44,7 +44,7 @@ public class AddVLLMClientTests
     [Fact]
     public void AddChatClientModelIdOverridesSettings()
     {
-        var builder = CreateBuilder();
+        var builder = CreateBuilder(connectionString: $"{Endpoint};Model=from-connection");
         builder.AddVLLMClient(ConnectionName, s =>
         {
             s.Model = "from-settings";
@@ -67,6 +67,7 @@ public class AddVLLMClientTests
 
         var exception = Assert.Throws<InvalidOperationException>(() => host.Services.GetRequiredService<IChatClient>());
         Assert.Contains("Model", exception.Message);
+        Assert.Contains("connection string", exception.Message);
     }
 
     [Fact]
@@ -94,6 +95,62 @@ public class AddVLLMClientTests
     }
 
     [Fact]
+    public void AddChatClientUsesModelFromConnectionString()
+    {
+        var builder = CreateBuilder(connectionString: $"{Endpoint};Model={Model}");
+        builder.AddVLLMClient(ConnectionName, s => s.DisableTracing = true).AddChatClient();
+
+        using var host = builder.Build();
+        var metadata = host.Services.GetRequiredService<IChatClient>().GetService<ChatClientMetadata>();
+
+        Assert.Equal(Model, metadata?.DefaultModelId);
+    }
+
+    [Fact]
+    public void AddKeyedChatClientUsesModelFromConnectionString()
+    {
+        var builder = CreateBuilder(connectionString: $"{Endpoint};Model={Model}");
+        builder.AddKeyedVLLMClient("chat", ConnectionName, s => s.DisableTracing = true).AddKeyedChatClient();
+
+        using var host = builder.Build();
+        var metadata = host.Services.GetRequiredKeyedService<IChatClient>("chat").GetService<ChatClientMetadata>();
+
+        Assert.Equal(Model, metadata?.DefaultModelId);
+    }
+
+    [Fact]
+    public void AddKeyedChatClientModelIdOverridesSettingsAndConnectionString()
+    {
+        var builder = CreateBuilder(connectionString: $"{Endpoint};Model=from-connection");
+        builder.AddKeyedVLLMClient("chat", ConnectionName, s =>
+        {
+            s.Model = "from-settings";
+            s.DisableTracing = true;
+        }).AddKeyedChatClient("from-argument");
+
+        using var host = builder.Build();
+        var metadata = host.Services.GetRequiredKeyedService<IChatClient>("chat").GetService<ChatClientMetadata>();
+
+        Assert.Equal("from-argument", metadata?.DefaultModelId);
+    }
+
+    [Fact]
+    public void ConfiguredModelOverridesConnectionStringForDefaultAndKeyedClients()
+    {
+        var builder = CreateBuilder(new Dictionary<string, string?>
+        {
+            ["Aspire:VLLM:Model"] = "shared-model",
+            [$"Aspire:VLLM:{ConnectionName}:Model"] = "connection-model",
+        }, connectionString: $"{Endpoint};Model=from-connection-string");
+
+        var defaultClient = builder.AddVLLMClient(ConnectionName);
+        var keyedClient = builder.AddKeyedVLLMClient("chat", ConnectionName);
+
+        Assert.Equal("connection-model", defaultClient.Settings.Model);
+        Assert.Equal("connection-model", keyedClient.Settings.Model);
+    }
+
+    [Fact]
     public void AddVLLMClientBindsSettingsFromConfiguration()
     {
         var builder = CreateBuilder(new Dictionary<string, string?>
@@ -101,7 +158,7 @@ public class AddVLLMClientTests
             ["Aspire:VLLM:DisableTracing"] = "true",
             [$"Aspire:VLLM:{ConnectionName}:Model"] = Model,
             [$"Aspire:VLLM:{ConnectionName}:Key"] = "from-config",
-        });
+        }, connectionString: $"{Endpoint};Model=from-connection");
 
         var clientBuilder = builder.AddVLLMClient(ConnectionName);
 
@@ -117,7 +174,7 @@ public class AddVLLMClientTests
         var builder = CreateBuilder(new Dictionary<string, string?>
         {
             [$"Aspire:VLLM:{ConnectionName}:Model"] = "from-config",
-        });
+        }, connectionString: $"{Endpoint};Model=from-connection");
 
         var clientBuilder = builder.AddVLLMClient(ConnectionName, s => s.Model = "from-callback");
 

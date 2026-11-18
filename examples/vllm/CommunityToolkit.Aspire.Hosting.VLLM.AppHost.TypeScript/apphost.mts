@@ -8,13 +8,13 @@ const builder = await createBuilder();
 const vllm = await builder.addVLLM("vllm");
 await vllm.withImage("vllm/vllm-openai-cpu", { tag: "v0.33.0" });
 await vllm.withDataVolume();
-await vllm.withModel("facebook/opt-125m");
+const model = await vllm.addNamedModel("model", "facebook/opt-125m");
 await vllm.withServedModelName("opt");
 // Avoid JIT warmup for this CPU-only example.
 await vllm.withArgs(["--enforce-eager"]);
 // The CPU build otherwise reserves most of the host memory for the KV cache (in GiB).
 await vllm.withEnvironment("VLLM_CPU_KVCACHE_SPACE", "1");
 
-await vllm.connectionStringExpression();
+await model.connectionStringExpression();
 
 await builder.build().run();

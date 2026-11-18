@@ -26,6 +26,7 @@ public sealed class VLLMClientSettings
     /// <summary>
     /// Gets or sets the served model name to use for chat requests.
     /// </summary>
+    /// <remarks>A configured value takes precedence over the model in the connection string.</remarks>
     public string? Model { get; set; }
 
     /// <summary>
@@ -60,6 +61,7 @@ public sealed class VLLMClientSettings
     /// <summary>
     /// Applies a base HTTP URI or the endpoint, key, and model values from a connection string.
     /// </summary>
+    /// <remarks>An existing configured model is not replaced.</remarks>
     /// <param name="connectionString">The connection string, or <see langword="null"/> to leave the settings unchanged.</param>
     internal void ParseConnectionString(string? connectionString)
     {
@@ -88,7 +90,7 @@ public sealed class VLLMClientSettings
             Key = keyValue;
         }
 
-        if (connectionBuilder.TryGetValue("Model", out var model) && model?.ToString() is { Length: > 0 } modelValue)
+        if (Model is null && connectionBuilder.TryGetValue("Model", out var model) && model?.ToString() is { Length: > 0 } modelValue)
         {
             Model = modelValue;
         }

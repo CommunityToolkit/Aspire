@@ -14,10 +14,10 @@ func main() {
 	vllm := builder.AddVLLM("vllm").
 		WithGPUSupport().
 		WithDataVolume().
-		WithModel("Qwen/Qwen3-0.6B").
 		WithServedModelName("qwen")
-	_ = vllm.ConnectionStringExpression()
-	if err := vllm.Err(); err != nil {
+	model := vllm.AddNamedModel("qwen", "Qwen/Qwen3-0.6B")
+	_ = model.ConnectionStringExpression()
+	if err := model.Err(); err != nil {
 		log.Fatal(aspire.FormatError(err))
 	}
 

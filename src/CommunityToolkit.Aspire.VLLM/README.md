@@ -6,7 +6,7 @@ The client applies vLLM-specific defaults:
 
 - a **placeholder API key** when none is configured (vLLM doesn't require one, but the OpenAI client requires a non-empty credential),
 - the **`/v1` base path**, appended automatically,
-- the **served model name**, resolved from `AddChatClient(modelId)` or settings,
+- the **served model name**, resolved from `AddChatClient(modelId)`, settings, or the model resource's connection string,
 - a **`/health` health check** that reports readiness of the vLLM engine.
 
 ## Getting Started
@@ -24,8 +24,8 @@ dotnet add package CommunityToolkit.Aspire.VLLM
 In the _Program.cs_ file of your project, call `AddVLLMClient` to register the vLLM client, then `AddChatClient` to register an `IChatClient`:
 
 ```csharp
-builder.AddVLLMClient("vllm")
-    .AddChatClient("Qwen/Qwen3-0.6B");
+builder.AddVLLMClient("qwen")
+    .AddChatClient();
 ```
 
 You can then inject `IChatClient` into your services:
@@ -53,7 +53,7 @@ When using a connection string from the `ConnectionStrings` configuration sectio
 builder.AddVLLMClient("vllm");
 ```
 
-The connection string is retrieved from the `ConnectionStrings` configuration section. It can be a bare URI or a set of key-value pairs:
+The connection string is retrieved from the `ConnectionStrings` configuration section. It can be a bare URI or a set of key-value pairs. A model resource reference supplies both `Endpoint` and `Model`; a bare URI or direct server reference requires the model to be configured separately:
 
 ```json
 {
@@ -80,6 +80,8 @@ The vLLM client integration supports `Microsoft.Extensions.Configuration`. It lo
   }
 }
 ```
+
+For the model name, a value passed to `AddChatClient(modelId)` takes precedence over inline settings, configuration, and the connection string, in that order. When the server uses `WithServedModelName`, use that alias as the model name.
 
 | Setting | Description |
 | --- | --- |
@@ -111,15 +113,15 @@ builder.AddKeyedVLLMClient("chat")
 
 ## AppHost integration
 
-In your AppHost project, install the `CommunityToolkit.Aspire.Hosting.VLLM` library and reference the vLLM resource from the consuming project:
+In your AppHost project, install the `CommunityToolkit.Aspire.Hosting.VLLM` library and reference the model resource from the consuming project:
 
 ```csharp
-var vllm = builder.AddVLLM("vllm")
-    .WithModel("Qwen/Qwen3-0.6B");
+var vllm = builder.AddVLLM("vllm");
+var model = vllm.AddModel(name: "qwen", model: "Qwen/Qwen3-0.6B");
 
 builder.AddProject<Projects.MyApp>("myapp")
-    .WithReference(vllm)
-    .WaitFor(vllm);
+    .WithReference(model)
+    .WaitFor(model);
 ```
 
 ## Additional documentation

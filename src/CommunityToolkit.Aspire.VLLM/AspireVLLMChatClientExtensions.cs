@@ -67,7 +67,7 @@ public static class AspireVLLMChatClientExtensions
         var model = modelId ?? settings.Model
             ?? throw new InvalidOperationException(
                 $"A vLLM served model name is required. Provide it with AddChatClient(modelId), {nameof(VLLMClientSettings)}.{nameof(VLLMClientSettings.Model)}, " +
-                $"or the '{AspireVLLMExtensions.DefaultConfigSectionName}:{builder.ConnectionName}:Model' configuration value.");
+                $"the '{AspireVLLMExtensions.DefaultConfigSectionName}:{builder.ConnectionName}:Model' configuration value, or the 'Model' connection string value.");
 
         var apiKey = string.IsNullOrEmpty(settings.Key) ? VLLMClientSettings.PlaceholderApiKey : settings.Key;
         var endpoint = new Uri($"{settings.Endpoint!.AbsoluteUri.TrimEnd('/')}/v1");

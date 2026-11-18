@@ -23,6 +23,7 @@ public static class VLLMResourceBuilderExtensions
     /// so resources that wait for this resource don't start until the server can serve requests.
     /// The container is started with <c>--shm-size 8g</c> because vLLM's engine processes communicate through shared memory,
     /// and the container runtime's default <c>/dev/shm</c> size is too small for the engine to start.
+    /// Add exactly one model using <see cref="AddModel(IResourceBuilder{VLLMResource}, string)"/> before starting or publishing.
     /// </remarks>
     [AspireExport]
     public static IResourceBuilder<VLLMResource> AddVLLM(this IDistributedApplicationBuilder builder, [ResourceName] string name, int? port = null)
@@ -36,6 +37,12 @@ public static class VLLMResourceBuilderExtensions
             .WithContainerRuntimeArgs("--shm-size", "8g")
             .WithIconName("BrainCircuit")
             .WithHttpEndpoint(port: port, targetPort: VLLMResource.DefaultContainerPort, name: VLLMResource.PrimaryEndpointName)
+            .WithArgs(context =>
+            {
+                var model = resource.Model ?? throw new DistributedApplicationException(
+                    $"The vLLM resource '{resource.Name}' requires a model. Call AddModel on the resource before starting or publishing.");
+                context.Args.Insert(0, model.ModelName);
+            })
             .WithHttpHealthCheck("/health");
     }
 
@@ -93,28 +100,56 @@ public static class VLLMResourceBuilderExtensions
     }
 
     /// <summary>
-    /// Sets the model that the vLLM server loads and serves.
+    /// Adds the model that the vLLM server loads and serves.
     /// </summary>
     /// <param name="builder">The <see cref="IResourceBuilder{T}"/>.</param>
-    /// <param name="model">A Hugging Face model ID, such as <c>Qwen/Qwen3-0.6B</c>, or a path to a model inside the container.</param>
-    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <param name="model">A Hugging Face model ID or a path to a model inside the container.</param>
+    /// <returns>A builder for the model resource.</returns>
     /// <remarks>
-    /// The model is passed as the first positional argument to <c>vllm serve</c>, regardless of when other arguments are added.
-    /// Calling this method again replaces the previously selected model.
+    /// The resource name is generated from the server and model names.
+    /// A vLLM server can serve only one base model; add another server for another model.
     /// </remarks>
-    [AspireExport("withVLLMModel", MethodName = "withModel")]
-    public static IResourceBuilder<VLLMResource> WithModel(this IResourceBuilder<VLLMResource> builder, string model)
+    [AspireExport("addVLLMModel", MethodName = "addModel")]
+    public static IResourceBuilder<VLLMModelResource> AddModel(this IResourceBuilder<VLLMResource> builder, string model)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        ArgumentException.ThrowIfNullOrEmpty(model);
+        ArgumentException.ThrowIfNullOrWhiteSpace(model);
 
-        var resource = builder.Resource;
-        var isFirstModel = resource.Model is null;
-        resource.Model = model;
+        var modelName = model.TrimEnd('/', '\\').Split('/', '\\').Last().Split(':')[0];
+        var sanitizedName = string.Concat(modelName.Select(c => char.IsAsciiLetterOrDigit(c) || c == '-' ? c : '-')).Trim('-');
+        var name = $"{builder.Resource.Name}-{(sanitizedName.Length == 0 ? "model" : sanitizedName)}";
 
-        return isFirstModel
-            ? builder.WithArgs(context => context.Args.Insert(0, resource.Model!))
-            : builder;
+        return builder.AddModel(name, model);
+    }
+
+    /// <summary>
+    /// Adds the model that the vLLM server loads and serves, with an explicit resource name.
+    /// </summary>
+    /// <param name="builder">The <see cref="IResourceBuilder{T}"/>.</param>
+    /// <param name="name">The name of the model resource.</param>
+    /// <param name="model">A Hugging Face model ID or a path to a model inside the container.</param>
+    /// <returns>A builder for the model resource.</returns>
+    /// <remarks>
+    /// A vLLM server can serve only one base model; add another server for another model.
+    /// </remarks>
+    /// <exception cref="DistributedApplicationException">Thrown when the server already has a model.</exception>
+    [AspireExport("addNamedVLLMModel", MethodName = "addNamedModel")]
+    public static IResourceBuilder<VLLMModelResource> AddModel(this IResourceBuilder<VLLMResource> builder, [ResourceName] string name, string model)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentException.ThrowIfNullOrWhiteSpace(model);
+
+        if (builder.Resource.Model is not null)
+        {
+            throw new DistributedApplicationException(
+                $"The vLLM resource '{builder.Resource.Name}' already has a model. Add another AddVLLM resource for another model.");
+        }
+
+        var modelResource = new VLLMModelResource(name, model, builder.Resource);
+        var modelBuilder = builder.ApplicationBuilder.AddResource(modelResource).WithIconName("BrainCircuit");
+        builder.Resource.Model = modelResource;
+        return modelBuilder;
     }
 
     /// <summary>
@@ -123,13 +158,24 @@ public static class VLLMResourceBuilderExtensions
     /// <param name="builder">The <see cref="IResourceBuilder{T}"/>.</param>
     /// <param name="servedModelName">The model name exposed through the OpenAI-compatible API.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <remarks>The served name is included in the model resource's connection string. Calling this method again replaces the previous name.</remarks>
     [AspireExport]
     public static IResourceBuilder<VLLMResource> WithServedModelName(this IResourceBuilder<VLLMResource> builder, string servedModelName)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        ArgumentException.ThrowIfNullOrEmpty(servedModelName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(servedModelName);
 
-        return builder.WithArgs("--served-model-name", servedModelName);
+        var resource = builder.Resource;
+        var isFirstName = resource.ServedModelName is null;
+        resource.ServedModelName = servedModelName;
+
+        return isFirstName
+            ? builder.WithArgs(context =>
+            {
+                context.Args.Add("--served-model-name");
+                context.Args.Add(resource.ServedModelName!);
+            })
+            : builder;
     }
 
     private static IResourceBuilder<VLLMResource> WithNvidiaGPUSupport(this IResourceBuilder<VLLMResource> builder)

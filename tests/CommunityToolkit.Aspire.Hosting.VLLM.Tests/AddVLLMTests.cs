@@ -1,6 +1,8 @@
 using Aspire.Hosting;
 using Aspire.Hosting.Utils;
 using CommunityToolkit.Aspire.Testing;
+using Microsoft.Extensions.Logging.Abstractions;
+using System.Data.Common;
 
 namespace CommunityToolkit.Aspire.Hosting.VLLM.Tests;
 
@@ -146,35 +148,142 @@ public class AddVLLMTests
     }
 
     [Fact]
-    public async Task WithModelIsFirstArgumentRegardlessOfOrder()
+    public async Task AddModelIsFirstArgumentRegardlessOfOrder()
     {
         var builder = DistributedApplication.CreateBuilder();
-        builder.AddVLLM("vllm")
+        var vllm = builder.AddVLLM("vllm")
             .WithArgs("--dtype", "bfloat16")
-            .WithServedModelName("my-model")
-            .WithModel("Qwen/Qwen3-0.6B");
+            .WithServedModelName("my-model");
+        var model = vllm.AddModel("qwen", "Qwen/Qwen3-0.6B");
 
         using var app = builder.Build();
 
         var args = await ArgumentEvaluator.GetArgumentListAsync(AssertSingleResource(app));
 
         Assert.Equal(["Qwen/Qwen3-0.6B", "--dtype", "bfloat16", "--served-model-name", "my-model"], args);
+        Assert.Same(vllm.Resource, model.Resource.Parent);
+    }
+
+    [Theory]
+    [InlineData("Qwen/Qwen3-0.6B", "vllm-Qwen3-0-6B")]
+    [InlineData("org/model:tag", "vllm-model")]
+    [InlineData("/models/my_model/", "vllm-my-model")]
+    public void AddModelGeneratesResourceName(string modelId, string expectedName)
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var model = builder.AddVLLM("vllm").AddModel(modelId);
+
+        Assert.Equal(expectedName, model.Resource.Name);
+        Assert.Equal(modelId, model.Resource.ModelName);
     }
 
     [Fact]
-    public async Task WithModelReplacesPreviousValue()
+    public async Task AddSecondModelFailsWithoutChangingTheFirstModel()
     {
         var builder = DistributedApplication.CreateBuilder();
-        builder.AddVLLM("vllm")
-            .WithModel("model-a")
-            .WithArgs("--dtype", "bfloat16")
-            .WithModel("model-b");
+        var vllm = builder.AddVLLM("vllm");
+        vllm.AddModel("first", "model-a");
 
-        using var app = builder.Build();
+        var exception = Assert.Throws<DistributedApplicationException>(() => vllm.AddModel("second", "model-b"));
 
-        var args = await ArgumentEvaluator.GetArgumentListAsync(AssertSingleResource(app));
+        Assert.Contains("another AddVLLM resource", exception.Message);
+        Assert.Equal(["model-a"], await vllm.Resource.GetArgumentListAsync());
+        Assert.Single(builder.Resources.OfType<VLLMModelResource>());
+    }
 
-        Assert.Equal(["model-b", "--dtype", "bfloat16"], args);
+    [Theory]
+    [InlineData(DistributedApplicationOperation.Run)]
+    [InlineData(DistributedApplicationOperation.Publish)]
+    public async Task ServerWithoutModelFailsWhenArgumentsAreEvaluated(DistributedApplicationOperation operation)
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var vllm = builder.AddVLLM("vllm");
+        var executionContext = new DistributedApplicationExecutionContext(
+            new DistributedApplicationExecutionContextOptions(operation));
+
+        var exception = await Assert.ThrowsAsync<DistributedApplicationException>(async () =>
+            await ExecutionConfigurationBuilder.Create(vllm.Resource)
+                .WithArgumentsConfig()
+                .BuildAsync(executionContext, NullLogger.Instance, TestContext.Current.CancellationToken));
+        Assert.Contains("'vllm' requires a model", exception.Message);
+        Assert.Contains("AddModel", exception.Message);
+    }
+
+    [Theory]
+    [InlineData("Qwen/Qwen3-0.6B")]
+    [InlineData("/models/model;revision=1")]
+    public async Task ModelConnectionStringContainsEscapedModelAndParentEndpoint(string modelId)
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var vllm = builder.AddVLLM("vllm");
+        vllm.WithEndpoint("http", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 27000));
+        var model = vllm.AddModel("model", modelId);
+
+        var connectionString = await model.Resource.ConnectionStringExpression.GetValueAsync(default);
+        var connection = new DbConnectionStringBuilder { ConnectionString = connectionString };
+        var properties = ((IResourceWithConnectionString)model.Resource).GetConnectionProperties().ToDictionary(p => p.Key, p => p.Value);
+
+        Assert.Equal("http://localhost:27000", connection["Endpoint"]);
+        Assert.Equal(modelId, connection["Model"]);
+        Assert.Equal(["Host", "Port", "Uri", "Model"], properties.Keys);
+        Assert.Equal(modelId, await properties["Model"].GetValueAsync(default));
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ServedModelAliasIsUsedInArgumentsAndModelConnectionRegardlessOfOrder(bool aliasBeforeModel)
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var vllm = builder.AddVLLM("vllm");
+        vllm.WithEndpoint("http", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 27000));
+
+        if (aliasBeforeModel)
+        {
+            vllm.WithServedModelName("old-alias");
+        }
+
+        var model = vllm.AddModel("model", "org/model");
+        var consumer = builder.AddExecutable("consumer", "dotnet", ".").WithReference(model);
+        if (!aliasBeforeModel)
+        {
+            vllm.WithServedModelName("old-alias");
+        }
+
+        vllm.WithServedModelName("new-alias");
+
+        var connectionString = await model.Resource.ConnectionStringExpression.GetValueAsync(default);
+        var connection = new DbConnectionStringBuilder { ConnectionString = connectionString };
+        var environment = await consumer.Resource.GetEnvironmentVariablesAsync();
+        var referencedConnection = new DbConnectionStringBuilder { ConnectionString = environment["ConnectionStrings__model"] };
+        var properties = ((IResourceWithConnectionString)model.Resource).GetConnectionProperties().ToDictionary(p => p.Key, p => p.Value);
+
+        Assert.Equal("new-alias", connection["Model"]);
+        Assert.Equal("new-alias", referencedConnection["Model"]);
+        Assert.Equal("new-alias", await properties["Model"].GetValueAsync(default));
+        Assert.Equal(["org/model", "--served-model-name", "new-alias"], await vllm.Resource.GetArgumentListAsync());
+    }
+
+    [Fact]
+    public async Task ReferencingAndWaitingForModelUsesConnectionAndParentHealth()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var vllm = builder.AddVLLM("vllm");
+        vllm.WithEndpoint("http", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 27000));
+        var model = vllm.AddModel("qwen", "Qwen/Qwen3-0.6B");
+        var consumer = builder.AddExecutable("consumer", "dotnet", ".")
+            .WithReference(model)
+            .WaitFor(model);
+
+        var environment = await consumer.Resource.GetEnvironmentVariablesAsync();
+        var connection = new DbConnectionStringBuilder { ConnectionString = environment["ConnectionStrings__qwen"] };
+        var waits = consumer.Resource.Annotations.OfType<WaitAnnotation>();
+
+        Assert.Equal("http://localhost:27000", connection["Endpoint"]);
+        Assert.Equal("Qwen/Qwen3-0.6B", connection["Model"]);
+        Assert.IsAssignableFrom<IResourceWithoutLifetime>(model.Resource);
+        Assert.Contains(waits, wait => wait.Resource == vllm.Resource && wait.WaitType == WaitType.WaitUntilHealthy);
+        Assert.Contains(waits, wait => wait.Resource == model.Resource && wait.WaitType == WaitType.WaitUntilHealthy);
     }
 
     [Theory]
