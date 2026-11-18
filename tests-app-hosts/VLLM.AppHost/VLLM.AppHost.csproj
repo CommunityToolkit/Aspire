@@ -1,0 +1,12 @@
+<Project Sdk="Aspire.AppHost.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <UserSecretsId>5c7f1d2e-6b0a-4f3e-9a8d-2e4b7c1f0a93</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.VLLM\CommunityToolkit.Aspire.Hosting.VLLM.csproj" IsAspireProjectResource="false" />
+  </ItemGroup>
+
+</Project>

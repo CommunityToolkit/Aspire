@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.VLLM\CommunityToolkit.Aspire.VLLM.csproj" />
+  </ItemGroup>
+
+</Project>
