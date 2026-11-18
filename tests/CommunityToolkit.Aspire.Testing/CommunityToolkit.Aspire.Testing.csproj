@@ -5,10 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Using Include="Aspire.Hosting" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.AppHost" />
     <!--
       This intentionally does not reference 'xunit', 'xunit.core', or any runner packages.
       XUnit recommends only using xunit.extensibility.*, xunit.assert, and xunit.abstractions for packages which "extend" xunit.
