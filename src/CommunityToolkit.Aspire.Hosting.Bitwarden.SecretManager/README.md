@@ -79,7 +79,9 @@ The value is resolved in this order during startup:
 
 1. **Configuration and defaults** — preserve the supplied parameter value.
 2. **Bitwarden prefill** — use the existing remote value when local input is missing.
-3. **Interactive prompt** — ask for input when neither source supplies it.
+3. **Interactive input** — provide a value in the dashboard when neither source supplies it. Aspire can show the prompt while Bitwarden is still checking for a remote value. If you submit a value during the lookup, Bitwarden uses your input.
+
+In a headless run, an existing Bitwarden value can satisfy a missing parameter. If the secret is missing locally and remotely, supply an explicit parameter value. Deployments keep remote fallback values in memory for the current operation.
 Aspire finds or creates the secret entirely by name and cached ID. There is no explicit GUID adoption for managed secrets — if the same secret was created in a previous run it will be found automatically.
 
 ## Externally managed secrets
@@ -145,7 +147,7 @@ builder.AddProject<Projects.ApiService>("api")
 
 Run `aspire deploy`. The integration adds six pipeline steps per Bitwarden resource:
 
-1. **Pre-sync managed secrets** — authenticates and fetches existing Bitwarden values for managed secrets before `process-parameters` runs. Prevents re-prompting for secrets that already exist.
+1. **Pre-sync managed secrets** — authenticates and identifies remote fallbacks before `process-parameters` runs. Aspire skips prompts for those secrets. The deployment uses their values after it saves local parameter inputs.
 2. **Authenticate** — resolves credentials and authenticates with Bitwarden Secrets Manager.
 3. **Provision project** — creates or updates the remote Bitwarden project.
 4. **Sync managed secrets** — reads upstream values for managed secrets whose local parameter values are missing.

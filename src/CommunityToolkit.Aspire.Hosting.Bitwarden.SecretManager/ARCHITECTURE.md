@@ -34,14 +34,14 @@ The steps run in order and are scoped to the resource by name:
 
 | #   | Step name                               | What it does                                                                                                                                                                                        |
 | --- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | `bitwarden-pre-sync-managed-{name}`     | Prompts for any missing credentials, authenticates, and fetches existing managed secret values from Bitwarden; writes everything to the deployment state before `process-parameters` evaluates them |
+| 1   | `bitwarden-pre-sync-managed-{name}`     | Collects credentials and identifies remote fallbacks before `process-parameters` |
 | 2   | `bitwarden-authenticate-{name}`         | Resolves credentials, loads the AppHost cache, authenticates with Bitwarden                                                                                                                         |
 | 3   | `bitwarden-provision-project-{name}`    | Creates or updates the remote Bitwarden project; binds the resolved project ID                                                                                                                      |
 | 4   | `bitwarden-sync-managed-secrets-{name}` | Binds upstream values for managed secrets whose local parameter values are missing                                                                                                                  |
 | 5   | `bitwarden-provision-secrets-{name}`    | Creates or updates managed secrets, validates declared references, saves cache                                                                                                                      |
 | 6   | `bitwarden-patch-env-{name}`            | Patches Bitwarden-resolved values into Docker Compose `.env.{env}` files                                                                                                                            |
 
-Step 1 must run before `process-parameters` because step 2 (`bitwarden-authenticate`) depends on `DeployPrereq`, which depends on `process-parameters` — there is no way to place a step that formally depends on authentication before the parameter prompt. Step 1 therefore performs its own inline authentication, prompting for any missing credentials via `ParameterProcessor` and saving them to the deployment state so `process-parameters` does not re-prompt for them. `process-parameters` is made to depend on step 1 (via `WithPipelineConfiguration`) so all values are written to the deployment state and reflected in `IConfiguration` before `ParameterProcessor` evaluates them.
+Step 1 runs before `process-parameters`. It collects credentials and identifies which managed secrets have a remote fallback. Those parameters are optional during input collection. Step 4 sets the fallback in memory after Aspire saves local parameter inputs.
 
 Step 2 depends on `DeployPrereq`; steps 3–5 form a chain where each step depends on the previous. Steps 3–5 are tagged `ProvisionInfrastructure`. Step 5 is also required by `Deploy`. Because steps 2–5 carry no dependency on `prepare-{env}`, they can run concurrently with the Docker image prepare phase.
 
@@ -82,7 +82,7 @@ Run-mode initialization collects parameters in four phases, all expressed as `Wa
 The resource waits for the management access token (and the auth cache path, which is derived from it). It then authenticates with Bitwarden immediately. A bad or missing token fails fast here — before the user is asked for project name or secret values — and the resource transitions to `Exited` (exit code 1).
 
 **Phase 2 — upstream managed secret sync.**
-After authentication, the resource resolves the project and checks Bitwarden for managed secrets with missing inputs. The provisioner records each remote ID and assigns each value with Aspire's public parameter setter. Aspire updates the parameter state in the dashboard.
+After authentication, the resource resolves the project and checks Bitwarden for managed secrets with missing inputs. Aspire can display its missing-parameter prompt during the lookup. The provisioner completes a pending parameter with the remote value. If the user has already completed the parameter, their value wins. When interaction is unavailable, the provisioner can recover a missing-value fault if Bitwarden has the value.
 
 **Phase 2.5 — upstream reference secret sync.**
 The provisioner fetches each reference-only secret and assigns the value to its optional parameter. A missing remote secret fails provisioning.
@@ -113,10 +113,10 @@ The "Reprovision" command repeats the full initialization sequence on demand. It
 The `bitwarden-pre-sync-managed-{name}` step addresses this by running before `process-parameters` (wired via `WithPipelineConfiguration`). It has no formal pipeline dependencies and performs its own inline authentication. It:
 
 1. Reads configured credentials and prompts for missing inputs when interaction is available. It assigns the values through Aspire's public parameter setter and saves them to deployment state.
-2. Authenticates with Bitwarden and prefills missing managed values when the project ID is known. It assigns the values to the parameters and saves them to deployment state.
+2. Authenticates with Bitwarden and identifies remote fallbacks when the project ID is known. It makes the corresponding parameters optional during input collection.
 3. Reloads configuration so other deployment steps can read the saved values.
 
-Aspire processes the populated parameters and prompts for any remaining required inputs.
+Aspire prompts for any remaining required inputs. The managed-secret sync step applies remote fallbacks after Aspire finishes saving parameters. Artifact-only `publish` and `build` skip remote pre-sync.
 
 ## Access Tokens
 

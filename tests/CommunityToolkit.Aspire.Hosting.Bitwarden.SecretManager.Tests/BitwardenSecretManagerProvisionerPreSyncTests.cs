@@ -1,8 +1,10 @@
 #pragma warning disable ASPIREPIPELINES002
+#pragma warning disable ASPIREINTERACTION001
 
 using Aspire.Hosting;
 using Aspire.Hosting.Pipelines;
 using Aspire.Hosting.Publishing;
+using Aspire.Hosting.Utils;
 using Microsoft.Extensions.Logging;
 
 namespace CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager.Tests;
@@ -42,7 +44,7 @@ public class BitwardenSecretManagerProvisionerPreSyncTests
         var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<BitwardenSecretManagerProvisioner>();
 
         // Should not throw InvalidOperationException for missing IDeploymentStateManager.
-        await provisioner.PreSyncManagedSecretValuesAsync(bitwarden.Resource, app.Services, logger, default);
+        await provisioner.PreSyncManagedSecretValuesAsync(bitwarden.Resource, appBuilder, app.Services, logger, default);
 
         Assert.Empty(bitwarden.Resource.ManagedSecrets);
     }
@@ -83,7 +85,7 @@ public class BitwardenSecretManagerProvisionerPreSyncTests
             var provisioner = app.Services.GetRequiredService<BitwardenSecretManagerProvisioner>();
             var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<BitwardenSecretManagerProvisioner>();
 
-            await provisioner.PreSyncManagedSecretValuesAsync(bitwarden.Resource, app.Services, logger, default);
+            await provisioner.PreSyncManagedSecretValuesAsync(bitwarden.Resource, appBuilder, app.Services, logger, default);
 
             Assert.Empty(fakeDeploymentState.SavedSectionNames);
         }
@@ -127,7 +129,7 @@ public class BitwardenSecretManagerProvisionerPreSyncTests
             var provisioner = app.Services.GetRequiredService<BitwardenSecretManagerProvisioner>();
             var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<BitwardenSecretManagerProvisioner>();
 
-            await provisioner.PreSyncManagedSecretValuesAsync(bitwarden.Resource, app.Services, logger, default);
+            await provisioner.PreSyncManagedSecretValuesAsync(bitwarden.Resource, appBuilder, app.Services, logger, default);
 
             Assert.Empty(fakeDeploymentState.SavedSectionNames);
         }
@@ -173,7 +175,7 @@ public class BitwardenSecretManagerProvisionerPreSyncTests
             var provisioner = app.Services.GetRequiredService<BitwardenSecretManagerProvisioner>();
             var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<BitwardenSecretManagerProvisioner>();
 
-            await provisioner.PreSyncManagedSecretValuesAsync(bitwarden.Resource, app.Services, logger, default);
+            await provisioner.PreSyncManagedSecretValuesAsync(bitwarden.Resource, appBuilder, app.Services, logger, default);
 
             Assert.Empty(fakeDeploymentState.SavedSectionNames);
         }
@@ -213,7 +215,7 @@ public class BitwardenSecretManagerProvisionerPreSyncTests
             var provisioner = app.Services.GetRequiredService<BitwardenSecretManagerProvisioner>();
             var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<BitwardenSecretManagerProvisioner>();
 
-            await provisioner.PreSyncManagedSecretValuesAsync(bitwarden.Resource, app.Services, logger, default);
+            await provisioner.PreSyncManagedSecretValuesAsync(bitwarden.Resource, appBuilder, app.Services, logger, default);
 
             Assert.Empty(fakeDeploymentState.SavedSectionNames);
         }
@@ -274,7 +276,7 @@ public class BitwardenSecretManagerProvisionerPreSyncTests
             var provisioner = app.Services.GetRequiredService<BitwardenSecretManagerProvisioner>();
             var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<BitwardenSecretManagerProvisioner>();
 
-            await provisioner.PreSyncManagedSecretValuesAsync(bitwarden.Resource, app.Services, logger, default);
+            await provisioner.PreSyncManagedSecretValuesAsync(bitwarden.Resource, appBuilder, app.Services, logger, default);
 
             Assert.Equal(localValue, await secret.GetValueAsync(default));
             Assert.DoesNotContain(configKey, fakeDeploymentState.SavedSectionNames);
@@ -320,7 +322,7 @@ public class BitwardenSecretManagerProvisionerPreSyncTests
             var provisioner = app.Services.GetRequiredService<BitwardenSecretManagerProvisioner>();
             var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<BitwardenSecretManagerProvisioner>();
 
-            await provisioner.PreSyncManagedSecretValuesAsync(bitwarden.Resource, app.Services, logger, default);
+            await provisioner.PreSyncManagedSecretValuesAsync(bitwarden.Resource, appBuilder, app.Services, logger, default);
 
             Assert.Empty(fakeDeploymentState.SavedSectionNames);
         }
@@ -331,7 +333,7 @@ public class BitwardenSecretManagerProvisionerPreSyncTests
     }
 
     [Fact]
-    public async Task PreSyncManagedSecretValuesAsync_ProjectMissing_InteractionPrompts_SavesProjectAndSecret()
+    public async Task PreSyncManagedSecretValuesAsync_ProjectMissing_InteractionPrompts_SavesOnlyProject()
     {
         // Project is absent from config but the user is prompted and enters the project ID as a GUID.
         // Pre-sync should save both the project ID and the managed secret value.
@@ -373,12 +375,11 @@ public class BitwardenSecretManagerProvisionerPreSyncTests
             var provisioner = app.Services.GetRequiredService<BitwardenSecretManagerProvisioner>();
             var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<BitwardenSecretManagerProvisioner>();
 
-            await provisioner.PreSyncManagedSecretValuesAsync(bitwarden.Resource, app.Services, logger, default);
+            await provisioner.PreSyncManagedSecretValuesAsync(bitwarden.Resource, appBuilder, app.Services, logger, default);
 
             Assert.Contains("Parameters:bitwarden-project", fakeDeploymentState.SavedSectionNames);
             Assert.Equal(projectId.ToString("D"), fakeDeploymentState.GetSavedValue("Parameters:bitwarden-project"));
-            Assert.Contains("Parameters:bitwarden-managed-secret", fakeDeploymentState.SavedSectionNames);
-            Assert.Equal("upstream-value", fakeDeploymentState.GetSavedValue("Parameters:bitwarden-managed-secret"));
+            Assert.DoesNotContain("Parameters:bitwarden-managed-secret", fakeDeploymentState.SavedSectionNames);
         }
         finally
         {
@@ -426,7 +427,7 @@ public class BitwardenSecretManagerProvisionerPreSyncTests
             var provisioner = app.Services.GetRequiredService<BitwardenSecretManagerProvisioner>();
             var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<BitwardenSecretManagerProvisioner>();
 
-            await provisioner.PreSyncManagedSecretValuesAsync(bitwarden.Resource, app.Services, logger, default);
+            await provisioner.PreSyncManagedSecretValuesAsync(bitwarden.Resource, appBuilder, app.Services, logger, default);
 
             Assert.Empty(fakeDeploymentState.SavedSectionNames);
         }
@@ -480,7 +481,7 @@ public class BitwardenSecretManagerProvisionerPreSyncTests
             var provisioner = app.Services.GetRequiredService<BitwardenSecretManagerProvisioner>();
             var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<BitwardenSecretManagerProvisioner>();
 
-            await provisioner.PreSyncManagedSecretValuesAsync(bitwarden.Resource, app.Services, logger, default);
+            await provisioner.PreSyncManagedSecretValuesAsync(bitwarden.Resource, appBuilder, app.Services, logger, default);
 
             Assert.DoesNotContain("Parameters:bitwarden-managed-secret", fakeDeploymentState.SavedSectionNames);
         }
@@ -491,7 +492,7 @@ public class BitwardenSecretManagerProvisionerPreSyncTests
     }
 
     [Fact]
-    public async Task PreSyncManagedSecretValuesAsync_SecretNotInConfig_UpstreamFound_SavesValue()
+    public async Task Deployment_UsesFreshRemoteFallbackWithoutSavingItAsInput()
     {
         var organizationId = Guid.NewGuid();
         var existingProjectId = Guid.NewGuid();
@@ -500,7 +501,7 @@ public class BitwardenSecretManagerProvisionerPreSyncTests
 
         try
         {
-            var appBuilder = DistributedApplication.CreateBuilder();
+            using var appBuilder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
             appBuilder.Configuration["Aspire:Store:Path"] = Path.GetTempPath();
             appBuilder.Configuration["Parameters:bitwarden-access-token"] = FakeAccessToken;
             appBuilder.Configuration["Parameters:bitwarden-organization-id"] = organizationId.ToString("D");
@@ -514,9 +515,11 @@ public class BitwardenSecretManagerProvisionerPreSyncTests
 
             var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", projectParam, organizationParameter, accessToken)
                 .WithCacheFile(stateFile);
-            bitwarden.AddSecret("managed-secret");
+            var secret = bitwarden.AddSecret("managed-secret");
+            appBuilder.AddContainer("consumer", "busybox").WithEnvironment("SECRET", secret);
 
             var fakeProvider = new FakeBitwardenProvider();
+            fakeProvider.Projects[existingProjectId] = new BitwardenProjectInfo(existingProjectId, "test-project", organizationId);
             fakeProvider.Secrets[existingSecretId] = new BitwardenSecretInfo(existingSecretId, "managed-secret", "upstream-value", string.Empty, organizationId, existingProjectId);
             appBuilder.Services.AddSingleton<IBitwardenSecretManagerProviderFactory>(new FakeBitwardenProviderFactory(fakeProvider));
 
@@ -527,11 +530,23 @@ public class BitwardenSecretManagerProvisionerPreSyncTests
             var provisioner = app.Services.GetRequiredService<BitwardenSecretManagerProvisioner>();
             var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<BitwardenSecretManagerProvisioner>();
 
-            await provisioner.PreSyncManagedSecretValuesAsync(bitwarden.Resource, app.Services, logger, default);
+            var processor = app.Services.GetRequiredService<ParameterProcessor>();
+            var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+            foreach (string remoteValue in new[] { "upstream-value", "rotated-value" })
+            {
+                fakeProvider.Secrets[existingSecretId] = fakeProvider.Secrets[existingSecretId] with { Value = remoteValue };
+                await provisioner.PreSyncManagedSecretValuesAsync(bitwarden.Resource, appBuilder, app.Services, logger, default);
+                await processor.InitializeParametersAsync(model, waitForResolution: true);
+                Assert.Null(await secret.Resource.GetValueAsync(default));
+                Assert.DoesNotContain("Parameters:bitwarden-managed-secret", fakeDeploymentState.SavedSectionNames);
 
-            const string expectedKey = "Parameters:bitwarden-managed-secret";
-            Assert.Contains(expectedKey, fakeDeploymentState.SavedSectionNames);
-            Assert.Equal("upstream-value", fakeDeploymentState.GetSavedValue(expectedKey));
+                await provisioner.AuthenticateAsync(bitwarden.Resource, app.Services, logger, default);
+                await provisioner.ProvisionProjectAsync(bitwarden.Resource, app.Services, logger, default);
+                await provisioner.SyncMissingManagedSecretValuesAsync(bitwarden.Resource, app.Services, logger, default);
+                await provisioner.ProvisionSecretsAsync(bitwarden.Resource, app.Services, logger, default);
+                Assert.Equal(remoteValue, await secret.Resource.GetValueAsync(default));
+                Assert.Empty(fakeProvider.UpdatedSecrets);
+            }
         }
         finally
         {

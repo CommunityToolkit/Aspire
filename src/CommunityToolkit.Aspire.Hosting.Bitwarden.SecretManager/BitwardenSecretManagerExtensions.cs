@@ -659,7 +659,7 @@ public static class BitwardenSecretManagerExtensions
                 Action = async ctx =>
                 {
                     var provisioner = ctx.Services.GetRequiredService<BitwardenSecretManagerProvisioner>();
-                    await provisioner.PreSyncManagedSecretValuesAsync(resource, ctx.Services, ctx.Logger, ctx.CancellationToken).ConfigureAwait(false);
+                    await provisioner.PreSyncManagedSecretValuesAsync(resource, builder.ApplicationBuilder, ctx.Services, ctx.Logger, ctx.CancellationToken).ConfigureAwait(false);
                 },
                 Resource = resource
             };
