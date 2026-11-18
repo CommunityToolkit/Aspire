@@ -111,7 +111,7 @@ internal sealed class BitwardenSecretManagerProvider : IBitwardenSecretManagerPr
         {
             return _pipeline.Execute(() => Map(_client.Secrets.Get(secretId)));
         }
-        catch (BitwardenException ex) when (!IsTransientError(ex))
+        catch (BitwardenException ex) when (IsSecretNotFound(ex))
         {
             return null;
         }
@@ -161,6 +161,11 @@ internal sealed class BitwardenSecretManagerProvider : IBitwardenSecretManagerPr
 
     private static bool IsTransientError(Exception ex)
         => ex.Message.StartsWith("error sending request", StringComparison.OrdinalIgnoreCase);
+
+    // The SDK exposes server status only in the exception message.
+    private static bool IsSecretNotFound(BitwardenException ex)
+        => ex.Message.Equals("Secret not found", StringComparison.OrdinalIgnoreCase)
+            || ex.Message.StartsWith("Received error message from server: [404 ", StringComparison.OrdinalIgnoreCase);
 
     private static BitwardenProjectInfo Map(ProjectResponse response) => new(response.Id, response.Name, response.OrganizationId);
 

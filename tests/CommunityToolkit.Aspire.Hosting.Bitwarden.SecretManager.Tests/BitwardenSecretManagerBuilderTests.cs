@@ -411,7 +411,8 @@ public class BitwardenSecretManagerBuilderTests
 
         Guid secretId = Guid.NewGuid();
         managedSecret.Resource.SecretId = secretId;
-        bitwarden.Resource.BindResolvedSecret(secretId, managedSecret.Resource.RemoteName, "resolved-managed-value");
+        await managedSecret.Resource.SetValueAsync("resolved-managed-value");
+        await bitwarden.Resource.BindResolvedSecretAsync(secretId, managedSecret.Resource.RemoteName, "resolved-managed-value", default);
 
         var consumer = appBuilder.AddContainer("consumer", "busybox", "1.37.0");
         consumer.WithEnvironment("DEMO_API_KEY", managedSecret);
@@ -440,7 +441,7 @@ public class BitwardenSecretManagerBuilderTests
 
         Guid secretId = Guid.NewGuid();
         managedSecret.Resource.SecretId = secretId;
-        bitwarden.Resource.BindResolvedSecret(secretId, managedSecret.Resource.RemoteName, "resolved-managed-value");
+        await bitwarden.Resource.BindResolvedSecretAsync(secretId, managedSecret.Resource.RemoteName, "resolved-managed-value", default);
 
         var consumer = appBuilder.AddContainer("consumer", "busybox", "1.37.0");
         consumer.WithEnvironment("DEMO_API_KEY_SECRET_ID", managedSecret.AsSecretId());

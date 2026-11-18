@@ -651,13 +651,7 @@ public static class BitwardenSecretManagerExtensions
 
         builder.WithPipelineStepFactory(async _ =>
         {
-            // Runs before process-parameters (wired in WithPipelineConfiguration below).
-            // Only handles managed (AddSecret) secrets — unmanaged (GetSecret) secrets return
-            // string.Empty from their valueGetter so ParameterProcessor never adds them to
-            // _unresolvedParameters and process-parameters never prompts for them.
-            // Prompts for any missing credentials, then fetches existing managed secret values
-            // from Bitwarden and writes them to deployment state. Calls IConfigurationRoot.Reload()
-            // so _valueGetter reads the fresh values when ParameterProcessor first evaluates them.
+            // Prefill missing managed inputs before Aspire processes parameters.
             PipelineStep preSyncManagedStep = new()
             {
                 Name = preSyncManagedStepName,
@@ -665,7 +659,7 @@ public static class BitwardenSecretManagerExtensions
                 Action = async ctx =>
                 {
                     var provisioner = ctx.Services.GetRequiredService<BitwardenSecretManagerProvisioner>();
-                    await provisioner.PreSyncManagedSecretValuesAsync(resource, ctx.Services, ctx.Logger, ctx.CancellationToken).ConfigureAwait(false);
+                    await provisioner.PreSyncManagedSecretValuesAsync(resource, builder.ApplicationBuilder, ctx.Services, ctx.Logger, ctx.CancellationToken).ConfigureAwait(false);
                 },
                 Resource = resource
             };
@@ -868,7 +862,9 @@ public static class BitwardenSecretManagerExtensions
 
         builder.WithReferenceRelationship(secret);
 
-        return builder.ApplicationBuilder.AddResource(secret)
+        var secretBuilder = builder.ApplicationBuilder.AddResource(secret);
+        secretBuilder.AsOptional();
+        return secretBuilder
             .WithParentRelationship(builder)
             .WithIconName("LockClosed")
             .WithInitialState(new CustomResourceSnapshot
@@ -899,7 +895,9 @@ public static class BitwardenSecretManagerExtensions
 
         builder.WithReferenceRelationship(secret);
 
-        return builder.ApplicationBuilder.AddResource(secret)
+        var secretBuilder = builder.ApplicationBuilder.AddResource(secret);
+        secretBuilder.AsOptional();
+        return secretBuilder
             .WithParentRelationship(builder)
             .WithIconName("LockClosed")
             .WithInitialState(new CustomResourceSnapshot
