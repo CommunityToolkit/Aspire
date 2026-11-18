@@ -77,10 +77,9 @@ IResourceBuilder<BitwardenSecretResource> managedSecret = bitwarden.AddSecret("a
 
 The value is resolved in this order during startup:
 
-1. **Bitwarden upstream** — if the secret already exists, its current value is synced automatically. No prompt or configuration needed.
-2. **Configuration** — reads `Parameters:{bitwardenResourceName}-{secretName}` (e.g. `Parameters:bitwarden-api-key`).
-3. **Interactive prompt** — the dashboard prompts for the value. Once supplied, Bitwarden creates the secret.
-
+1. **Configuration and defaults** — preserve the supplied parameter value.
+2. **Bitwarden prefill** — use the existing remote value when local input is missing.
+3. **Interactive prompt** — ask for input when neither source supplies it.
 Aspire finds or creates the secret entirely by name and cached ID. There is no explicit GUID adoption for managed secrets — if the same secret was created in a previous run it will be found automatically.
 
 ## Externally managed secrets
@@ -355,6 +354,4 @@ Each entry lists all fields that changed and their previous values. The trail is
 
 ## Compatibility
 
-Tested with **Aspire 13.3.0**.
-
-This integration relies on several experimental Aspire APIs (`ASPIREATS001`, `ASPIREPIPELINES001/002/004`, `ASPIREINTERACTION001`) and four `UnsafeAccessor` workarounds against private members of `ParameterResource` and `ParameterProcessor`. See [ASPIRE-INTERNALS.md](ASPIRE-INTERNALS.md) for the full explanation of each one, why no public API covers it, and what breaks when Aspire changes it.
+The integration uses the Aspire 17 parameter APIs to set resolved values and report failures.

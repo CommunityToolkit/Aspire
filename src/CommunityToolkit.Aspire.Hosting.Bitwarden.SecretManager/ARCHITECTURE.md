@@ -82,20 +82,13 @@ Run-mode initialization collects parameters in four phases, all expressed as `Wa
 The resource waits for the management access token (and the auth cache path, which is derived from it). It then authenticates with Bitwarden immediately. A bad or missing token fails fast here — before the user is asked for project name or secret values — and the resource transitions to `Exited` (exit code 1).
 
 **Phase 2 — upstream managed secret sync.**
-After a successful authentication, the resource resolves the project, then checks Bitwarden for existing managed secrets whose local parameter values are missing. For each secret that has an upstream value, the provisioner:
-
-1. Binds the value into the resource's resolved-secret cache (`BindResolvedSecret`).
-2. Calls `WaitForValueTcs.TrySetResult(value)` on the `BitwardenSecretResource`'s underlying `ParameterResource` so any caller awaiting `GetValueAsync()` unblocks immediately.
-3. Removes the secret from `ParameterProcessor._unresolvedParameters` and cancels the prompt loop if the list becomes empty.
-4. Publishes a `ResourceNotificationService` snapshot update to show the parameter state as `Running` in the dashboard.
-
-The net effect: the "Parameters need values" banner disappears automatically after upstream sync for any secrets whose values already exist in Bitwarden.
+After authentication, the resource resolves the project and checks Bitwarden for managed secrets with missing inputs. The provisioner records each remote ID and assigns each value with Aspire's public parameter setter. Aspire updates the parameter state in the dashboard.
 
 **Phase 2.5 — upstream reference secret sync.**
-After managed secret sync, the resource fetches current values for all reference-only secrets (declared via `GetSecret`). For each one, the provisioner binds the value and calls `ResolveWaitForValue` so `ParameterProcessor` sees the value and does not prompt. If a referenced secret does not exist in Bitwarden, the provisioner throws here rather than letting the dashboard ask for a value that the user cannot meaningfully supply.
+The provisioner fetches each reference-only secret and assigns the value to its optional parameter. A missing remote secret fails provisioning.
 
 **Phase 3 — remaining parameters.**
-After upstream sync, the resource waits for any remaining project, organization, or managed secret parameter values. Managed secrets with no upstream value are still in `ParameterProcessor._unresolvedParameters` at this point, so the dashboard's interactive prompt remains active for those only. Once every value is available, the resource transitions to `Running` and provisioning continues.
+After upstream sync, the resource waits for any remaining project, organization, or managed secret parameter values. Aspire prompts for any managed secret that still needs a value. Once every value is available, the resource transitions to `Running` and provisioning continues.
 
 The resource never enters `Running` while parameters are still pending. `Running` strictly means "all inputs gathered, provisioning in progress."
 
@@ -111,15 +104,7 @@ The "Reprovision" command repeats the full initialization sequence on demand. It
 
 **Dashboard visibility.** Both kinds use `ResourceType = "Parameter"` in their initial snapshot so they appear in the Aspire dashboard parameters tab. For managed secrets, the `Source` property shows the configuration key (`Parameters:{resourceName}`) where a value can be pre-supplied. For reference-only secrets, the `Source` shows `Bitwarden: {remoteName}` (the Bitwarden secret name) to signal that the value comes exclusively from Bitwarden.
 
-**`ParameterProcessor` integration.** Aspire's built-in `ParameterProcessor` processes every `ParameterResource` on startup. For **managed secrets**: the value getter throws `MissingParameterValueException` when no config key is set, so the secret is added to `_unresolvedParameters`; Phase 2 sync removes resolved secrets from that list. For **reference-only secrets**: the value getter returns `string.Empty` (never throws), so `ParameterProcessor` resolves the TCS immediately with an empty string and never adds the secret to `_unresolvedParameters`. The real value flows through `IValueProvider.GetValueAsync`, which reads from the Bitwarden resolved-secret cache populated by Phase 2.5.
-
-**Value resolution order.** Both `IValueProvider.GetValueAsync(CancellationToken)` and `IValueProvider.GetValueAsync(ValueProviderContext, CancellationToken)` are explicitly overridden on `BitwardenSecretResource`. The context overload is necessary because `ParameterResource` implements it to call the public (non-interface) `GetValueAsync(CancellationToken)`, which goes directly to `WaitForValueTcs` and bypasses the Bitwarden cache. The override redirects the framework dispatch path through the interface implementation, which applies the priority below:
-
-1. Bitwarden resolved-secret cache (populated by `BindResolvedSecret` after Phase 2/2.5 sync or Phase 4 provisioning).
-2. **Managed only** — `ParameterResource.GetValueAsync` — waits on `WaitForValueTcs`, which is set by either `ParameterProcessor` (from config or user input) or by the provisioner (from upstream sync).
-3. **Reference-only** — returns `null` if the Bitwarden cache is empty (pre-Phase 2.5); Phase 2.5 always populates the cache before the resource enters `Running`.
-
-The Bitwarden cache always takes precedence because it represents the authoritative remote state. The `ParameterResource` fallback for managed secrets serves as the write path: the value the user or config supplies is what the provisioner pushes to Bitwarden when the secret does not yet exist.
+**Parameter processing.** Managed secrets use configuration, defaults, remote prefill for missing values, and normal Aspire prompts. Reference-only secrets are optional during parameter processing and receive their values from Bitwarden. The resource and both `IValueProvider.GetValueAsync` overloads read the same parameter state. The resolved-secret cache supplies identity and remote values for deployment bookkeeping.
 
 ## Deploy-mode parameter suppression
 
@@ -127,15 +112,11 @@ The Bitwarden cache always takes precedence because it represents the authoritat
 
 The `bitwarden-pre-sync-managed-{name}` step addresses this by running before `process-parameters` (wired via `WithPipelineConfiguration`). It has no formal pipeline dependencies and performs its own inline authentication. It:
 
-1. Reads any missing credentials (access token, organization ID) from `IConfiguration`. If a credential is absent and `IInteractionService` is available, prompts via `IInteractionService.PromptInputAsync` directly — **not** via `ParameterProcessor.SetParameterAsync` / `PromptAsync`, which calls `ValueInternal` and would permanently cache `MissingParameterValueException` in `_lazyValue` (see `_lazyValue` hazard below). After collecting, saves to the deployment state and sets `WaitForValueTcs` via `InitializeWaitForValue` + `ResolveWaitForValue` so in-process callers (`GetResolvedManagementAccessTokenAsync`, `GetResolvedOrganizationIdAsync`) see the value before `IConfiguration` is reloaded.
-2. Authenticates with Bitwarden using the resolved credentials; looks up each managed secret's current value — by project ID from the AppHost cache when available, or by the `projectNameOrId` parameter if its current config value is a GUID — and writes each found value to the deployment state via `IDeploymentStateManager`. When neither a cached ID nor a GUID config value is available (project is identified by name only, first deploy), the step skips managed secret pre-sync; values are fetched after `bitwarden-provision-project` creates the project. When a project ID is known and the `projectNameOrId` parameter config value is absent, the step also fetches the project name from Bitwarden and pre-populates the parameter so `process-parameters` does not prompt for it. If the cached project ID no longer exists in Bitwarden (stale cache), a warning is logged and the secrets loop finds nothing; `bitwarden-provision-project` detects the missing project and creates a replacement.
-3. Calls `IConfigurationRoot.Reload()` in a `finally` block to force the JSON configuration provider (which loaded the deployment state file at startup with `reloadOnChange: false`) to re-read the updated file. The `finally` ensures the reload happens even when the step exits early (e.g. interaction unavailable, cancelled prompt, Bitwarden auth failure after credentials were saved).
+1. Reads configured credentials and prompts for missing inputs when interaction is available. It assigns the values through Aspire's public parameter setter and saves them to deployment state.
+2. Authenticates with Bitwarden and prefills missing managed values when the project ID is known. It assigns the values to the parameters and saves them to deployment state.
+3. Reloads configuration so other deployment steps can read the saved values.
 
-When `process-parameters` then calls `ParameterProcessor.InitializeParametersAsync`, each managed secret's `_valueGetter` reads `IConfiguration[key]` and finds the Bitwarden value — no prompt.
-
-**`_lazyValue` hazard.** `ParameterResource._lazyValue` is a `Lazy<string>` with `LazyThreadSafetyMode.ExecutionAndPublication` (the default). This mode permanently caches exceptions: if the factory throws `MissingParameterValueException` on the first call, all subsequent calls re-throw the same cached exception, even after `IConfiguration` is reloaded. Therefore the pre-sync step must never call `HasValue()`, `ValueInternal`, or any path that evaluates `_lazyValue` on the parameters it is pre-resolving. The step reads `IConfiguration[key]` directly to check whether a local value is already present.
-
-The first `aspire deploy` is prompt-minimizing: credentials are asked for once in step 1, and `process-parameters` finds them in `IConfiguration` and does not ask again. Managed secrets that exist in Bitwarden (even when the project ID is not yet cached) are pre-populated so `process-parameters` does not prompt for them either. Secrets that do not yet exist in Bitwarden still require a value — those are prompted by `process-parameters` as usual.
+Aspire processes the populated parameters and prompts for any remaining required inputs.
 
 ## Access Tokens
 
