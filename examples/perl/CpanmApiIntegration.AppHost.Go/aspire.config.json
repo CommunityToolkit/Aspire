@@ -4,7 +4,7 @@
     "language": "go"
   },
   "sdk": {
-    "version": "17.0.0-preview.1.26555.11"
+    "version": "17.0.0"
   },
   "packages": {
     "CommunityToolkit.Aspire.Hosting.Perl": "../../../src/CommunityToolkit.Aspire.Hosting.Perl/CommunityToolkit.Aspire.Hosting.Perl.csproj"

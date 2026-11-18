@@ -4,7 +4,7 @@
     "language": "go"
   },
   "sdk": {
-    "version": "17.0.0-preview.1.26555.11"
+    "version": "17.0.0"
   },
   "packages": {
     "CommunityToolkit.Aspire.Hosting.Squad": "../../../src/CommunityToolkit.Aspire.Hosting.Squad/CommunityToolkit.Aspire.Hosting.Squad.csproj"

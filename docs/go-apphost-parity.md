@@ -1,10 +1,10 @@
 # Go AppHost parity gaps
 
 These limitations were observed with Aspire SDK
-`17.1.0-preview.1.26559.8`. The repository now pins
-`17.0.0-preview.1.26555.11`; the ActiveMQ, Flare, Keycloak, and Zitadel
-failures have also been confirmed with that version. The other cases have not
-yet been revalidated against it:
+`17.1.0-preview.1.26559.8`. The ActiveMQ, Flare, Keycloak, and Zitadel
+failures were also confirmed with `17.0.0-preview.1.26555.11`. The repository
+now pins stable `17.0.0`; these cases have not yet been revalidated against
+that release:
 
 - **RustFs:** `AddRustFsOptions.AccessKey` and `SecretKey` are generated as
   `*aspire.ParameterResource` (pointers to interfaces). Passing addresses of
