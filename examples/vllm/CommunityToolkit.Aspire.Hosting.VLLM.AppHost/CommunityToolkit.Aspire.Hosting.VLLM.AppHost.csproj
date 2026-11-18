@@ -1,4 +1,4 @@
-<Project Sdk="Aspire.AppHost.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -6,11 +6,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.VLLM.ConsumerApp\CommunityToolkit.Aspire.Hosting.VLLM.ConsumerApp.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.VLLM.ConsumerApp\CommunityToolkit.Aspire.Hosting.VLLM.ConsumerApp.csproj" IsAspireProjectResource="true" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" ExcludeAssets="all" Private="false" />
     <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.VLLM\CommunityToolkit.Aspire.Hosting.VLLM.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.AppHost" />
     <PackageReference Include="Aspire.Hosting.Dotnet" />
   </ItemGroup>
 </Project>
