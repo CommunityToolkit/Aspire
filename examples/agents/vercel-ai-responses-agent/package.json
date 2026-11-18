@@ -12,7 +12,7 @@
     "build": "tsc --noEmit"
   },
   "dependencies": {
-    "@ai-sdk/azure": "^4.0.119",
+    "@ai-sdk/azure": "^4.0.126",
     "@azure/identity": "^4.14.1",
     "ai": "^7.0.173",
     "express": "^5.3.0",
