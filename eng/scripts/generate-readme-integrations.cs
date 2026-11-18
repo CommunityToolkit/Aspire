@@ -1,3 +1,5 @@
+#:property TargetFramework=net10.0
+
 using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
