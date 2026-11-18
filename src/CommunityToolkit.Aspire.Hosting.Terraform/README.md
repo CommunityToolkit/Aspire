@@ -39,7 +39,7 @@ For a standalone apply of a saved plan, pass the plan path through `WithApply(ar
 
 ## Deployment pipeline
 
-Declared operations register `terraform-init-{name}`, `terraform-plan-{name}`, `terraform-apply-{name}`, and `terraform-destroy-{name}` steps. Steps are independent by default; apply is required by `aspire deploy` and destroy by `aspire destroy`. Explicit local startup is not an approval gate for pipeline operations.
+Declared operations register `terraform-init-{name}`, `terraform-plan-{name}`, `terraform-apply-{name}`, and `terraform-destroy-{name}` steps. All wait for Aspire to process parameters, but do not depend on other Terraform steps by default. Apply is required by `aspire deploy` and destroy by `aspire destroy`. Explicit local startup is not an approval gate for pipeline operations.
 
 For approval workflows, run init and plan, securely store the saved plan and module, then restore them and run init on the apply runner before invoking apply. `ChainSteps` instead produces a fresh plan when applying. Saved plans and Terraform state may contain secrets; restrict access to both and to logs. Terraform, provider credentials, backend state, and locking remain your responsibility.
 

@@ -69,7 +69,7 @@ public class TerraformResourceTests
     }
 
     [Fact]
-    public void PipelineStepsAreIndependentByDefaultAndAttachToDeployAndDestroy()
+    public void PipelineStepsDependOnlyOnParameterProcessingByDefaultAndAttachToDeployAndDestroy()
     {
         using var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
         var env = builder.AddTerraformEnvironment("infra", "./module").WithInit().WithPlan().WithApply().WithDestroy();
@@ -77,7 +77,7 @@ public class TerraformResourceTests
 
         Assert.Equal(4, steps.Count);
         Assert.All(steps.Values, step => Assert.Same(env.Resource, step.Resource));
-        Assert.All(steps.Values, step => Assert.Empty(step.DependsOnSteps));
+        Assert.All(steps.Values, step => Assert.Equal([WellKnownPipelineSteps.ProcessParameters], step.DependsOnSteps));
         Assert.Contains(WellKnownPipelineSteps.Deploy, steps["terraform-apply-infra"].RequiredBySteps);
         Assert.Contains(WellKnownPipelineSteps.Destroy, steps["terraform-destroy-infra"].RequiredBySteps);
         Assert.Contains(env.Resource.Annotations, a => a is PipelineStepAnnotation);
@@ -96,6 +96,7 @@ public class TerraformResourceTests
             });
         var steps = TerraformPipelineExtensions.CreateSteps(env.Resource).ToDictionary(s => s.Name);
 
+        Assert.All(steps.Values, step => Assert.Contains(WellKnownPipelineSteps.ProcessParameters, step.DependsOnSteps));
         Assert.Contains("terraform-init-infra", steps["terraform-plan-infra"].DependsOnSteps);
         Assert.Contains("terraform-plan-infra", steps["terraform-apply-infra"].DependsOnSteps);
         Assert.Contains("terraform-init-infra", steps["terraform-destroy-infra"].DependsOnSteps);

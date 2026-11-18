@@ -15,7 +15,8 @@ internal static class TerraformPipelineExtensions
     /// <returns>The environment builder.</returns>
     /// <remarks>
     /// Steps are named terraform-COMMAND-RESOURCE and reuse the arguments and environment of the local command
-    /// resources. Dependencies and global deploy/destroy attachment follow <see cref="TerraformPipelineOptions"/>.
+    /// resources. All steps wait for Aspire parameter processing. Command chaining and global deploy/destroy
+    /// attachment follow <see cref="TerraformPipelineOptions"/>.
     /// </remarks>
     internal static IResourceBuilder<TerraformEnvironmentResource> RegisterTerraformPipeline(
         this IResourceBuilder<TerraformEnvironmentResource> builder)
@@ -77,6 +78,7 @@ internal static class TerraformPipelineExtensions
             Name = $"terraform-{annotation.Command.ToString().ToLowerInvariant()}-{name}",
             Description = description,
             Resource = environment,
+            DependsOnSteps = [WellKnownPipelineSteps.ProcessParameters],
             Action = async context =>
             {
                 var planPath = environment.GetPlanPath();
