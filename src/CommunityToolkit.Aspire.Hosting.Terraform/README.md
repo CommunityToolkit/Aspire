@@ -22,7 +22,7 @@ var infrastructure = builder.AddTerraformEnvironment("infrastructure", "./terraf
 
 The local plan waits for init, and apply waits for the saved plan. Destroy requires an explicit local start. Without a declared plan, apply uses `-auto-approve`. Paths are relative to the AppHost directory.
 
-Set input variables using `WithTfVar`, `WithTfVarsFile`, and backend settings using `WithBackendConfig` or `WithBackendConfigFile`. Aspire parameters and expressions can be used for deferred values. `WithWorkspace` selects an existing workspace. `WithTerraformExecutablePath` selects an executable when Terraform is not on `PATH`.
+Set input variables using `WithTfVar`, `WithTfVarsFile`, and backend settings using `WithBackendConfig` or `WithBackendConfigFile`. Aspire parameters and expressions can be used for deferred values. `WithWorkspace` selects an existing workspace. `WithTerraformExecutablePath` selects an executable when Terraform is not on `PATH`. Both methods apply to all commands in the environment, whether called before or after declaring them.
 
 For a single command without pipeline steps, use the standalone CLI resource:
 

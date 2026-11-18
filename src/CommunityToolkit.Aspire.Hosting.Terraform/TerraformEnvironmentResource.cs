@@ -13,8 +13,9 @@ public sealed class TerraformEnvironmentResource(string name, string workingDire
     /// <summary>Gets the absolute path to the Terraform module.</summary>
     public string WorkingDirectory { get; } = workingDirectory;
 
-    /// <summary>Gets or sets the Terraform workspace, or null to use Terraform's default selection.</summary>
-    public string? Workspace { get; set; }
-    /// <summary>Gets or sets the Terraform executable name or path.</summary>
-    public string TerraformExecutablePath { get; set; } = "terraform";
+    /// <summary>Gets the Terraform workspace selected with <c>WithWorkspace</c>, or null if none was selected.</summary>
+    public string? Workspace { get; internal set; }
+
+    /// <summary>Gets the Terraform executable name or path configured with <c>WithTerraformExecutablePath</c>.</summary>
+    public string TerraformExecutablePath { get; internal set; } = "terraform";
 }

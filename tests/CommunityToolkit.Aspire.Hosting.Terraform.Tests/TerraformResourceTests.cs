@@ -31,6 +31,43 @@ public class TerraformResourceTests
         Assert.Equal(Path.Combine(environment.Resource.WorkingDirectory, "infra.tfplan"), environment.Resource.GetPlanPath());
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task EnvironmentConfigurationAppliesToAllCommandsRegardlessOfDeclarationOrder(bool configureFirst)
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var environment = builder.AddTerraformEnvironment("infra", "./module");
+
+        if (configureFirst)
+        {
+            ConfigureEnvironment();
+        }
+
+        environment.WithInit().WithPlan().WithApply().WithDestroy();
+
+        if (!configureFirst)
+        {
+            ConfigureEnvironment();
+        }
+
+        foreach (var annotation in environment.Resource.Annotations.OfType<TerraformCommandAnnotation>())
+        {
+            var command = annotation.Resource;
+            Assert.Equal("custom-terraform", command.Command);
+            var values = new Dictionary<string, object>();
+            var context = new EnvironmentCallbackContext(builder.ExecutionContext, command, values, TestContext.Current.CancellationToken);
+            foreach (var callback in command.Annotations.OfType<EnvironmentCallbackAnnotation>())
+            {
+                await callback.Callback(context);
+            }
+
+            Assert.Equal("staging", Assert.IsType<string>(values["TF_WORKSPACE"]));
+        }
+
+        void ConfigureEnvironment() => environment.WithWorkspace("staging").WithTerraformExecutablePath("custom-terraform");
+    }
+
     [Fact]
     public void PipelineStepsAreIndependentByDefaultAndAttachToDeployAndDestroy()
     {
