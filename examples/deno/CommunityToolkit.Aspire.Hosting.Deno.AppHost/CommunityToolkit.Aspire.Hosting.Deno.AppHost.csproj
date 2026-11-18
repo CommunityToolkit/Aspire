@@ -1,4 +1,4 @@
-<Project Sdk="Aspire.AppHost.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -15,5 +15,9 @@
   <Target Name="CleanNodeModules" AfterTargets="Build">
     <Delete Files="../vite-demo/node_modules/**" Condition="Exists('../vite-demo/node_modules')" />
   </Target>
-  
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.AppHost" />
+    <PackageReference Include="Aspire.Hosting.Dotnet" />
+  </ItemGroup>
 </Project>

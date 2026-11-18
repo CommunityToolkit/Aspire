@@ -1,4 +1,4 @@
-<Project Sdk="Aspire.AppHost.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -7,12 +7,13 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.RabbitMQ" />
+    <PackageReference Include="Aspire.Hosting.AppHost" />
     <PackageReference Include="Aspire.Hosting.Dotnet" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" VersionOverride="10.0.14" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CommunityToolkit.Aspire.MassTransit.RabbitMQ.ApiService\CommunityToolkit.Aspire.MassTransit.RabbitMQ.ApiService.csproj" />
-    <ProjectReference Include="..\CommunityToolkit.Aspire.MassTransit.RabbitMQ.Publisher\CommunityToolkit.Aspire.MassTransit.RabbitMQ.Publisher.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.MassTransit.RabbitMQ.ApiService\CommunityToolkit.Aspire.MassTransit.RabbitMQ.ApiService.csproj" IsAspireProjectResource="true" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" ExcludeAssets="all" Private="false" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.MassTransit.RabbitMQ.Publisher\CommunityToolkit.Aspire.MassTransit.RabbitMQ.Publisher.csproj" IsAspireProjectResource="true" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" ExcludeAssets="all" Private="false" />
   </ItemGroup>
 </Project>
