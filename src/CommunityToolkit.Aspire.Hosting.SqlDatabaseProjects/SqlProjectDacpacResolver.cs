@@ -127,6 +127,8 @@ internal sealed class SqlProjectDacpacResolver(IHostEnvironment hostEnvironment)
             };
             processStartInfo.ArgumentList.Add("restore");
             processStartInfo.ArgumentList.Add(projectPath);
+            // Persistent MSBuild nodes can keep the temporary AppHost directory locked on Windows.
+            processStartInfo.ArgumentList.Add("--disable-build-servers");
             processStartInfo.ArgumentList.Add("--verbosity");
             processStartInfo.ArgumentList.Add("minimal");
             processStartInfo.ArgumentList.Add("--property:ImportDirectoryBuildProps=false");
