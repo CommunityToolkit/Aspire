@@ -1,3 +1,0 @@
-<Project>
-  <Import Project="..\build\CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.targets" />
-</Project>
