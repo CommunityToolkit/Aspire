@@ -111,9 +111,41 @@ public class WithCertificateTrustTests
             }
 
             var logs = await LoggingTestHelper.CollectLogsAsync(app, resource.Name);
-            Assert.Contains(logs, line =>
-                line.Contains("Append", StringComparison.Ordinal) &&
-                line.Contains("OTLP", StringComparison.OrdinalIgnoreCase));
+            Assert.Contains(logs, line => line.Contains("'Append'", StringComparison.Ordinal));
+        }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task DefaultCertificateTrust_AppendScope_KeepsCertificateDirectoryOnlyWhenItIncludesDefaults(bool hostHasCertificateDirectory)
+    {
+        var originalCertificateDirectory = Environment.GetEnvironmentVariable("SSL_CERT_DIR");
+        try
+        {
+            Environment.SetEnvironmentVariable("SSL_CERT_DIR", hostHasCertificateDirectory ? Path.GetTempPath() : null);
+
+            var builder = DistributedApplication.CreateBuilder();
+            var perlApp = builder.AddPerlScript("perl-app", "scripts", "app.pl")
+                .WithCertificateTrustScope(CertificateTrustScope.Append);
+
+            using var app = builder.Build();
+            await LoggingTestHelper.PublishBeforeStartAsync(builder, app);
+
+            var environment = await InvokeCertificateTrustCallbacksAsync(
+                perlApp.Resource, CreateRunContext(app), CertificateTrustScope.Append, CreateBundleExpression(perlApp.Resource));
+
+            // Aspire only appends default directories on Linux or when the AppHost already has SSL_CERT_DIR.
+            var expectCertificateDirectory = OperatingSystem.IsLinux() || hostHasCertificateDirectory;
+            Assert.Equal(expectCertificateDirectory, environment.ContainsKey("SSL_CERT_DIR"));
+
+            var logs = await LoggingTestHelper.CollectLogsAsync(app, perlApp.Resource.Name);
+            var expectedLog = expectCertificateDirectory ? "appended to the default certificate directories" : "only OTLP certificate trust";
+            Assert.Contains(logs, line => line.Contains(expectedLog, StringComparison.Ordinal));
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("SSL_CERT_DIR", originalCertificateDirectory);
         }
     }
 
@@ -461,8 +493,10 @@ public class WithCertificateTrustTests
         CertificateTrustScope scope,
         ReferenceExpression bundlePath)
     {
-        var environment = new Dictionary<string, object>();
         var certificateDirectory = GetCertificateDirectory(resource);
+        var certificateDirectoriesPath = ReferenceExpression.Create($"{certificateDirectory}");
+        // Aspire sets SSL_CERT_DIR before invoking resource callbacks.
+        var environment = new Dictionary<string, object> { ["SSL_CERT_DIR"] = certificateDirectoriesPath };
         var context = new CertificateTrustConfigurationCallbackAnnotationContext
         {
             ExecutionContext = executionContext,
@@ -470,7 +504,7 @@ public class WithCertificateTrustTests
             Arguments = [],
             EnvironmentVariables = environment,
             CertificateBundlePath = bundlePath,
-            CertificateDirectoriesPath = ReferenceExpression.Create($"{certificateDirectory}"),
+            CertificateDirectoriesPath = certificateDirectoriesPath,
             Scope = scope,
             CancellationToken = TestContext.Current.CancellationToken
         };

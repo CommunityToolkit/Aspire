@@ -198,9 +198,14 @@ Package and project dependency installers inherit the parent's final trust scope
 and developer-certificate trust setting, regardless of fluent-call order. Each installer uses
 its own certificate bundle, not the AppHost process's `SSL_CERT_FILE` environment variable.
 
-Perl TLS libraries cannot append to their default CA stores. With `Append` scope, the integration
-logs this limitation and configures only OTLP certificate trust; it leaves the Perl TLS variables
-untouched so public HTTPS and CPAN downloads retain their default trust.
+With `Append` scope, the integration leaves the Perl-specific TLS variables (`SSL_CERT_FILE`,
+`PERL_LWP_SSL_CA_FILE`, `MOJO_CA_FILE`) untouched so public HTTPS and CPAN downloads retain their
+default trust, and always configures OTLP certificate trust. Custom certificate authorities are
+appended only through Aspire's `SSL_CERT_DIR`, which includes the default certificate directories on
+Linux or when the AppHost already sets `SSL_CERT_DIR`. Otherwise (for example, Windows and macOS
+without `SSL_CERT_DIR`), the integration removes `SSL_CERT_DIR` so Perl falls back to its default
+CA bundle (typically `Mozilla::CA`), and only OTLP certificate trust is applied. Use `System` scope,
+the default, to trust both custom and default certificate authorities on every platform.
 
 To disable Aspire-managed certificate trust for the app and its installers:
 

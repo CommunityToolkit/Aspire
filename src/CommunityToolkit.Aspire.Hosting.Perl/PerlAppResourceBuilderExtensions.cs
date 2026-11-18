@@ -533,7 +533,18 @@ public static partial class PerlAppResourceBuilderExtensions
             {
                 var logger = context.ExecutionContext.Services.GetRequiredService<ResourceLoggerService>()
                     .GetLogger(context.Resource);
-                logger.LogInformation("Certificate trust scope is set to 'Append', but Perl resources do not support appending to the default certificate authorities; only OTLP certificate trust will be applied.");
+
+                if (AppendCertificateDirectoriesIncludeDefaults(OperatingSystem.IsLinux(), Environment.GetEnvironmentVariable(SslCertDirEnvironmentVariable)))
+                {
+                    logger.LogInformation("Certificate trust scope is set to 'Append'; custom certificate authorities are appended to the default certificate directories through SSL_CERT_DIR.");
+                }
+                else
+                {
+                    // Aspire's SSL_CERT_DIR would contain only the custom authorities here, which makes Perl TLS
+                    // clients skip their Mozilla::CA fallback and reject public certificate authorities.
+                    context.EnvironmentVariables.Remove(SslCertDirEnvironmentVariable);
+                    logger.LogInformation("Certificate trust scope is set to 'Append', but Perl resources cannot append to the default certificate authorities on this platform; only OTLP certificate trust will be applied. Use 'System' to trust both custom and default certificate authorities.");
+                }
             }
             else
             {
@@ -554,6 +565,17 @@ public static partial class PerlAppResourceBuilderExtensions
 
         return Task.CompletedTask;
     }
+
+    private const string SslCertDirEnvironmentVariable = "SSL_CERT_DIR";
+
+    /// <summary>
+    /// Determines whether Aspire's <c>Append</c> <c>SSL_CERT_DIR</c> value includes default certificate directories
+    /// in addition to the custom certificate authorities.
+    /// </summary>
+    /// <param name="isLinux">Whether the AppHost is running on Linux, where Aspire appends the system certificate directories.</param>
+    /// <param name="hostCertificateDirectories">The AppHost's <c>SSL_CERT_DIR</c> value, which Aspire appends when set.</param>
+    internal static bool AppendCertificateDirectoriesIncludeDefaults(bool isLinux, string? hostCertificateDirectories) =>
+        isLinux || !string.IsNullOrEmpty(hostCertificateDirectories);
 
     /// <summary>
     /// Sets a Perl-specific OpenTelemetry variable to resolve from the final standard variable value.

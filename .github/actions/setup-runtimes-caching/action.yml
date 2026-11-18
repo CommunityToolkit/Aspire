@@ -119,6 +119,11 @@ runs:
       shell: bash
       run: sudo apt-get install -y cpanminus
 
+    - name: Install Perl TLS client modules
+      if: ${{ runner.os == 'Linux' && (inputs.name == 'Full' || contains(inputs.name, 'Hosting.Perl')) }}
+      shell: bash
+      run: sudo apt-get install -y libio-socket-ssl-perl liblwp-protocol-https-perl libmojolicious-perl
+
     - uses: actions/cache@v6
       name: Cache NuGet packages
       with:
