@@ -1,4 +1,4 @@
-<Project Sdk="Aspire.AppHost.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -9,13 +9,14 @@
     <ItemGroup>
       <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Logto\CommunityToolkit.Aspire.Hosting.Logto.csproj" 
                         IsAspireProjectResource="false"  />
-      <ProjectReference Include="..\CommunityToolkit.Aspire.Logto.ClientJWT\CommunityToolkit.Aspire.Logto.ClientJWT.csproj" />
-      <ProjectReference Include="..\CommunityToolkit.Aspire.Logto.ClientOIDC\CommunityToolkit.Aspire.Logto.ClientOIDC.csproj" />
+      <ProjectReference Include="..\CommunityToolkit.Aspire.Logto.ClientJWT\CommunityToolkit.Aspire.Logto.ClientJWT.csproj" IsAspireProjectResource="true" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" ExcludeAssets="all" Private="false" />
+      <ProjectReference Include="..\CommunityToolkit.Aspire.Logto.ClientOIDC\CommunityToolkit.Aspire.Logto.ClientOIDC.csproj" IsAspireProjectResource="true" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" ExcludeAssets="all" Private="false" />
     </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="Aspire.Hosting.PostgreSQL" />
       <PackageReference Include="Aspire.Hosting.Redis" />
+      <PackageReference Include="Aspire.Hosting.AppHost" />
       <PackageReference Include="Aspire.Hosting.Dotnet" />
     </ItemGroup>
 

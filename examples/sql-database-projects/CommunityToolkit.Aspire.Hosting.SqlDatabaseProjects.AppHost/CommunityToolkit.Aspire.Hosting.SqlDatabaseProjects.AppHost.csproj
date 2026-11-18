@@ -1,4 +1,4 @@
-<Project Sdk="Aspire.AppHost.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -11,9 +11,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects\CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.csproj" IsAspireProjectResource="False" />
-    <ProjectReference Include="..\SdkProject\SdkProject.csproj" />
+    <ProjectReference Include="..\SdkProject\SdkProject.csproj" IsAspireProjectResource="true" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" ExcludeAssets="all" Private="false" />
   </ItemGroup>
 
   <Import Project="..\..\..\src\CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects\build\CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.targets" />
 
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.AppHost" />
+    <PackageReference Include="Aspire.Hosting.Dotnet" />
+  </ItemGroup>
 </Project>

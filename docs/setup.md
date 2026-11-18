@@ -37,9 +37,9 @@ Toolkit packages target both `net10.0` and `net11.0`; tests and examples use the
 
 The repository currently targets Aspire **17.0.0-preview.1.26555.11**, an unsupported nightly build from the public `dotnet9` feed. `nuget.config` maps `Aspire.*` packages to that feed; Elasticsearch remains on its last stable package because no Aspire 17 nightly is published for it.
 
-`Directory.Build.props` pins hosting and testing packages, `global.json` pins the AppHost SDK, and example `aspire.config.json` files pin the polyglot SDK. Keep these versions aligned when upgrading. The nightly version already contains its prerelease suffix, so `AspirePreviewSuffix` is empty.
+`Directory.Build.props` pins hosting and testing packages (including the C# AppHost packages through `Directory.Packages.props`), and example `aspire.config.json` files pin the polyglot SDK. Keep these versions aligned when upgrading. The nightly version already contains its prerelease suffix, so `AspirePreviewSuffix` is empty.
 
-The C# AppHosts that host .NET projects now reference `Aspire.Hosting.Dotnet` and use `AddDotnetProject`; the TypeScript equivalents use `addDotnetProject`. `Aspire.Hosting.Dotnet` is centrally pinned to the same nightly version. The AppHosts still use `Aspire.AppHost.Sdk` for staged compatibility; Aspire 17 emits `ASPIRE012` for that obsolete SDK, and migrating to explicit `Aspire.Hosting.AppHost` references remains separate from this project-resource migration.
+The C# AppHosts use `Microsoft.NET.Sdk` and explicitly reference `Aspire.Hosting.AppHost` and `Aspire.Hosting.Dotnet`. Use `AddDotnetProject` to register .NET services; the TypeScript equivalents use `addDotnetProject`. Where an example still reads generated `Projects.*` metadata, its project reference is explicitly marked as an Aspire project resource.
 
 Install the matching CLI with `aspire.dev`'s installer and its explicit version option (`-Version 17.0.0-preview.1.26555.11` on Windows or `--version 17.0.0-preview.1.26555.11` on Linux/macOS), rather than selecting a moving daily channel. See the [upstream daily-build guide](https://github.com/microsoft/aspire/blob/main/docs/using-latest-daily.md) for installer instructions.
 
