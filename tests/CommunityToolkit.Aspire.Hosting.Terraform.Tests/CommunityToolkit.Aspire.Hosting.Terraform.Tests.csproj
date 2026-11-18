@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <Compile Remove="FakeTerraform\**\*.cs" />
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.Terraform\CommunityToolkit.Aspire.Hosting.Terraform.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
+    <ProjectReference Include="..\..\examples\terraform\CommunityToolkit.Aspire.Hosting.Terraform.AppHost\CommunityToolkit.Aspire.Hosting.Terraform.AppHost.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="FakeTerraform\FakeTerraform.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+  <Target Name="CopyFakeTerraform" AfterTargets="Build">
+    <ItemGroup>
+      <FakeTerraformOutput Include="FakeTerraform\bin\$(Configuration)\$(TargetFramework)\FakeTerraform*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(FakeTerraformOutput)" DestinationFolder="$(OutDir)fake-terraform" />
+  </Target>
+</Project>

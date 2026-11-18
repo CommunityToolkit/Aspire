@@ -1,0 +1,12 @@
+{
+  "appHost": {
+    "path": "apphost.mts",
+    "language": "typescript/nodejs"
+  },
+  "sdk": {
+    "version": "17.0.0-preview.1.26555.11"
+  },
+  "packages": {
+    "CommunityToolkit.Aspire.Hosting.Terraform": "../../../src/CommunityToolkit.Aspire.Hosting.Terraform/CommunityToolkit.Aspire.Hosting.Terraform.csproj"
+  }
+}
