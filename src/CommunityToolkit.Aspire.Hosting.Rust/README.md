@@ -24,6 +24,8 @@ var rustApp = builder.AddBaconApp("rust-app", "../actix_api");
 
 For applications using Cargo directly, use the upstream `Aspire.Hosting.Rust` package and its `AddRustApp` method instead.
 
+The Rust examples accept `ENABLE_BACON=1` to launch Bacon automatically. The Go and TypeScript AppHosts otherwise register Bacon for manual start. Install Cargo, rustc, and Bacon to run the Rust AppHost startup tests.
+
 ## Feedback & contributing
 
 https://github.com/CommunityToolkit/Aspire
