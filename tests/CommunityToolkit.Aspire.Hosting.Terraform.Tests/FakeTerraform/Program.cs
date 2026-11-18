@@ -22,6 +22,9 @@ if (Environment.GetEnvironmentVariable("TERRAFORM_TEST_FAIL") == "true")
     Console.Error.WriteLine($"Error: {Environment.GetEnvironmentVariable("TERRAFORM_TEST_SECRET")}");
     Console.WriteLine($"Output: {Environment.GetEnvironmentVariable("TF_VAR_probe")}");
     Console.Error.WriteLine($"Error: {Environment.GetEnvironmentVariable("TF_VAR_probe")}");
+    var argument = args.Single(arg => arg.StartsWith("-backend-config=probe=", StringComparison.Ordinal));
+    Console.WriteLine($"Output: {argument}");
+    Console.Error.WriteLine($"Error: {argument}");
     return 17;
 }
 

@@ -66,12 +66,29 @@ public class TerraformPipelineExecutionTests
             Assert.Contains("exit code 17", failure, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("[REDACTED]", failure);
             Assert.DoesNotContain("sensitive-test-value", failure);
-            Assert.Contains("prefix-[REDACTED]-suffix", failure);
-            Assert.DoesNotContain("parameter-value-to-mask", failure);
-            Assert.Contains("Last stdout:", failure);
-            Assert.Contains("Last stderr:", failure);
+            Assert.DoesNotContain("argument-value-to-mask", failure);
+            Assert.DoesNotContain("parameter-first-line", failure);
+            Assert.DoesNotContain("parameter-second-line", failure);
+            Assert.DoesNotContain("parameter-third-line", failure);
+            var stdoutStart = failure.IndexOf("Last stdout:", StringComparison.Ordinal);
+            var stderrStart = failure.IndexOf("Last stderr:", StringComparison.Ordinal);
+            Assert.True(stdoutStart >= 0 && stderrStart > stdoutStart, failure);
+            var logs = failure[..stdoutStart];
+            var stdoutDiagnostics = failure[stdoutStart..stderrStart];
+            var stderrDiagnostics = failure[stderrStart..];
+            Assert.Contains("Output: -backend-config=probe=[REDACTED]", logs);
+            Assert.Contains("Error: -backend-config=probe=[REDACTED]", logs);
+            Assert.Contains("Output: -backend-config=probe=[REDACTED]", stdoutDiagnostics);
+            Assert.Contains("Error: -backend-config=probe=[REDACTED]", stderrDiagnostics);
+            Assert.Contains("Output: prefix-[REDACTED]", logs);
+            Assert.Contains("Error: prefix-[REDACTED]", logs);
+            Assert.Contains("Output: prefix-[REDACTED]", stdoutDiagnostics);
+            Assert.Contains("Error: prefix-[REDACTED]", stderrDiagnostics);
             using var failedCommand = JsonDocument.Parse((await File.ReadAllLinesAsync(trace, TestContext.Current.CancellationToken)).Last());
-            Assert.Equal("prefix-parameter-value-to-mask-suffix", failedCommand.RootElement.GetProperty("Probe").GetString());
+            Assert.Equal("prefix-parameter-first-line\nparameter-second-line\r\nparameter-third-line-suffix",
+                failedCommand.RootElement.GetProperty("Probe").GetString());
+            Assert.Contains("-backend-config=probe=argument-value-to-mask",
+                failedCommand.RootElement.GetProperty("Arguments").EnumerateArray().Select(arg => arg.GetString()));
         }
         finally
         {
@@ -106,7 +123,8 @@ public class TerraformPipelineExecutionTests
                 info.Environment["TERRAFORM_TEST_FAIL"] = "true";
                 info.Environment["TERRAFORM_TEST_SECRET"] = "sensitive-test-value";
                 info.Environment["TerraformTestSecretEnabled"] = "true";
-                info.Environment["Parameters__pipeline-value"] = "parameter-value-to-mask";
+                info.Environment["Parameters__pipeline-value"] = "parameter-first-line\nparameter-second-line\r\nparameter-third-line";
+                info.Environment["Parameters__pipeline-argument"] = "argument-value-to-mask";
             }
             using var process = Process.Start(info) ?? throw new InvalidOperationException("Failed to start Aspire CLI.");
             var stdout = process.StandardOutput.ReadToEndAsync(TestContext.Current.CancellationToken);

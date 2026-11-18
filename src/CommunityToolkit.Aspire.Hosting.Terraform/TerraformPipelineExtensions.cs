@@ -90,22 +90,26 @@ internal static class TerraformPipelineExtensions
                         $"Saved Terraform plan '{planPath}' for '{name}' was not found. Run terraform-plan-{name} first or provide the plan artifact.");
                 }
 
-                var (variables, redactions) = await ResolveEnvironmentAsync(annotation.Resource, context).ConfigureAwait(false);
-                var arguments = await ResolveArgumentsAsync(annotation.Resource, context).ConfigureAwait(false);
+                var secrets = new HashSet<string>(StringComparer.Ordinal);
+                var visited = new HashSet<object>(ReferenceEqualityComparer.Instance);
+                Task CollectSecretsAsync(object value) => AddSecretReferencesAsync(value, secrets, visited, context.CancellationToken);
+
+                var variables = await ResolveEnvironmentAsync(annotation.Resource, context, CollectSecretsAsync).ConfigureAwait(false);
+                var arguments = await ResolveArgumentsAsync(annotation.Resource, context, CollectSecretsAsync).ConfigureAwait(false);
                 arguments.Insert(1, "-no-color");
                 if (annotation.Command == TerraformCommand.Plan)
                 {
                     arguments.Insert(2, "-detailed-exitcode");
                 }
 
-                await RunAsync(environment, annotation.Resource, [.. arguments], variables, redactions, context,
+                await RunAsync(environment, annotation.Resource, [.. arguments], variables, secrets, context,
                     allowChangesExitCode: annotation.Command == TerraformCommand.Plan).ConfigureAwait(false);
             }
         };
     }
 
     private static async Task<List<string>> ResolveArgumentsAsync(
-        TerraformCliResource resource, PipelineStepContext context)
+        TerraformCliResource resource, PipelineStepContext context, Func<object, Task> collectSecretsAsync)
     {
         var values = new List<object>();
         var callbackContext = new CommandLineArgsCallbackContext(values, resource, context.CancellationToken)
@@ -129,13 +133,14 @@ internal static class TerraformPipelineExtensions
             };
             arguments.Add(resolved
                 ?? throw new InvalidOperationException($"A Terraform argument for '{resource.Name}' could not be resolved."));
+            await collectSecretsAsync(value).ConfigureAwait(false);
         }
 
         return arguments;
     }
 
-    private static async Task<(Dictionary<string, string> Variables, string[] Redactions)> ResolveEnvironmentAsync(
-        TerraformCliResource resource, PipelineStepContext context)
+    private static async Task<Dictionary<string, string>> ResolveEnvironmentAsync(
+        TerraformCliResource resource, PipelineStepContext context, Func<object, Task> collectSecretsAsync)
     {
         var values = new Dictionary<string, object>();
         var callbackContext = new EnvironmentCallbackContext(context.ExecutionContext, resource, values, context.CancellationToken)
@@ -148,8 +153,6 @@ internal static class TerraformPipelineExtensions
         }
 
         var environment = new Dictionary<string, string>();
-        var redactions = new HashSet<string>(StringComparer.Ordinal);
-        var visited = new HashSet<object>(ReferenceEqualityComparer.Instance);
         foreach (var (key, value) in values)
         {
             var resolved = value switch
@@ -160,41 +163,34 @@ internal static class TerraformPipelineExtensions
             };
             environment[key] = resolved
                 ?? throw new InvalidOperationException($"Terraform environment variable '{key}' could not be resolved.");
-            await AddSecretReferencesAsync(value).ConfigureAwait(false);
+            await collectSecretsAsync(value).ConfigureAwait(false);
         }
 
         environment["TF_IN_AUTOMATION"] = "true";
         environment["TF_INPUT"] = "false";
-        foreach (var (key, value) in environment)
+        return environment;
+    }
+
+    private static async Task AddSecretReferencesAsync(
+        object value, HashSet<string> secrets, HashSet<object> visited, CancellationToken cancellationToken)
+    {
+        if (!visited.Add(value))
         {
-            if (IsSensitiveKey(key) && !string.IsNullOrEmpty(value))
+            return;
+        }
+        if (value is ParameterResource { Secret: true } parameter)
+        {
+            var secret = await parameter.GetValueAsync(cancellationToken).ConfigureAwait(false);
+            if (!string.IsNullOrEmpty(secret))
             {
-                redactions.Add(value);
+                secrets.Add(secret);
             }
         }
-
-        return (environment, redactions.OrderByDescending(value => value.Length).ToArray());
-
-        async Task AddSecretReferencesAsync(object value)
+        if (value is IValueWithReferences references)
         {
-            if (!visited.Add(value))
+            foreach (var reference in references.References)
             {
-                return;
-            }
-            if (value is ParameterResource { Secret: true } parameter)
-            {
-                var secret = await parameter.GetValueAsync(context.CancellationToken).ConfigureAwait(false);
-                if (!string.IsNullOrEmpty(secret))
-                {
-                    redactions.Add(secret);
-                }
-            }
-            if (value is IValueWithReferences references)
-            {
-                foreach (var reference in references.References)
-                {
-                    await AddSecretReferencesAsync(reference).ConfigureAwait(false);
-                }
+                await AddSecretReferencesAsync(reference, secrets, visited, cancellationToken).ConfigureAwait(false);
             }
         }
     }
@@ -207,7 +203,7 @@ internal static class TerraformPipelineExtensions
             || key.Contains("ACCESS_KEY", StringComparison.OrdinalIgnoreCase);
 
     private static async Task RunAsync(TerraformEnvironmentResource resource, TerraformCliResource command,
-        string[] arguments, Dictionary<string, string> environment, string[] redactions, PipelineStepContext context, bool allowChangesExitCode = false)
+        string[] arguments, Dictionary<string, string> environment, HashSet<string> secrets, PipelineStepContext context, bool allowChangesExitCode = false)
     {
         if (!Directory.Exists(command.WorkingDirectory))
         {
@@ -234,9 +230,12 @@ internal static class TerraformPipelineExtensions
             startInfo.Environment[key] = value;
         }
 
-        redactions = redactions.Concat(startInfo.Environment
+        secrets.UnionWith(startInfo.Environment
             .Where(item => IsSensitiveKey(item.Key) && !string.IsNullOrEmpty(item.Value))
-            .Select(item => item.Value!)).Distinct(StringComparer.Ordinal)
+            .Select(item => item.Value!));
+        // Streamed output is read one line at a time.
+        var redactions = secrets.Concat(secrets.SelectMany(secret => secret.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)))
+            .Distinct(StringComparer.Ordinal)
             .OrderByDescending(value => value.Length).ToArray();
         var operationContext = RedactOutput(
             $"Terraform {arguments[0]} for '{resource.Name}'. Module: {command.WorkingDirectory}. Executable: {command.Command}.", redactions);

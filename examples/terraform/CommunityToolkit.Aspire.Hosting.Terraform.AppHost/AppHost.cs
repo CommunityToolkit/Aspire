@@ -20,6 +20,9 @@ if (builder.Configuration["TerraformTestSecretEnabled"] == "true")
 {
     var secret = builder.AddParameter("pipeline-value", secret: true);
     environment.WithTfVar("probe", ReferenceExpression.Create($"prefix-{secret}-suffix"));
+    var argumentSecret = builder.AddParameter("pipeline-argument", secret: true);
+    environment.WithInit(init => init.WithArgs(context =>
+        context.Args.Add(ReferenceExpression.Create($"-backend-config=probe={argumentSecret}"))));
 }
 
 builder.Build().Run();

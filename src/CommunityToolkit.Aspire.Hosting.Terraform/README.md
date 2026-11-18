@@ -45,7 +45,7 @@ For approval workflows, run init and plan, securely store the saved plan and mod
 
 For example, invoke `aspire do terraform-init-infrastructure`, then `aspire do terraform-plan-infrastructure`, and finally `aspire do terraform-apply-infrastructure` after approval. A declared plan is written to the module directory by default; `WithPlan(outputPath: ...)` overrides that location. Applying a saved plan requires the file to exist on the apply runner. Terraform plan exit code 2 (changes present) is treated as success.
 
-Pipeline output redaction is best-effort: known secret parameter values and values of environment variables with sensitive-looking names are masked, but Terraform and providers may print other sensitive values. Do not rely on redaction to secure logs; restrict log access and avoid exposing secrets in output. The same precautions apply to local resource logs.
+Pipeline output redaction is best-effort: known secret parameter values in arguments and environment variables, and values of environment variables with sensitive-looking names, are masked, including individual lines of multiline values. Prefer passing secrets through environment variables: redaction does not hide them from the process command line if passed as arguments. Do not rely on redaction to secure logs; restrict log access and avoid exposing secrets in output. The same precautions apply to local resource logs.
 
 ## Additional documentation
 
