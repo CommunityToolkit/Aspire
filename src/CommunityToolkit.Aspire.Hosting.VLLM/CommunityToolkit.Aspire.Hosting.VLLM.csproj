@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>An Aspire hosting integration for running the vLLM OpenAI-compatible inference server in a container, with GPU support and Hugging Face model serving.</Description>
+    <AdditionalPackageTags>hosting vllm ai llm openai</AdditionalPackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.VLLM.Tests"></InternalsVisibleTo>
+  </ItemGroup>
+</Project>

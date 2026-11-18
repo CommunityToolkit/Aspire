@@ -1,15 +1,12 @@
-#pragma warning disable ASPIREINTERACTION001
-#pragma warning disable ASPIREPIPELINES002
-
 using System.Collections.Immutable;
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Pipelines;
 using Bitwarden.Sdk;
-using CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager;
 
@@ -33,8 +30,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(logger);
 
-        ParameterResourceExtensions.SetCompatibilityLogger(logger);
-        resource.ResetResolvedValues();
+        await resource.ResetResolvedValuesAsync(cancellationToken).ConfigureAwait(false);
         logger.LogDebug("Starting Bitwarden authentication for resource '{ResourceName}'.", resource.Name);
 
         try
@@ -199,9 +195,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
             }
 
             secret.SecretId = secretInfo.Id;
-            resource.BindResolvedSecret(secretInfo.Id, secretInfo.Key, secretInfo.Value);
-            secret.ResolveWaitForValue(secretInfo.Value);
-            await NotifySecretValueResolvedAsync(secret, secretInfo.Value, services, cancellationToken).ConfigureAwait(false);
+            await resource.BindResolvedSecretAsync(secretInfo.Id, secretInfo.Key, secretInfo.Value, cancellationToken).ConfigureAwait(false);
             logger.LogInformation("Synced reference secret '{RemoteName}' from Bitwarden secret {SecretId}.", secret.RemoteName, secretInfo.Id);
         }
 
@@ -242,32 +236,70 @@ internal sealed class BitwardenSecretManagerProvisioner(
 
         foreach (BitwardenSecretResource secret in resource.ManagedSecrets)
         {
-            if (secret.HasValue())
+            if (secret.TryGetCurrentValue(out _))
             {
                 logger.LogDebug("Skipping upstream sync for managed secret '{RemoteName}' because a local value is already configured.", secret.RemoteName);
                 continue;
             }
 
-            BitwardenSecretInfo? upstreamSecret = await ResolveExistingManagedSecretAsync(
-                resource,
-                projectId,
-                secret,
-                cacheContext.Cache,
-                lookupContext,
-                interactionService,
-                logger,
-                cancellationToken).ConfigureAwait(false);
+            BitwardenSecretInfo? upstreamSecret = secret.DeploymentPrefill is { } prefill && prefill.ProjectId == projectId
+                ? lookupContext.GetSecret(prefill.Id)
+                : await ResolveExistingManagedSecretAsync(
+                    resource,
+                    projectId,
+                    secret,
+                    cacheContext.Cache,
+                    lookupContext,
+                    interactionService,
+                    logger,
+                    cancellationToken).ConfigureAwait(false);
 
-            if (upstreamSecret is null)
+            if (upstreamSecret is null || string.IsNullOrEmpty(upstreamSecret.Value) ||
+                (secret.DeploymentPrefill is not null && upstreamSecret.ProjectId != projectId))
             {
+                if (secret.DeploymentPrefill is not null)
+                {
+                    throw new DistributedApplicationException($"Managed Bitwarden secret '{secret.RemoteName}' has no value in the resolved Bitwarden project. Supply the '{secret.Name}' parameter.");
+                }
+
                 logger.LogDebug("No upstream value found for managed secret '{RemoteName}'. A local parameter value is still required.", secret.RemoteName);
                 continue;
             }
 
             secret.SecretId = upstreamSecret.Id;
-            resource.BindResolvedSecret(upstreamSecret.Id, secret.RemoteName, upstreamSecret.Value);
-            secret.ResolveWaitForValue(upstreamSecret.Value);
-            await NotifySecretValueResolvedAsync(secret, upstreamSecret.Value, services, cancellationToken).ConfigureAwait(false);
+            await resource.BindResolvedSecretAsync(upstreamSecret.Id, secret.RemoteName, upstreamSecret.Value, cancellationToken).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (secret.DeploymentPrefill is not null)
+            {
+                // Deployment parameter collection has finished. Keep the remote value out of saved inputs.
+                if (secret.TryGetCurrentValue(out _))
+                {
+                    continue;
+                }
+
+                await secret.SetValueAsync(upstreamSecret.Value, cancellationToken).ConfigureAwait(false);
+                secret.AppliedDeploymentPrefill = upstreamSecret.Value;
+            }
+            else if (!secret.TrySetValue(upstreamSecret.Value))
+            {
+                // Interactive parameter collection can complete the input while the lookup is in flight.
+                // Headless processing faults a missing required parameter instead of leaving it pending.
+                if (interactionService?.IsAvailable == true)
+                {
+                    continue;
+                }
+
+                try
+                {
+                    await secret.GetValueAsync(cancellationToken).ConfigureAwait(false);
+                    continue;
+                }
+                catch (MissingParameterValueException)
+                {
+                    await secret.SetValueAsync(upstreamSecret.Value, cancellationToken).ConfigureAwait(false);
+                }
+            }
+
             syncedCount++;
             logger.LogInformation("Synced managed secret '{RemoteName}' from existing Bitwarden secret {SecretId}.", secret.RemoteName, upstreamSecret.Id);
         }
@@ -276,21 +308,12 @@ internal sealed class BitwardenSecretManagerProvisioner(
     }
 
     /// <summary>
-    /// Prompts for any missing credentials, then fetches existing managed secret values from Bitwarden
-    /// and writes everything to the deployment state so that <c>process-parameters</c> finds the values
-    /// in <see cref="IConfiguration"/> and does not re-prompt the user. Runs before <c>process-parameters</c>.
-    /// When the project ID is not yet cached, performs an org-wide lookup for managed secrets.
+    /// Collects credentials and checks for existing managed secrets before <c>process-parameters</c>.
+    /// Aspire skips prompting for secrets with a remote fallback. The fallback is applied after parameter persistence.
     /// </summary>
-    /// <remarks>
-    /// Why IConfiguration and not TCS: <c>ParameterProcessor.InitializeParametersAsync</c> unconditionally
-    /// creates a fresh <c>WaitForValueTcs</c> then immediately calls <c>ValueInternal</c>, which reads the
-    /// lazy-evaluated <c>_valueGetter</c>. That getter reads <see cref="IConfiguration"/>. Writing the value
-    /// to the deployment state file and calling <see cref="IConfigurationRoot.Reload"/> before
-    /// <c>process-parameters</c> runs is the only way to pre-populate the value without racing against
-    /// TCS creation.
-    /// </remarks>
     public async Task PreSyncManagedSecretValuesAsync(
         BitwardenSecretManagerResource resource,
+        IDistributedApplicationBuilder applicationBuilder,
         IServiceProvider services,
         ILogger logger,
         CancellationToken cancellationToken)
@@ -307,21 +330,31 @@ internal sealed class BitwardenSecretManagerProvisioner(
             return;
         }
 
+        foreach (BitwardenSecretResource secret in resource.ManagedSecrets.Where(secret => secret.DeploymentPrefill is not null))
+        {
+            if (secret.AppliedDeploymentPrefill is { } previousValue &&
+                secret.TryGetCurrentValue(out string? currentValue) && currentValue == previousValue)
+            {
+                string? configuredValue = services.GetRequiredService<IConfiguration>()[$"Parameters:{secret.Name}"];
+                await secret.SetValueAsync(configuredValue ?? secret.Default?.GetDefaultValue(), cancellationToken).ConfigureAwait(false);
+            }
+
+            secret.DeploymentPrefill = null;
+            secret.AppliedDeploymentPrefill = null;
+            applicationBuilder.CreateResourceBuilder(secret).AsRequired();
+        }
+
+        string? targetStep = services.GetService<IOptions<PipelineOptions>>()?.Value.Step;
+        if (targetStep is WellKnownPipelineSteps.Publish or WellKnownPipelineSteps.Build)
+        {
+            return;
+        }
+
         IConfiguration configuration = services.GetRequiredService<IConfiguration>();
         IDeploymentStateManager deploymentStateManager = services.GetRequiredService<IDeploymentStateManager>();
         IInteractionService? interactionService = services.GetService<IInteractionService>();
         int savedCount = 0;
 
-        // Never call HasValue() or ValueInternal on credential parameters here.
-        // Both evaluate _lazyValue (Lazy<string> with ExecutionAndPublication caching). If _lazyValue
-        // throws MissingParameterValueException, the exception is cached permanently: when
-        // process-parameters later creates a fresh WaitForValueTcs and reads ValueInternal, it re-throws
-        // the cached exception and the user is prompted again even though the value is in IConfiguration.
-        //
-        // When credentials are absent, prompt via IInteractionService.PromptInputAsync directly — not
-        // PromptAsync/SetParameterAsync, which call ValueInternal and would poison _lazyValue.
-        // After collecting, save to deployment state and set WaitForValueTcs so that in-process calls
-        // (e.g. ResolveAuthCachePathAsync) resolve without re-prompting before IConfiguration is reloaded.
         try
         {
             string accessTokenConfigKey = $"Parameters:{resource.ManagementAccessToken.Name}";
@@ -361,9 +394,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
                 await deploymentStateManager.SaveSectionAsync(tokenSlot, cancellationToken).ConfigureAwait(false);
                 savedCount++;
 
-                // Set TCS so in-process callers get the value before IConfiguration is reloaded.
-                resource.ManagementAccessToken.InitializeWaitForValue();
-                resource.ManagementAccessToken.ResolveWaitForValue(accessToken);
+                await resource.ManagementAccessToken.SetValueAsync(accessToken, cancellationToken).ConfigureAwait(false);
             }
             else
             {
@@ -415,8 +446,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
                     await deploymentStateManager.SaveSectionAsync(orgIdSlot, cancellationToken).ConfigureAwait(false);
                     savedCount++;
 
-                    orgIdParam.InitializeWaitForValue();
-                    orgIdParam.ResolveWaitForValue(orgIdString);
+                    await orgIdParam.SetValueAsync(orgIdString, cancellationToken).ConfigureAwait(false);
                 }
                 else if (!Guid.TryParse(orgIdString, out organizationId))
                 {
@@ -478,8 +508,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
                     await deploymentStateManager.SaveSectionAsync(projectSlot, cancellationToken).ConfigureAwait(false);
                     savedCount++;
 
-                    projectNameOrIdParam.InitializeWaitForValue();
-                    projectNameOrIdParam.ResolveWaitForValue(projectNameOrId);
+                    await projectNameOrIdParam.SetValueAsync(projectNameOrId, cancellationToken).ConfigureAwait(false);
                 }
 
                 if (Guid.TryParse(projectNameOrId, out Guid parsedProjectId))
@@ -542,37 +571,24 @@ internal sealed class BitwardenSecretManagerProvisioner(
                 // ConfigurationKey is internal to Aspire.Hosting; replicate it — managed secrets are never connection strings.
                 string configKey = $"Parameters:{secret.Name}";
 
-                // Check IConfiguration directly — never call HasValue() or ValueInternal here (see above).
-                if (!string.IsNullOrWhiteSpace(configuration[configKey]))
+                if (!string.IsNullOrEmpty(configuration[configKey]) || secret.TryGetCurrentValue(out _))
                 {
-                    logger.LogDebug("Skipping pre-sync for managed secret '{RemoteName}': value already in configuration.", secret.RemoteName);
+                    logger.LogDebug("Skipping pre-sync for managed secret '{RemoteName}': a local value is already available.", secret.RemoteName);
                     continue;
                 }
 
-                BitwardenSecretInfo? existing;
-                try
-                {
-                    existing = await ResolveExistingManagedSecretAsync(
-                        resource, projectId.Value, secret, cacheContext.Cache, lookupContext,
-                        interactionService: null, logger, cancellationToken).ConfigureAwait(false);
-                }
-                catch (Exception ex)
-                {
-                    logger.LogWarning(ex, "Pre-sync lookup failed for managed secret '{RemoteName}'; skipping.", secret.RemoteName);
-                    continue;
-                }
-
-                if (existing is null)
+                BitwardenSecretInfo? existing = await ResolveExistingManagedSecretAsync(
+                    resource, projectId.Value, secret, cacheContext.Cache, lookupContext,
+                    interactionService, logger, cancellationToken).ConfigureAwait(false);
+                if (existing is null || string.IsNullOrEmpty(existing.Value))
                 {
                     logger.LogDebug("No upstream value found for managed secret '{RemoteName}' during pre-sync.", secret.RemoteName);
                     continue;
                 }
 
-                var slot = await deploymentStateManager.AcquireSectionAsync(configKey, cancellationToken).ConfigureAwait(false);
-                slot.SetValue(existing.Value);
-                await deploymentStateManager.SaveSectionAsync(slot, cancellationToken).ConfigureAwait(false);
+                secret.DeploymentPrefill = (existing.Id, projectId.Value);
+                applicationBuilder.CreateResourceBuilder(secret).AsOptional();
                 preResolvedCount++;
-                savedCount++;
 
                 logger.LogInformation("Pre-resolved managed secret '{RemoteName}' from Bitwarden secret {SecretId}.", secret.RemoteName, existing.Id);
             }
@@ -584,14 +600,8 @@ internal sealed class BitwardenSecretManagerProvisioner(
         }
         finally
         {
-            // Force IConfiguration to re-read the updated deployment state file regardless of how this
-            // method exits. AddJsonFile is registered with reloadOnChange:false so manual Reload() is
-            // required. _lazyValue in ParameterResource is unevaluated at this point (pre-sync only reads
-            // IConfiguration directly), so process-parameters' _valueGetter will pick up the fresh values.
-            //
-            // On the first deployment the state file does not exist at startup, so Aspire skips
-            // AddJsonFile and the file is not a configuration source. Register it now so Reload()
-            // picks up the values we just saved, preventing a second prompt from process-parameters.
+            // Reload deployment state for other configuration consumers. On the first deployment,
+            // Aspire may have skipped the state file because it did not yet exist.
             if (savedCount > 0 && configuration is IConfigurationRoot configRoot)
             {
                 if (configuration is IConfigurationBuilder configBuilder &&
@@ -654,7 +664,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
             foreach (BitwardenSecretResource secret in resource.ManagedSecrets)
             {
                 logger.LogDebug("Processing managed secret '{RemoteName}'.", secret.RemoteName);
-                await ReconcileManagedSecretAsync(resource, organizationId, secret, cacheContext.Cache, lookupContext, provider, interactionService, logger, staleManagedMappings, services, cancellationToken).ConfigureAwait(false);
+                await ReconcileManagedSecretAsync(resource, organizationId, secret, cacheContext.Cache, lookupContext, provider, interactionService, logger, staleManagedMappings, cancellationToken).ConfigureAwait(false);
             }
 
             cacheContext.Cache.ManagedSecretIds = resource.ManagedSecrets
@@ -748,7 +758,6 @@ internal sealed class BitwardenSecretManagerProvisioner(
         IInteractionService? interactionService,
         ILogger logger,
         IReadOnlyDictionary<string, Guid> staleManagedMappings,
-        IServiceProvider services,
         CancellationToken cancellationToken)
     {
         logger.LogDebug("Resolving value for managed secret '{RemoteName}'.", secretResource.RemoteName);
@@ -759,18 +768,16 @@ internal sealed class BitwardenSecretManagerProvisioner(
         Guid projectId = resource.ProjectId ?? throw new DistributedApplicationException($"Bitwarden resource '{resource.Name}' has not resolved a project identifier.");
 
         BitwardenSecretInfo secret;
-        if (secretResource.ExistingSecretId is Guid explicitSecretId)
+        if ((secretResource.ExistingSecretId ?? secretResource.SecretId) is Guid resolvedSecretId)
         {
-            logger.LogDebug("Using explicitly configured secret ID {SecretId} for managed secret '{RemoteName}'.", explicitSecretId, secretResource.RemoteName);
-            BitwardenSecretInfo? explicitSecret = lookupContext.GetSecret(explicitSecretId);
-            if (explicitSecret is null)
+            logger.LogDebug("Using secret ID {SecretId} for managed secret '{RemoteName}'.", resolvedSecretId, secretResource.RemoteName);
+            BitwardenSecretInfo? resolvedSecret = lookupContext.GetSecret(resolvedSecretId);
+            if (resolvedSecret is null)
             {
-                logger.LogError("Configured secret {SecretId} was not found for managed secret '{RemoteName}'.", explicitSecretId, secretResource.RemoteName);
-                throw new DistributedApplicationException($"Bitwarden secret '{explicitSecretId:D}' configured for managed secret '{secretResource.RemoteName}' was not found.");
+                throw new DistributedApplicationException($"Bitwarden secret '{resolvedSecretId:D}' for managed secret '{secretResource.RemoteName}' was not found.");
             }
 
-            logger.LogDebug("Ensuring configured secret {SecretId} matches desired configuration for managed secret '{RemoteName}'.", explicitSecretId, secretResource.RemoteName);
-            secret = EnsureSecretMatches(provider, explicitSecret, projectId, secretResource.RemoteName, resolvedValue);
+            secret = EnsureSecretMatches(provider, resolvedSecret, projectId, secretResource.RemoteName, resolvedValue);
         }
         else if (state.ManagedSecretIds.TryGetValue(secretResource.RemoteName, out Guid persistedSecretId))
         {
@@ -843,9 +850,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
 
         lookupContext.CacheSecret(secret);
         secretResource.SecretId = secret.Id;
-        resource.BindResolvedSecret(secret.Id, secretResource.RemoteName, secret.Value);
-        secretResource.ResolveWaitForValue(secret.Value);
-        await NotifySecretValueResolvedAsync(secretResource, secret.Value, services, cancellationToken).ConfigureAwait(false);
+        await resource.BindResolvedSecretAsync(secret.Id, secretResource.RemoteName, secret.Value, cancellationToken).ConfigureAwait(false);
         logger.LogInformation("Successfully provisioned managed secret '{RemoteName}' with ID {SecretId}.", secretResource.RemoteName, secret.Id);
     }
 
@@ -923,7 +928,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
                     string? managedSecretValue = resource.ResolveSecretValue(secretReference);
                     if (managedSecretValue is not null)
                     {
-                        resource.BindResolvedSecret(managedSecretId, secretReference.RemoteName, managedSecretValue);
+                        await resource.BindResolvedSecretAsync(managedSecretId, secretReference.RemoteName, managedSecretValue, cancellationToken).ConfigureAwait(false);
                         logger.LogDebug("Bound declared reference to managed secret {SecretId} for '{RemoteName}'.", managedSecretId, secretReference.RemoteName);
                     }
                 }
@@ -948,7 +953,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
                     throw new DistributedApplicationException($"Bitwarden secret '{explicitSecretId:D}' referenced by resource '{resource.Name}' does not belong to Bitwarden project '{projectId:D}'.");
                 }
 
-                resource.BindResolvedSecret(secret.Id, secret.Key, secret.Value);
+                await resource.BindResolvedSecretAsync(secret.Id, secret.Key, secret.Value, cancellationToken).ConfigureAwait(false);
                 logger.LogDebug("Bound declared reference to explicit secret {SecretId} ({SecretName}).", secret.Id, secret.Key);
                 continue;
             }
@@ -973,7 +978,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
                     }
 
                     secretReference.SecretId = persistedSecret.Id;
-                    resource.BindResolvedSecret(persistedSecret.Id, remoteName, persistedSecret.Value);
+                    await resource.BindResolvedSecretAsync(persistedSecret.Id, remoteName, persistedSecret.Value, cancellationToken).ConfigureAwait(false);
                     logger.LogDebug("Bound declared reference to persisted secret {SecretId} for name '{RemoteName}'.", persistedSecret.Id, remoteName);
                     continue;
                 }
@@ -1012,7 +1017,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
 
             secretReference.SecretId = secretByName.Id;
             state.NameBindings[remoteName] = secretByName.Id;
-            resource.BindResolvedSecret(secretByName.Id, remoteName, secretByName.Value);
+            await resource.BindResolvedSecretAsync(secretByName.Id, remoteName, secretByName.Value, cancellationToken).ConfigureAwait(false);
             logger.LogInformation("Successfully resolved declared reference to secret {SecretId} for name '{RemoteName}'.", secretByName.Id, remoteName);
         }
     }
@@ -1124,49 +1129,6 @@ internal sealed class BitwardenSecretManagerProvisioner(
         {
             File.Delete(authCachePath);
         }
-    }
-
-    // Called after the Bitwarden provisioner has resolved a managed secret's value so the dashboard
-    // parameter state reflects the resolved value instead of staying in "ValueMissing".
-    private static async Task NotifySecretValueResolvedAsync(
-        BitwardenSecretResource secretResource,
-        string resolvedValue,
-        IServiceProvider services,
-        CancellationToken cancellationToken)
-    {
-#pragma warning disable ASPIREINTERACTION001
-        ParameterProcessor? paramProcessor = services.GetService<ParameterProcessor>();
-        if (paramProcessor is not null)
-        {
-            ParameterResourceExtensions.MarkParameterResolved(paramProcessor, secretResource);
-        }
-#pragma warning restore ASPIREINTERACTION001
-
-        ResourceNotificationService? notificationService = services.GetService<ResourceNotificationService>();
-        if (notificationService is null)
-        {
-            return;
-        }
-
-        await notificationService.PublishUpdateAsync(secretResource, s =>
-        {
-            // Update the "Value" property (IsSensitive because secrets are always masked in the dashboard).
-            const string valuePropName = "Value";
-            var props = s.Properties;
-            var valueProp = new ResourcePropertySnapshot(valuePropName, resolvedValue) { IsSensitive = secretResource.Secret };
-            int idx = -1;
-            for (int i = 0; i < props.Length; i++)
-            {
-                if (string.Equals(props[i].Name, valuePropName, StringComparison.OrdinalIgnoreCase))
-                {
-                    idx = i;
-                    break;
-                }
-            }
-            props = idx >= 0 ? props.SetItem(idx, valueProp) : [.. props, valueProp];
-
-            return s with { State = KnownResourceStates.Running, Properties = props };
-        }).ConfigureAwait(false);
     }
 
     private static async Task<string> ResolveAuthCachePathAsync(
@@ -1284,21 +1246,13 @@ internal sealed class BitwardenLookupContext(IBitwardenSecretManagerProvider pro
 
         if (_secretIdentifiers is null || _secretIdentifiers.Count == 0)
         {
-            try
+            IReadOnlyList<BitwardenSecretInfo> synced = provider.SyncSecrets(organizationId);
+            logger?.LogDebug("Sync({OrganizationId}) returned {Count} secret(s).", organizationId, synced.Count);
+            foreach (BitwardenSecretInfo secret in synced)
             {
-                IReadOnlyList<BitwardenSecretInfo> synced = provider.SyncSecrets(organizationId);
-                logger?.LogDebug("Sync({OrganizationId}) returned {Count} secret(s).", organizationId, synced.Count);
-                foreach (BitwardenSecretInfo secret in synced)
-                {
-                    _secretsById[secret.Id] = secret;
-                }
-                _secretIdentifiers = [.. synced.Select(s => new BitwardenSecretIdentifierInfo(s.Id, s.Key, s.OrganizationId))];
+                _secretsById[secret.Id] = secret;
             }
-            catch (Exception ex)
-            {
-                logger?.LogDebug(ex, "Sync({OrganizationId}) failed: {Message}", organizationId, ex.Message);
-                _secretIdentifiers = [];
-            }
+            _secretIdentifiers = [.. synced.Select(s => new BitwardenSecretIdentifierInfo(s.Id, s.Key, s.OrganizationId))];
         }
     }
 

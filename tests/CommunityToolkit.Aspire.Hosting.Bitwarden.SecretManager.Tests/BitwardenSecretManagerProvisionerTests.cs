@@ -2,6 +2,8 @@ using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Microsoft.Extensions.Logging;
 
+#pragma warning disable ASPIREINTERACTION001
+
 namespace CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager.Tests;
 
 public class BitwardenSecretManagerProvisionerTests
@@ -207,8 +209,13 @@ public class BitwardenSecretManagerProvisionerTests
         }
     }
 
-    [Fact]
-    public async Task SyncMissingManagedSecretValuesAsync_UsesExistingUpstreamValueWhenParameterIsMissing()
+    [Theory]
+    [InlineData(false, null, false)]
+    [InlineData(false, "programmatic-value", false)]
+    [InlineData(true, null, false)]
+    [InlineData(true, "dashboard-value", false)]
+    [InlineData(false, null, true)]
+    public async Task SyncMissingManagedSecretValuesAsync_UsesRemoteFallbackAndPreservesLocalInput(bool interactive, string? submittedValue, bool lookupFails)
     {
         var organizationId = Guid.NewGuid();
         var existingProjectId = Guid.NewGuid();
@@ -236,20 +243,45 @@ public class BitwardenSecretManagerProvisionerTests
             fakeProvider.Projects[existingProjectId] = new BitwardenProjectInfo(existingProjectId, "application-secrets", organizationId);
             fakeProvider.Secrets[existingSecretId] = new BitwardenSecretInfo(existingSecretId, "managed-secret", "upstream-value", string.Empty, organizationId, existingProjectId);
             appBuilder.Services.AddSingleton<IBitwardenSecretManagerProviderFactory>(new FakeBitwardenProviderFactory(fakeProvider));
+            appBuilder.Services.AddSingleton<IInteractionService>(new FakeInteractionService(canceled: true, isAvailable: interactive));
 
             using var app = appBuilder.Build();
             var provisioner = app.Services.GetRequiredService<BitwardenSecretManagerProvisioner>();
             var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<BitwardenSecretManagerProvisioner>();
+            var processor = app.Services.GetRequiredService<ParameterProcessor>();
+            await processor.InitializeParametersAsync([managedSecret.Resource]);
+            if (!interactive)
+            {
+                await Assert.ThrowsAsync<MissingParameterValueException>(() => managedSecret.Resource.GetValueAsync(default).AsTask());
+            }
 
             await provisioner.AuthenticateAsync(bitwarden.Resource, app.Services, logger, default);
             await provisioner.ProvisionProjectAsync(bitwarden.Resource, app.Services, logger, default);
+            if (lookupFails)
+            {
+                fakeProvider.Secrets.Clear();
+                var failure = new InvalidOperationException("Remote lookup failed.");
+                fakeProvider.BeforeSyncSecrets = () => throw failure;
+                Assert.Same(failure, await Assert.ThrowsAsync<InvalidOperationException>(
+                    () => provisioner.SyncMissingManagedSecretValuesAsync(bitwarden.Resource, app.Services, logger, default)));
+                Assert.Empty(fakeProvider.CreatedSecrets);
+                return;
+            }
+
+            if (submittedValue is not null)
+            {
+                fakeProvider.BeforeListSecrets = () => processor.SetValueAsync(managedSecret.Resource, submittedValue).GetAwaiter().GetResult();
+            }
+
             await provisioner.SyncMissingManagedSecretValuesAsync(bitwarden.Resource, app.Services, logger, default);
+            fakeProvider.BeforeListSecrets = null;
             await provisioner.ProvisionSecretsAsync(bitwarden.Resource, app.Services, logger, default);
 
+            string expectedValue = submittedValue ?? "upstream-value";
             Assert.Equal(existingSecretId, managedSecret.Resource.SecretId);
             Assert.Empty(fakeProvider.CreatedSecrets);
-            Assert.Empty(fakeProvider.UpdatedSecrets);
-            Assert.Equal("upstream-value", bitwarden.Resource.ResolveSecretValue(managedSecret.Resource));
+            Assert.Equal(expectedValue, fakeProvider.Secrets[existingSecretId].Value);
+            Assert.Equal(expectedValue, await managedSecret.Resource.GetValueAsync(default));
         }
         finally
         {
@@ -260,8 +292,10 @@ public class BitwardenSecretManagerProvisionerTests
         }
     }
 
-    [Fact]
-    public async Task SyncMissingManagedSecretValuesAsync_DoesNotOverrideConfiguredParameterValue()
+    [Theory]
+    [InlineData(null)]
+    [InlineData("later-dashboard-value")]
+    public async Task ProvisionSecretsAsync_WritesSelectedValueAndPreservesInputChangedDuringWrite(string? laterValue)
     {
         var organizationId = Guid.NewGuid();
         var existingProjectId = Guid.NewGuid();
@@ -294,6 +328,10 @@ public class BitwardenSecretManagerProvisionerTests
             using var app = appBuilder.Build();
             var provisioner = app.Services.GetRequiredService<BitwardenSecretManagerProvisioner>();
             var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<BitwardenSecretManagerProvisioner>();
+            if (laterValue is not null)
+            {
+                fakeProvider.BeforeUpdateSecret = () => managedSecret.Resource.SetValueAsync(laterValue).GetAwaiter().GetResult();
+            }
 
             await provisioner.AuthenticateAsync(bitwarden.Resource, app.Services, logger, default);
             await provisioner.ProvisionProjectAsync(bitwarden.Resource, app.Services, logger, default);
@@ -303,6 +341,7 @@ public class BitwardenSecretManagerProvisionerTests
             Assert.Equal(existingSecretId, managedSecret.Resource.SecretId);
             Assert.Contains(existingSecretId, fakeProvider.UpdatedSecrets);
             Assert.Equal("configured-value", bitwarden.Resource.ResolveSecretValue(managedSecret.Resource));
+            Assert.Equal(laterValue ?? "configured-value", await managedSecret.Resource.GetValueAsync(default));
         }
         finally
         {
@@ -637,6 +676,12 @@ internal sealed class FakeBitwardenProvider : IBitwardenSecretManagerProvider
 
     public List<Guid> UpdatedSecrets { get; } = [];
 
+    public Action? BeforeListSecrets { get; set; }
+
+    public Action? BeforeSyncSecrets { get; set; }
+
+    public Action? BeforeUpdateSecret { get; set; }
+
     public string? ApiUrl { get; set; }
 
     public string? IdentityUrl { get; set; }
@@ -677,10 +722,13 @@ internal sealed class FakeBitwardenProvider : IBitwardenSecretManagerProvider
         => secretIds.Where(Secrets.ContainsKey).Select(secretId => Secrets[secretId]).ToArray();
 
     public IReadOnlyList<BitwardenSecretIdentifierInfo> ListSecrets(Guid organizationId)
-        => Secrets.Values
+    {
+        BeforeListSecrets?.Invoke();
+        return Secrets.Values
             .Where(secret => secret.OrganizationId == organizationId)
             .Select(secret => new BitwardenSecretIdentifierInfo(secret.Id, secret.Key, secret.OrganizationId))
             .ToArray();
+    }
 
     public BitwardenSecretInfo CreateSecret(Guid organizationId, string remoteName, string value, Guid[] projectIds, string note = "")
     {
@@ -692,6 +740,7 @@ internal sealed class FakeBitwardenProvider : IBitwardenSecretManagerProvider
 
     public BitwardenSecretInfo UpdateSecret(Guid organizationId, Guid secretId, string remoteName, string value, string note, Guid[] projectIds)
     {
+        BeforeUpdateSecret?.Invoke();
         BitwardenSecretInfo secret = new(secretId, remoteName, value, note, organizationId, projectIds[0]);
         Secrets[secret.Id] = secret;
         UpdatedSecrets.Add(secret.Id);
@@ -699,7 +748,10 @@ internal sealed class FakeBitwardenProvider : IBitwardenSecretManagerProvider
     }
 
     public IReadOnlyList<BitwardenSecretInfo> SyncSecrets(Guid organizationId)
-        => Secrets.Values.Where(s => s.OrganizationId == organizationId).ToArray();
+    {
+        BeforeSyncSecrets?.Invoke();
+        return Secrets.Values.Where(s => s.OrganizationId == organizationId).ToArray();
+    }
 
     public ValueTask DisposeAsync() => ValueTask.CompletedTask;
 }

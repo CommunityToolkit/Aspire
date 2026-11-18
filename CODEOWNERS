@@ -153,3 +153,12 @@
 /examples/agents/ @tommasodotNET
 /src/CommunityToolkit.Aspire.Hosting.Agents/ @tommasodotNET
 /tests/CommunityToolkit.Aspire.Hosting.Agents.Tests/ @tommasodotNET
+
+# CommunityToolkit.Aspire.VLLM, CommunityToolkit.Aspire.Hosting.VLLM
+
+/examples/vllm/ @luisquintanilla
+/src/CommunityToolkit.Aspire.VLLM/ @luisquintanilla
+/tests/CommunityToolkit.Aspire.VLLM.Tests/ @luisquintanilla
+/src/CommunityToolkit.Aspire.Hosting.VLLM/ @luisquintanilla
+/tests/CommunityToolkit.Aspire.Hosting.VLLM.Tests/ @luisquintanilla
+/tests-app-hosts/VLLM.AppHost/ @luisquintanilla
