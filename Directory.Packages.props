@@ -48,7 +48,7 @@
     <PackageVersion Include="Microsoft.AspNetCore.Components.QuickGrid" Version="$(AspNetCoreVersion)" />
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.15" />
     <PackageVersion Include="Microsoft.DotNet.PlatformAbstractions" Version="3.1.6" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.14">
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.15">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageVersion>
@@ -80,11 +80,11 @@
   </ItemGroup>
   <ItemGroup Label="Integration Packages">
     <!-- External packages -->
-    <PackageVersion Include="AWSSDK.S3" Version="4.0.104.12" />
+    <PackageVersion Include="AWSSDK.S3" Version="4.1.1" />
     <PackageVersion Include="Azure.AI.OpenAI" Version="2.9.0-beta.1" />
     <PackageVersion Include="Azure.Identity" Version="1.21.0" />
     <PackageVersion Include="Azure.Messaging.ServiceBus" Version="7.21.0" />
-    <PackageVersion Include="Azure.Provisioning.AppContainers" Version="1.3.0-beta.2" />
+    <PackageVersion Include="Azure.Provisioning.AppContainers" Version="1.3.0" />
     <PackageVersion Include="Azure.Storage.Blobs" Version="12.29.2" />
     <PackageVersion Include="Google.Cloud.Storage.V1" Version="5.0.0" />
     <PackageVersion Include="Bitwarden.Secrets.Sdk" Version="1.0.0" />
@@ -92,7 +92,7 @@
          fix) depends on SDK 1.0.20 and MAF 1.24.0+, and its buildTransitive bridge points
          MAF 1.26.0 at the SDK 1.0.20 build targets.
          Keep the Squad sample's direct SDK reference aligned with those build targets. -->
-    <PackageVersion Include="GitHub.Copilot.SDK" Version="1.0.31" />
+    <PackageVersion Include="GitHub.Copilot.SDK" Version="1.0.34" />
     <PackageVersion Include="JsonSchema.Net" Version="9.6.0" />
     <PackageVersion Include="KubernetesClient" Version="19.0.2" />
     <PackageVersion Include="OllamaSharp" Version="5.4.12" />
@@ -130,13 +130,13 @@
     <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="1.4.1" />
     <PackageVersion Include="KurrentDB.Client" Version="1.6.1" />
     <PackageVersion Include="SSH.NET" Version="2026.0.0" />
-    <PackageVersion Include="ChromaDotNet.Client.DependencyInjection" Version="2.20.0" />
+    <PackageVersion Include="ChromaDotNet.Client.DependencyInjection" Version="2.22.1" />
   </ItemGroup>
   <ItemGroup Label="Testing">
     <!-- Testing packages -->
     <PackageVersion Include="Aspire.Hosting.Testing" Version="$(AspireVersion)" />
     <PackageVersion Include="Bogus" Version="35.6.3" />
-    <PackageVersion Include="coverlet.collector" Version="10.1.0" />
+    <PackageVersion Include="coverlet.collector" Version="10.1.1" />
     <PackageVersion Include="OpenFeature.Providers.Flagd" Version="0.6.0" />
     <PackageVersion Include="OpenFeature.Providers.Ofrep" Version="0.1.2" />
     <PackageVersion Include="MartinCostello.Logging.XUnit.v3" Version="0.7.1" />
