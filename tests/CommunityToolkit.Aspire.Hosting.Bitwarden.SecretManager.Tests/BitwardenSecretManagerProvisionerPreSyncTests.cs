@@ -2,6 +2,7 @@
 
 using Aspire.Hosting;
 using Aspire.Hosting.Pipelines;
+using Aspire.Hosting.Publishing;
 using Microsoft.Extensions.Logging;
 
 namespace CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager.Tests;
@@ -222,9 +223,14 @@ public class BitwardenSecretManagerProvisionerPreSyncTests
         }
     }
 
-    [Fact]
-    public async Task PreSyncManagedSecretValuesAsync_SecretAlreadyInConfig_SkipsSave()
+    [Theory]
+    [InlineData("configuration")]
+    [InlineData("default")]
+    [InlineData("assigned")]
+    public async Task PreSyncManagedSecretValuesAsync_ExistingLocalValue_PreservesValueWithoutSaving(string inputSource)
     {
+        const string configKey = "Parameters:bitwarden-managed-secret";
+        const string localValue = "local-value";
         var organizationId = Guid.NewGuid();
         var existingProjectId = Guid.NewGuid();
         var existingSecretId = Guid.NewGuid();
@@ -237,16 +243,25 @@ public class BitwardenSecretManagerProvisionerPreSyncTests
             appBuilder.Configuration["Parameters:bitwarden-access-token"] = FakeAccessToken;
             appBuilder.Configuration["Parameters:bitwarden-organization-id"] = organizationId.ToString("D");
             appBuilder.Configuration["Parameters:bitwarden-project"] = existingProjectId.ToString("D");
-            // Secret value already present in config — pre-sync must skip the Bitwarden fetch for it.
-            appBuilder.Configuration["Parameters:bitwarden-managed-secret"] = "already-configured-value";
-
             var organizationParameter = appBuilder.AddParameter("bitwarden-organization-id");
             var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
             var projectParam = appBuilder.AddParameter("bitwarden-project");
 
             var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", projectParam, organizationParameter, accessToken)
                 .WithCacheFile(stateFile);
-            bitwarden.AddSecret("managed-secret");
+            var secret = bitwarden.AddSecret("managed-secret").Resource;
+            switch (inputSource)
+            {
+                case "configuration":
+                    appBuilder.Configuration[configKey] = localValue;
+                    break;
+                case "default":
+                    secret.Default = new FixedDefault(localValue);
+                    break;
+                case "assigned":
+                    await secret.SetValueAsync(localValue);
+                    break;
+            }
 
             var fakeProvider = new FakeBitwardenProvider();
             fakeProvider.Secrets[existingSecretId] = new BitwardenSecretInfo(existingSecretId, "managed-secret", "upstream-value", string.Empty, organizationId, existingProjectId);
@@ -261,8 +276,8 @@ public class BitwardenSecretManagerProvisionerPreSyncTests
 
             await provisioner.PreSyncManagedSecretValuesAsync(bitwarden.Resource, app.Services, logger, default);
 
-            // The secret was already in config so no deployment state save should have occurred.
-            Assert.DoesNotContain("Parameters:bitwarden-managed-secret", fakeDeploymentState.SavedSectionNames);
+            Assert.Equal(localValue, await secret.GetValueAsync(default));
+            Assert.DoesNotContain(configKey, fakeDeploymentState.SavedSectionNames);
         }
         finally
         {
@@ -522,5 +537,11 @@ public class BitwardenSecretManagerProvisionerPreSyncTests
         {
             if (File.Exists(stateFile)) File.Delete(stateFile);
         }
+    }
+
+    private sealed class FixedDefault(string value) : ParameterDefault
+    {
+        public override string GetDefaultValue() => value;
+        public override void WriteToManifest(ManifestPublishingContext context) => throw new NotSupportedException();
     }
 }

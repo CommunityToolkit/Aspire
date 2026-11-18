@@ -515,10 +515,10 @@ internal sealed class BitwardenSecretManagerProvisioner(
                 // ConfigurationKey is internal to Aspire.Hosting; replicate it — managed secrets are never connection strings.
                 string configKey = $"Parameters:{secret.Name}";
 
-                // A configured input takes precedence over the value in Bitwarden.
-                if (!string.IsNullOrWhiteSpace(configuration[configKey]))
+                if (!string.IsNullOrWhiteSpace(configuration[configKey]) ||
+                    (secret.TryGetCurrentValue(out string? currentValue) && !string.IsNullOrWhiteSpace(currentValue)))
                 {
-                    logger.LogDebug("Skipping pre-sync for managed secret '{RemoteName}': value already in configuration.", secret.RemoteName);
+                    logger.LogDebug("Skipping pre-sync for managed secret '{RemoteName}': a local value is already available.", secret.RemoteName);
                     continue;
                 }
 
