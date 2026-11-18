@@ -41,7 +41,7 @@ The steps run in order and are scoped to the resource by name:
 | 5   | `bitwarden-provision-secrets-{name}`    | Creates or updates managed secrets, validates declared references, saves cache                                                                                                                      |
 | 6   | `bitwarden-patch-env-{name}`            | Patches Bitwarden-resolved values into Docker Compose `.env.{env}` files                                                                                                                            |
 
-Step 1 runs before `process-parameters`. It collects credentials and identifies which managed secrets have a remote fallback. Those parameters are optional during input collection. Step 4 sets the fallback in memory after Aspire saves local parameter inputs.
+Step 1 runs before `process-parameters`. It collects credentials and looks for remote fallbacks only for managed secrets without a local value. A configured value, a declared default, or a value assigned in code takes precedence. Parameters with a remote fallback are optional during input collection.
 
 Step 2 depends on `DeployPrereq`; steps 3–5 form a chain where each step depends on the previous. Steps 3–5 are tagged `ProvisionInfrastructure`. Step 5 is also required by `Deploy`. Because steps 2–5 carry no dependency on `prepare-{env}`, they can run concurrently with the Docker image prepare phase.
 
@@ -79,10 +79,12 @@ Dependent resources must call `.WaitForCompletion(bitwarden)` explicitly in apph
 Run-mode initialization collects parameters in four phases, all expressed as `Waiting` state to the dashboard until all inputs are ready:
 
 **Phase 1 — authentication inputs only.**
-The resource waits for the management access token (and the auth cache path, which is derived from it). It then authenticates with Bitwarden immediately. A bad or missing token fails fast here — before the user is asked for project name or secret values — and the resource transitions to `Exited` (exit code 1).
+The provisioner resolves the management token and its auth cache path, then authenticates with Bitwarden. Authentication failure moves the resource to `Exited` before the provisioner attempts to resolve the project or its secrets. Aspire starts parameter collection independently.
 
 **Phase 2 — upstream managed secret sync.**
-After authentication, the resource resolves the project and checks Bitwarden for managed secrets with missing inputs. Aspire can display its missing-parameter prompt during the lookup. The provisioner completes a pending parameter with the remote value. If the user has already completed the parameter, their value wins. When interaction is unavailable, the provisioner can recover a missing-value fault if Bitwarden has the value.
+After authentication, the resource resolves the project and checks Bitwarden for managed secrets with missing inputs. Aspire can display its missing-parameter prompt during the lookup. The provisioner uses `TrySetValue` to complete a pending parameter with the remote value. If a dashboard submission completes it first, the submitted value wins.
+
+When interaction is unavailable, Aspire can fault a missing required parameter. If Bitwarden has the secret, the provisioner recovers that missing-value fault with `SetValueAsync`. If both sources lack a value, the required input error reaches the operator. A failed remote lookup surfaces as a lookup error.
 
 **Phase 2.5 — upstream reference secret sync.**
 The provisioner fetches each reference-only secret and assigns the value to its optional parameter. A missing remote secret fails provisioning.
@@ -90,7 +92,7 @@ The provisioner fetches each reference-only secret and assigns the value to its 
 **Phase 3 — remaining parameters.**
 After upstream sync, the resource waits for any remaining project, organization, or managed secret parameter values. Aspire prompts for any managed secret that still needs a value. Once every value is available, the resource transitions to `Running` and provisioning continues.
 
-The resource never enters `Running` while parameters are still pending. `Running` strictly means "all inputs gathered, provisioning in progress."
+The writer reads the current parameter value before it reconciles each managed secret. A later edit stays in the parameter and is available for the next reconciliation. The writer records the remote identity and value after the write without assigning its earlier snapshot back to the managed parameter.
 
 ### Sync command
 
@@ -104,7 +106,7 @@ The "Reprovision" command repeats the full initialization sequence on demand. It
 
 **Dashboard visibility.** Both kinds use `ResourceType = "Parameter"` in their initial snapshot so they appear in the Aspire dashboard parameters tab. For managed secrets, the `Source` property shows the configuration key (`Parameters:{resourceName}`) where a value can be pre-supplied. For reference-only secrets, the `Source` shows `Bitwarden: {remoteName}` (the Bitwarden secret name) to signal that the value comes exclusively from Bitwarden.
 
-**Parameter processing.** Managed secrets use configuration, defaults, remote prefill for missing values, and normal Aspire prompts. Reference-only secrets are optional during parameter processing and receive their values from Bitwarden. The resource and both `IValueProvider.GetValueAsync` overloads read the same parameter state. The resolved-secret cache supplies identity and remote values for deployment bookkeeping.
+**Parameter processing.** Managed secrets use configuration, defaults, values assigned in code, and normal Aspire prompts. Bitwarden supplies a fallback when the parameter has no local input. Reference-only secrets are optional during parameter processing and receive their values from Bitwarden. The resource and both `IValueProvider.GetValueAsync` overloads read the same parameter state. The resolved-secret cache supplies identity and remote values for deployment bookkeeping.
 
 ## Deploy-mode parameter suppression
 
@@ -116,7 +118,7 @@ The `bitwarden-pre-sync-managed-{name}` step addresses this by running before `p
 2. Authenticates with Bitwarden and identifies remote fallbacks when the project ID is known. It makes the corresponding parameters optional during input collection.
 3. Reloads configuration so other deployment steps can read the saved values.
 
-Aspire prompts for any remaining required inputs. The managed-secret sync step applies remote fallbacks after Aspire finishes saving parameters. Artifact-only `publish` and `build` skip remote pre-sync.
+Aspire prompts for any remaining required inputs and saves local parameter values. After that step, the managed-secret sync reads each fallback in the resolved project and assigns it in memory if the parameter still lacks a local value. When another deployment starts in the same AppHost, pre-sync clears its previous fallback before Aspire saves parameters again. Artifact-only `publish` and `build` skip remote pre-sync.
 
 ## Access Tokens
 

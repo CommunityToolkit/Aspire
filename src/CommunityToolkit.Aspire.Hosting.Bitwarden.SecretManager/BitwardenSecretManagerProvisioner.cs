@@ -1,6 +1,3 @@
-#pragma warning disable ASPIREINTERACTION001
-#pragma warning disable ASPIREPIPELINES001, ASPIREPIPELINES002
-
 using System.Collections.Immutable;
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
