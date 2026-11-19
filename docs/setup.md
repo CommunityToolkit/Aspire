@@ -37,7 +37,7 @@ Toolkit packages target both `net10.0` and `net11.0`; tests and examples use the
 
 The repository targets the stable Aspire **17.0.0** release. `nuget.config` maps `Aspire.*` packages to NuGet.org. Elasticsearch and ClickHouse remain on their last stable packages because neither publishes an Aspire 17.0 package.
 
-`Directory.Build.props` pins hosting and testing packages (including the C# AppHost packages through `Directory.Packages.props`), and example `aspire.config.json` files pin the polyglot SDK. Keep these versions aligned when upgrading. Keycloak hosting/authentication and Foundry hosting still ship as preview packages; `AspirePreviewSuffix` pins their release-aligned `-preview.1.26567.5` suffix. Kubernetes hosting now uses the stable version without that suffix.
+`Directory.Build.props` pins hosting and testing packages (including the C# AppHost packages through `Directory.Packages.props`), and example `aspire.config.json` files pin the polyglot SDK. Keep these versions aligned when upgrading. Keycloak hosting/authentication, Foundry hosting, and Rust hosting still ship as preview packages; `AspirePreviewSuffix` pins their release-aligned `-preview.1.26567.5` suffix. Kubernetes hosting now uses the stable version without that suffix.
 
 The C# AppHosts use `Microsoft.NET.Sdk` and explicitly reference `Aspire.Hosting.AppHost` and `Aspire.Hosting.Dotnet`. Use `AddDotnetProject` to register .NET services; the TypeScript equivalents use `addDotnetProject`. Where an example still reads generated `Projects.*` metadata, its project reference is explicitly marked as an Aspire project resource.
 
