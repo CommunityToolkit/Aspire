@@ -7,7 +7,6 @@ using System.Security.Cryptography.X509Certificates;
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Utils;
-using CommunityToolkit.Aspire.Testing;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
@@ -16,9 +15,9 @@ namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 /// Launches real Perl processes through DCP and performs HTTPS requests with HTTP::Tiny
 /// (<c>SSL_CERT_FILE</c>), LWP (<c>PERL_LWP_SSL_CA_FILE</c>), and Mojo::UserAgent (<c>MOJO_CA_FILE</c>).
 /// The local server's certificate is issued by a test-only authority that is reachable only through
-/// Aspire's certificate trust configuration; the public endpoint is reachable only through system roots.
+/// Aspire's certificate trust configuration; the public endpoint is reachable only through each
+/// Perl runtime's default roots.
 /// </summary>
-[RequiresLinux]
 public class CertificateTrustRuntimeTests
 {
     private const string PublicUrl = "https://www.cpan.org/";
