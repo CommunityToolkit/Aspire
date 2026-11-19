@@ -184,14 +184,38 @@ to install them. Individual module installation is supported with cpan or cpanm 
 
 ## Certificate trust
 
-The experimental `WithPerlCertificateTrust()` API (`CTASPIREPERL001`) configures
-`SSL_CERT_FILE`, `PERL_LWP_SSL_CA_FILE`, and `MOJO_CA_FILE` for the Perl app and its
-package and project dependency installers. Each resource uses the certificate bundle
-provided by its own Aspire certificate trust context, not the AppHost process's
-`SSL_CERT_FILE` environment variable.
+In run mode, all `AddPerl*` methods configure certificate trust with `System` scope by default.
+Aspire's bundle includes system root CAs plus configured custom and developer certificates.
+`SSL_CERT_FILE`, `PERL_LWP_SSL_CA_FILE`, and `MOJO_CA_FILE` point to that bundle, replacing
+any values configured earlier in environment callbacks. `Override` scope uses only the configured
+custom and developer certificates, without system roots.
 
-Call it before or after `WithPackage()` or `WithProjectDependencies()`; both orders
-are supported. Certificate trust remains opt-in.
+`OTEL_EXPORTER_OTLP_CERTIFICATE` also points to the resource's bundle. When an OTLP endpoint is
+configured, `OTEL_PERL_EXPORTER_OTLP_CERTIFICATE` resolves from the final standard certificate
+variable unless a Perl-specific value was explicitly set.
+
+Package and project dependency installers inherit the parent's final trust scope, custom CAs,
+and developer-certificate trust setting, regardless of fluent-call order. Each installer uses
+its own certificate bundle, not the AppHost process's `SSL_CERT_FILE` environment variable.
+
+With `Append` scope, the integration leaves the Perl-specific TLS variables (`SSL_CERT_FILE`,
+`PERL_LWP_SSL_CA_FILE`, `MOJO_CA_FILE`) untouched so public HTTPS and CPAN downloads retain their
+default trust, and always configures OTLP certificate trust. Custom certificate authorities are
+appended only through Aspire's `SSL_CERT_DIR`, which includes the default certificate directories on
+Linux or when the AppHost already sets `SSL_CERT_DIR`. Otherwise (for example, Windows and macOS
+without `SSL_CERT_DIR`), the integration removes `SSL_CERT_DIR` so Perl falls back to its default
+CA bundle (typically `Mozilla::CA`), and only OTLP certificate trust is applied. Use `System` scope,
+the default, to trust both custom and default certificate authorities on every platform.
+
+To disable Aspire-managed certificate trust for the app and its installers:
+
+```csharp
+builder.AddPerlScript("worker", "../scripts", "Worker.pl")
+    .WithCertificateTrustScope(CertificateTrustScope.None);
+```
+
+Publish mode retains the deployment target's default certificate trust behavior.
+`WithPerlCertificateTrust()` (`CTASPIREPERL001`) is now an obsolete no-op retained for compatibility.
 
 ---
 
