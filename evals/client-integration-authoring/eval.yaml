@@ -1,0 +1,44 @@
+name: client-integration-authoring
+description: Reviews keyed client configuration precedence and health check isolation.
+type: capability
+defaults:
+  executor: copilot-sdk
+  model: claude-haiku-5.5
+  timeout: 3m
+  runs: 1
+agent_environment:
+  skills:
+    - ../../.agents/skills/client-integration-authoring
+stimuli:
+  - name: keyed-client-configuration-precedence
+    prompt: |
+      Use the client-integration-authoring skill to review this proposed Aspire client registration.
+      The thread-safe Contoso SDK client supports a lightweight, cancellable PingAsync.
+      For the "orders" keyed registration, the proposed extension calls the caller's
+      configuration callback first (Endpoint = https://callback.example.test), binds
+      the Contoso settings section next (Endpoint = https://section.example.test), then
+      applies the named connection string (Endpoint = https://named.example.test).
+      The default and "orders" registrations both register a health check named "contoso".
+      Give the current and corrected effective endpoints in that order. Explain the
+      corrected settings order and give example health check names for the default and
+      "orders" registrations. Give review feedback in chat; don't change files.
+    graders:
+      - type: completed
+      - type: skill-invocation
+        config:
+          required: [client-integration-authoring]
+      - type: output-matches
+        name: effective-endpoints
+        config:
+          pattern: '(?is)\bnamed\.example\.test\b.{0,240}\bcallback\.example\.test\b'
+      - type: output-matches
+        name: corrected-configuration-order
+        config:
+          pattern: '(?is)(?:bind|section).{0,180}connection string.{0,180}(?:callback|delegate)'
+      - type: output-matches
+        name: keyed-health-check-name
+        config:
+          pattern: '(?i)\bcontoso[-:. /_]+orders\b|\borders[-:. /_]+contoso\b'
+      - type: diff-empty
+scoring:
+  threshold: 1

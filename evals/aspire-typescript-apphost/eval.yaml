@@ -1,0 +1,42 @@
+name: aspire-typescript-apphost
+description: Plans TypeScript AppHost coverage for the requested integration without over-scoping.
+type: capability
+defaults:
+  executor: copilot-sdk
+  model: claude-haiku-5.5
+  timeout: 3m
+  runs: 1
+agent_environment:
+  skills:
+    - ../../.agents/skills/aspire-typescript-apphost
+stimuli:
+  - name: apphost-startup-coverage
+    prompt: |
+      Use the aspire-typescript-apphost skill to propose a change for the Contoso
+      hosting integration. Assume the existing example is in examples/contoso and
+      has a C# AppHost named CommunityToolkit.Aspire.Hosting.Contoso.AppHost.
+      That AppHost defines a Docker-backed resource called "broker" and a
+      consuming project called "worker"; both are required to verify startup.
+      Give the proposed TypeScript entry-point path and the xUnit test snippet
+      for startup coverage, following this repository's conventions. This is a
+      hypothetical example: reply in chat, don't edit any files or run tests.
+    graders:
+      - type: completed
+      - type: skill-invocation
+        config:
+          required: [aspire-typescript-apphost]
+      - type: output-matches
+        name: typescript-entry-point-path
+        config:
+          pattern: 'examples[/\\]contoso[/\\]CommunityToolkit\.Aspire\.Hosting\.Contoso\.AppHost\.TypeScript[/\\]apphost\.mts'
+      - type: output-matches
+        name: docker-aware-shared-test
+        config:
+          pattern: '(?s)\[RequiresDocker(?:\([^)]*\))?\].*\bTypeScriptAppHostTest\.Run\('
+      - type: output-matches
+        name: both-required-resources
+        config:
+          pattern: '\bwaitForResources\s*:\s*[^;]*?(?:"broker"[^;]*?"worker"|"worker"[^;]*?"broker")'
+      - type: diff-empty
+scoring:
+  threshold: 1
