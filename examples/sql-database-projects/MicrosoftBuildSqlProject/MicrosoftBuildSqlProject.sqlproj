@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.Build.Sql/2.3.0">
+  <PropertyGroup>
+    <DSP>Microsoft.Data.Tools.Schema.Sql.Sql160DatabaseSchemaProvider</DSP>
+    <OutputPath>$(MSBuildProjectDirectory)/bin/$(Configuration)/custom output/</OutputPath>
+  </PropertyGroup>
+</Project>

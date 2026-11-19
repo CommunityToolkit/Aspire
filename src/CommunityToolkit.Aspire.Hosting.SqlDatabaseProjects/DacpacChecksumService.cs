@@ -7,11 +7,11 @@ namespace CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects;
 
 internal class DacpacChecksumService : IDacpacChecksumService
 {
-    public async Task<string?> CheckIfDeployedAsync(string dacpacPath, string targetConnectionString, ILogger logger, CancellationToken cancellationToken)
+    public async Task<string?> CheckIfDeployedAsync(string dacpacPath, string dacpacIdentity, string targetConnectionString, ILogger logger, CancellationToken cancellationToken)
     {
         var targetDatabaseName = GetDatabaseName(targetConnectionString);
 
-        var dacpacPathChecksum = GetStringChecksum(dacpacPath);
+        var dacpacPathChecksum = GetStringChecksum(dacpacIdentity);
 
         var dacpacChecksum = await GetChecksumAsync(dacpacPath);
 
@@ -41,11 +41,11 @@ internal class DacpacChecksumService : IDacpacChecksumService
         return dacpacChecksum;
     }
 
-    public async Task SetChecksumAsync(string dacpacPath, string targetConnectionString, string dacpacChecksum, ILogger logger, CancellationToken cancellationToken)
+    public async Task SetChecksumAsync(string dacpacPath, string dacpacIdentity, string targetConnectionString, string dacpacChecksum, ILogger logger, CancellationToken cancellationToken)
     {
         var targetDatabaseName = GetDatabaseName(targetConnectionString);
 
-        var dacpacPathChecksum = GetStringChecksum(dacpacPath);
+        var dacpacPathChecksum = GetStringChecksum(dacpacIdentity);
 
         using var connection = new SqlConnection(targetConnectionString);
 

@@ -1,26 +1,25 @@
+using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects;
 
-internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksumService dacpacChecksumService, IHostEnvironment hostEnvironment, ResourceLoggerService resourceLoggerService, ResourceNotificationService resourceNotificationService)
+internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksumService dacpacChecksumService, SqlProjectDacpacResolver dacpacResolver, ResourceLoggerService resourceLoggerService, ResourceNotificationService resourceNotificationService)
 {
     public async Task PublishSqlProject(IResourceWithDacpac resource, IResourceWithConnectionString target, string? targetDatabaseName, CancellationToken cancellationToken)
     {
         var logger = resourceLoggerService.GetLogger(resource);
         ResourceStateSnapshot? failureState = KnownResourceStates.FailedToStart;
+        ResolvedDacpac? resolvedDacpac = null;
 
         try
         {
             await resourceNotificationService.PublishUpdateAsync(resource,
                 state => state with { State = new ResourceStateSnapshot(KnownResourceStates.Starting, KnownResourceStateStyles.Error) });
 
-            var dacpacPath = resource.GetDacpacPath();
-            if (!Path.IsPathRooted(dacpacPath))
-            {
-                dacpacPath = Path.Combine(hostEnvironment.ContentRootPath, dacpacPath);
-            }
+            resolvedDacpac = await dacpacResolver.ResolveAsync(resource, logger, cancellationToken);
+            var dacpacPath = resolvedDacpac.Path;
+            var dacpacIdentity = resolvedDacpac.Identity;
 
             if (!File.Exists(dacpacPath))
             {
@@ -52,11 +51,11 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksu
             {
                 options.DropExtendedPropertiesNotInSource = false;
 
-                var result = await dacpacChecksumService.CheckIfDeployedAsync(dacpacPath, connectionString, logger, cancellationToken);
+                var result = await dacpacChecksumService.CheckIfDeployedAsync(dacpacPath, dacpacIdentity, connectionString, logger, cancellationToken);
                 if (result is null)
                 {
                     await resourceNotificationService.PublishUpdateAsync(resource,
-                        state => state with { State = KnownResourceStates.Finished });
+                        state => state with { State = KnownResourceStates.Finished, ExitCode = 0 });
                     return;
                 }
 
@@ -64,7 +63,8 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksu
             }
 
             await resourceNotificationService.PublishUpdateAsync(resource,
-                state => state with { 
+                state => state with
+                {
                     State = KnownResourceStates.Running,
                     StartTimeStamp = DateTime.UtcNow
                 });
@@ -73,11 +73,12 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksu
 
             if (!string.IsNullOrEmpty(checksum) && resource.HasAnnotationOfType<DacpacSkipWhenDeployedAnnotation>())
             {
-                await dacpacChecksumService.SetChecksumAsync(dacpacPath, connectionString, checksum, logger, cancellationToken);
+                await dacpacChecksumService.SetChecksumAsync(dacpacPath, dacpacIdentity, connectionString, checksum, logger, cancellationToken);
             }
 
             await resourceNotificationService.PublishUpdateAsync(resource,
-                state => state with { 
+                state => state with
+                {
                     State = KnownResourceStates.Finished,
                     ExitCode = 0,
                     StopTimeStamp = DateTime.UtcNow
@@ -89,11 +90,16 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksu
             logger.LogError(ex, "Failed to publish database project.");
 
             await resourceNotificationService.PublishUpdateAsync(resource,
-                state => state with {
+                state => state with
+                {
                     State = failureState,
                     ExitCode = failureState == KnownResourceStates.Finished ? 1 : state.ExitCode,
                     StopTimeStamp = DateTime.UtcNow
                 });
+        }
+        finally
+        {
+            resolvedDacpac?.Dispose();
         }
     }
 }
