@@ -1,6 +1,6 @@
 ﻿# CommunityToolkit.Aspire.Hosting.Rust library
 
-Provides extensions methods and resource definitions for the Aspire AppHost to support running Rust applications.
+Provides an Aspire AppHost extension for running Rust applications with [Bacon](https://dystroy.org/bacon/), using Aspire's Rust resource.
 
 ## Getting Started
 
@@ -14,15 +14,17 @@ dotnet add package CommunityToolkit.Aspire.Hosting.Rust
 
 ### Example usage
 
-Then, in the _Program.cs_ file of `AppHost`, define a Rust resource, then call `AddRustApp`:
+Install Bacon and call `AddBaconApp` from your AppHost:
 
 ```csharp
-var rustApp = builder.AddRustApp("rust-app", "../actix_api");
+var rustApp = builder.AddBaconApp("rust-app", "../actix_api");
 ```
 
 ## Additional Information
 
-https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-rust
+For applications using Cargo directly, use the upstream `Aspire.Hosting.Rust` package and its `AddRustApp` method instead.
+
+The Rust examples accept `ENABLE_BACON=1` to launch Bacon automatically. The Go and TypeScript AppHosts otherwise register Bacon for manual start. Install Cargo, rustc, and Bacon to run the Rust AppHost startup tests.
 
 ## Feedback & contributing
 

@@ -16,13 +16,15 @@ func main() {
 	rust.WithHttpHealthCheck(&aspire.WithHttpHealthCheckOptions{Path: aspire.StringPtr("/")})
 	check(rust.Err())
 
-	if os.Getenv("RUST_ARGS_VALIDATION") == "1" {
-		withArgs := builder.AddRustApp("rust-app-with-args", "../actix_api", &aspire.AddRustAppOptions{
-			Args: []string{"--", "--help"},
-		})
-		withArgs.WithHttpEndpoint(&aspire.WithHttpEndpointOptions{Env: aspire.StringPtr("PORT")})
-		check(withArgs.Err())
+	bacon := builder.AddBaconApp("bacon-app", "../actix_api", &aspire.AddBaconAppOptions{
+		Args: []string{"--headless", "run-long"},
+	})
+	bacon.WithHttpEndpoint(&aspire.WithHttpEndpointOptions{Env: aspire.StringPtr("PORT")})
+	bacon.WithHttpHealthCheck(&aspire.WithHttpHealthCheckOptions{Path: aspire.StringPtr("/ping")})
+	if os.Getenv("ENABLE_BACON") != "1" {
+		bacon.WithExplicitStart()
 	}
+	check(bacon.Err())
 
 	app, err := builder.Build()
 	check(err)

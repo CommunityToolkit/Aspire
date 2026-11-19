@@ -104,6 +104,10 @@ jobs:
         if: runner.os == 'Linux'
         run: docker info
 
+      - name: Install Bacon
+        if: matrix.name == 'Hosting.Rust.Tests'
+        run: cargo install bacon --version 3.26.0 --locked
+
       - name: Build test project
         env:
           CI: false

@@ -5,7 +5,6 @@ Use this archetype for non-.NET app workloads such as Python, Go, JavaScript, No
 Representative examples:
 
 - `src/CommunityToolkit.Aspire.Hosting.Python.Extensions/UvicornAppHostingExtension.cs`
-- `src/CommunityToolkit.Aspire.Hosting.Golang/GolangAppHostingExtension.cs`
 - `src/CommunityToolkit.Aspire.Hosting.JavaScript.Extensions/JavaScriptHostingExtensions.cs`
 
 ## Resource shape

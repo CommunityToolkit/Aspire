@@ -9,14 +9,11 @@ await rustApp.withHttpEndpoint({ env: "PORT" });
 await rustApp.withExternalHttpEndpoints();
 await rustApp.withHttpHealthCheck({ path: "/" });
 
-// addRustApp — optional args
-if (process.env["RUST_ARGS_VALIDATION"] === "1") {
-    const rustAppWithArgs = await builder.addRustApp(
-        "rust-app-with-args",
-        rustAppPath,
-        { args: ["--", "--help"] },
-    );
-    await rustAppWithArgs.withHttpEndpoint({ env: "PORT" });
+const baconApp = await builder.addBaconApp("bacon-app", rustAppPath, { args: ["--headless", "run-long"] });
+await baconApp.withHttpEndpoint({ env: "PORT" });
+await baconApp.withHttpHealthCheck({ path: "/ping" });
+if (process.env["ENABLE_BACON"] !== "1") {
+    await baconApp.withExplicitStart();
 }
 
 await builder.build().run();

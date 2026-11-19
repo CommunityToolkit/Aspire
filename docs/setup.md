@@ -18,8 +18,6 @@ If you prefer not to use `devcontainer`, you can manually set up your developmen
 -   [Node.js LTS](https://nodejs.org/en/)
     -   [Yarn 2](https://yarnpkg.com/getting-started/install)
     -   [pnpm](https://pnpm.io/)
--   [Java JDK 21](https://learn.microsoft.com/java/openjdk/download)
-    -   You'll also need [Gradle](https://gradle.org/install/) and [Apache Maven](https://maven.apache.org/download.cgi)
 -   [Bun](https://bun.sh)
 -   [Deno 2](https://deno.land/)
 -   [Go 1.26 or later](https://go.dev/dl/) (required for Go AppHosts)
