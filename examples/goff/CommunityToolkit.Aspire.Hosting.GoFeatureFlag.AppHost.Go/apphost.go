@@ -15,7 +15,7 @@ func main() {
 
 	goff := builder.AddGoFeatureFlag("goff", &aspire.AddGoFeatureFlagOptions{
 		PathToConfigFile: aspire.StringPtr("/goff/goff-proxy.yaml"),
-		Port:             aspire.Float64Ptr(11031),
+		Port:             aspire.IntPtr(11031),
 	})
 	goff.WithDataVolume(&aspire.WithDataVolumeOptions{Name: aspire.StringPtr("goff-data")})
 	goff.WithGoffBindMount(config)

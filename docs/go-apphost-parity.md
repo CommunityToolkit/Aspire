@@ -1,10 +1,11 @@
 # Go AppHost parity gaps
 
 These limitations were observed with Aspire SDK
-`17.1.0-preview.1.26559.8`. The ActiveMQ, Flare, Keycloak, and Zitadel
-failures were also confirmed with `17.0.0-preview.1.26555.11`. The repository
-now pins stable `17.0.0`; these cases have not yet been revalidated against
-that release:
+`17.1.0-preview.1.26559.8`. The Keycloak failure was also confirmed with
+`17.0.0-preview.1.26555.11`. The repository now pins stable `17.0.0`; the
+cases below have not yet been revalidated against that release. The previously
+reported ActiveMQ, Flare, and Zitadel publish-model failures no longer reproduce
+with stable `17.0.0`.
 
 - **RustFs:** `AddRustFsOptions.AccessKey` and `SecretKey` are generated as
   `*aspire.ParameterResource` (pointers to interfaces). Passing addresses of
@@ -43,20 +44,6 @@ that release:
   `CommunityToolkit.Aspire.Hosting.McpInspector/addMcpInspectorPolyglot` fails
   during publish-model construction with `INVALID_ARGUMENT` for
   `proxyToken` and the same `IResourceBuilder\`1` deserialization error.
-- **Zitadel:** `AddZitadelOptions.Username`, `Password`, and `MasterKey` are
-  optional parameter-resource pointers. Supplying the credentials used by the
-  TypeScript example fails `CommunityToolkit.Aspire.Hosting.Zitadel/addZitadel`
-  with `INVALID_ARGUMENT` for `username` due to the same pointer-to-interface
-  serialization defect. Omitting them would change the example.
-- **ActiveMQ:** `AddActiveMQOptions.UserName` is a pointer to a parameter
-  interface. `addActiveMQ` fails with `INVALID_ARGUMENT` for `userName` during
-  model construction when the TypeScript example's explicit credentials are
-  supplied. Its Go counterpart retains those credentials and is compile-tested.
-- **Flare:** `WithPublicUrlsOptions.DashboardUrl` is a pointer to a parameter
-  interface. Passing the example's `flare-dashboard-url` causes
-  `CommunityToolkit.Aspire.Hosting.Flare/withPublicUrls` to fail with
-  `INVALID_ARGUMENT` for `dashboardUrl`; omitting it changes the configured
-  public URL.
 - **Keycloak extensions:** The example's PostgreSQL `userName` and `password`
   are parameter handles supplied to `addPostgres`. The generated Go options use
   parameter-interface pointers; `Aspire.Hosting.PostgreSQL/addPostgres` fails

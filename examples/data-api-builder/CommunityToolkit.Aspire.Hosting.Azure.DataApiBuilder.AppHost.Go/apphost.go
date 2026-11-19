@@ -26,7 +26,7 @@ func main() {
 	}).WaitFor(sql).WithReference(db)
 	check(dab.Err())
 	dabWithOptions := builder.AddDataAPIBuilder("dab-with-options", &aspire.AddDataAPIBuilderOptions{
-		ConfigFilePaths: []string{primaryConfig, secondaryConfig}, HttpPort: aspire.Float64Ptr(5001),
+		ConfigFilePaths: []string{primaryConfig, secondaryConfig}, HttpPort: aspire.IntPtr(5001),
 	}).WaitFor(sql).WithReference(db)
 	check(dabWithOptions.Err())
 

@@ -46,8 +46,8 @@ func main() {
 		// All K3sClusterOptions are now available as fluent builder methods.
 		configuredCluster := builder.AddK3sCluster("k8s-configured",
 			&aspire.AddK3sClusterOptions{
-				ApiServerPort: aspire.Float64Ptr(6443),
-				AgentCount:    aspire.Float64Ptr(2),
+				ApiServerPort: aspire.IntPtr(6443),
+				AgentCount:    aspire.IntPtr(2),
 			}).
 			WithK3sVersion("v1.32.3-k3s1").
 			WithPodSubnet("10.42.0.0/16").

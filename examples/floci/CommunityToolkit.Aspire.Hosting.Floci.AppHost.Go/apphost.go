@@ -49,7 +49,7 @@ func main() {
 		WaitFor(aws).WaitFor(azure).WaitFor(gcp).WaitFor(storage)
 	probe := builder.AddContainer("servicebus-probe", "node:22-alpine").
 		WithFlociAzureServiceBusReference(serviceBus).
-		WithHttpEndpoint(&aspire.WithHttpEndpointOptions{TargetPort: aspire.Float64Ptr(8080)}).
+		WithHttpEndpoint(&aspire.WithHttpEndpointOptions{TargetPort: aspire.IntPtr(8080)}).
 		WithHttpHealthCheck(&aspire.WithHttpHealthCheckOptions{Path: aspire.StringPtr("/")}).
 		WaitFor(azure).WithArgs([]string{"-e", `
         const net = require('node:net');
@@ -76,7 +76,7 @@ func main() {
         }).listen(8080, '0.0.0.0');
     `})
 	custom := builder.AddFlociAws("floci-custom", &aspire.AddFlociAwsOptions{
-		Port: aspire.Float64Ptr(14566), DefaultRegion: aspire.StringPtr("eu-west-1"), DefaultAccountId: aspire.StringPtr("123456789012"),
+		Port: aspire.IntPtr(14566), DefaultRegion: aspire.StringPtr("eu-west-1"), DefaultAccountId: aspire.StringPtr("123456789012"),
 	})
 	gcpCustom := builder.AddFlociGcp("floci-gcp-custom", &aspire.AddFlociGcpOptions{DefaultProjectId: aspire.StringPtr("my-project")})
 	persistent := builder.AddFlociAws("floci-persistent").WithDataVolume("floci-data")
@@ -94,7 +94,7 @@ func main() {
 		builder.AddFlociAws("floci-with-ui").WithFlociUI(&aspire.WithFlociUIOptions{
 			ContainerName: aspire.StringPtr("my-floci-ui"),
 			ConfigureContainer: func(ui aspire.FlociUIContainerResource) {
-				ui.WithHostPort(aspire.Float64Ptr(14500))
+				ui.WithHostPort(aspire.IntPtr(14500))
 				if err := ui.Err(); err != nil {
 					log.Fatal(aspire.FormatError(err))
 				}
@@ -103,7 +103,7 @@ func main() {
 		socketOptions := &aspire.WithDockerSocketOptions{SocketPath: aspire.StringPtr("/run/user/1000/podman/podman.sock")}
 		builder.AddFlociAws("floci-podman").WithDockerSocket(socketOptions)
 		builder.AddFlociAzure("floci-az-podman").WithDockerSocket(socketOptions).
-			WithServiceBus(&aspire.WithServiceBusOptions{Name: aspire.StringPtr("podman-servicebus"), AmqpPort: aspire.Float64Ptr(15673), AmqpTlsPort: aspire.Float64Ptr(15674)})
+			WithServiceBus(&aspire.WithServiceBusOptions{Name: aspire.StringPtr("podman-servicebus"), AmqpPort: aspire.IntPtr(15673), AmqpTlsPort: aspire.IntPtr(15674)})
 		builder.AddFlociGcp("floci-gcp-podman").WithDockerSocket(socketOptions)
 		builder.AddFlociAzure("floci-az-persistent").WithDataVolume("floci-az-data")
 		builder.AddFlociAzure("floci-az-mount").WithDataBindMount("/tmp/floci-az-data")

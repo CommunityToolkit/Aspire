@@ -26,7 +26,7 @@ func main() {
 	check(existingDatabase.Err())
 
 	zitadel := builder.AddZitadel("zitadel", &aspire.AddZitadelOptions{
-		Port: aspire.Float64Ptr(8080), Username: &username, Password: &password, MasterKey: &masterKey,
+		Port: aspire.IntPtr(8080), Username: &username, Password: &password, MasterKey: &masterKey,
 	})
 	zitadel.WithExternalDomain("auth.example.com")
 	zitadel.WithDatabase(postgres, &aspire.WithDatabaseOptions{DatabaseName: aspire.StringPtr("zitadel-db")})

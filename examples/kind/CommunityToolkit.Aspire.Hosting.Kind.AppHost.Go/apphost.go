@@ -59,29 +59,36 @@ metadata:
 	if !manifestConfigured || !chartConfigured {
 		log.Fatal("CRD-wait callbacks were not invoked for both Kind builders")
 	}
-	timeout, err := manifest.CrdWaitTimeout()
-	if err != nil {
-		log.Fatal(aspire.FormatError(err))
-	}
-	behavior, err := manifest.CrdWaitBehavior()
-	if err != nil {
-		log.Fatal(aspire.FormatError(err))
-	}
-	if timeout != 120_000 || behavior != aspire.CrdWaitBehaviorBestEffort {
-		log.Fatal("Manifest CRD-wait policy did not retain the configured options")
-	}
-	manifest.WithCrdWaitTimeout(90_000).WithCrdWaitBehavior(aspire.CrdWaitBehaviorFail)
-	timeout, err = manifest.CrdWaitTimeout()
-	if err != nil {
-		log.Fatal(aspire.FormatError(err))
-	}
-	behavior, err = manifest.CrdWaitBehavior()
-	if err != nil {
-		log.Fatal(aspire.FormatError(err))
-	}
-	if timeout != 90_000 || behavior != aspire.CrdWaitBehaviorFail {
-		log.Fatal("Legacy manifest CRD-wait methods did not update the configured options")
-	}
+	manifest.WithCrdWait(func(options aspire.CrdWaitOptions) {
+		timeout, err := options.Timeout()
+		if err != nil {
+			log.Fatal(aspire.FormatError(err))
+		}
+		behavior, err := options.FailureBehavior()
+		if err != nil {
+			log.Fatal(aspire.FormatError(err))
+		}
+		if timeout != 120_000 || behavior != aspire.CrdWaitBehaviorBestEffort {
+			log.Fatal("Manifest CRD-wait policy did not retain the configured options")
+		}
+		options.SetTimeout(90_000).SetFailureBehavior(aspire.CrdWaitBehaviorFail)
+		if err := options.Err(); err != nil {
+			log.Fatal(aspire.FormatError(err))
+		}
+	})
+	manifest.WithCrdWait(func(options aspire.CrdWaitOptions) {
+		timeout, err := options.Timeout()
+		if err != nil {
+			log.Fatal(aspire.FormatError(err))
+		}
+		behavior, err := options.FailureBehavior()
+		if err != nil {
+			log.Fatal(aspire.FormatError(err))
+		}
+		if timeout != 90_000 || behavior != aspire.CrdWaitBehaviorFail {
+			log.Fatal("Manifest CRD-wait options were not updated")
+		}
+	})
 	if err := chart.Err(); err != nil {
 		log.Fatal(aspire.FormatError(err))
 	}

@@ -28,16 +28,16 @@ func main() {
 	check(user.Err())
 
 	classic := builder.AddActiveMQ("classic", &aspire.AddActiveMQOptions{
-		UserName: &user, Password: &password, Port: aspire.Float64Ptr(36161),
-		Scheme: aspire.StringPtr("activemq"), WebPort: aspire.Float64Ptr(38161),
+		UserName: &user, Password: &password, Port: aspire.IntPtr(36161),
+		Scheme: aspire.StringPtr("activemq"), WebPort: aspire.IntPtr(38161),
 	}).WithDataVolume(&aspire.WithDataVolumeOptions{Name: aspire.StringPtr("classic-data")}).
 		WithConfVolume(&aspire.WithConfVolumeOptions{Name: aspire.StringPtr("classic-conf")})
 	classic2 := builder.AddActiveMQ("classic2", &aspire.AddActiveMQOptions{
 		UserName: &user, Password: &password,
 	})
 	artemis := builder.AddActiveMQArtemis("artemis", &aspire.AddActiveMQArtemisOptions{
-		UserName: &user, Password: &password, Port: aspire.Float64Ptr(36162),
-		Scheme: aspire.StringPtr("tcp"), WebPort: aspire.Float64Ptr(38162),
+		UserName: &user, Password: &password, Port: aspire.IntPtr(36162),
+		Scheme: aspire.StringPtr("tcp"), WebPort: aspire.IntPtr(38162),
 	}).WithDataBindMount(artemisDataPath).WithConfBindMount(artemisConfPath)
 	artemis2 := builder.AddActiveMQArtemis("artemis2", &aspire.AddActiveMQArtemisOptions{
 		UserName: &user, Password: &password,
