@@ -1,5 +1,3 @@
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
-
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
@@ -42,5 +40,3 @@ public class DataApiBuilderContainerResource(string name, string? entrypoint = n
     /// </remarks>
     public ReferenceExpression UriExpression => ReferenceExpression.Create($"{PrimaryEndpoint.Scheme}://{Host}:{Port}");
 }
-
-#pragma warning restore ASPIREATS001 // AspireExport is experimental

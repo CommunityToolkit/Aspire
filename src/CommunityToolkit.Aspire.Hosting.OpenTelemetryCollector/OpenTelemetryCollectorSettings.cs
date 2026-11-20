@@ -1,6 +1,5 @@
 using Aspire.Hosting.ApplicationModel;
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting;
 
@@ -54,5 +53,3 @@ public class OpenTelemetryCollectorSettings
     /// </summary>
     public bool DisableHealthcheck { get; set; } = false;
 }
-
-#pragma warning restore ASPIREATS001 // AspireExport is experimental

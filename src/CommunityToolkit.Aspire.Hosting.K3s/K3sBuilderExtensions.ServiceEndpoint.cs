@@ -8,7 +8,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting;
 
@@ -241,5 +240,3 @@ internal sealed class K3sServiceEndpointHealthCheck(K3sServiceEndpointResource e
             ? HealthCheckResult.Healthy("Port-forward is active")
             : HealthCheckResult.Unhealthy("Port-forward not yet active"));
 }
-
-#pragma warning restore ASPIREATS001

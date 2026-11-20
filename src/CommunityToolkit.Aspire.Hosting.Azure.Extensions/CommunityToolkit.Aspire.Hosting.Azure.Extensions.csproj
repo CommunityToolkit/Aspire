@@ -3,7 +3,6 @@
   <PropertyGroup>
     <AdditionalPackageTags>hosting azure extensions</AdditionalPackageTags>
     <Description>Azure extensions support for Aspire.</Description>
-    <NoWarn>$(NoWarn);ASPIREATS001</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

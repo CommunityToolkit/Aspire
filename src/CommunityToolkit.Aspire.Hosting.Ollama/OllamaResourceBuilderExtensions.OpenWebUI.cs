@@ -3,7 +3,6 @@ using Aspire.Hosting.Utils;
 using CommunityToolkit.Aspire.Hosting.Ollama;
 using System.Diagnostics.CodeAnalysis;
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting;
 

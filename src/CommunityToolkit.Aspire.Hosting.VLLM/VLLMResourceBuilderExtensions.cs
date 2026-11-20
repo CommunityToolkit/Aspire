@@ -2,7 +2,6 @@ using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Utils;
 using CommunityToolkit.Aspire.Hosting.VLLM;
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting;
 

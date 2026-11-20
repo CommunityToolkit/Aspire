@@ -1,4 +1,3 @@
-#pragma warning disable ASPIREATS001
 #pragma warning disable ASPIREINTERACTION001
 
 using CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager;

@@ -1,5 +1,3 @@
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
-
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
@@ -76,5 +74,3 @@ public sealed class StableDiffusionCppResource(
         HuggingFaceToken = token;
     }
 }
-
-#pragma warning restore ASPIREATS001 // AspireExport is experimental

@@ -6,7 +6,6 @@ using Microsoft.Extensions.Logging;
 using OllamaSharp;
 using System.Text.Json;
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting;
 

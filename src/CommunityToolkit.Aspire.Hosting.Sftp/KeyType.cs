@@ -1,5 +1,3 @@
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
-
 [assembly: Aspire.Hosting.AspireExport(typeof(Aspire.Hosting.KeyType))]
 
 namespace Aspire.Hosting;
@@ -19,5 +17,3 @@ public enum KeyType
     /// </summary>
     Rsa
 }
-
-#pragma warning restore ASPIREATS001 // AspireExport is experimental

@@ -3,7 +3,6 @@ using System.Diagnostics.CodeAnalysis;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Python;
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting;
 
@@ -99,5 +98,3 @@ public static class StreamlitAppHostingExtension
         return streamlitBuilder;
     }
 }
-
-#pragma warning restore ASPIREATS001 // AspireExport is experimental

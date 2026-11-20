@@ -6,7 +6,6 @@ using Aspire.Hosting.Utils;
 using CommunityToolkit.Aspire.Hosting.GoFeatureFlag;
 using Microsoft.Extensions.Logging;
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting;
 
@@ -197,5 +196,3 @@ internal enum GoFeatureFlagLogLevel
     Warning,
     Error
 }
-
-#pragma warning restore ASPIREATS001 // AspireExport is experimental

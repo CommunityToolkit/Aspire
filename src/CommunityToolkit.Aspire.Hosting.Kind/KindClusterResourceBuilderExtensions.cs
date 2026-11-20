@@ -9,7 +9,6 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 using System.ComponentModel;
 
-#pragma warning disable ASPIREATS001 // AspireExport APIs are experimental
 
 namespace Aspire.Hosting;
 
@@ -372,5 +371,3 @@ public static class KindClusterResourceBuilderExtensions
         });
     }
 }
-
-#pragma warning restore ASPIREATS001

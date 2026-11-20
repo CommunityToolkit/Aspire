@@ -3,7 +3,6 @@ using CommunityToolkit.Aspire.Hosting.LavinMQ;
 using Microsoft.Extensions.DependencyInjection;
 using RabbitMQ.Client;
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting;
 
@@ -146,5 +145,3 @@ public static class LavinMQHostingExtension
         return builder.WithBindMount(source, "/var/lib/lavinmq", isReadOnly);
     }
 }
-
-#pragma warning restore ASPIREATS001

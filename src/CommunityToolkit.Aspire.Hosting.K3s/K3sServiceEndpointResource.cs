@@ -1,5 +1,3 @@
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
-
 using CommunityToolkit.Aspire.Hosting;
 
 namespace Aspire.Hosting.ApplicationModel;

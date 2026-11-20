@@ -1,7 +1,6 @@
 using Aspire.Hosting.ApplicationModel;
 using System.Text.Json;
 
-#pragma warning disable ASPIREATS001
 
 namespace Aspire.Hosting;
 
@@ -267,5 +266,3 @@ public static class PostgresBuilderExtensions
         );
     }
 }
-
-#pragma warning restore ASPIREATS001

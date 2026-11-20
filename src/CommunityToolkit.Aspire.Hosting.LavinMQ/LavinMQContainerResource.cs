@@ -1,5 +1,3 @@
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
-
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
@@ -64,5 +62,3 @@ public class LavinMQContainerResource(string name)
         yield return new("Uri", UriExpression);
     }
 }
-
-#pragma warning restore ASPIREATS001

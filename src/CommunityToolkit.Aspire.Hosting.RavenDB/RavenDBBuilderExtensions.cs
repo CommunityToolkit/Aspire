@@ -6,7 +6,6 @@ using Raven.Client.ServerWide;
 using Raven.Client.ServerWide.Operations;
 using System.Data.Common;
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting;
 

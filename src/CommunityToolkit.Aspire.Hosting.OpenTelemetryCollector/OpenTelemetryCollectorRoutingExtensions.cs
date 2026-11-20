@@ -1,7 +1,6 @@
 using Aspire.Hosting.ApplicationModel;
 using Microsoft.Extensions.Logging;
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
 #pragma warning disable ASPIREEXPORT009 // This export intentionally keeps the public polyglot name without duplicating OpenTelemetryCollector.
 
 namespace Aspire.Hosting;
@@ -45,5 +44,4 @@ public static class OpenTelemetryCollectorRoutingExtensions
     }
 }
 
-#pragma warning restore ASPIREATS001 // AspireExport is experimental
 #pragma warning restore ASPIREEXPORT009

@@ -1,5 +1,3 @@
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
-
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
@@ -51,5 +49,3 @@ public class SftpContainerResource(string name) : ContainerResource(name), IReso
         yield return new("Uri", UriExpression);
     }
 }
-
-#pragma warning restore ASPIREATS001 // AspireExport is experimental

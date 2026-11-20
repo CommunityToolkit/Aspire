@@ -1,7 +1,6 @@
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Tempo;
 
-#pragma warning disable ASPIREATS001
 
 namespace Aspire.Hosting;
 
@@ -181,5 +180,3 @@ public static class TempoBuilderExtensions
         public string Source { get; } = source;
     }
 }
-
-#pragma warning restore ASPIREATS001

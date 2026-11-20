@@ -3,7 +3,6 @@
   <PropertyGroup>
     <AdditionalPackageTags>hosting surrealdb</AdditionalPackageTags>
     <Description>SurrealDB support for Aspire.</Description>
-    <NoWarn>$(NoWarn);ASPIREATS001</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

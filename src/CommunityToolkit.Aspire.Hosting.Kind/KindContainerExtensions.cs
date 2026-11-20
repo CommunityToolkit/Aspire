@@ -7,7 +7,6 @@ using CommunityToolkit.Aspire.Hosting.Kind;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-#pragma warning disable ASPIREATS001 // AspireExport APIs are experimental
 
 namespace Aspire.Hosting;
 
@@ -219,5 +218,3 @@ public static class KindContainerExtensions
         return RandomNumberGenerator.GetString(chars, length);
     }
 }
-
-#pragma warning restore ASPIREATS001

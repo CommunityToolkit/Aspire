@@ -3,7 +3,6 @@ using CommunityToolkit.Aspire.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
 #pragma warning disable ASPIRECERTIFICATES001 // WithHttpsDeveloperCertificate is experimental
 
 namespace Aspire.Hosting;
@@ -815,5 +814,4 @@ public static class K3sBuilderExtensions
 
 }
 
-#pragma warning restore ASPIREATS001
 #pragma warning restore ASPIRECERTIFICATES001

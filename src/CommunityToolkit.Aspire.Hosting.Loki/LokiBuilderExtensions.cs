@@ -1,7 +1,6 @@
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Loki;
 
-#pragma warning disable ASPIREATS001
 #pragma warning disable ASPIRECERTIFICATES001
 
 namespace Aspire.Hosting;
@@ -133,5 +132,4 @@ public static class LokiBuilderExtensions
     }
 }
 
-#pragma warning restore ASPIREATS001
 #pragma warning restore ASPIRECERTIFICATES001

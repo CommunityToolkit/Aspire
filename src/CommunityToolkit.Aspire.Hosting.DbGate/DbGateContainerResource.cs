@@ -1,6 +1,4 @@
-﻿#pragma warning disable ASPIREATS001 // AspireExport is experimental
-
-namespace Aspire.Hosting.ApplicationModel;
+﻿namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
 /// Represents a container resource for DbGate.
@@ -18,5 +16,3 @@ public sealed class DbGateContainerResource(string name) : ContainerResource(nam
     /// </summary>
     public EndpointReference PrimaryEndpoint => _primaryEndpoint ??= new(this, PrimaryEndpointName);
 }
-
-#pragma warning restore ASPIREATS001

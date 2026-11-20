@@ -1,7 +1,6 @@
 using Aspire.Hosting.ApplicationModel;
 using System.Reflection;
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting;
 
@@ -83,5 +82,3 @@ public static class AdminerBuilderExtensions
         }
     }
 }
-
-#pragma warning restore ASPIREATS001

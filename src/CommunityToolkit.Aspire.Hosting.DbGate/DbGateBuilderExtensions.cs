@@ -1,7 +1,6 @@
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Utils;
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting;
 
@@ -117,5 +116,3 @@ public static class DbGateBuilderExtensions
         return resourceName.Replace('-', '_');
     }
 }
-
-#pragma warning restore ASPIREATS001

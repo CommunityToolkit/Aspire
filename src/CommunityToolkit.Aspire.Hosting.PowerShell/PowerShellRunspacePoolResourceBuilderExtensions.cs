@@ -1,6 +1,4 @@
-﻿#pragma warning disable ASPIREATS001 // AspireExport is experimental
-
-using Aspire.Hosting;
+﻿using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

@@ -5,7 +5,6 @@ using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Kind;
 using Microsoft.Extensions.DependencyInjection;
 
-#pragma warning disable ASPIREATS001 // AspireExport APIs are experimental
 
 namespace Aspire.Hosting;
 
@@ -295,5 +294,3 @@ public static class KindManifestResourceBuilderExtensions
         return builder;
     }
 }
-
-#pragma warning restore ASPIREATS001

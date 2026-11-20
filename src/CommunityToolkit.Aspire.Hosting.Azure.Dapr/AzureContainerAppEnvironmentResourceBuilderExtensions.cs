@@ -5,7 +5,6 @@ using Azure.Provisioning.AppContainers;
 using CommunityToolkit.Aspire.Hosting.Azure.Dapr;
 using CommunityToolkit.Aspire.Hosting.Dapr;
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting;
 

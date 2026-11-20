@@ -2,7 +2,6 @@ using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Flagd;
 using Microsoft.Extensions.Logging;
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting;
 
@@ -123,5 +122,3 @@ public static class FlagdBuilderExtensions
             .WithArgs("--uri", $"file:./flags/{filename}");
     }
 }
-
-#pragma warning restore ASPIREATS001
