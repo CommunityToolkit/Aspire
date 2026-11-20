@@ -21,6 +21,9 @@ namespace Aspire.Hosting
 
         [AspireExport]
         public static ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Zitadel.ZitadelResource> WithExternalDomain(this ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Zitadel.ZitadelResource> builder, string externalDomain) { throw null; }
+
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Zitadel.ZitadelResource> WithHostPort(this ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Zitadel.ZitadelResource> builder, int? port) { throw null; }
     }
 }
 

@@ -19,6 +19,9 @@ namespace Aspire.Hosting
         [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.GoFeatureFlagResource> WithGoffBindMount(this ApplicationModel.IResourceBuilder<ApplicationModel.GoFeatureFlagResource> builder, string source) { throw null; }
 
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.GoFeatureFlagResource> WithHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.GoFeatureFlagResource> builder, int? port) { throw null; }
+
         [AspireExportIgnore(Reason = "LogLevel is defined in Microsoft.Extensions.Logging and is not ATS-compatible. Use the enum-based overload instead.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.GoFeatureFlagResource> WithLogLevel(this ApplicationModel.IResourceBuilder<ApplicationModel.GoFeatureFlagResource> builder, Microsoft.Extensions.Logging.LogLevel logLevel) { throw null; }
     }

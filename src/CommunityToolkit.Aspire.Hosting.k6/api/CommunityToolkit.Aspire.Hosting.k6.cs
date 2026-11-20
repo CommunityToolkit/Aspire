@@ -14,6 +14,9 @@ namespace Aspire.Hosting
         public static ApplicationModel.IResourceBuilder<ApplicationModel.K6Resource> AddK6(this IDistributedApplicationBuilder builder, string name, bool enableBrowserExtensions = false, int? port = null) { throw null; }
 
         [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.K6Resource> WithHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.K6Resource> builder, int? port) { throw null; }
+
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.K6Resource> WithK6OtlpEnvironment(this ApplicationModel.IResourceBuilder<ApplicationModel.K6Resource> builder) { throw null; }
 
         [AspireExport]

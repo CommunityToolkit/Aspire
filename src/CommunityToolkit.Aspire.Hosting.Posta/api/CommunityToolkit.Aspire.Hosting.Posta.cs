@@ -37,6 +37,9 @@ namespace Aspire.Hosting
         [AspireExportIgnore(Reason = "Action<PostaGoogleOAuthOptions> is not supported in polyglot app hosts. Use the options object overload instead.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.PostaResource> WithGoogleOAuth(this ApplicationModel.IResourceBuilder<ApplicationModel.PostaResource> builder, System.Action<CommunityToolkit.Aspire.Hosting.Posta.PostaGoogleOAuthOptions> configureOptions) { throw null; }
 
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.PostaResource> WithHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.PostaResource> builder, int? port) { throw null; }
+
         [AspireExportIgnore(Reason = "PostaInboundSmtpOptions contains parameter builders and is intended for C# AppHosts.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.PostaResource> WithInboundSmtp(this ApplicationModel.IResourceBuilder<ApplicationModel.PostaResource> builder, CommunityToolkit.Aspire.Hosting.Posta.PostaInboundSmtpOptions options, int? port = null, int targetPort = 2525) { throw null; }
 
@@ -55,11 +58,17 @@ namespace Aspire.Hosting
         [AspireExportIgnore(Reason = "Action<PostaS3BlobStorageOptions> is not supported in polyglot app hosts. Use the options object overload instead.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.PostaResource> WithS3BlobStorage(this ApplicationModel.IResourceBuilder<ApplicationModel.PostaResource> builder, System.Action<CommunityToolkit.Aspire.Hosting.Posta.PostaS3BlobStorageOptions> configureOptions) { throw null; }
 
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.PostaResource> WithSmtpHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.PostaResource> builder, int? port) { throw null; }
+
         [AspireExportIgnore(Reason = "PostaSmtpRelayOptions contains parameter builders and is intended for C# AppHosts.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.PostaResource> WithSmtpRelay(this ApplicationModel.IResourceBuilder<ApplicationModel.PostaResource> builder, CommunityToolkit.Aspire.Hosting.Posta.PostaSmtpRelayOptions options, int? port = null, int targetPort = 2526) { throw null; }
 
         [AspireExportIgnore(Reason = "Action<PostaSmtpRelayOptions> is not supported in polyglot app hosts.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.PostaResource> WithSmtpRelay(this ApplicationModel.IResourceBuilder<ApplicationModel.PostaResource> builder, System.Action<CommunityToolkit.Aspire.Hosting.Posta.PostaSmtpRelayOptions> configureOptions, int? port = null, int targetPort = 2526) { throw null; }
+
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.PostaResource> WithSmtpRelayHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.PostaResource> builder, int? port) { throw null; }
 
         [AspireExportIgnore(Reason = "PostaSystemSmtpOptions contains parameter builders and is intended for C# AppHosts.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.PostaResource> WithSystemSmtp(this ApplicationModel.IResourceBuilder<ApplicationModel.PostaResource> builder, CommunityToolkit.Aspire.Hosting.Posta.PostaSystemSmtpOptions options) { throw null; }

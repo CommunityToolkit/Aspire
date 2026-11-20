@@ -23,6 +23,7 @@ namespace Aspire.Hosting
         public static ApplicationModel.IResourceBuilder<ApplicationModel.ListmonkResource> WithAdminUser(this ApplicationModel.IResourceBuilder<ApplicationModel.ListmonkResource> builder, string username) { throw null; }
 
         [AspireExport]
+        [System.Obsolete("Use WithHostPort to configure the host port and WithEndpoint(endpoint => endpoint.TargetHost = host) to configure the bind host.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.ListmonkResource> WithAppAddress(this ApplicationModel.IResourceBuilder<ApplicationModel.ListmonkResource> builder, string address) { throw null; }
 
         [AspireExport]
@@ -42,6 +43,9 @@ namespace Aspire.Hosting
 
         [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.ListmonkResource> WithGroupId(this ApplicationModel.IResourceBuilder<ApplicationModel.ListmonkResource> builder, int groupId) { throw null; }
+
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.ListmonkResource> WithHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.ListmonkResource> builder, int? port) { throw null; }
 
         [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.ListmonkResource> WithReference(this ApplicationModel.IResourceBuilder<ApplicationModel.ListmonkResource> builder, ApplicationModel.IResourceBuilder<ApplicationModel.PostgresDatabaseResource> database) { throw null; }
