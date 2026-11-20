@@ -1,8 +1,8 @@
 using CommunityToolkit.Aspire.Testing;
 
-namespace CommunityToolkit.Aspire.Hosting.Rust.Tests;
+namespace CommunityToolkit.Aspire.Hosting.Rust.Extensions.Tests;
 
-public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Rust_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Rust_AppHost>>
+public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Rust_Extensions_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Rust_Extensions_AppHost>>
 {
     [Fact]
     public async Task ResourceStartsAndRespondsOk()
@@ -32,7 +32,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
                 await ProcessTestUtilities.RunProcessAsync(command, ["--version"], Directory.GetCurrentDirectory(), cancellationToken);
             }
 
-            await using var builder = await DistributedApplicationTestingBuilder.CreateAsync<Projects.CommunityToolkit_Aspire_Hosting_Rust_AppHost>(
+            await using var builder = await DistributedApplicationTestingBuilder.CreateAsync<Projects.CommunityToolkit_Aspire_Hosting_Rust_Extensions_AppHost>(
                 ["--ENABLE_BACON=1"], cancellationToken);
             await using var app = await builder.BuildAsync(cancellationToken);
             await app.StartAsync(cancellationToken);

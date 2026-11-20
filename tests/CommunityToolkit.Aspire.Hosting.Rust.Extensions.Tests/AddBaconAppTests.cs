@@ -6,7 +6,7 @@ using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Utils;
 using CommunityToolkit.Aspire.Testing;
 
-namespace CommunityToolkit.Aspire.Hosting.Rust.Tests;
+namespace CommunityToolkit.Aspire.Hosting.Rust.Extensions.Tests;
 public class AddBaconAppTests
 {
     [Fact]

@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.Rust.Tests"></InternalsVisibleTo>
+    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.Rust.Extensions.Tests"></InternalsVisibleTo>
   </ItemGroup>
 
   <ItemGroup>

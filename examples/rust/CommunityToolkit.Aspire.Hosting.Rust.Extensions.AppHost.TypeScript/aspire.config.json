@@ -17,6 +17,6 @@
   },
   "packages": {
     "Aspire.Hosting.Rust": "17.0.0-preview.1.26567.5",
-    "CommunityToolkit.Aspire.Hosting.Rust": "../../../src/CommunityToolkit.Aspire.Hosting.Rust/CommunityToolkit.Aspire.Hosting.Rust.csproj"
+    "CommunityToolkit.Aspire.Hosting.Rust.Extensions": "../../../src/CommunityToolkit.Aspire.Hosting.Rust.Extensions/CommunityToolkit.Aspire.Hosting.Rust.Extensions.csproj"
   }
 }

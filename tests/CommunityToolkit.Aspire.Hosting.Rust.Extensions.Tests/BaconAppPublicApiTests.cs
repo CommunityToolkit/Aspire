@@ -3,7 +3,7 @@
 
 using Aspire.Hosting;
 
-namespace CommunityToolkit.Aspire.Hosting.Rust.Tests;
+namespace CommunityToolkit.Aspire.Hosting.Rust.Extensions.Tests;
 
 public class BaconAppPublicApiTests
 {

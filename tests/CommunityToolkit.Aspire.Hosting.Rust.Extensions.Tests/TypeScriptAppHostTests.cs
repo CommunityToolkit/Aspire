@@ -1,6 +1,6 @@
 using CommunityToolkit.Aspire.Testing;
 
-namespace CommunityToolkit.Aspire.Hosting.Rust.Tests;
+namespace CommunityToolkit.Aspire.Hosting.Rust.Extensions.Tests;
 
 public class TypeScriptAppHostTests
 {
@@ -8,8 +8,8 @@ public class TypeScriptAppHostTests
     public async Task TypeScriptAppHostCompilesAndStarts()
     {
         await TypeScriptAppHostTest.Run(
-            appHostProject: "CommunityToolkit.Aspire.Hosting.Rust.AppHost.TypeScript",
-            packageName: "CommunityToolkit.Aspire.Hosting.Rust",
+            appHostProject: "CommunityToolkit.Aspire.Hosting.Rust.Extensions.AppHost.TypeScript",
+            packageName: "CommunityToolkit.Aspire.Hosting.Rust.Extensions",
             exampleName: "rust",
             waitForResources: ["rust-app"],
             requiredCommands: ["cargo", "rustc"],
