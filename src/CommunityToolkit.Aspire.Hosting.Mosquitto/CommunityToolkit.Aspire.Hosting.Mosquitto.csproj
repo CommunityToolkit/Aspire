@@ -8,6 +8,7 @@
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting" />
     <!-- Provides the MQTT client used by the broker readiness health check. -->
+    <PackageReference Include="Microsoft.NET.StringTools" />
     <PackageReference Include="MQTTnet" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" />
   </ItemGroup>

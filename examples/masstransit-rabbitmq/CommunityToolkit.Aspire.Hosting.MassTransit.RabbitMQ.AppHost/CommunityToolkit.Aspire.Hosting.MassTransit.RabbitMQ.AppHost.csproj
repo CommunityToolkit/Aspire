@@ -10,6 +10,7 @@
     <PackageReference Include="Aspire.Hosting.AppHost" />
     <PackageReference Include="Aspire.Hosting.Dotnet" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" VersionOverride="10.0.15" />
+    <PackageReference Include="Microsoft.NET.StringTools" />
   </ItemGroup>
 
   <ItemGroup>

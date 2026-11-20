@@ -12,6 +12,7 @@
          brings in Confluent.Kafka for ProducerConfig. -->
     <PackageReference Include="AspNetCore.HealthChecks.Kafka" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" VersionOverride="10.0.15" />
+    <PackageReference Include="Microsoft.NET.StringTools" />
   </ItemGroup>
 
   <ItemGroup>

@@ -15,6 +15,7 @@
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" VersionOverride="10.0.15" />
+    <PackageReference Include="Microsoft.NET.StringTools" />
   </ItemGroup>
 
 </Project>
