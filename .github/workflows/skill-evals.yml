@@ -1,0 +1,68 @@
+name: Skill evals
+
+on:
+  pull_request:
+    paths:
+      - '.agents/skills/**'
+      - 'evals/**'
+      - '.vally.yaml'
+      - '.github/workflows/skill-evals.yml'
+  push:
+    branches: [main]
+    paths:
+      - '.agents/skills/**'
+      - 'evals/**'
+      - '.vally.yaml'
+      - '.github/workflows/skill-evals.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    # Native lint can load executable plugins, so treat it like the live run.
+    if: >-
+      github.actor != 'dependabot[bot]' &&
+      (github.event_name != 'pull_request' ||
+       github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: github/evals-action@3c551330898c1467b8ddf9ef7c7f6e6c6af489d6
+        env:
+          VALLY_TELEMETRY_OPTOUT: '1'
+        with:
+          command: lint
+          working-directory: .
+          vally-version: '0.21.0'
+
+  run:
+    needs: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      copilot-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: github/evals-action@3c551330898c1467b8ddf9ef7c7f6e6c6af489d6
+        env:
+          VALLY_TELEMETRY_OPTOUT: '1'
+        with:
+          command: run
+          working-directory: .
+          vally-version: '0.21.0'
+          suite: smoke
+          copilot-token: ${{ github.token }}
+          workers: 1
+          max-retries: 0

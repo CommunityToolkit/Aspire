@@ -43,3 +43,4 @@ examples/**/.aspire/integrations/*
 playground/**/.modules/*
 playground/**/.aspire/modules/*
 playground/**/.aspire/integrations/*
+/vally-results/
