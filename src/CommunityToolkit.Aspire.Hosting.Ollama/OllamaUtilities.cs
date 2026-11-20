@@ -8,7 +8,6 @@ using System.Globalization;
 
 namespace CommunityToolkit.Aspire.Hosting.Ollama;
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 internal static class OllamaUtilities
 {
@@ -83,5 +82,3 @@ internal static class OllamaUtilities
     }
 
 }
-
-#pragma warning restore ASPIREATS001

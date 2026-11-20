@@ -27,9 +27,7 @@ public static class SeaweedFSBuilderExtensions
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
     /// <param name="name">The name of the resource. This name will be used as the connection string name when referenced in a dependency.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{SeaweedFSContainerResource}"/>.</returns>
-#pragma warning disable ASPIREATS001
     [AspireExport]
-#pragma warning restore ASPIREATS001
     public static IResourceBuilder<SeaweedFSContainerResource> AddSeaweedFS(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name)
@@ -119,9 +117,7 @@ public static class SeaweedFSBuilderExtensions
     /// <summary>
     /// Enables the SeaweedFS S3-Compatible API Gateway.
     /// </summary>
-#pragma warning disable ASPIREATS001
     [AspireExport]
-#pragma warning restore ASPIREATS001
     public static IResourceBuilder<SeaweedFSContainerResource> WithS3(
         this IResourceBuilder<SeaweedFSContainerResource> builder,
         int? s3Port = null)
@@ -150,9 +146,7 @@ public static class SeaweedFSBuilderExtensions
     /// <summary>
     /// Enables the SeaweedFS Native Filer API.
     /// </summary>
-#pragma warning disable ASPIREATS001
     [AspireExport]
-#pragma warning restore ASPIREATS001
     public static IResourceBuilder<SeaweedFSContainerResource> WithFiler(
         this IResourceBuilder<SeaweedFSContainerResource> builder,
         int? filerPort = null)
@@ -173,9 +167,7 @@ public static class SeaweedFSBuilderExtensions
     /// <summary>
     /// Configures the Master API host port that the SeaweedFS resource is exposed on.
     /// </summary>
-#pragma warning disable ASPIREATS001
     [AspireExport]
-#pragma warning restore ASPIREATS001
     public static IResourceBuilder<SeaweedFSContainerResource> WithHostPort(this IResourceBuilder<SeaweedFSContainerResource> builder, int? port)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -189,9 +181,7 @@ public static class SeaweedFSBuilderExtensions
     /// <summary>
     /// Configures the Access Key that the SeaweedFS S3 resource uses.
     /// </summary>
-#pragma warning disable ASPIREATS001
     [AspireExport]
-#pragma warning restore ASPIREATS001
     public static IResourceBuilder<SeaweedFSContainerResource> WithAccessKey(
         this IResourceBuilder<SeaweedFSContainerResource> builder,
         IResourceBuilder<ParameterResource> accessKey)
@@ -206,9 +196,7 @@ public static class SeaweedFSBuilderExtensions
     /// <summary>
     /// Configures the Secret Key that the SeaweedFS S3 resource uses.
     /// </summary>
-#pragma warning disable ASPIREATS001
     [AspireExport]
-#pragma warning restore ASPIREATS001
     public static IResourceBuilder<SeaweedFSContainerResource> WithSecretKey(
         this IResourceBuilder<SeaweedFSContainerResource> builder,
         IResourceBuilder<ParameterResource> secretKey)
@@ -223,9 +211,7 @@ public static class SeaweedFSBuilderExtensions
     /// <summary>
     /// Configures the SeaweedFS S3 API to use a specific external security configuration file.
     /// </summary>
-#pragma warning disable ASPIREATS001
     [AspireExport]
-#pragma warning restore ASPIREATS001
     public static IResourceBuilder<SeaweedFSContainerResource> WithS3ConfigFile(
         this IResourceBuilder<SeaweedFSContainerResource> builder,
         string configFilePath)
@@ -251,9 +237,7 @@ public static class SeaweedFSBuilderExtensions
     /// <summary>
     /// Adds a bind mount for the SeaweedFS data folder.
     /// </summary>
-#pragma warning disable ASPIREATS001
     [AspireExport]
-#pragma warning restore ASPIREATS001
     public static IResourceBuilder<SeaweedFSContainerResource> WithDataBindMount(
         this IResourceBuilder<SeaweedFSContainerResource> builder,
         string source,
@@ -268,9 +252,7 @@ public static class SeaweedFSBuilderExtensions
     /// <summary>
     /// Adds a named volume for the SeaweedFS data folder.
     /// </summary>
-#pragma warning disable ASPIREATS001
     [AspireExport]
-#pragma warning restore ASPIREATS001
     public static IResourceBuilder<SeaweedFSContainerResource> WithDataVolume(
         this IResourceBuilder<SeaweedFSContainerResource> builder,
         string? name = null,

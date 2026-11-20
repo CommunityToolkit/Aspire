@@ -1,5 +1,3 @@
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
-
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
@@ -14,5 +12,3 @@ public class StripeResource(string name) : ContainerResource(name)
     /// </summary>
     public string? WebhookSigningSecret { get; internal set; }
 }
-
-#pragma warning restore ASPIREATS001 // AspireExport is experimental

@@ -1,7 +1,6 @@
 using Aspire.Hosting.ApplicationModel;
 using Microsoft.Extensions.DependencyInjection;
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting;
 
@@ -307,5 +306,3 @@ public static class LogtoBuilderExtensions
             .WithArgs("-c", "npm run cli db seed -- --swe && npm start");
     }
 }
-
-#pragma warning restore ASPIREATS001

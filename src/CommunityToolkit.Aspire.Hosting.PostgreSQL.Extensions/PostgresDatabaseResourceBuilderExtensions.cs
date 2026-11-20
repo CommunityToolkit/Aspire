@@ -1,6 +1,5 @@
 using Aspire.Hosting.ApplicationModel;
 
-#pragma warning disable ASPIREATS001
 #pragma warning disable ASPIREEXPORT001 // AspireExport supports C# extension blocks even though the analyzer currently requires static methods.
 
 namespace Aspire.Hosting;
@@ -106,5 +105,4 @@ public static partial class PostgresDatabaseResourceBuilderExtensions
     }
 }
 
-#pragma warning restore ASPIREATS001
 #pragma warning restore ASPIREEXPORT001

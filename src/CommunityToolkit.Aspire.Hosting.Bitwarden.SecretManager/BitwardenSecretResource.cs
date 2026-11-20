@@ -1,5 +1,3 @@
-#pragma warning disable ASPIREATS001
-
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>

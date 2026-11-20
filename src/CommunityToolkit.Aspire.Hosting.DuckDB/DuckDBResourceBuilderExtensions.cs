@@ -1,6 +1,5 @@
 using Aspire.Hosting.ApplicationModel;
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting;
 
@@ -72,5 +71,3 @@ public static class DuckDBResourceBuilderExtensions
         return builder;
     }
 }
-
-#pragma warning restore ASPIREATS001

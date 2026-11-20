@@ -1,5 +1,3 @@
-#pragma warning disable ASPIREATS001 // AspireExport is experimental.
-
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Hosting.Utils;
 using Microsoft.Extensions.DependencyInjection;
@@ -449,5 +447,3 @@ public static class McpInspectorResourceBuilderExtensions
         return builder.WithCommand("bunx");
     }
 }
-
-#pragma warning restore ASPIREATS001 // AspireExport is experimental.

@@ -7,7 +7,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 
-#pragma warning disable ASPIREATS001 // AspireExport APIs are experimental
 
 namespace Aspire.Hosting;
 
@@ -227,5 +226,3 @@ public static class KindHelmChartResourceBuilderExtensions
         return builder;
     }
 }
-
-#pragma warning restore ASPIREATS001

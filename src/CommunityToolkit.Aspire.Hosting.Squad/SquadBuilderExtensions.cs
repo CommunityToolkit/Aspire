@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting;
 

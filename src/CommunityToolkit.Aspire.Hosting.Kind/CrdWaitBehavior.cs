@@ -1,7 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-#pragma warning disable ASPIREATS001 // AspireExport APIs are experimental
 
 [assembly: Aspire.Hosting.AspireExport(typeof(Aspire.Hosting.CrdWaitBehavior))]
 
@@ -22,5 +21,3 @@ public enum CrdWaitBehavior
     /// </summary>
     BestEffort,
 }
-
-#pragma warning restore ASPIREATS001

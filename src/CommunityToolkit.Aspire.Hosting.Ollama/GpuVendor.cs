@@ -1,5 +1,3 @@
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
-
 [assembly: Aspire.Hosting.AspireExport(typeof(Aspire.Hosting.OllamaGpuVendor))]
 
 namespace Aspire.Hosting;

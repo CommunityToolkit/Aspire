@@ -35,7 +35,6 @@ public static class MongoDBBuilderExtensions
     /// </code>
     /// </example>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-#pragma warning disable ASPIREATS001
     [AspireExportIgnore(Reason = "The configuration callback depends on DbGate container APIs that are not exported to polyglot app hosts. Use the overload without a configuration callback instead.")]
     public static IResourceBuilder<MongoDBServerResource> WithDbGate(this IResourceBuilder<MongoDBServerResource> builder, Action<IResourceBuilder<DbGateContainerResource>>? configureContainer = null, string? containerName = null)
     {
@@ -68,7 +67,6 @@ public static class MongoDBBuilderExtensions
     {
         return builder.WithDbGate(configureContainer: null, containerName);
     }
-#pragma warning restore ASPIREATS001
     
     
     /// <summary>

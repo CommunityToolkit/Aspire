@@ -2,7 +2,6 @@ using CommunityToolkit.Aspire.Hosting.ActiveMQ;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting.ApplicationModel;
 
@@ -85,5 +84,3 @@ public abstract class ActiveMQServerResourceBase(string name, ParameterResource?
     private static T ThrowIfNull<T>([NotNull] T? argument, [CallerArgumentExpression(nameof(argument))] string? paramName = null)
         => argument ?? throw new ArgumentNullException(paramName);
 }
-
-#pragma warning restore ASPIREATS001

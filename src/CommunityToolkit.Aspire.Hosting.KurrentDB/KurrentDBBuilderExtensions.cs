@@ -7,7 +7,6 @@ using CommunityToolkit.Aspire.Hosting.KurrentDB;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting;
 
@@ -161,5 +160,3 @@ public static class KurrentDBBuilderExtensions
         context.EnvironmentVariables.Add("KURRENTDB_INSECURE", "true");
     }
 }
-
-#pragma warning restore ASPIREATS001 // AspireExport is experimental

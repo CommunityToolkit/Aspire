@@ -1,6 +1,4 @@
-﻿#pragma warning disable ASPIREATS001 // AspireExport is experimental
-
-namespace Aspire.Hosting.ApplicationModel;
+﻿namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
 /// Resource for the MailPit server.
@@ -53,5 +51,3 @@ public class MailPitContainerResource(string name) : ContainerResource(name), IR
         yield return new("Uri", UriExpression);
     }
 }
-
-#pragma warning restore ASPIREATS001

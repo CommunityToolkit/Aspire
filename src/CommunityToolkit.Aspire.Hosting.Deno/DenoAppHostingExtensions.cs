@@ -2,7 +2,6 @@ using Aspire.Hosting.ApplicationModel;
 using Microsoft.Extensions.Hosting;
 using CommunityToolkit.Aspire.Utils;
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting;
 /// <summary>
@@ -131,5 +130,3 @@ public static class DenoAppHostingExtensions
     builder.WithOtlpExporter()
         .WithEnvironment("DENO_ENV", builder.ApplicationBuilder.Environment.IsDevelopment() ? "development" : "production");
 }
-
-#pragma warning restore ASPIREATS001

@@ -1,7 +1,6 @@
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.MailPit;
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting;
 
@@ -122,5 +121,3 @@ public static class MailPitHostingExtension
         }).WithBindMount(source, "/data", isReadOnly);
     }
 }
-
-#pragma warning restore ASPIREATS001

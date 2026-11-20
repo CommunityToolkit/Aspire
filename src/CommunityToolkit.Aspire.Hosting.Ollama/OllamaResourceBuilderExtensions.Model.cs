@@ -6,7 +6,6 @@ using OllamaSharp;
 using System.Data.Common;
 using System.Globalization;
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting;
 

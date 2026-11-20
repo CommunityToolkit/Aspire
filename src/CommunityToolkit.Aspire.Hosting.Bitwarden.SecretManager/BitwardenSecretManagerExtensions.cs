@@ -1,5 +1,4 @@
 #pragma warning disable ASPIREPIPELINES001
-#pragma warning disable ASPIREATS001
 
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Pipelines;

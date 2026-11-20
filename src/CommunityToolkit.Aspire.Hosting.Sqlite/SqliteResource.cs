@@ -1,5 +1,3 @@
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
-
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
@@ -25,5 +23,3 @@ public class SqliteResource(string name, string databasePath, string databaseFil
         yield return new("DataSource", ReferenceExpression.Create($"{DatabaseFilePath}"));
     }
 }
-
-#pragma warning restore ASPIREATS001 // AspireExport is experimental

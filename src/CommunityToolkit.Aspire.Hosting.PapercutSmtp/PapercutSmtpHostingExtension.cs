@@ -1,7 +1,6 @@
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.PapercutSmtp;
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting;
 
@@ -77,5 +76,3 @@ public static class PapercutSmtpHostingExtension
         return rb;
     }
 }
-
-#pragma warning restore ASPIREATS001 // AspireExport is experimental

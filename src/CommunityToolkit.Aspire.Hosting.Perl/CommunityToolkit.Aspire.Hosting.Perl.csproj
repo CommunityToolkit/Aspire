@@ -3,7 +3,6 @@
   <PropertyGroup>
     <AdditionalPackageTags>aspire integration hosting perl</AdditionalPackageTags>
     <Description>An Aspire hosting integration for hosting Perl apps.</Description>
-    <NoWarn>$(NoWarn);ASPIREATS001</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

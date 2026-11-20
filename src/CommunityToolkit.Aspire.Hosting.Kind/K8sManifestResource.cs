@@ -3,7 +3,6 @@
 
 using Aspire.Hosting;
 
-#pragma warning disable ASPIREATS001 // AspireExport APIs are experimental
 
 namespace Aspire.Hosting.ApplicationModel;
 
@@ -133,5 +132,3 @@ public class K8sManifestResource(string name, string manifestPath, KindClusterRe
         set => CommunityToolkit.Aspire.Hosting.Kind.KindCrdWaitPolicies.GetOrCreate(this).Options.FailureBehavior = value;
     }
 }
-
-#pragma warning restore ASPIREATS001

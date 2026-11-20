@@ -1,6 +1,5 @@
 using System.Data.Common;
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting.ApplicationModel;
 

@@ -1,5 +1,3 @@
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
-
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
@@ -36,5 +34,3 @@ public sealed class DbxContainerResource(string name) : ContainerResource(name)
         return true;
     }
 }
-
-#pragma warning restore ASPIREATS001

@@ -14,6 +14,10 @@ This repository contains community-maintained Aspire integrations and extensions
 - Prefer `is null` and `is not null` over equality checks with `null`.
 - Do not manually edit generated `*/api/*.cs` files unless API baseline regeneration is explicitly required.
 
+### Code review
+
+- Flag newly introduced `ASPIREATS001` suppressions, including pragma directives and `NoWarn` entries. `AspireExport` is no longer experimental; ask contributors to remove only that suppression while preserving other warning IDs and the `AspireExport` attribute.
+
 ### Working approach
 
 - Start with the integration being changed, then inspect its tests, example, README, and one or two same-pattern integrations.

@@ -2,7 +2,6 @@ using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Zitadel;
 using Microsoft.Extensions.DependencyInjection;
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting;
 
@@ -214,5 +213,3 @@ public static class ZitadelHostingExtensions
         return builder.WithEnvironment("ZITADEL_EXTERNALDOMAIN", externalDomain);
     }
 }
-
-#pragma warning restore ASPIREATS001 // AspireExport is experimental

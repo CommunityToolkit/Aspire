@@ -7,7 +7,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Text;
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting;
 
@@ -254,5 +253,3 @@ public static class ActiveMQBuilderExtensions
         return builder;
     }
 }
-
-#pragma warning restore ASPIREATS001

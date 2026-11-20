@@ -2,7 +2,6 @@ using System.Text;
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting;
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting;
 
@@ -559,5 +558,3 @@ public static class K3sHelmBuilderExtensions
     private static string ShellEscape(string value) =>
         $"'{value.Replace("'", "'\\''")}'";
 }
-
-#pragma warning restore ASPIREATS001
