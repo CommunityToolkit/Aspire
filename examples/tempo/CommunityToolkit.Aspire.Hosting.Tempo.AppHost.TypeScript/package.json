@@ -22,6 +22,6 @@
     "eslint": "^9.39.0",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.72.2"
+    "typescript-eslint": "^8.73.0"
   }
 }
