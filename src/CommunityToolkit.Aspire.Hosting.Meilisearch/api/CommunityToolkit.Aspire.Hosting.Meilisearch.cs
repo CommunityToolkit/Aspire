@@ -18,6 +18,9 @@ namespace Aspire.Hosting
 
         [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.MeilisearchResource> WithDataVolume(this ApplicationModel.IResourceBuilder<ApplicationModel.MeilisearchResource> builder, string? name = null) { throw null; }
+
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.MeilisearchResource> WithHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.MeilisearchResource> builder, int? port) { throw null; }
     }
 }
 

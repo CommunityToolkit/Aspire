@@ -36,8 +36,11 @@ namespace Aspire.Hosting.ApplicationModel
         [System.Text.Json.Serialization.JsonPropertyName("db_type")]
         public required DbxDatabaseType DbType { get { throw null; } set { } }
 
+        [System.Text.Json.Serialization.JsonIgnore]
+        public EndpointReference? Endpoint { get { throw null; } set { } }
+
         [System.Text.Json.Serialization.JsonPropertyName("host")]
-        public required string Host { get { throw null; } set { } }
+        public string Host { get { throw null; } set { } }
 
         [System.Text.Json.Serialization.JsonPropertyName("id")]
         public required string Id { get { throw null; } set { } }
@@ -56,7 +59,7 @@ namespace Aspire.Hosting.ApplicationModel
         public required string Password { get { throw null; } set { } }
 
         [System.Text.Json.Serialization.JsonPropertyName("port")]
-        public required ushort Port { get { throw null; } set { } }
+        public ushort Port { get { throw null; } set { } }
 
         [System.Text.Json.Serialization.JsonPropertyName("query_timeout_secs")]
         public ulong QueryTimeoutSecs { get { throw null; } set { } }

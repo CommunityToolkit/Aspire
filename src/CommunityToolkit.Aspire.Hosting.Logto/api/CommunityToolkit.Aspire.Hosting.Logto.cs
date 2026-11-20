@@ -17,6 +17,9 @@ namespace Aspire.Hosting
         public static ApplicationModel.IResourceBuilder<ApplicationModel.LogtoResource> WithAdminEndpoint(this ApplicationModel.IResourceBuilder<ApplicationModel.LogtoResource> builder, string url) { throw null; }
 
         [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.LogtoResource> WithAdminHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.LogtoResource> builder, int? port) { throw null; }
+
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.LogtoResource> WithDatabase(this ApplicationModel.IResourceBuilder<ApplicationModel.LogtoResource> builder, ApplicationModel.IResourceBuilder<ApplicationModel.PostgresServerResource> postgres, string databaseName = "logto_db") { throw null; }
 
         [AspireExport]
@@ -33,6 +36,9 @@ namespace Aspire.Hosting
 
         [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.LogtoResource> WithDisableAdminConsole(this ApplicationModel.IResourceBuilder<ApplicationModel.LogtoResource> builder, bool disable) { throw null; }
+
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.LogtoResource> WithHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.LogtoResource> builder, int? port) { throw null; }
 
         [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.LogtoResource> WithNodeEnv(this ApplicationModel.IResourceBuilder<ApplicationModel.LogtoResource> builder, string env) { throw null; }

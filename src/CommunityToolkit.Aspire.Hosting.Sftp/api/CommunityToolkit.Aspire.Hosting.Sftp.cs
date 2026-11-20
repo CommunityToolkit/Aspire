@@ -23,6 +23,9 @@ namespace Aspire.Hosting
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SftpContainerResource> WithHostKeyFile(this ApplicationModel.IResourceBuilder<ApplicationModel.SftpContainerResource> builder, string keyFile, KeyType keyType) { throw null; }
 
         [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.SftpContainerResource> WithHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.SftpContainerResource> builder, int? port) { throw null; }
+
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SftpContainerResource> WithUserKeyFile(this ApplicationModel.IResourceBuilder<ApplicationModel.SftpContainerResource> builder, string username, string keyFile, KeyType keyType) { throw null; }
 
         [AspireExport]

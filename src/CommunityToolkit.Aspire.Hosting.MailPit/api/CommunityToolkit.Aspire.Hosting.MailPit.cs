@@ -18,6 +18,12 @@ namespace Aspire.Hosting
 
         [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.MailPitContainerResource> WithDataVolume(this ApplicationModel.IResourceBuilder<ApplicationModel.MailPitContainerResource> builder, string name, bool isReadOnly = false) { throw null; }
+
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.MailPitContainerResource> WithHttpHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.MailPitContainerResource> builder, int? port) { throw null; }
+
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.MailPitContainerResource> WithSmtpHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.MailPitContainerResource> builder, int? port) { throw null; }
     }
 }
 

@@ -133,9 +133,5 @@ namespace Aspire.Hosting.ApplicationModel
         public System.Guid? ResolvedSecretId { get { throw null; } }
 
         public System.Guid? SecretId { get { throw null; } }
-
-        System.Threading.Tasks.ValueTask<string?> IValueProvider.GetValueAsync(ValueProviderContext context, System.Threading.CancellationToken cancellationToken) { throw null; }
-
-        System.Threading.Tasks.ValueTask<string?> IValueProvider.GetValueAsync(System.Threading.CancellationToken cancellationToken) { throw null; }
     }
 }

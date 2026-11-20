@@ -31,6 +31,14 @@ namespace Aspire.Hosting
         [AspireExport]
         public static ApplicationModel.IResourceBuilder<T> WithDataVolume<T>(this ApplicationModel.IResourceBuilder<T> builder, string? name = null, bool isReadOnly = false)
             where T : ApplicationModel.ActiveMQServerResourceBase { throw null; }
+
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<T> WithHostPort<T>(this ApplicationModel.IResourceBuilder<T> builder, int? port)
+            where T : ApplicationModel.ActiveMQServerResourceBase { throw null; }
+
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<T> WithWebHostPort<T>(this ApplicationModel.IResourceBuilder<T> builder, int? port)
+            where T : ApplicationModel.ActiveMQServerResourceBase { throw null; }
     }
 }
 

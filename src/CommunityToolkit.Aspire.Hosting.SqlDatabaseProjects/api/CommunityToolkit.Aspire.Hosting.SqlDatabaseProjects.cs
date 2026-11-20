@@ -19,9 +19,15 @@ namespace Aspire.Hosting
 
     public static partial class SqlProjectBuilderExtensions
     {
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.SqlProjectResource> AddSqlPackage(this IDistributedApplicationBuilder builder, string name, string packageId, string version) { throw null; }
+
         [AspireExportIgnore(Reason = "Polyglot app hosts cannot supply IPackageMetadata types.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SqlPackageResource<TPackage>> AddSqlPackage<TPackage>(this IDistributedApplicationBuilder builder, string name)
             where TPackage : IPackageMetadata, new() { throw null; }
+
+        [AspireExport("addSqlProjectFromPath")]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.SqlProjectResource> AddSqlProject(this IDistributedApplicationBuilder builder, string name, string projectPath, string configuration = "Debug") { throw null; }
 
         [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SqlProjectResource> AddSqlProject(this IDistributedApplicationBuilder builder, string name) { throw null; }
