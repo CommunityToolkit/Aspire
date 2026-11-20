@@ -14,7 +14,6 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting" />
-    <PackageReference Include="Aspire.Hosting.Rust" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" VersionOverride="10.0.15" />
   </ItemGroup>
 
