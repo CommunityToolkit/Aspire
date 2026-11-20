@@ -1,0 +1,24 @@
+{
+  "appHost": {
+    "path": "apphost.mts",
+    "language": "typescript/nodejs"
+  },
+  "sdk": {
+    "version": "17.0.0-preview.1.26555.3"
+  },
+  "profiles": {
+    "https": {
+      "applicationUrl": "https://localhost:29751;http://localhost:28932",
+      "environmentVariables": {
+        "ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL": "https://localhost:10976",
+        "ASPIRE_RESOURCE_SERVICE_ENDPOINT_URL": "https://localhost:13320"
+      }
+    }
+  },
+  "packages": {
+    "Aspire.Hosting.Docker": "17.0.0-preview.1.26555.3",
+    "Aspire.Hosting.Dotnet": "17.0.0-preview.1.26555.3",
+    "CommunityToolkit.Aspire.Hosting.RavenDB": "../../../src/CommunityToolkit.Aspire.Hosting.RavenDB/CommunityToolkit.Aspire.Hosting.RavenDB.csproj",
+    "CommunityToolkit.Aspire.Hosting.RavenDB.Cloud": "../../../src/CommunityToolkit.Aspire.Hosting.RavenDB.Cloud/CommunityToolkit.Aspire.Hosting.RavenDB.Cloud.csproj"
+  }
+}

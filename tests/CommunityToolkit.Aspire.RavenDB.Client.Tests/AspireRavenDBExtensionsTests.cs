@@ -4,6 +4,8 @@ using Microsoft.Extensions.Hosting;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Session;
 using Raven.Client.Http;
+using Raven.Client.ServerWide;
+using Raven.Client.ServerWide.Operations;
 
 namespace CommunityToolkit.Aspire.RavenDB.Client.Tests;
 
@@ -350,6 +352,31 @@ public class AspireRavenDBExtensionsTests(RavenDbServerFixture serverFixture) : 
         Assert.Equal(databaseName, documentStore.Database);
         Assert.Equal(ReadBalanceBehavior.RoundRobin, documentStore.Conventions.ReadBalanceBehavior);
         Assert.Equal(99, documentStore.Conventions.MaxNumberOfRequestsPerSession);
+    }
+
+    [Fact]
+    public void AddRavenDbClient_CreateDatabaseUsesAnExistingDatabase()
+    {
+        var databaseName = Guid.NewGuid().ToString("N");
+
+        using (var store = new DocumentStore { Urls = [DefaultConnectionString] }.Initialize())
+        {
+            store.Maintenance.Server.Send(new CreateDatabaseOperation(new DatabaseRecord(databaseName)));
+        }
+
+        var builder = CreateBuilder();
+
+        // Database names are case insensitive: the existing database is used, not created a second time.
+        builder.AddRavenDBClient(connectionName: DefaultConnectionName, configureSettings: clientSettings =>
+        {
+            clientSettings.CreateDatabase = true;
+            clientSettings.DatabaseName = databaseName.ToUpperInvariant();
+        });
+
+        using var host = builder.Build();
+
+        var documentStore = host.Services.GetRequiredService<IDocumentStore>();
+        Assert.Equal(databaseName.ToUpperInvariant(), documentStore.Database);
     }
 
     private HostApplicationBuilder CreateBuilder(IEnumerable<KeyValuePair<string, string?>>? config = null)

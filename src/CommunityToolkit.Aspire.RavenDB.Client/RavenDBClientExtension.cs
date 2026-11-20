@@ -213,17 +213,37 @@ public static class RavenDBClientExtension
 
         documentStore.Initialize();
 
-        if (ravenDbClientSettings.CreateDatabase)
+        if (ravenDbClientSettings.CreateDatabase && !DatabaseExists(documentStore, ravenDbClientSettings.DatabaseName!))
         {
-            var databaseRecord = documentStore.Maintenance.Server.Send(new GetDatabaseRecordOperation(ravenDbClientSettings.DatabaseName));
-            if (databaseRecord == null)
-            {
-                var newDatabaseRecord = new DatabaseRecord(ravenDbClientSettings.DatabaseName);
-                documentStore.Maintenance.Server.Send(new CreateDatabaseOperation(newDatabaseRecord));
-            }
+            var newDatabaseRecord = new DatabaseRecord(ravenDbClientSettings.DatabaseName);
+            documentStore.Maintenance.Server.Send(new CreateDatabaseOperation(newDatabaseRecord));
         }
 
         return documentStore;
+    }
+
+    /// <summary>
+    /// Whether the database exists, asked in a way every certificate may: one limited to its own databases, such as the
+    /// ones a RavenDB Cloud deployment issues, lists them but cannot read database records.
+    /// </summary>
+    private static bool DatabaseExists(IDocumentStore documentStore, string databaseName)
+    {
+        const int pageSize = 1024;
+
+        for (var start = 0; ; start += pageSize)
+        {
+            var names = documentStore.Maintenance.Server.Send(new GetDatabaseNamesOperation(start, pageSize));
+
+            if (names.Any(name => string.Equals(name, databaseName, StringComparison.OrdinalIgnoreCase)))
+            {
+                return true;
+            }
+
+            if (names.Length < pageSize)
+            {
+                return false;
+            }
+        }
     }
 
     private static IDocumentSession CreateDocumentSession(this IServiceProvider provider,
@@ -251,9 +271,10 @@ public static class RavenDBClientExtension
                 ConnectionString = connectionString
             };
 
+            // The nodes of a cluster, separated by commas: the client reaches the cluster through any of them.
             if (connectionBuilder.TryGetValue("URL", out var url) && url is string serverUrl)
             {
-                settings.Urls = new[] { serverUrl };
+                settings.Urls = serverUrl.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             }
 
             if (connectionBuilder.TryGetValue("Database", out var database) && database is string databaseName)
@@ -287,9 +308,10 @@ public static class RavenDBClientExtension
 
             if (uri!.Scheme == Uri.UriSchemeHttps)
             {
-                if (string.IsNullOrEmpty(settings.CertificatePath) && settings.Certificate == null)
-                    throw new ArgumentNullException(nameof(settings.Certificate), "A valid certificate must be provided in 'RavenDBClientSettings.Certificate' " +
-                        "or a certificate path in 'RavenDBClientSettings.CertificatePath' when using HTTPS.");
+                if (!settings.HasCertificate)
+                    throw new ArgumentNullException(nameof(settings.Certificate), "A valid certificate must be provided in 'RavenDBClientSettings.Certificate', " +
+                        "its base64-encoded .pfx content in 'RavenDBClientSettings.CertificateBase64' or a certificate path in " +
+                        "'RavenDBClientSettings.CertificatePath' when using HTTPS.");
             }
         }
 
