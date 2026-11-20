@@ -21,7 +21,7 @@
     <DotNetExtensionsVersion Condition="'$(TargetFramework)' == 'net11.0'">11.0.0</DotNetExtensionsVersion>
     <TestContainersVersion>4.14.0</TestContainersVersion>
     <MEAIVersion>11.0.0</MEAIVersion>
-    <ServiceDiscoveryVersion>10.0.0</ServiceDiscoveryVersion>
+    <ServiceDiscoveryVersion>11.0.0</ServiceDiscoveryVersion>
     <IsPackable>false</IsPackable>
     <MoqVersion>4.20.72</MoqVersion>
 
