@@ -12,8 +12,8 @@ func main() {
 	}
 
 	adminer := builder.AddAdminer("adminer", &aspire.AddAdminerOptions{
-		Port: aspire.Float64Ptr(18080),
-	}).WithHostPort(aspire.Float64Ptr(18081))
+		Port: aspire.IntPtr(18080),
+	}).WithHostPort(aspire.IntPtr(18081))
 	if err := adminer.Err(); err != nil {
 		log.Fatal(aspire.FormatError(err))
 	}

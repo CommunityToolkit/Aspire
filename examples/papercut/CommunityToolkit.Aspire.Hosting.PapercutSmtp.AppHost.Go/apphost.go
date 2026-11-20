@@ -12,8 +12,8 @@ func main() {
 	}
 
 	papercut := builder.AddPapercutSmtp("papercut", &aspire.AddPapercutSmtpOptions{
-		HttpPort: aspire.Float64Ptr(8080),
-		SmtpPort: aspire.Float64Ptr(2525),
+		HttpPort: aspire.IntPtr(8080),
+		SmtpPort: aspire.IntPtr(2525),
 	})
 	check(papercut.Host().Err())
 	check(papercut.Port().Err())

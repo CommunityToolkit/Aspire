@@ -13,8 +13,8 @@ func main() {
 	flagsPath := "../CommunityToolkit.Aspire.Hosting.Flagd.AppHost.TypeScript/flags"
 
 	flagd := builder.AddFlagd("flagd", &aspire.AddFlagdOptions{
-		Port:      aspire.Float64Ptr(18013),
-		OfrepPort: aspire.Float64Ptr(18016),
+		Port:      aspire.IntPtr(18013),
+		OfrepPort: aspire.IntPtr(18016),
 	})
 	flagd.WithBindFileSync(flagsPath)
 	check(flagd.PrimaryEndpoint().Err())

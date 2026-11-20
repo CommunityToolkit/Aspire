@@ -13,7 +13,7 @@ func main() {
 	check(err)
 
 	dbgate := builder.AddDbGate(&aspire.AddDbGateOptions{Name: aspire.StringPtr("dbgate")}).
-		WithHostPort(aspire.Float64Ptr(3310)).
+		WithHostPort(aspire.IntPtr(3310)).
 		WithDataBindMount(bindMountPath, &aspire.WithDataBindMountOptions{IsReadOnly: aspire.BoolPtr(false)})
 	check(dbgate.Err())
 	// A bind mount and volume would otherwise overlap on the same target path.

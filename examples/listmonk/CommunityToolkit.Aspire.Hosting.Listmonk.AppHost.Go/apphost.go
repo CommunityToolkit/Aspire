@@ -22,7 +22,7 @@ func main() {
 	check(defaultPostgres.Err())
 	check(defaultDatabase.Err())
 
-	listmonk := builder.AddListmonk("listmonk", &aspire.AddListmonkOptions{Port: aspire.Float64Ptr(31900)})
+	listmonk := builder.AddListmonk("listmonk", &aspire.AddListmonkOptions{Port: aspire.IntPtr(31900)})
 	defaults := builder.AddListmonk("listmonk-default")
 	listmonk.WithReference(database)
 	listmonk.WithAdminCredentials("admin", password)

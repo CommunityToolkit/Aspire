@@ -31,7 +31,7 @@ func main() {
 	check(solr.Err())
 
 	mounted := builder.AddSolr("solr-bind", &aspire.AddSolrOptions{
-		Port:     aspire.Float64Ptr(8984),
+		Port:     aspire.IntPtr(8984),
 		CoreName: aspire.StringPtr("bindcore"),
 	})
 	mountedCore, err := mounted.CoreName()

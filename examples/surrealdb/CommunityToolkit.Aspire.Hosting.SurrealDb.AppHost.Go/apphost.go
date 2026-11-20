@@ -10,7 +10,7 @@ func main() {
 	check(err)
 
 	primary := builder.AddSurrealServer("primary", &aspire.AddSurrealServerOptions{
-		Port: aspire.Float64Ptr(18000), Path: aspire.StringPtr("memory"),
+		Port: aspire.IntPtr(18000), Path: aspire.StringPtr("memory"),
 	})
 	primary.WithDataVolume(&aspire.WithDataVolumeOptions{Name: aspire.StringPtr("surreal-primary-data")})
 	primary.WithLogLevel("Information")
@@ -26,7 +26,7 @@ func main() {
 	check(database.Err())
 
 	mounted := builder.AddSurrealServer("mounted", &aspire.AddSurrealServerOptions{
-		Port: aspire.Float64Ptr(18001), Path: aspire.StringPtr("memory"),
+		Port: aspire.IntPtr(18001), Path: aspire.StringPtr("memory"),
 	})
 	mounted.WithDataBindMount("./data")
 	mounted.WithInitFiles("./seed.surql")

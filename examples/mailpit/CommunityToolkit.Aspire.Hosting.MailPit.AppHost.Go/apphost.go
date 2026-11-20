@@ -17,8 +17,8 @@ func main() {
 	}
 
 	mailpit := builder.AddMailPit("mailpit", &aspire.AddMailPitOptions{
-		HttpPort: aspire.Float64Ptr(18025),
-		SmtpPort: aspire.Float64Ptr(11025),
+		HttpPort: aspire.IntPtr(18025),
+		SmtpPort: aspire.IntPtr(11025),
 	})
 	mailpit.WithDataVolume("mailpit-data")
 	check(mailpit.PrimaryEndpoint().Err())

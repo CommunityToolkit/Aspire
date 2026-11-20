@@ -12,7 +12,7 @@ func main() {
 	}
 
 	dbx := builder.AddDbx(&aspire.AddDbxOptions{Name: aspire.StringPtr("dbx")})
-	dbx.WithHostPort(aspire.Float64Ptr(3310))
+	dbx.WithHostPort(aspire.IntPtr(3310))
 	if err := dbx.PrimaryEndpoint().Err(); err != nil {
 		log.Fatal(aspire.FormatError(err))
 	}

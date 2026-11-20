@@ -21,7 +21,7 @@ func main() {
 		log.Fatal(aspire.FormatError(err))
 	}
 
-	pinned := builder.AddRedPanda("redpanda-pinned", &aspire.AddRedPandaOptions{Port: aspire.Float64Ptr(9092)})
+	pinned := builder.AddRedPanda("redpanda-pinned", &aspire.AddRedPandaOptions{Port: aspire.IntPtr(9092)})
 	if err := pinned.Err(); err != nil {
 		log.Fatal(aspire.FormatError(err))
 	}

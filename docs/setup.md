@@ -33,14 +33,14 @@ Toolkit packages target both `net10.0` and `net11.0`; tests and examples use the
 
 `global.json` requires the .NET 11 SDK, allowing roll-forward to newer .NET 11 feature bands. It also lets GitHub's automatic dependency submission install an SDK that can restore both target frameworks.
 
-### Aspire nightly builds
+### Aspire version
 
-The repository currently targets Aspire **17.0.0-preview.1.26555.11**, an unsupported nightly build from the public `dotnet9` feed. `nuget.config` maps `Aspire.*` packages to that feed; Elasticsearch remains on its last stable package because no Aspire 17 nightly is published for it.
+The repository targets the stable Aspire **17.0.0** release. `nuget.config` maps `Aspire.*` packages to NuGet.org. Elasticsearch and ClickHouse remain on their last stable packages because neither publishes an Aspire 17.0 package.
 
-`Directory.Build.props` pins hosting and testing packages (including the C# AppHost packages through `Directory.Packages.props`), and example `aspire.config.json` files pin the polyglot SDK. Keep these versions aligned when upgrading. The nightly version already contains its prerelease suffix, so `AspirePreviewSuffix` is empty.
+`Directory.Build.props` pins hosting and testing packages (including the C# AppHost packages through `Directory.Packages.props`), and example `aspire.config.json` files pin the polyglot SDK. Keep these versions aligned when upgrading. Keycloak hosting/authentication, Foundry hosting, and Rust hosting still ship as preview packages; `AspirePreviewSuffix` pins their release-aligned `-preview.1.26567.5` suffix. Kubernetes hosting now uses the stable version without that suffix.
 
 The C# AppHosts use `Microsoft.NET.Sdk` and explicitly reference `Aspire.Hosting.AppHost` and `Aspire.Hosting.Dotnet`. Use `AddDotnetProject` to register .NET services; the TypeScript equivalents use `addDotnetProject`. Where an example still reads generated `Projects.*` metadata, its project reference is explicitly marked as an Aspire project resource.
 
-Install the matching CLI with `aspire.dev`'s installer and its explicit version option (`-Version 17.0.0-preview.1.26555.11` on Windows or `--version 17.0.0-preview.1.26555.11` on Linux/macOS), rather than selecting a moving daily channel. See the [upstream daily-build guide](https://github.com/microsoft/aspire/blob/main/docs/using-latest-daily.md) for installer instructions.
+Install the matching CLI with `aspire.dev`'s installer and its explicit version option (`-Version 17.0.0` on Windows or `--version 17.0.0` on Linux/macOS), rather than selecting a moving daily channel. See the [Aspire CLI installation guide](https://aspire.dev/get-started/install-cli/) for installer instructions. CI installs `Aspire.Cli` from NuGet.org using the central `AspireVersion`.
 
 Go AppHosts are a preview feature. In a Go AppHost directory, run `aspire restore` to generate the SDK in `.aspire/modules`, then `go test ./...` to check compilation. Run the application with `aspire run`, rather than `go run`, so the CLI starts the AppHost server.

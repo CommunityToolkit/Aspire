@@ -4,10 +4,10 @@
     "language": "go"
   },
   "sdk": {
-    "version": "17.0.0-preview.1.26555.11"
+    "version": "17.0.0"
   },
   "packages": {
     "CommunityToolkit.Aspire.Hosting.Flare": "../../../src/CommunityToolkit.Aspire.Hosting.Flare/CommunityToolkit.Aspire.Hosting.Flare.csproj",
-    "Aspire.Hosting.Dotnet": "17.0.0-preview.1.26555.11"
+    "Aspire.Hosting.Dotnet": "17.0.0"
   }
 }

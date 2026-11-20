@@ -17,7 +17,7 @@ func main() {
 	})
 	target := builder.AddContainer("webhook-target", "nginx:alpine")
 	target.WithHttpEndpoint(&aspire.WithHttpEndpointOptions{
-		TargetPort: aspire.Float64Ptr(80), Name: aspire.StringPtr("http"),
+		TargetPort: aspire.IntPtr(80), Name: aspire.StringPtr("http"),
 	})
 	external := builder.AddExternalService("external-target", "http://localhost:5082")
 	consumer := builder.AddContainer("consumer", "nginx:alpine")

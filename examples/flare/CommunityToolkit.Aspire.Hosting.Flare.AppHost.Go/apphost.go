@@ -20,10 +20,10 @@ func main() {
 		Value: aspire.StringPtr("http://localhost:3000"),
 	})
 	flare := builder.AddFlare("flare", clickhouse, redis, &aspire.AddFlareOptions{
-		DashboardPort: aspire.Float64Ptr(3000),
+		DashboardPort: aspire.IntPtr(3000),
 	})
 	flare.WithDataVolume().
-		WithIngestPorts(&aspire.WithIngestPortsOptions{GrpcPort: aspire.Float64Ptr(4317), HttpPort: aspire.Float64Ptr(4318)}).
+		WithIngestPorts(&aspire.WithIngestPortsOptions{GrpcPort: aspire.IntPtr(4317), HttpPort: aspire.IntPtr(4318)}).
 		WithFlareImageTag("0.6").
 		WithPublicUrls(&aspire.WithPublicUrlsOptions{DashboardUrl: &dashboardURL}).
 		WithApiKey(ingestKey)

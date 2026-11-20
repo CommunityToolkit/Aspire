@@ -17,8 +17,8 @@ func main() {
 	}
 
 	volume := builder.AddLavinMQ("volume-broker", &aspire.AddLavinMQOptions{
-		AmqpPort:       aspire.Float64Ptr(35672),
-		ManagementPort: aspire.Float64Ptr(35673),
+		AmqpPort:       aspire.IntPtr(35672),
+		ManagementPort: aspire.IntPtr(35673),
 	})
 	volume.WithDataVolume("lavinmq-volume")
 	check(volume.PrimaryEndpoint().Err())
@@ -31,8 +31,8 @@ func main() {
 	}
 
 	mounted := builder.AddLavinMQ("bind-broker", &aspire.AddLavinMQOptions{
-		AmqpPort:       aspire.Float64Ptr(35674),
-		ManagementPort: aspire.Float64Ptr(35675),
+		AmqpPort:       aspire.IntPtr(35674),
+		ManagementPort: aspire.IntPtr(35675),
 	})
 	mounted.WithDataBindMount(bindMountPath)
 	if err := mounted.Err(); err != nil {

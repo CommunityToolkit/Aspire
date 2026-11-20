@@ -12,7 +12,7 @@ func main() {
 	}
 
 	chroma := builder.AddChroma("chroma")
-	chroma.WithHostPort(aspire.Float64Ptr(18080))
+	chroma.WithHostPort(aspire.IntPtr(18080))
 	chroma.WithDataVolume(&aspire.WithDataVolumeOptions{Name: aspire.StringPtr("chroma-data")})
 	check(chroma.PrimaryEndpoint().Err())
 	check(chroma.Host().Err())

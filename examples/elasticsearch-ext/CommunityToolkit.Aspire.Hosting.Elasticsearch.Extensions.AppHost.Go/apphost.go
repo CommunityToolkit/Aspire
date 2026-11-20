@@ -6,7 +6,7 @@ import (
 )
 
 func validateWithHostPort(elasticvue aspire.ElasticvueContainerResource) aspire.ElasticvueContainerResource {
-	return elasticvue.WithHostPort(aspire.Float64Ptr(9280))
+	return elasticvue.WithHostPort(aspire.IntPtr(9280))
 }
 
 // Keep extension coverage compile-only until the base Elasticsearch add API is exported.

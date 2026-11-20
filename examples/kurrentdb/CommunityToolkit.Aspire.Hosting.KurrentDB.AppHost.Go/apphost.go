@@ -15,7 +15,7 @@ func main() {
 	mount := filepath.Join(directory, "..", "CommunityToolkit.Aspire.Hosting.KurrentDB.AppHost.TypeScript", "data", "kurrentdb")
 	check(os.MkdirAll(mount, 0755))
 
-	volume := builder.AddKurrentDB("kurrentdb", &aspire.AddKurrentDBOptions{Port: aspire.Float64Ptr(22113)})
+	volume := builder.AddKurrentDB("kurrentdb", &aspire.AddKurrentDBOptions{Port: aspire.IntPtr(22113)})
 	volume.WithDataVolume(&aspire.WithDataVolumeOptions{Name: aspire.StringPtr("kurrentdb-data")})
 	mounted := builder.AddKurrentDB("kurrentdb2")
 	mounted.WithDataBindMount(mount)

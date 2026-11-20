@@ -13,11 +13,11 @@
     <Nullable>enable</Nullable>
 
     <AspireMajorVersion>17</AspireMajorVersion>
-    <AspireVersion>$(AspireMajorVersion).0.0-preview.1.26555.11</AspireVersion>
+    <AspireVersion>$(AspireMajorVersion).0.0</AspireVersion>
     <AspireUseCliBundle>true</AspireUseCliBundle>
-    <AspirePreviewSuffix></AspirePreviewSuffix> <!-- The nightly AspireVersion already includes its prerelease suffix. -->
+    <AspirePreviewSuffix>-preview.1.26567.5</AspirePreviewSuffix>
     <AspNetCoreVersion>9.0.0</AspNetCoreVersion>
-    <DotNetExtensionsVersion>10.0.14</DotNetExtensionsVersion>
+    <DotNetExtensionsVersion>10.0.15</DotNetExtensionsVersion>
     <DotNetExtensionsVersion Condition="'$(TargetFramework)' == 'net11.0'">11.0.0</DotNetExtensionsVersion>
     <TestContainersVersion>4.14.0</TestContainersVersion>
     <MEAIVersion>10.11.0</MEAIVersion>

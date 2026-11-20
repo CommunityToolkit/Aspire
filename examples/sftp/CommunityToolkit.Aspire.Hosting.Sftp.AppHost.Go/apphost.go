@@ -14,7 +14,7 @@ func main() {
 	check(err)
 	fixtures := filepath.Join(directory, "..", "CommunityToolkit.Aspire.Hosting.Sftp.AppHost")
 
-	sftp := builder.AddSftp("sftp", &aspire.AddSftpOptions{Port: aspire.Float64Ptr(2222)})
+	sftp := builder.AddSftp("sftp", &aspire.AddSftpOptions{Port: aspire.IntPtr(2222)})
 	if os.Getenv("ASPIRE_RUNTIME_SMOKE") == "1" {
 		sftp.WithEnvironment("SFTP_USERS", "foo:pass:::upload")
 	} else {
