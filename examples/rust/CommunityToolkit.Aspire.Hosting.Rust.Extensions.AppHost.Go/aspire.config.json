@@ -1,0 +1,13 @@
+{
+  "appHost": {
+    "path": "apphost.go",
+    "language": "go"
+  },
+  "sdk": {
+    "version": "17.0.0"
+  },
+  "packages": {
+    "Aspire.Hosting.Rust": "17.0.0-preview.1.26567.5",
+    "CommunityToolkit.Aspire.Hosting.Rust.Extensions": "../../../src/CommunityToolkit.Aspire.Hosting.Rust.Extensions/CommunityToolkit.Aspire.Hosting.Rust.Extensions.csproj"
+  }
+}

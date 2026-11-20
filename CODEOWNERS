@@ -23,11 +23,11 @@
 /src/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects/ @ErikEJ @jmezach
 /tests/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects/ @ErikEJ @jmezach
 
-# CommunityToolkit.Aspire.Hosting.Rust
+# CommunityToolkit.Aspire.Hosting.Rust.Extensions
 
 /examples/rust/ @Alirexaa
-/src/CommunityToolkit.Aspire.Hosting.Rust/ @Alirexaa
-/tests/CommunityToolkit.Aspire.Hosting.Rust/ @Alirexaa
+/src/CommunityToolkit.Aspire.Hosting.Rust.Extensions/ @Alirexaa
+/tests/CommunityToolkit.Aspire.Hosting.Rust.Extensions.Tests/ @Alirexaa
 
 # CommunityToolkit.Aspire.EventStore
 # CommunityToolkit.Aspire.Hosting.EventStore

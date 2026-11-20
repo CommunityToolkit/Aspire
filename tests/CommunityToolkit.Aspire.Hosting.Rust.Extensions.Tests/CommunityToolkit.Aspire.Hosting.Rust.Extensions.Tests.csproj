@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\examples\rust\CommunityToolkit.Aspire.Hosting.Rust.AppHost\CommunityToolkit.Aspire.Hosting.Rust.AppHost.csproj" />
+    <ProjectReference Include="..\..\examples\rust\CommunityToolkit.Aspire.Hosting.Rust.Extensions.AppHost\CommunityToolkit.Aspire.Hosting.Rust.Extensions.AppHost.csproj" />
     <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
   </ItemGroup>
 

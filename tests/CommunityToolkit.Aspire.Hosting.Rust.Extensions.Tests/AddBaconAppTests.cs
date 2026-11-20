@@ -2,11 +2,11 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Aspire.Hosting;
-using Aspire.Hosting.Rust;
+using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Utils;
 using CommunityToolkit.Aspire.Testing;
 
-namespace CommunityToolkit.Aspire.Hosting.Rust.Tests;
+namespace CommunityToolkit.Aspire.Hosting.Rust.Extensions.Tests;
 public class AddBaconAppTests
 {
     [Fact]
@@ -21,7 +21,7 @@ public class AddBaconAppTests
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var resource = Assert.Single(appModel.Resources.OfType<RustAppResource>());
+        var resource = Assert.Single(appModel.Resources.OfType<RustAppExecutableResource>());
         workingDirectory = Path.Combine(appBuilder.AppHostDirectory, workingDirectory).NormalizePathForCurrentPlatform();
         Assert.Equal("bacon-app", resource.Name);
         Assert.Equal(workingDirectory, resource.WorkingDirectory);
@@ -43,7 +43,7 @@ public class AddBaconAppTests
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var resource = Assert.Single(appModel.Resources.OfType<RustAppResource>());
+        var resource = Assert.Single(appModel.Resources.OfType<RustAppExecutableResource>());
         workingDirectory = Path.Combine(appBuilder.AppHostDirectory, workingDirectory).NormalizePathForCurrentPlatform();
         Assert.Equal("bacon-app", resource.Name);
         Assert.Equal(workingDirectory, resource.WorkingDirectory);
@@ -65,5 +65,23 @@ public class AddBaconAppTests
         Assert.Equal("cargo", rust.Resource.Command);
         Assert.Equal("bacon", bacon.Resource.Command);
         Assert.Equal(["run"], await bacon.Resource.GetArgumentListAsync());
+    }
+
+    [Fact]
+    public async Task BaconRetainsStableBuilderTypeAndSupportsReferencesAndDockerfilePublishing()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
+        IResourceBuilder<RustAppExecutableResource> bacon = appBuilder
+            .AddBaconApp("bacon-app", "../../examples/rust/actix_api")
+            .WithHttpEndpoint(env: "PORT");
+        appBuilder.AddExecutable("consumer", "consumer", ".").WithReference(bacon);
+
+        await using var app = appBuilder.Build();
+
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var publishedResource = Assert.IsAssignableFrom<ContainerResource>(
+            Assert.Single(model.Resources, resource => resource.Name == bacon.Resource.Name));
+        Assert.True(publishedResource.TryGetLastAnnotation<DockerfileBuildAnnotation>(out _));
+        Assert.Contains(publishedResource.Annotations.OfType<EndpointAnnotation>(), endpoint => endpoint.Name == "http");
     }
 }

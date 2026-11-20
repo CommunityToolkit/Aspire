@@ -1,5 +1,4 @@
 using Aspire.Hosting.ApplicationModel;
-using Aspire.Hosting.Rust;
 using CommunityToolkit.Aspire.Utils;
 
 
@@ -19,7 +18,7 @@ public static class RustAppHostingExtension
     /// <param name="args">The optional arguments to be passed to the bacon command.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     [AspireExport]
-    public static IResourceBuilder<RustAppResource> AddBaconApp(
+    public static IResourceBuilder<RustAppExecutableResource> AddBaconApp(
         this IDistributedApplicationBuilder builder, 
         [ResourceName] string name, 
         string workingDirectory, 
@@ -35,10 +34,9 @@ public static class RustAppHostingExtension
             : ["run"];
 
         workingDirectory = Path.Combine(builder.AppHostDirectory, workingDirectory).NormalizePathForCurrentPlatform();
-        var resource = new RustAppResource(name, workingDirectory);
+        var resource = new RustAppExecutableResource(name, workingDirectory, "bacon");
 
         return builder.AddResource(resource)
-                      .WithCommand("bacon")
                       .WithOtlpExporter()
                       .WithArgs(allArgs)
                       .WithIconName("Code")
