@@ -9,6 +9,7 @@
     <PackageReference Include="Aspire.Hosting" />
     <PackageReference Include="JsonSchema.Net" VersionOverride="9.4.1" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" VersionOverride="10.0.15" />
+    <PackageReference Include="Microsoft.NET.StringTools" />
     <PackageReference Include="Microsoft.PowerShell.SDK" />
     <PackageReference Include="System.Security.Cryptography.Pkcs" />
     <PackageReference Include="System.Security.Cryptography.Xml" />

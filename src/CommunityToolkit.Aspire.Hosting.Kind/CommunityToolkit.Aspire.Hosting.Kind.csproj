@@ -12,6 +12,7 @@
     <PackageReference Include="KubernetesClient" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" VersionOverride="10.0.15" />
     <PackageReference Include="Microsoft.Extensions.Resilience" />
+    <PackageReference Include="Microsoft.NET.StringTools" />
     <PackageReference Include="YamlDotNet" />
   </ItemGroup>
 
