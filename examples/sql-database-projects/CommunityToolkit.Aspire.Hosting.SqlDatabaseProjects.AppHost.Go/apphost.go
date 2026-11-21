@@ -40,10 +40,10 @@ func main() {
 	connectionProject.WithConnectionReference(existingConnection)
 	includeInPublish := true
 	includeInDeploy := true
-	connectionProject.WithPipelineOptions(&aspire.DacpacPipelineOptions{
+	connectionProject.WithPipelineOptions(aspire.PipelineOptionsOptions(&aspire.DacpacPipelineOptions{
 		IncludeInPublish: &includeInPublish,
 		IncludeInDeploy:  &includeInDeploy,
-	})
+	}))
 	check(connectionProject.Err())
 
 	_, err = project.DacpacPath()

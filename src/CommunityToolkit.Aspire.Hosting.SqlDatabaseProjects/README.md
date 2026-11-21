@@ -152,10 +152,10 @@ Nullable DTO values are pointers in generated Go APIs:
 ```go
 includeInPublish := true
 includeInDeploy := true
-project.WithPipelineOptions(&aspire.DacpacPipelineOptions{
+project.WithPipelineOptions(aspire.PipelineOptionsOptions(&aspire.DacpacPipelineOptions{
     IncludeInPublish: &includeInPublish,
     IncludeInDeploy:  &includeInDeploy,
-})
+}))
 ```
 
 Pipeline operations use `dotnet dnx Microsoft.SqlPackage@170.3.93` by default. The connection string is written to a temporary, access-restricted publish profile and is not passed on the SqlPackage command line. Log redaction is best effort; diagnostics and external tooling may still expose sensitive values.
