@@ -161,15 +161,17 @@ public static class SqlProjectBuilderExtensions
     private static IResourceBuilder<T> AddDacPacResource<T>(this IDistributedApplicationBuilder builder, string name, T resource, ImmutableArray<ResourcePropertySnapshot> properties)
         where T : IResourceWithDacpac
     {
-        return builder.AddResource(resource)
-                      .WithIconName("DatabaseArrowUp")
-                      .WithInitialState(new CustomResourceSnapshot
-                      {
-                          Properties = properties,
-                          ResourceType = "SqlProject",
-                          State = KnownResourceStates.Waiting
-                      })
-                      .ExcludeFromManifest();
+        var resourceBuilder = builder.AddResource(resource)
+                                     .WithIconName("DatabaseArrowUp")
+                                     .WithInitialState(new CustomResourceSnapshot
+                                     {
+                                         Properties = properties,
+                                         ResourceType = "SqlProject",
+                                         State = KnownResourceStates.Waiting
+                                     })
+                                     .ExcludeFromManifest();
+
+        return SqlProjectPipelineExtensions.RegisterPipeline(resourceBuilder);
     }
 
     private static IResourceBuilder<SqlProjectResource> AddSqlProjectResource(
@@ -376,7 +378,11 @@ public static class SqlProjectBuilderExtensions
         builder.ApplicationBuilder.Services.TryAddSingleton<IDacpacChecksumService, DacpacChecksumService>();
         builder.ApplicationBuilder.Services.TryAddSingleton<SqlProjectDacpacResolver>();
         builder.ApplicationBuilder.Services.TryAddSingleton<SqlProjectPublishService>();
+        builder.ApplicationBuilder.Services.TryAddSingleton<ISqlPackageRunner, SqlPackageRunner>();
 
+        builder.WithAnnotation(
+            new DacpacTargetAnnotation(target.Resource, targetDatabaseName),
+            ResourceAnnotationMutationBehavior.Replace);
         builder.WithParentRelationship(target.Resource);
 
         target.OnResourceReady(async (targetResource, evt, ct) =>
