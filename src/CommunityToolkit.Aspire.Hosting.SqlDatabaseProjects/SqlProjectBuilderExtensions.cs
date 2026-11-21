@@ -161,15 +161,17 @@ public static class SqlProjectBuilderExtensions
     private static IResourceBuilder<T> AddDacPacResource<T>(this IDistributedApplicationBuilder builder, string name, T resource, ImmutableArray<ResourcePropertySnapshot> properties)
         where T : IResourceWithDacpac
     {
-        return builder.AddResource(resource)
-                      .WithIconName("DatabaseArrowUp")
-                      .WithInitialState(new CustomResourceSnapshot
-                      {
-                          Properties = properties,
-                          ResourceType = "SqlProject",
-                          State = KnownResourceStates.Waiting
-                      })
-                      .ExcludeFromManifest();
+        var resourceBuilder = builder.AddResource(resource)
+                                     .WithIconName("DatabaseArrowUp")
+                                     .WithInitialState(new CustomResourceSnapshot
+                                     {
+                                         Properties = properties,
+                                         ResourceType = "SqlProject",
+                                         State = KnownResourceStates.Waiting
+                                     })
+                                     .ExcludeFromManifest();
+
+        return SqlProjectPipelineExtensions.RegisterPipeline(resourceBuilder);
     }
 
     private static IResourceBuilder<SqlProjectResource> AddSqlProjectResource(
@@ -376,7 +378,32 @@ public static class SqlProjectBuilderExtensions
         builder.ApplicationBuilder.Services.TryAddSingleton<IDacpacChecksumService, DacpacChecksumService>();
         builder.ApplicationBuilder.Services.TryAddSingleton<SqlProjectDacpacResolver>();
         builder.ApplicationBuilder.Services.TryAddSingleton<SqlProjectPublishService>();
+        builder.ApplicationBuilder.Services.TryAddSingleton<ISqlPackageRunner, SqlPackageRunner>();
 
+        ParameterResource? pipelineConnectionStringParameter = null;
+        if (!builder.ApplicationBuilder.ExecutionContext.IsRunMode
+            && target.Resource is SqlServerDatabaseResource)
+        {
+            var parameterName = $"{target.Resource.Name}-connection-string";
+            pipelineConnectionStringParameter = builder.ApplicationBuilder.Resources
+                .OfType<ParameterResource>()
+                .FirstOrDefault(parameter =>
+                    string.Equals(parameter.Name, parameterName, StringComparison.Ordinal));
+            if (pipelineConnectionStringParameter is null)
+            {
+                var parameter = builder.ApplicationBuilder.AddParameter(parameterName, secret: true);
+                parameter.WithDescription(
+                    $"Connection string used by DACPAC pipeline operations targeting '{target.Resource.Name}'.");
+                pipelineConnectionStringParameter = parameter.Resource;
+            }
+        }
+
+        builder.WithAnnotation(
+            new DacpacTargetAnnotation(
+                target.Resource,
+                targetDatabaseName,
+                pipelineConnectionStringParameter),
+            ResourceAnnotationMutationBehavior.Replace);
         builder.WithParentRelationship(target.Resource);
 
         target.OnResourceReady(async (targetResource, evt, ct) =>

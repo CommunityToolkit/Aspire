@@ -14,7 +14,31 @@ namespace CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects;
 
 internal sealed class SqlProjectDacpacResolver(IHostEnvironment hostEnvironment)
 {
-    public async Task<ResolvedDacpac> ResolveAsync(IResourceWithDacpac resource, ILogger logger, CancellationToken cancellationToken)
+    public Task<ResolvedDacpac> ResolveAsync(
+        IResourceWithDacpac resource,
+        ILogger logger,
+        CancellationToken cancellationToken)
+        => ResolveAsync(resource, null, buildProject: true, logger, cancellationToken);
+
+    public Task<ResolvedDacpac> ResolveExistingAsync(
+        IResourceWithDacpac resource,
+        ILogger logger,
+        CancellationToken cancellationToken)
+        => ResolveAsync(resource, null, buildProject: false, logger, cancellationToken);
+
+    public Task<ResolvedDacpac> ResolveAsync(
+        IResourceWithDacpac resource,
+        string? buildConfiguration,
+        ILogger logger,
+        CancellationToken cancellationToken)
+        => ResolveAsync(resource, buildConfiguration, buildProject: true, logger, cancellationToken);
+
+    private async Task<ResolvedDacpac> ResolveAsync(
+        IResourceWithDacpac resource,
+        string? buildConfiguration,
+        bool buildProject,
+        ILogger logger,
+        CancellationToken cancellationToken)
     {
         string? temporaryDacpacDirectory = null;
         try
@@ -24,18 +48,32 @@ internal sealed class SqlProjectDacpacResolver(IHostEnvironment hostEnvironment)
             string? projectDirectory = null;
             if (resource.TryGetLastAnnotation<IProjectMetadata>(out var metadata))
             {
-                projectDirectory = Path.GetDirectoryName(Path.GetFullPath(metadata.ProjectPath, hostEnvironment.ContentRootPath));
+                projectDirectory = Path.GetDirectoryName(ResolveProjectPath(metadata.ProjectPath));
             }
 
-            if (resource.TryGetLastAnnotation<SqlProjectBuildAnnotation>(out var buildAnnotation)
+            var effectiveBuildConfiguration = buildConfiguration;
+            if (buildProject
+                && effectiveBuildConfiguration is null
+                && resource.TryGetLastAnnotation<SqlProjectBuildAnnotation>(out var buildAnnotation))
+            {
+                effectiveBuildConfiguration = buildAnnotation.Configuration;
+            }
+
+            if (buildProject
+                && effectiveBuildConfiguration is not null
                 && resource.TryGetLastAnnotation<IProjectMetadata>(out var projectMetadata))
             {
-                var buildLock = SqlProjectBuildLock.Get(projectMetadata.ProjectPath);
+                var absoluteProjectPath = ResolveProjectPath(projectMetadata.ProjectPath);
+                var buildLock = SqlProjectBuildLock.Get(absoluteProjectPath);
                 await buildLock.WaitAsync(cancellationToken);
                 try
                 {
-                    await BuildProjectAsync(projectMetadata.ProjectPath, buildAnnotation.Configuration, logger, cancellationToken);
-                    var builtDacpacPath = ResolveDacpacPath(resource.GetDacpacPath(), projectDirectory);
+                    await BuildProjectAsync(absoluteProjectPath, effectiveBuildConfiguration, logger, cancellationToken);
+                    var builtDacpacPath = ResolveDacpacPath(
+                        buildConfiguration is null
+                            ? resource.GetDacpacPath()
+                            : await GetProjectDacpacPathAsync(absoluteProjectPath, effectiveBuildConfiguration, cancellationToken),
+                        projectDirectory);
                     dacpacIdentity = builtDacpacPath;
                     if (File.Exists(builtDacpacPath))
                     {
@@ -70,6 +108,24 @@ internal sealed class SqlProjectDacpacResolver(IHostEnvironment hostEnvironment)
                 }
             }
 
+            if (dacpacPath is null
+                && resource.TryGetLastAnnotation<IProjectMetadata>(out var outputMetadata))
+            {
+                var outputConfiguration = buildConfiguration;
+                if (outputConfiguration is null
+                    && resource.TryGetLastAnnotation<SqlProjectBuildAnnotation>(out var outputBuild))
+                {
+                    outputConfiguration = outputBuild.Configuration;
+                }
+
+                dacpacPath = ResolveDacpacPath(
+                    await GetProjectDacpacPathAsync(
+                        ResolveProjectPath(outputMetadata.ProjectPath),
+                        outputConfiguration,
+                        cancellationToken),
+                    projectDirectory);
+            }
+
             dacpacPath ??= ResolveDacpacPath(resource.GetDacpacPath(), projectDirectory);
             dacpacIdentity ??= dacpacPath;
             return new ResolvedDacpac(dacpacPath, dacpacIdentity, temporaryDacpacDirectory, logger);
@@ -85,6 +141,91 @@ internal sealed class SqlProjectDacpacResolver(IHostEnvironment hostEnvironment)
         => Path.IsPathRooted(dacpacPath)
             ? dacpacPath
             : Path.GetFullPath(dacpacPath, baseDirectory ?? hostEnvironment.ContentRootPath);
+
+    private string ResolveProjectPath(string projectPath)
+    {
+        if (Path.IsPathRooted(projectPath))
+        {
+            return Path.GetFullPath(projectPath);
+        }
+
+        var contentRootPath = Path.GetFullPath(projectPath, hostEnvironment.ContentRootPath);
+        if (File.Exists(contentRootPath))
+        {
+            return contentRootPath;
+        }
+
+        return Path.GetFullPath(projectPath, AppContext.BaseDirectory);
+    }
+
+    private static async Task<string> GetProjectDacpacPathAsync(
+        string projectPath,
+        string? configuration,
+        CancellationToken cancellationToken)
+    {
+        var processStartInfo = new ProcessStartInfo
+        {
+            FileName = "dotnet",
+            WorkingDirectory = Path.GetDirectoryName(projectPath)!,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+        processStartInfo.ArgumentList.Add("msbuild");
+        processStartInfo.ArgumentList.Add(projectPath);
+        processStartInfo.ArgumentList.Add("-nodeReuse:false");
+        if (!string.IsNullOrWhiteSpace(configuration))
+        {
+            processStartInfo.ArgumentList.Add($"-property:Configuration={configuration}");
+        }
+        processStartInfo.ArgumentList.Add("-getProperty:SqlTargetPath,TargetPath");
+
+        using var process = new Process { StartInfo = processStartInfo };
+        if (!process.Start())
+        {
+            throw new InvalidOperationException($"Unable to evaluate SQL project output for '{projectPath}'.");
+        }
+
+        var standardOutput = process.StandardOutput.ReadToEndAsync(cancellationToken);
+        var standardError = process.StandardError.ReadToEndAsync(cancellationToken);
+        try
+        {
+            await process.WaitForExitAsync(cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            if (!process.HasExited)
+            {
+                process.Kill(entireProcessTree: true);
+                await process.WaitForExitAsync();
+            }
+
+            throw;
+        }
+
+        var output = await standardOutput;
+        var error = await standardError;
+        if (process.ExitCode != 0)
+        {
+            throw new InvalidOperationException(
+                $"Unable to evaluate SQL project output for '{projectPath}' with exit code {process.ExitCode}.{Environment.NewLine}{error.Trim()}");
+        }
+
+        using var result = JsonDocument.Parse(output);
+        var properties = result.RootElement.GetProperty("Properties");
+        var sqlTargetPath = properties.GetProperty("SqlTargetPath").GetString();
+        var targetPath = properties.GetProperty("TargetPath").GetString();
+        var resolvedPath = !string.IsNullOrWhiteSpace(sqlTargetPath) ? sqlTargetPath : targetPath;
+
+        if (string.IsNullOrWhiteSpace(resolvedPath))
+        {
+            throw new InvalidOperationException(
+                $"SQL project '{projectPath}' did not produce a SqlTargetPath or TargetPath.");
+        }
+
+        return resolvedPath;
+    }
 
     private static async Task BuildProjectAsync(string projectPath, string configuration, ILogger logger, CancellationToken cancellationToken)
     {
