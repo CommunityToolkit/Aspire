@@ -38,6 +38,12 @@ func main() {
 	connectionProject := builder.AddSqlProject("connection-project")
 	connectionProject.WithDacpac(projectPath)
 	connectionProject.WithConnectionReference(existingConnection)
+	includeInPublish := true
+	includeInDeploy := true
+	connectionProject.WithPipelineOptions(&aspire.DacpacPipelineOptions{
+		IncludeInPublish: &includeInPublish,
+		IncludeInDeploy:  &includeInDeploy,
+	})
 	check(connectionProject.Err())
 
 	_, err = project.DacpacPath()

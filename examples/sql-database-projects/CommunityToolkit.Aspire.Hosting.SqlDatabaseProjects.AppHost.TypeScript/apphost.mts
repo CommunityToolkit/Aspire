@@ -28,6 +28,10 @@ await databaseProject.withReference(database);
 
 const connectionProject = await builder.addSqlProjectFromPath("connection-project", projectPath);
 await connectionProject.withConnectionReference(existingConnection);
+await connectionProject.withPipelineOptions({
+    includeInPublish: true,
+    includeInDeploy: true,
+});
 await connectionProject.withExplicitStart();
 
 const packageDatabase = await sqlServer.addDatabase("PackageDatabase");
