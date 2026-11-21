@@ -380,8 +380,29 @@ public static class SqlProjectBuilderExtensions
         builder.ApplicationBuilder.Services.TryAddSingleton<SqlProjectPublishService>();
         builder.ApplicationBuilder.Services.TryAddSingleton<ISqlPackageRunner, SqlPackageRunner>();
 
+        ParameterResource? pipelineConnectionStringParameter = null;
+        if (!builder.ApplicationBuilder.ExecutionContext.IsRunMode
+            && target.Resource is SqlServerDatabaseResource)
+        {
+            var parameterName = $"{target.Resource.Name}-connection-string";
+            pipelineConnectionStringParameter = builder.ApplicationBuilder.Resources
+                .OfType<ParameterResource>()
+                .FirstOrDefault(parameter =>
+                    string.Equals(parameter.Name, parameterName, StringComparison.Ordinal));
+            if (pipelineConnectionStringParameter is null)
+            {
+                var parameter = builder.ApplicationBuilder.AddParameter(parameterName, secret: true);
+                parameter.WithDescription(
+                    $"Connection string used by DACPAC pipeline operations targeting '{target.Resource.Name}'.");
+                pipelineConnectionStringParameter = parameter.Resource;
+            }
+        }
+
         builder.WithAnnotation(
-            new DacpacTargetAnnotation(target.Resource, targetDatabaseName),
+            new DacpacTargetAnnotation(
+                target.Resource,
+                targetDatabaseName,
+                pipelineConnectionStringParameter),
             ResourceAnnotationMutationBehavior.Replace);
         builder.WithParentRelationship(target.Resource);
 

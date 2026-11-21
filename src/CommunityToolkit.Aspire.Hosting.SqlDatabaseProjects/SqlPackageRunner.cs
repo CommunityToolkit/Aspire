@@ -83,9 +83,9 @@ internal sealed class SqlPackageRunner(IHostEnvironment hostEnvironment) : ISqlP
 
         try
         {
+            await ProtectDirectoryAsync(temporaryDirectory, cancellationToken);
             var profilePath = Path.Combine(temporaryDirectory, "deployment.publish.xml");
             var profileSecrets = CreateProfile(request, profilePath);
-            await ProtectProfileAsync(profilePath, cancellationToken);
             var redactor = SqlPackageSecretRedactor.Create(
                 [request.ConnectionString, .. profileSecrets]);
             var outputDirectory = Path.GetDirectoryName(request.OutputPath);
@@ -323,7 +323,7 @@ internal sealed class SqlPackageRunner(IHostEnvironment hostEnvironment) : ISqlP
         }
     }
 
-    private static async Task ProtectProfileAsync(string path, CancellationToken cancellationToken)
+    internal static async Task ProtectDirectoryAsync(string path, CancellationToken cancellationToken)
     {
         if (OperatingSystem.IsWindows())
         {
@@ -342,7 +342,7 @@ internal sealed class SqlPackageRunner(IHostEnvironment hostEnvironment) : ISqlP
             processStartInfo.ArgumentList.Add(path);
             processStartInfo.ArgumentList.Add("/inheritance:r");
             processStartInfo.ArgumentList.Add("/grant:r");
-            processStartInfo.ArgumentList.Add($"*{sid}:(R)");
+            processStartInfo.ArgumentList.Add($"*{sid}:(OI)(CI)F");
 
             using var process = new Process { StartInfo = processStartInfo };
             if (!process.Start())
@@ -382,7 +382,9 @@ internal sealed class SqlPackageRunner(IHostEnvironment hostEnvironment) : ISqlP
         {
             File.SetUnixFileMode(
                 path,
-                UnixFileMode.UserRead | UnixFileMode.UserWrite);
+                UnixFileMode.UserRead
+                | UnixFileMode.UserWrite
+                | UnixFileMode.UserExecute);
         }
     }
 }

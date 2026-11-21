@@ -25,7 +25,12 @@ public enum DacpacSource
     /// <summary>
     /// Uses a DACPAC path supplied through the pipeline parameter.
     /// </summary>
-    File
+    File,
+
+    /// <summary>
+    /// Uses the DACPAC already produced at the configured SQL project output path.
+    /// </summary>
+    Existing
 }
 
 /// <summary>
@@ -369,24 +374,68 @@ internal static class SqlProjectPipelineSteps
         var provisionSteps = steps
             .Where(step => step.Tags.Contains(WellKnownPipelineTags.ProvisionInfrastructure))
             .ToList();
+        var deploySteps = steps
+            .Where(step => step.Name.StartsWith("deploy-", StringComparison.Ordinal)
+                && step.Resource is IResourceWithDacpac)
+            .ToList();
+        var aggregateRoots = deploySteps
+            .Where(step =>
+                step.Resource is IResourceWithDacpac resource
+                && resource.TryGetLastAnnotation<DacpacPipelineOptionsAnnotation>(out var options)
+                && options.Options.IncludeInDeploy)
+            .ToList();
+        var closure = GetDeployClosure(aggregateRoots, deploySteps);
 
-        foreach (var step in steps.Where(step =>
-                     step.Name.StartsWith("deploy-", StringComparison.Ordinal)))
+        foreach (var step in closure)
         {
-            if (step.Resource is not IResourceWithDacpac resource
-                || !resource.TryGetLastAnnotation<DacpacPipelineOptionsAnnotation>(out var options)
-                || !options.Options.IncludeInDeploy)
-            {
-                continue;
-            }
-
+            var resource = (IResourceWithDacpac)step.Resource!;
             foreach (var provisionStep in provisionSteps)
             {
                 DependOn(step, provisionStep.Name);
             }
             ConfigureProjectDependencies(step, resource, steps);
-            ConfigureDatabaseSerialization(step, resource, steps);
         }
+
+        foreach (var group in GetTargetGroups(closure))
+        {
+            var ordered = TopologicalOrder(group, closure);
+            for (var index = 1; index < ordered.Count; index++)
+            {
+                DependOn(ordered[index], ordered[index - 1].Name);
+            }
+        }
+    }
+
+    private static HashSet<PipelineStep> GetDeployClosure(
+        IEnumerable<PipelineStep> roots,
+        IReadOnlyList<PipelineStep> deploySteps)
+    {
+        var closure = new HashSet<PipelineStep>();
+        var pending = new Stack<PipelineStep>(roots);
+
+        while (pending.TryPop(out var step))
+        {
+            if (!closure.Add(step)
+                || step.Resource is not IResourceWithDacpac resource
+                || !resource.TryGetAnnotationsOfType<WaitAnnotation>(out var waits))
+            {
+                continue;
+            }
+
+            foreach (var dependency in waits
+                         .Select(wait => wait.Resource)
+                         .OfType<IResourceWithDacpac>())
+            {
+                var dependencyStep = deploySteps.FirstOrDefault(
+                    candidate => candidate.Name == $"deploy-{dependency.Name}");
+                if (dependencyStep is not null)
+                {
+                    pending.Push(dependencyStep);
+                }
+            }
+        }
+
+        return closure;
     }
 
     private static void ConfigureProjectDependencies(
@@ -415,35 +464,124 @@ internal static class SqlProjectPipelineSteps
         }
     }
 
-    private static void ConfigureDatabaseSerialization(
-        PipelineStep deploy,
-        IResourceWithDacpac resource,
-        IReadOnlyList<PipelineStep> steps)
+    private static IEnumerable<IReadOnlyList<PipelineStep>> GetTargetGroups(
+        HashSet<PipelineStep> deploySteps)
     {
-        if (!resource.TryGetLastAnnotation<DacpacTargetAnnotation>(out var target))
+        var ungrouped = deploySteps.ToList();
+        while (ungrouped.Count > 0)
         {
-            return;
+            var first = ungrouped[0];
+            var group = ungrouped
+                .Where(candidate => TargetsMatch(first, candidate))
+                .ToList();
+            foreach (var item in group)
+            {
+                ungrouped.Remove(item);
+            }
+
+            yield return group;
+        }
+    }
+
+    private static List<PipelineStep> TopologicalOrder(
+        IReadOnlyList<PipelineStep> group,
+        HashSet<PipelineStep> closure)
+    {
+        var groupNames = group.Select(step => step.Name).ToHashSet(StringComparer.Ordinal);
+        var dependencies = group.ToDictionary(
+            step => step,
+            step => GetTransitiveDependencies(step, closure)
+                .Where(groupNames.Contains)
+                .ToHashSet(StringComparer.Ordinal));
+        var indegree = dependencies.ToDictionary(
+            pair => pair.Key,
+            pair => pair.Value.Count);
+
+        var ready = new SortedSet<PipelineStep>(
+            group.Where(step => indegree[step] == 0),
+            Comparer<PipelineStep>.Create((left, right) =>
+                StringComparer.Ordinal.Compare(left.Name, right.Name)));
+        var ordered = new List<PipelineStep>(group.Count);
+        while (ready.Count > 0)
+        {
+            var current = ready.Min!;
+            ready.Remove(current);
+            ordered.Add(current);
+
+            foreach (var dependent in group.Where(step =>
+                         dependencies[step].Contains(current.Name)))
+            {
+                indegree[dependent]--;
+                if (indegree[dependent] == 0)
+                {
+                    ready.Add(dependent);
+                }
+            }
         }
 
-        var siblings = steps
-            .Where(step =>
-                step.Name.StartsWith("deploy-", StringComparison.Ordinal)
-                && step.Resource is IResourceWithDacpac candidate
-                && candidate.TryGetLastAnnotation<DacpacPipelineOptionsAnnotation>(out var candidateOptions)
-                && candidateOptions.Options.IncludeInDeploy
-                && candidate.TryGetLastAnnotation<DacpacTargetAnnotation>(out var candidateTarget)
-                && TargetsMatch(resource, candidate, target, candidateTarget)
-                && string.Equals(
-                    candidateTarget.TargetDatabaseName,
-                    target.TargetDatabaseName,
-                    StringComparison.Ordinal))
-            .OrderBy(step => step.Name, StringComparer.Ordinal)
-            .ToList();
-        var previous = siblings.TakeWhile(step => step != deploy).LastOrDefault();
-        if (previous is not null)
+        if (ordered.Count != group.Count)
         {
-            DependOn(deploy, previous.Name);
+            throw new DistributedApplicationException(
+                $"DACPAC deployment dependencies for target '{GetTargetKey(group[0])}' contain a cycle.");
         }
+
+        return ordered;
+    }
+
+    private static HashSet<string> GetTransitiveDependencies(
+        PipelineStep step,
+        HashSet<PipelineStep> steps)
+    {
+        var names = steps.ToDictionary(candidate => candidate.Name, StringComparer.Ordinal);
+        var dependencies = new HashSet<string>(StringComparer.Ordinal);
+        var pending = new Stack<string>(step.DependsOnSteps);
+        while (pending.TryPop(out var dependency))
+        {
+            if (!dependencies.Add(dependency)
+                || !names.TryGetValue(dependency, out var dependencyStep))
+            {
+                continue;
+            }
+
+            foreach (var nested in dependencyStep.DependsOnSteps)
+            {
+                pending.Push(nested);
+            }
+        }
+
+        return dependencies;
+    }
+
+    private static bool TargetsMatch(PipelineStep left, PipelineStep right)
+        => string.Equals(GetTargetKey(left), GetTargetKey(right), StringComparison.Ordinal);
+
+    private static string GetTargetKey(PipelineStep step)
+    {
+        if (step.Resource is not IResourceWithDacpac resource)
+        {
+            return $"step:{step.Name}";
+        }
+
+        var parameterName = resource.TryGetLastAnnotation<DacpacPipelineOptionsAnnotation>(out var options)
+            ? options.Options.TargetConnectionStringParameterName
+            : null;
+        if (!string.IsNullOrWhiteSpace(parameterName))
+        {
+            return $"parameter:{parameterName}";
+        }
+
+        if (!resource.TryGetLastAnnotation<DacpacTargetAnnotation>(out var target))
+        {
+            return $"step:{step.Name}";
+        }
+
+        parameterName = target.PipelineConnectionStringParameter?.Name;
+        if (!string.IsNullOrWhiteSpace(parameterName))
+        {
+            return $"parameter:{parameterName}";
+        }
+
+        return $"reference:{target.Target.Name}:{target.TargetDatabaseName}";
     }
 
     private static void DependOn(PipelineStep step, string dependency)
@@ -454,35 +592,13 @@ internal static class SqlProjectPipelineSteps
         }
     }
 
-    private static bool TargetsMatch(
-        IResourceWithDacpac resource,
-        IResourceWithDacpac candidate,
-        DacpacTargetAnnotation target,
-        DacpacTargetAnnotation candidateTarget)
-    {
-        var resourceParameter = resource.TryGetLastAnnotation<DacpacPipelineOptionsAnnotation>(out var resourceOptions)
-            ? resourceOptions.Options.TargetConnectionStringParameterName
-            : null;
-        var candidateParameter = candidate.TryGetLastAnnotation<DacpacPipelineOptionsAnnotation>(out var candidateOptions)
-            ? candidateOptions.Options.TargetConnectionStringParameterName
-            : null;
-
-        if (!string.IsNullOrWhiteSpace(resourceParameter)
-            || !string.IsNullOrWhiteSpace(candidateParameter))
-        {
-            return string.Equals(resourceParameter, candidateParameter, StringComparison.Ordinal);
-        }
-
-        return candidateTarget.Target == target.Target;
-    }
-
     internal static IEnumerable<PipelineStep> CreateSteps(
         IResourceWithDacpac resource,
         DacpacPipelineEffectiveOptions options)
     {
         var source = GetSource(resource, options);
         var effectiveOptions = options with { Source = source };
-        var build = source == DacpacSource.Build
+        var build = resource.TryGetLastAnnotation<IProjectMetadata>(out _)
             ? CreateBuildStep(resource, effectiveOptions)
             : null;
 
@@ -511,9 +627,9 @@ internal static class SqlProjectPipelineSteps
 
         foreach (var consumer in new[] { publish, report, script, deploy })
         {
-            if (build is not null)
+            if (source == DacpacSource.Build)
             {
-                consumer.DependsOn(build);
+                consumer.DependsOn(build!);
             }
             else if (source == DacpacSource.File && consumer == publish)
             {
@@ -569,7 +685,9 @@ internal static class SqlProjectPipelineSteps
         }
 
         return resource.TryGetLastAnnotation<IProjectMetadata>(out _)
-            ? DacpacSource.Build
+            ? options.IncludeInPublish || options.IncludeInDeploy
+                ? DacpacSource.Build
+                : DacpacSource.Existing
             : null;
     }
 
@@ -711,6 +829,11 @@ internal static class SqlProjectPipelineSteps
                 $"DACPAC pipeline resource '{resource.Name}' has no target. Call WithReference before running report, script, or deploy operations.");
         }
 
+        if (target.PipelineConnectionStringParameter is not null)
+        {
+            return (target.PipelineConnectionStringParameter, target.TargetDatabaseName);
+        }
+
         return (target.Target.ConnectionStringExpression, target.TargetDatabaseName);
     }
 
@@ -782,15 +905,15 @@ internal static class DacpacPipelineArtifacts
         }
 
         var resolver = context.Services.GetRequiredService<SqlProjectDacpacResolver>();
-        var dacpac = await resolver.ResolveAsync(resource, context.Logger, context.CancellationToken);
+        using var dacpac = options.Source == DacpacSource.Existing
+            ? await resolver.ResolveExistingAsync(resource, context.Logger, context.CancellationToken)
+            : await resolver.ResolveAsync(resource, context.Logger, context.CancellationToken);
         if (!File.Exists(dacpac.Path))
         {
-            dacpac.Dispose();
             throw new DistributedApplicationException(
                 $"DACPAC for resource '{resource.Name}' was not found at '{dacpac.Path}'.");
         }
 
-        context.CancellationToken.Register(dacpac.Dispose);
         return dacpac.Path;
     }
 

@@ -32,7 +32,7 @@ public class SqlProjectPipelineStepTests
             ["build-schema", "publish-schema", "report-schema", "script-schema", "deploy-schema"],
             steps.Select(step => step.Name));
         Assert.DoesNotContain(steps, step => step.RequiredBySteps.Count > 0);
-        Assert.Contains("build-schema", steps.Single(step => step.Name == "publish-schema").DependsOnSteps);
+        Assert.Empty(steps.Single(step => step.Name == "publish-schema").DependsOnSteps);
         Assert.Contains(WellKnownPipelineSteps.ProcessParameters, steps.Single(step => step.Name == "report-schema").DependsOnSteps);
         Assert.Same(resource.Resource, sqlProject);
     }
@@ -114,8 +114,10 @@ public class SqlProjectPipelineStepTests
 
         var steps = SqlProjectPipelineSteps.CreateSteps(sqlProject, annotation.Options).ToList();
 
-        Assert.DoesNotContain(steps, step => step.Name == "build-schema");
-        Assert.All(steps, step =>
+        Assert.Contains(steps, step => step.Name == "build-schema");
+        Assert.All(steps.Where(step => step.Name != "build-schema"), step =>
+            Assert.DoesNotContain("build-schema", step.DependsOnSteps));
+        Assert.All(steps.Where(step => step.Name != "build-schema"), step =>
             Assert.Contains(WellKnownPipelineSteps.ProcessParameters, step.DependsOnSteps));
         Assert.Equal(DacpacSource.File, annotation.Options.Source);
         Assert.False(annotation.Options.IncludeInPublish);
@@ -572,6 +574,176 @@ public class SqlProjectPipelineStepTests
     }
 
     [Fact]
+    public void DeployConfigurationIncludesNonOptedInClosureAndProvisioning()
+    {
+        var builder = CreateBuilder();
+        var target = builder.AddConnectionString("Target");
+        var prerequisite = AddSqlProjectFromPath(builder).WithReference(target);
+        var dependent = builder.AddSqlProject("schema-b", Path.Combine(AppContext.BaseDirectory, "B.sqlproj"))
+            .WithPipelineOptions(new() { IncludeInDeploy = true })
+            .WithReference(target)
+            .WaitForCompletion(prerequisite);
+        var steps = new List<PipelineStep>
+        {
+            new()
+            {
+                Name = "provision-target",
+                Tags = [WellKnownPipelineTags.ProvisionInfrastructure],
+                Action = _ => Task.CompletedTask
+            }
+        };
+        foreach (var resource in new[] { prerequisite.Resource, dependent.Resource })
+        {
+            Assert.True(resource.TryGetLastAnnotation<DacpacPipelineOptionsAnnotation>(out var options));
+            steps.AddRange(SqlProjectPipelineSteps.CreateSteps(resource, options.Options));
+        }
+
+        SqlProjectPipelineSteps.ConfigureDeployDependencies(steps);
+
+        var prerequisiteDeploy = steps.Single(step => step.Name == "deploy-schema");
+        var dependentDeploy = steps.Single(step => step.Name == "deploy-schema-b");
+        Assert.Contains("provision-target", prerequisiteDeploy.DependsOnSteps);
+        Assert.Contains("provision-target", dependentDeploy.DependsOnSteps);
+        Assert.Contains(prerequisiteDeploy.Name, dependentDeploy.DependsOnSteps);
+    }
+
+    [Fact]
+    public void SerializationUsesEffectiveTargetParameter()
+    {
+        var builder = CreateBuilder();
+        var firstTarget = builder.AddConnectionString("TargetA");
+        var secondTarget = builder.AddConnectionString("TargetB");
+        builder.AddParameter("pipeline-target", secret: true);
+        var options = new DacpacPipelineOptions
+        {
+            IncludeInDeploy = true,
+            TargetConnectionStringParameterName = "pipeline-target"
+        };
+        var first = AddSqlProjectFromPath(builder)
+            .WithPipelineOptions(options)
+            .WithReference(firstTarget);
+        var second = builder.AddSqlProject("schema-b", Path.Combine(AppContext.BaseDirectory, "B.sqlproj"))
+            .WithPipelineOptions(options)
+            .WithReference(secondTarget);
+        var steps = CreateDeploySteps(first.Resource, second.Resource);
+
+        SqlProjectPipelineSteps.ConfigureDeployDependencies(steps);
+
+        var firstDeploy = steps.Single(step => step.Name == "deploy-schema");
+        var secondDeploy = steps.Single(step => step.Name == "deploy-schema-b");
+        Assert.Contains(firstDeploy.Name, secondDeploy.DependsOnSteps);
+    }
+
+    [Fact]
+    public void SerializationRespectsReverseAlphabeticalDependency()
+    {
+        var builder = CreateBuilder();
+        var target = builder.AddConnectionString("Target");
+        var last = builder.AddSqlProject("schema-z", Path.Combine(AppContext.BaseDirectory, "Z.sqlproj"))
+            .WithPipelineOptions(new() { IncludeInDeploy = true })
+            .WithReference(target);
+        var first = AddSqlProjectFromPath(builder)
+            .WithPipelineOptions(new() { IncludeInDeploy = true })
+            .WithReference(target)
+            .WaitForCompletion(last);
+        var steps = CreateDeploySteps(first.Resource, last.Resource);
+
+        SqlProjectPipelineSteps.ConfigureDeployDependencies(steps);
+
+        var firstDeploy = steps.Single(step => step.Name == "deploy-schema");
+        var lastDeploy = steps.Single(step => step.Name == "deploy-schema-z");
+        Assert.Contains(lastDeploy.Name, firstDeploy.DependsOnSteps);
+        Assert.DoesNotContain(firstDeploy.Name, lastDeploy.DependsOnSteps);
+    }
+
+    [Fact]
+    public void SerializationRejectsDependencyCycle()
+    {
+        var builder = CreateBuilder();
+        var target = builder.AddConnectionString("Target");
+        var first = AddSqlProjectFromPath(builder)
+            .WithPipelineOptions(new() { IncludeInDeploy = true })
+            .WithReference(target);
+        var second = builder.AddSqlProject("schema-b", Path.Combine(AppContext.BaseDirectory, "B.sqlproj"))
+            .WithPipelineOptions(new() { IncludeInDeploy = true })
+            .WithReference(target)
+            .WaitForCompletion(first);
+        first.WaitForCompletion(second);
+        var steps = CreateDeploySteps(first.Resource, second.Resource);
+
+        var exception = Assert.Throws<DistributedApplicationException>(
+            () => SqlProjectPipelineSteps.ConfigureDeployDependencies(steps));
+
+        Assert.Contains("contain a cycle", exception.Message);
+    }
+
+    [Fact]
+    public void SerializationPreservesTransitiveDependencyThroughOtherTarget()
+    {
+        var builder = CreateBuilder();
+        var sharedTarget = builder.AddConnectionString("Shared");
+        var otherTarget = builder.AddConnectionString("Other");
+        var first = AddSqlProjectFromPath(builder)
+            .WithPipelineOptions(new() { IncludeInDeploy = true })
+            .WithReference(sharedTarget);
+        var middle = builder.AddSqlProject("schema-m", Path.Combine(AppContext.BaseDirectory, "M.sqlproj"))
+            .WithReference(otherTarget)
+            .WaitForCompletion(first);
+        var last = builder.AddSqlProject("schema-z", Path.Combine(AppContext.BaseDirectory, "Z.sqlproj"))
+            .WithPipelineOptions(new() { IncludeInDeploy = true })
+            .WithReference(sharedTarget)
+            .WaitForCompletion(middle);
+        var steps = CreateDeploySteps(first.Resource, middle.Resource, last.Resource);
+
+        SqlProjectPipelineSteps.ConfigureDeployDependencies(steps);
+
+        var firstDeploy = steps.Single(step => step.Name == "deploy-schema");
+        var lastDeploy = steps.Single(step => step.Name == "deploy-schema-z");
+        Assert.Contains(firstDeploy.Name, lastDeploy.DependsOnSteps);
+    }
+
+    [Fact]
+    public void LocalSqlServerReferenceUsesSecretPipelineParameter()
+    {
+        var builder = CreateBuilder();
+        var database = builder.AddSqlServer("sql").AddDatabase("Database");
+        var resource = AddSqlProjectFromPath(builder).WithReference(database);
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var sqlProject = Assert.Single(model.Resources.OfType<SqlProjectResource>());
+        Assert.True(sqlProject.TryGetLastAnnotation<DacpacPipelineOptionsAnnotation>(out var options));
+        Assert.True(sqlProject.TryGetLastAnnotation<DacpacTargetAnnotation>(out var target));
+        Assert.NotNull(target.PipelineConnectionStringParameter);
+
+        var resolved = SqlProjectPipelineSteps.GetTarget(sqlProject, model, options.Options);
+
+        Assert.Same(target.PipelineConnectionStringParameter, resolved.ConnectionString);
+        Assert.True(target.PipelineConnectionStringParameter.Secret);
+    }
+
+    [Fact]
+    public void LocalSqlServerReferencesShareOnePipelineParameter()
+    {
+        var builder = CreateBuilder();
+        var database = builder.AddSqlServer("sql").AddDatabase("Database");
+        AddSqlProjectFromPath(builder).WithReference(database);
+        builder.AddSqlProject("schema-b", Path.Combine(AppContext.BaseDirectory, "B.sqlproj"))
+            .WithReference(database);
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var parameter = Assert.Single(
+            model.Resources.OfType<ParameterResource>(),
+            parameter => parameter.Name == "Database-connection-string");
+        var sqlProjects = model.Resources.OfType<SqlProjectResource>().ToList();
+        Assert.All(sqlProjects, resource =>
+        {
+            Assert.True(resource.TryGetLastAnnotation<DacpacTargetAnnotation>(out var target));
+            Assert.Same(parameter, target.PipelineConnectionStringParameter);
+        });
+    }
+
+    [Fact]
     public void BuildAndPublishWithoutFileSourceDoNotRegisterDacpacPathParameter()
     {
         var builder = CreateBuilder();
@@ -585,10 +757,84 @@ public class SqlProjectPipelineStepTests
 
         Assert.DoesNotContain(model.Resources.OfType<ParameterResource>(), parameter =>
             parameter.Name == "schema-dacpac-path");
-        Assert.Contains("build-schema", steps.Single(step => step.Name == "publish-schema").DependsOnSteps);
+        Assert.Contains(steps, step => step.Name == "build-schema");
+        Assert.Empty(steps.Single(step => step.Name == "publish-schema").DependsOnSteps);
         Assert.DoesNotContain(
             WellKnownPipelineSteps.ProcessParameters,
             steps.Single(step => step.Name == "publish-schema").DependsOnSteps);
+    }
+
+    [Fact]
+    public async Task ExistingSourceEvaluatesOutputWithoutBuilding()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"dacpac existing {Guid.NewGuid():N}");
+        var projectPath = Path.Combine(directory, "Database.sqlproj");
+        var dacpacPath = Path.Combine(directory, "bin", "Debug", "Database.dacpac");
+        Directory.CreateDirectory(Path.GetDirectoryName(dacpacPath)!);
+
+        try
+        {
+            File.WriteAllText(
+                projectPath,
+                """
+                <Project>
+                  <PropertyGroup>
+                    <TargetPath>bin\Debug\Database.dacpac</TargetPath>
+                  </PropertyGroup>
+                  <Target Name="Build">
+                    <Error Text="Build must not run for Existing source." />
+                  </Target>
+                </Project>
+                """);
+            File.WriteAllText(dacpacPath, "existing dacpac");
+            var builder = CreateBuilder();
+            var resource = builder.AddSqlProject("schema", projectPath, "Debug");
+            using var app = builder.Build();
+            var resolver = app.Services.GetRequiredService<SqlProjectDacpacResolver>();
+
+            using var resolved = await resolver.ResolveExistingAsync(
+                resource.Resource,
+                Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance,
+                TestContext.Current.CancellationToken);
+
+            Assert.Equal(Path.GetFullPath(dacpacPath), Path.GetFullPath(resolved.Path));
+            Assert.Equal("existing dacpac", File.ReadAllText(resolved.Path));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task TemporaryProfileDirectoryIsPrivateOnUnix()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        var directory = Path.Combine(Path.GetTempPath(), $"dacpac private {Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+
+        try
+        {
+            await SqlPackageRunner.ProtectDirectoryAsync(directory, TestContext.Current.CancellationToken);
+            var mode = File.GetUnixFileMode(directory);
+
+            Assert.Equal(
+                UnixFileMode.None,
+                mode & (UnixFileMode.GroupRead
+                    | UnixFileMode.GroupWrite
+                    | UnixFileMode.GroupExecute
+                    | UnixFileMode.OtherRead
+                    | UnixFileMode.OtherWrite
+                    | UnixFileMode.OtherExecute));
+        }
+        finally
+        {
+            Directory.Delete(directory);
+        }
     }
 
     [Fact]
@@ -693,6 +939,18 @@ public class SqlProjectPipelineStepTests
 
     private static IDistributedApplicationBuilder CreateBuilder()
         => TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
+
+    private static List<PipelineStep> CreateDeploySteps(params IResourceWithDacpac[] resources)
+    {
+        var steps = new List<PipelineStep>();
+        foreach (var resource in resources)
+        {
+            Assert.True(resource.TryGetLastAnnotation<DacpacPipelineOptionsAnnotation>(out var options));
+            steps.AddRange(SqlProjectPipelineSteps.CreateSteps(resource, options.Options));
+        }
+
+        return steps;
+    }
 
     private static ProcessStartInfo CreateShellStartInfo(string windowsScript, string unixScript)
     {

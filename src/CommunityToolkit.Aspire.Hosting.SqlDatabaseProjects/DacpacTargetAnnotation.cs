@@ -7,6 +7,8 @@ namespace CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects;
 /// </summary>
 /// <param name="Target">The resource providing the target connection string.</param>
 /// <param name="TargetDatabaseName">The optional database name override.</param>
+/// <param name="PipelineConnectionStringParameter">The optional parameter used instead of a run-mode local endpoint.</param>
 internal sealed record DacpacTargetAnnotation(
     IResourceWithConnectionString Target,
-    string? TargetDatabaseName) : IResourceAnnotation;
+    string? TargetDatabaseName,
+    ParameterResource? PipelineConnectionStringParameter = null) : IResourceAnnotation;
