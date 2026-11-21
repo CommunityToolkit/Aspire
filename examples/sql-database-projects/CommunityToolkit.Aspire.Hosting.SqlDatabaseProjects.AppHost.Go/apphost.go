@@ -35,8 +35,7 @@ func main() {
 	packageProject.WithReference(packageDatabase)
 	check(packageProject.Err())
 
-	connectionProject := builder.AddSqlProject("connection-project")
-	connectionProject.WithDacpac(projectPath)
+	connectionProject := builder.AddSqlProjectFromPath("connection-project", projectPath)
 	connectionProject.WithConnectionReference(existingConnection)
 	includeInPublish := true
 	includeInDeploy := true
