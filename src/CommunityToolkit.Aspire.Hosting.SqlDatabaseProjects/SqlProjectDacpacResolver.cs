@@ -70,7 +70,9 @@ internal sealed class SqlProjectDacpacResolver(IHostEnvironment hostEnvironment)
                 {
                     await BuildProjectAsync(absoluteProjectPath, effectiveBuildConfiguration, logger, cancellationToken);
                     var builtDacpacPath = ResolveDacpacPath(
-                        await GetProjectDacpacPathAsync(absoluteProjectPath, effectiveBuildConfiguration, cancellationToken),
+                        buildConfiguration is null
+                            ? resource.GetDacpacPath()
+                            : await GetProjectDacpacPathAsync(absoluteProjectPath, effectiveBuildConfiguration, cancellationToken),
                         projectDirectory);
                     dacpacIdentity = builtDacpacPath;
                     if (File.Exists(builtDacpacPath))
