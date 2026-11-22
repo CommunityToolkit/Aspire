@@ -1,5 +1,6 @@
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
@@ -407,6 +408,22 @@ internal sealed class SqlPackageSecretRedactor(IReadOnlyList<string> secrets)
 
     public static SqlPackageSecretRedactor Create(IEnumerable<string> values)
     {
+        var credentials = new List<string>();
+        foreach (var value in values.Where(value => !string.IsNullOrWhiteSpace(value)))
+        {
+            try
+            {
+                var connectionString = new SqlConnectionStringBuilder(value);
+                if (!string.IsNullOrEmpty(connectionString.Password))
+                {
+                    credentials.Add(connectionString.Password);
+                }
+            }
+            catch (ArgumentException)
+            {
+            }
+        }
+
         var secrets = values
             .Where(value => !string.IsNullOrWhiteSpace(value))
             .SelectMany(value => value.Replace("\r\n", "\n", StringComparison.Ordinal)
@@ -414,6 +431,7 @@ internal sealed class SqlPackageSecretRedactor(IReadOnlyList<string> secrets)
             .SelectMany(value => new[] { value, GetAssignmentValue(value) })
                 .OfType<string>()
             .Where(value => value is { Length: >= 4 })
+            .Concat(credentials)
             .Distinct(StringComparer.Ordinal)
             .OrderByDescending(value => value.Length)
             .ToArray();

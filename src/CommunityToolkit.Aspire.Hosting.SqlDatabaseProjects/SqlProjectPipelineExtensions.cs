@@ -147,6 +147,7 @@ public static class SqlProjectPipelineExtensions
 
         builder.ApplicationBuilder.Services.TryAddSingleton<SqlProjectDacpacResolver>();
         builder.ApplicationBuilder.Services.TryAddSingleton<ISqlPackageRunner, SqlPackageRunner>();
+        builder.ApplicationBuilder.Services.TryAddSingleton<SqlPackageTargetLock>();
 
         if (!builder.Resource.HasAnnotationOfType<DacpacPipelineRegistrationAnnotation>())
         {
@@ -161,7 +162,7 @@ public static class SqlProjectPipelineExtensions
                 builder.WithPipelineConfiguration(SqlProjectPipelineSteps.ConfigureDeployDependencies);
             }
 
-            builder.WithAnnotation(new PipelineStepAnnotation(_ =>
+            builder.WithAnnotation(new PipelineStepAnnotation(context =>
             {
                 if (!builder.Resource.TryGetLastAnnotation<DacpacPipelineOptionsAnnotation>(out var current))
                 {
@@ -169,6 +170,10 @@ public static class SqlProjectPipelineExtensions
                         $"DACPAC pipeline options for resource '{builder.Resource.Name}' are unavailable.");
                 }
 
+                SqlProjectPipelineSteps.ValidateSecretTargetParameter(
+                    builder.Resource,
+                    context.PipelineContext.Model,
+                    current.Options.TargetConnectionStringParameterName);
                 return SqlProjectPipelineSteps.CreateSteps(builder.Resource, current.Options);
             }));
         }
@@ -776,19 +781,27 @@ internal static class SqlProjectPipelineSteps
                     : Path.Combine(outputRoot, resource.Name, outputFileName);
                 var runner = context.Services.GetRequiredService<ISqlPackageRunner>();
 
-                await runner.RunAsync(
-                    new(
-                        action,
-                        options.SqlPackageVersion,
-                        source,
-                        outputPath,
-                        await target.ConnectionString.GetValueAsync(context.CancellationToken)
-                            ?? throw new DistributedApplicationException(
-                                $"The target connection string for resource '{resource.Name}' did not resolve to a value."),
-                        target.DatabaseName,
-                        profilePath),
-                    context.Logger,
-                    context.CancellationToken);
+                var connectionString = await target.ConnectionString.GetValueAsync(context.CancellationToken)
+                    ?? throw new DistributedApplicationException(
+                        $"The target connection string for resource '{resource.Name}' did not resolve to a value.");
+                var targetLock = context.Services.GetRequiredService<SqlPackageTargetLock>();
+                using (await targetLock.AcquireAsync(
+                    connectionString,
+                    target.DatabaseName,
+                    context.CancellationToken))
+                {
+                    await runner.RunAsync(
+                        new(
+                            action,
+                            options.SqlPackageVersion,
+                            source,
+                            outputPath,
+                            connectionString,
+                            target.DatabaseName,
+                            profilePath),
+                        context.Logger,
+                        context.CancellationToken);
+                }
 
                 if (outputPath is not null && !File.Exists(outputPath))
                 {
@@ -820,6 +833,12 @@ internal static class SqlProjectPipelineSteps
                     $"DACPAC target parameter '{options.TargetConnectionStringParameterName}' for resource '{resource.Name}' was not found in the application model.");
             }
 
+            if (!parameter.Secret)
+            {
+                throw new DistributedApplicationException(
+                    $"DACPAC target parameter '{parameter.Name}' for resource '{resource.Name}' must be a secret parameter. Create it with AddParameter(..., secret: true).");
+            }
+
             return (parameter, null);
         }
 
@@ -831,10 +850,37 @@ internal static class SqlProjectPipelineSteps
 
         if (target.PipelineConnectionStringParameter is not null)
         {
+            if (!target.PipelineConnectionStringParameter.Secret)
+            {
+                throw new DistributedApplicationException(
+                    $"DACPAC target parameter '{target.PipelineConnectionStringParameter.Name}' for resource '{resource.Name}' must be a secret parameter. Create it with AddParameter(..., secret: true).");
+            }
+
             return (target.PipelineConnectionStringParameter, target.TargetDatabaseName);
         }
 
         return (target.Target.ConnectionStringExpression, target.TargetDatabaseName);
+    }
+
+    internal static void ValidateSecretTargetParameter(
+        IResourceWithDacpac resource,
+        DistributedApplicationModel model,
+        string? parameterName)
+    {
+        if (string.IsNullOrWhiteSpace(parameterName))
+        {
+            return;
+        }
+
+        var parameter = model.Resources
+            .OfType<ParameterResource>()
+            .SingleOrDefault(candidate =>
+                string.Equals(candidate.Name, parameterName, StringComparison.Ordinal));
+        if (parameter is not null && !parameter.Secret)
+        {
+            throw new DistributedApplicationException(
+                $"DACPAC target parameter '{parameter.Name}' for resource '{resource.Name}' must be a secret parameter. Create it with AddParameter(..., secret: true).");
+        }
     }
 
     internal static string? GetProfilePath(

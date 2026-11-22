@@ -6,6 +6,7 @@ using NuGet.Packaging;
 using NuGet.Versioning;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Reflection;
 using System.Runtime.Versioning;
 using System.Text.Json;
 using System.Xml.Linq;
@@ -111,12 +112,10 @@ internal sealed class SqlProjectDacpacResolver(IHostEnvironment hostEnvironment)
             if (dacpacPath is null
                 && resource.TryGetLastAnnotation<IProjectMetadata>(out var outputMetadata))
             {
-                var outputConfiguration = buildConfiguration;
-                if (outputConfiguration is null
-                    && resource.TryGetLastAnnotation<SqlProjectBuildAnnotation>(out var outputBuild))
-                {
-                    outputConfiguration = outputBuild.Configuration;
-                }
+                var outputConfiguration = GetOutputConfiguration(
+                    resource,
+                    outputMetadata,
+                    buildConfiguration);
 
                 dacpacPath = ResolveDacpacPath(
                     await GetProjectDacpacPathAsync(
@@ -135,6 +134,24 @@ internal sealed class SqlProjectDacpacResolver(IHostEnvironment hostEnvironment)
             DeleteTemporaryDacpacDirectory(temporaryDacpacDirectory, logger);
             throw;
         }
+    }
+
+    internal static string? GetOutputConfiguration(
+        IResourceWithDacpac resource,
+        IProjectMetadata metadata,
+        string? buildConfiguration)
+    {
+        var outputConfiguration = buildConfiguration;
+        if (outputConfiguration is null
+            && resource.TryGetLastAnnotation<SqlProjectBuildAnnotation>(out var outputBuild))
+        {
+            outputConfiguration = outputBuild.Configuration;
+        }
+
+        return outputConfiguration
+            ?? metadata.GetType().Assembly
+                .GetCustomAttribute<AssemblyConfigurationAttribute>()?
+                .Configuration;
     }
 
     private string ResolveDacpacPath(string dacpacPath, string? baseDirectory = null)

@@ -6,7 +6,9 @@ using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Pipelines;
 using Aspire.Hosting.Utils;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using System.Diagnostics;
+using System.Reflection;
 using System.Xml.Linq;
 
 namespace CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.Tests;
@@ -310,6 +312,19 @@ public class SqlProjectPipelineStepTests
     }
 
     [Fact]
+    public void SecretRedactorParsesShortAndQuotedPasswords()
+    {
+        var redactor = SqlPackageSecretRedactor.Create(
+        [
+            "Server=localhost;Password=abc;Initial Catalog=db",
+            "Server=localhost;Password=\"p@ss;word\";Initial Catalog=db"
+        ]);
+
+        Assert.DoesNotContain("abc", redactor.Redact("password=abc"));
+        Assert.DoesNotContain("p@ss;word", redactor.Redact("password=p@ss;word"));
+    }
+
+    [Fact]
     public void SqlPackageArgumentsHaveStableOrderAndDoNotExposeTarget()
     {
         foreach (var item in new[]
@@ -469,6 +484,27 @@ public class SqlProjectPipelineStepTests
             var parameter = Assert.IsType<ParameterResource>(actionTarget.ConnectionString);
             Assert.Equal("pipeline-target", parameter.Name);
             Assert.Null(actionTarget.DatabaseName);
+        }
+
+        [Fact]
+        public void TargetParameterMustBeSecret()
+        {
+            var builder = CreateBuilder();
+            builder.AddParameter("pipeline-target", secret: false);
+            var resource = AddSqlProjectFromPath(builder)
+                .WithPipelineOptions(new()
+                {
+                    TargetConnectionStringParameterName = "pipeline-target"
+                });
+            using var app = builder.Build();
+            var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+            var sqlProject = Assert.Single(model.Resources.OfType<SqlProjectResource>());
+            Assert.True(sqlProject.TryGetLastAnnotation<DacpacPipelineOptionsAnnotation>(out var options));
+
+            var exception = Assert.Throws<DistributedApplicationException>(
+                () => SqlProjectPipelineSteps.GetTarget(sqlProject, model, options.Options));
+
+            Assert.Contains("must be a secret parameter", exception.Message);
         }
 
     [Fact]
@@ -741,6 +777,60 @@ public class SqlProjectPipelineStepTests
             Assert.True(resource.TryGetLastAnnotation<DacpacTargetAnnotation>(out var target));
             Assert.Same(parameter, target.PipelineConnectionStringParameter);
         });
+    }
+
+    [Fact]
+    public void LocalSqlServerReferenceRejectsExistingNonSecretParameter()
+    {
+        var builder = CreateBuilder();
+        builder.AddParameter("Database-connection-string", secret: false);
+        var database = builder.AddSqlServer("sql").AddDatabase("Database");
+
+        var exception = Assert.Throws<DistributedApplicationException>(
+            () => AddSqlProjectFromPath(builder).WithReference(database));
+
+        Assert.Contains("must be a secret parameter", exception.Message);
+    }
+
+    [Fact]
+    public async Task TargetLockSerializesAliasedConnectionStrings()
+    {
+        var targetLock = new SqlPackageTargetLock();
+        var first = await targetLock.AcquireAsync(
+            "Server=server;Initial Catalog=database;Password=one",
+            null,
+            TestContext.Current.CancellationToken);
+        var secondTask = targetLock.AcquireAsync(
+            "Data Source=SERVER;Database=DATABASE;Password=two",
+            null,
+            TestContext.Current.CancellationToken);
+
+        await Task.Delay(100, TestContext.Current.CancellationToken);
+        Assert.False(secondTask.IsCompleted);
+        first.Dispose();
+        using var second = await secondTask;
+    }
+
+    [Fact]
+    public void ExistingMetadataUsesAssemblyConfiguration()
+    {
+        var builder = CreateBuilder();
+        builder.AddSqlProject<TestProject>("schema");
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(model.Resources.OfType<SqlProjectResource>());
+        Assert.True(resource.TryGetLastAnnotation<IProjectMetadata>(out var metadata));
+
+        var configuration = SqlProjectDacpacResolver.GetOutputConfiguration(
+            resource,
+            metadata,
+            null);
+
+        Assert.Equal(
+            typeof(TestProject).Assembly
+                .GetCustomAttribute<AssemblyConfigurationAttribute>()?
+                .Configuration,
+            configuration);
     }
 
     [Fact]

@@ -396,6 +396,11 @@ public static class SqlProjectBuilderExtensions
                     $"Connection string used by DACPAC pipeline operations targeting '{target.Resource.Name}'.");
                 pipelineConnectionStringParameter = parameter.Resource;
             }
+            else if (!pipelineConnectionStringParameter.Secret)
+            {
+                throw new DistributedApplicationException(
+                    $"DACPAC target parameter '{pipelineConnectionStringParameter.Name}' must be a secret parameter. Create it with AddParameter(..., secret: true).");
+            }
         }
 
         builder.WithAnnotation(
