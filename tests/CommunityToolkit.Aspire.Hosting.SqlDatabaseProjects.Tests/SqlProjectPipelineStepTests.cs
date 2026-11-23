@@ -944,6 +944,25 @@ public class SqlProjectPipelineStepTests
     }
 
     [Theory]
+    [InlineData(DacpacSource.Build)]
+    [InlineData(DacpacSource.Existing)]
+    public void SwitchingAwayFromFileSourceRemovesDacpacPathParameter(DacpacSource finalSource)
+    {
+        var builder = CreateBuilder();
+        AddSqlProjectFromPath(builder)
+            .WithPipelineOptions(new() { Source = DacpacSource.File })
+            .WithPipelineOptions(new() { Source = finalSource });
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var sqlProject = Assert.Single(model.Resources.OfType<SqlProjectResource>());
+
+        Assert.DoesNotContain(model.Resources.OfType<ParameterResource>(), parameter =>
+            parameter.Name == "schema-dacpac-path");
+        Assert.False(sqlProject.HasAnnotationOfType<DacpacPipelinePathParameterAnnotation>());
+    }
+
+    [Theory]
     [InlineData(false, false, null, true)]
     [InlineData(true, false, null, true)]
     [InlineData(false, true, null, true)]
@@ -989,7 +1008,7 @@ public class SqlProjectPipelineStepTests
                 """
                 <Project>
                   <PropertyGroup>
-                    <TargetPath>bin\Debug\Database.dacpac</TargetPath>
+                    <TargetPath>bin/Debug/Database.dacpac</TargetPath>
                   </PropertyGroup>
                   <Target Name="Build">
                     <Error Text="Build must not run for Existing source." />

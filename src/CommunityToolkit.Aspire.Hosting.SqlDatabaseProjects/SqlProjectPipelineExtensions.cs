@@ -144,13 +144,20 @@ public static class SqlProjectPipelineExtensions
             new DacpacPipelineOptionsAnnotation(merged),
             ResourceAnnotationMutationBehavior.Replace);
 
-        if (merged.Source == DacpacSource.File
-            && !builder.Resource.HasAnnotationOfType<DacpacPipelinePathParameterAnnotation>())
+        // The path parameter exists only while the final source is File, so a later call that
+        // switches source does not leave an unused parameter for ProcessParameters to prompt for.
+        var hasPathParameter = builder.Resource.TryGetLastAnnotation<DacpacPipelinePathParameterAnnotation>(out var pathParameter);
+        if (merged.Source == DacpacSource.File && !hasPathParameter)
         {
             var parameterName = $"{builder.Resource.Name}-dacpac-path";
             var parameter = builder.ApplicationBuilder.AddParameter(parameterName)
                 .WithDescription($"Path to the DACPAC used by the pipeline operations for '{builder.Resource.Name}'.");
             builder.WithAnnotation(new DacpacPipelinePathParameterAnnotation(parameter.Resource));
+        }
+        else if (merged.Source != DacpacSource.File && hasPathParameter)
+        {
+            builder.ApplicationBuilder.Resources.Remove(pathParameter!.Parameter);
+            builder.Resource.Annotations.Remove(pathParameter);
         }
 
         builder.ApplicationBuilder.Services.TryAddSingleton<SqlProjectDacpacResolver>();

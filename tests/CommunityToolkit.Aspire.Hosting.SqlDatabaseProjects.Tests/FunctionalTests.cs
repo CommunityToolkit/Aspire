@@ -1,12 +1,17 @@
 ﻿using Aspire.Hosting;
+using Aspire.Hosting.Pipelines;
 using Aspire.Hosting.Utils;
 using CommunityToolkit.Aspire.Testing;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.SqlServer.Dac;
 
 namespace CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.Tests;
+
+#pragma warning disable ASPIREPIPELINES001
+#pragma warning disable CTASPIREPIPELINES001
 
 [RequiresDocker]
 public class FunctionalTests(ITestOutputHelper testOutputHelper, SqlServerContainerFixture sqlServerContainerFixture) : IClassFixture<SqlServerContainerFixture>
@@ -107,6 +112,76 @@ public class FunctionalTests(ITestOutputHelper testOutputHelper, SqlServerContai
         {
             Directory.Delete(appHostDirectory, recursive: true);
             AddSqlPackageTests.DeleteRestoredTestPackage(packageId);
+        }
+    }
+
+    [Fact]
+    public async Task VerifyPipelineReportScriptAndDeploySteps()
+    {
+        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        cancellation.CancelAfter(TimeSpan.FromMinutes(8));
+        var databaseName = $"Pipeline_{Guid.NewGuid():N}";
+        var connectionString = new SqlConnectionStringBuilder(sqlServerContainerFixture.GetConnectionString())
+        {
+            InitialCatalog = databaseName
+        }.ConnectionString;
+        var outputDirectory = Path.Combine(Path.GetTempPath(), $"dacpac-pipeline-{Guid.NewGuid():N}");
+
+        try
+        {
+            await RunPipelineStepAsync("report-schema");
+            var reportPath = Directory.EnumerateFiles(outputDirectory, "report.xml", SearchOption.AllDirectories).Single();
+            Assert.Contains("SdkProject", await File.ReadAllTextAsync(reportPath, cancellation.Token));
+            Assert.False(await DatabaseExistsAsync());
+
+            await RunPipelineStepAsync("script-schema");
+            var scriptPath = Directory.EnumerateFiles(outputDirectory, "script.sql", SearchOption.AllDirectories).Single();
+            Assert.Contains("SdkProject", await File.ReadAllTextAsync(scriptPath, cancellation.Token));
+            Assert.False(await DatabaseExistsAsync());
+
+            await RunPipelineStepAsync("deploy-schema");
+            Assert.True(await DatabaseExistsAsync());
+            await using var sqlConnection = new SqlConnection(connectionString);
+            await sqlConnection.OpenAsync(cancellation.Token);
+            await using var query = sqlConnection.CreateCommand();
+            query.CommandText = "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'dbo' AND TABLE_NAME = 'SdkProject'";
+            Assert.Equal(1, await query.ExecuteScalarAsync(cancellation.Token));
+        }
+        finally
+        {
+            if (Directory.Exists(outputDirectory))
+            {
+                Directory.Delete(outputDirectory, recursive: true);
+            }
+        }
+
+        async Task RunPipelineStepAsync(string stepName)
+        {
+            using var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
+            builder.Configuration["Parameters:target-connection"] = connectionString;
+            builder.AddParameter("target-connection", secret: true);
+            builder.AddSqlProject("schema", Path.GetFullPath(TestProject.RelativePath, AppContext.BaseDirectory))
+                .WithPipelineOptions(new() { TargetConnectionStringParameterName = "target-connection" });
+
+            await using var app = builder.Build();
+            app.Services.GetRequiredService<IOptions<PipelineOptions>>().Value.Step = stepName;
+            app.Services.GetRequiredService<IOptions<PipelineOptions>>().Value.OutputPath = outputDirectory;
+            await app.Services.GetRequiredService<IDistributedApplicationPipeline>().ExecuteAsync(new PipelineContext(
+                app.Services.GetRequiredService<DistributedApplicationModel>(),
+                builder.ExecutionContext,
+                app.Services,
+                Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance,
+                cancellation.Token));
+        }
+
+        async Task<bool> DatabaseExistsAsync()
+        {
+            await using var master = new SqlConnection(sqlServerContainerFixture.GetConnectionString());
+            await master.OpenAsync(cancellation.Token);
+            await using var command = master.CreateCommand();
+            command.CommandText = "SELECT COUNT(*) FROM sys.databases WHERE name = @name";
+            command.Parameters.AddWithValue("@name", databaseName);
+            return (int)(await command.ExecuteScalarAsync(cancellation.Token))! == 1;
         }
     }
 
