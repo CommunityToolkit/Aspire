@@ -21,6 +21,8 @@ public static class GoAppHostTest
         string appHostDirectory = Path.Combine(repoRoot, "examples", exampleName, appHostProject);
         string aspire = OperatingSystem.IsWindows() ? "cmd.exe" : "aspire";
         string[] aspirePrefix = OperatingSystem.IsWindows() ? ["/d", "/c", "aspire"] : [];
+
+        using IDisposable appHostLock = await PolyglotAppHostLock.AcquireAsync(cancellationToken);
         await ProcessTestUtilities.RunProcessAsync(aspire, [.. aspirePrefix, "restore", "--apphost", "apphost.go", "--non-interactive"], appHostDirectory, cancellationToken);
         await ProcessTestUtilities.RunProcessAsync("go", ["test", "./..."], appHostDirectory, cancellationToken);
         if (validatePublish)
