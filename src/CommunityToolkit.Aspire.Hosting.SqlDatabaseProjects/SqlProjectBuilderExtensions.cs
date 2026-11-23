@@ -171,7 +171,7 @@ public static class SqlProjectBuilderExtensions
                                      })
                                      .ExcludeFromManifest();
 
-        return SqlProjectPipelineExtensions.RegisterPipeline(resourceBuilder);
+        return SqlProjectPipelineExtensions.AddDefaultPipelineSteps(resourceBuilder);
     }
 
     private static IResourceBuilder<SqlProjectResource> AddSqlProjectResource(
@@ -380,34 +380,8 @@ public static class SqlProjectBuilderExtensions
         builder.ApplicationBuilder.Services.TryAddSingleton<SqlProjectPublishService>();
         builder.ApplicationBuilder.Services.TryAddSingleton<ISqlPackageRunner, SqlPackageRunner>();
 
-        ParameterResource? pipelineConnectionStringParameter = null;
-        if (!builder.ApplicationBuilder.ExecutionContext.IsRunMode
-            && target.Resource is SqlServerDatabaseResource)
-        {
-            var parameterName = $"{target.Resource.Name}-connection-string";
-            pipelineConnectionStringParameter = builder.ApplicationBuilder.Resources
-                .OfType<ParameterResource>()
-                .FirstOrDefault(parameter =>
-                    string.Equals(parameter.Name, parameterName, StringComparison.Ordinal));
-            if (pipelineConnectionStringParameter is null)
-            {
-                var parameter = builder.ApplicationBuilder.AddParameter(parameterName, secret: true);
-                parameter.WithDescription(
-                    $"Connection string used by DACPAC pipeline operations targeting '{target.Resource.Name}'.");
-                pipelineConnectionStringParameter = parameter.Resource;
-            }
-            else if (!pipelineConnectionStringParameter.Secret)
-            {
-                throw new DistributedApplicationException(
-                    $"DACPAC target parameter '{pipelineConnectionStringParameter.Name}' must be a secret parameter. Create it with AddParameter(..., secret: true).");
-            }
-        }
-
         builder.WithAnnotation(
-            new DacpacTargetAnnotation(
-                target.Resource,
-                targetDatabaseName,
-                pipelineConnectionStringParameter),
+            new DacpacTargetAnnotation(target.Resource, targetDatabaseName),
             ResourceAnnotationMutationBehavior.Replace);
         builder.WithParentRelationship(target.Resource);
 

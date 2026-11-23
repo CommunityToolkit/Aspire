@@ -1,10 +1,13 @@
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
-using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
+using System.Data.Common;
 using System.Diagnostics;
+using System.Security.AccessControl;
+using System.Security.Principal;
+using System.Xml;
 using System.Xml.Linq;
 
 namespace CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects;
@@ -76,15 +79,11 @@ internal sealed class SqlPackageRunner(IHostEnvironment hostEnvironment) : ISqlP
     {
         Validate(request);
 
-        var temporaryDirectory = Path.Combine(
-            Path.GetTempPath(),
-            "CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects",
-            Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(temporaryDirectory);
+        cancellationToken.ThrowIfCancellationRequested();
+        var temporaryDirectory = CreatePrivateProfileDirectory().FullName;
 
         try
         {
-            await ProtectDirectoryAsync(temporaryDirectory, cancellationToken);
             var profilePath = Path.Combine(temporaryDirectory, "deployment.publish.xml");
             var profileSecrets = CreateProfile(request, profilePath);
             var redactor = SqlPackageSecretRedactor.Create(
@@ -152,7 +151,7 @@ internal sealed class SqlPackageRunner(IHostEnvironment hostEnvironment) : ISqlP
                     $"DACPAC publish profile '{profilePath}' was not found.");
             }
 
-            document = XDocument.Load(profilePath);
+            document = LoadProfile(profilePath);
         }
 
         var root = document.Root
@@ -198,6 +197,13 @@ internal sealed class SqlPackageRunner(IHostEnvironment hostEnvironment) : ISqlP
         Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
         document.Save(outputPath);
         return secrets;
+    }
+
+    // Publish profiles are plain MSBuild XML: refuse DTDs so the file cannot pull in external entities.
+    private static XDocument LoadProfile(string path)
+    {
+        using var reader = XmlReader.Create(path, new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null });
+        return XDocument.Load(reader);
     }
 
     internal static string[] BuildArguments(SqlPackageRunRequest request, string profilePath)
@@ -324,78 +330,40 @@ internal sealed class SqlPackageRunner(IHostEnvironment hostEnvironment) : ISqlP
         }
     }
 
-    internal static async Task ProtectDirectoryAsync(string path, CancellationToken cancellationToken)
+    internal static DirectoryInfo CreatePrivateProfileDirectory()
     {
         if (OperatingSystem.IsWindows())
         {
-            var identity = System.Security.Principal.WindowsIdentity.GetCurrent();
-            var sid = identity.User?.Value
+            using var identity = WindowsIdentity.GetCurrent();
+            var sid = identity.User
                 ?? throw new DistributedApplicationException(
                     "Unable to determine the current Windows identity for the temporary SqlPackage profile.");
-            var processStartInfo = new ProcessStartInfo
-            {
-                FileName = "icacls",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-            processStartInfo.ArgumentList.Add(path);
-            processStartInfo.ArgumentList.Add("/inheritance:r");
-            processStartInfo.ArgumentList.Add("/grant:r");
-            processStartInfo.ArgumentList.Add($"*{sid}:(OI)(CI)F");
 
-            using var process = new Process { StartInfo = processStartInfo };
-            if (!process.Start())
-            {
-                throw new DistributedApplicationException(
-                    "Unable to restrict access to the temporary SqlPackage profile.");
-            }
-
-            var output = process.StandardOutput.ReadToEndAsync(cancellationToken);
-            var error = process.StandardError.ReadToEndAsync(cancellationToken);
-            try
-            {
-                await process.WaitForExitAsync(cancellationToken);
-            }
-            catch (OperationCanceledException)
-            {
-                if (!process.HasExited)
-                {
-                    process.Kill(entireProcessTree: true);
-                    await process.WaitForExitAsync();
-                }
-
-                await Task.WhenAll(output, error);
-                throw;
-            }
-
-            if (process.ExitCode != 0)
-            {
-                var diagnostics = (await error).Trim();
-                throw new DistributedApplicationException(
-                    $"Unable to restrict access to the temporary SqlPackage profile.{Environment.NewLine}{diagnostics}");
-            }
-
-            _ = await output;
+            // Create the directory with its final ACL; the profile inherits that ACL.
+            var security = new DirectorySecurity();
+            security.SetAccessRuleProtection(isProtected: true, preserveInheritance: false);
+            security.AddAccessRule(new FileSystemAccessRule(
+                sid,
+                FileSystemRights.FullControl,
+                InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit,
+                PropagationFlags.None,
+                AccessControlType.Allow));
+            return security.CreateDirectory(Path.Combine(Path.GetTempPath(), $"aspire-dacpac-{Guid.NewGuid():N}"));
         }
-        else
-        {
-            File.SetUnixFileMode(
-                path,
-                UnixFileMode.UserRead
-                | UnixFileMode.UserWrite
-                | UnixFileMode.UserExecute);
-        }
+
+        // On Unix CreateTempSubdirectory creates a unique directory with mode 0700.
+        return Directory.CreateTempSubdirectory("aspire-dacpac-");
     }
 }
 
 /// <summary>
-/// Redacts configured secret values and connection-string fragments from SqlPackage output.
+/// Redacts connection strings and their passwords from SqlPackage output.
 /// </summary>
-/// <param name="secrets">The exact values and fragments to redact.</param>
+/// <param name="secrets">The exact values to redact, longest first.</param>
 internal sealed class SqlPackageSecretRedactor(IReadOnlyList<string> secrets)
 {
+    private static readonly string[] s_passwordKeys = ["Password", "PWD"];
+
     public string Redact(string value)
     {
         foreach (var secret in secrets)
@@ -406,44 +374,55 @@ internal sealed class SqlPackageSecretRedactor(IReadOnlyList<string> secrets)
         return value;
     }
 
-    public static SqlPackageSecretRedactor Create(IEnumerable<string> values)
+    public static SqlPackageSecretRedactor Create(IEnumerable<string> connectionStrings)
     {
-        var credentials = new List<string>();
-        foreach (var value in values.Where(value => !string.IsNullOrWhiteSpace(value)))
+        var secrets = new List<string>();
+        foreach (var connectionString in connectionStrings.Where(value => !string.IsNullOrWhiteSpace(value)))
         {
+            AddValue(secrets, connectionString);
+
+            // DbConnectionStringBuilder accepts any keyword and handles quoted values such as "p@ss;word".
+            var builder = new DbConnectionStringBuilder();
             try
             {
-                var connectionString = new SqlConnectionStringBuilder(value);
-                if (!string.IsNullOrEmpty(connectionString.Password))
-                {
-                    credentials.Add(connectionString.Password);
-                }
+                builder.ConnectionString = connectionString;
             }
             catch (ArgumentException)
             {
+                // Unparsable: we cannot tell which part is the password, so hide every value.
+                foreach (var part in connectionString.Split(';', StringSplitOptions.RemoveEmptyEntries))
+                {
+                    AddValue(secrets, part[(part.IndexOf('=') + 1)..]);
+                }
+
+                continue;
+            }
+
+            foreach (var key in s_passwordKeys)
+            {
+                if (builder.TryGetValue(key, out var password) && password is string value)
+                {
+                    AddValue(secrets, value);
+                }
             }
         }
 
-        var secrets = values
-            .Where(value => !string.IsNullOrWhiteSpace(value))
-            .SelectMany(value => value.Replace("\r\n", "\n", StringComparison.Ordinal)
-                .Split(['\n', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-            .SelectMany(value => new[] { value, GetAssignmentValue(value) })
-                .OfType<string>()
-            .Where(value => value is { Length: >= 4 })
-            .Concat(credentials)
+        return new(secrets
             .Distinct(StringComparer.Ordinal)
-            .OrderByDescending(value => value.Length)
-            .ToArray();
-
-        return new(secrets);
+            .OrderByDescending(secret => secret.Length)
+            .ToArray());
     }
 
-    private static string? GetAssignmentValue(string value)
+    // Output is redacted one line at a time, so multiline values are also added line by line.
+    private static void AddValue(List<string> secrets, string value)
     {
-        var index = value.IndexOf('=', StringComparison.Ordinal);
-        return index >= 0 && index < value.Length - 1
-            ? value[(index + 1)..].Trim()
-            : null;
+        value = value.Trim();
+        if (value.Length == 0)
+        {
+            return;
+        }
+
+        secrets.Add(value);
+        secrets.AddRange(value.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
     }
 }

@@ -107,7 +107,7 @@ builder.Build().Run();
 
 ## DACPAC pipeline artifacts
 
-SQL project resources automatically register the DACPAC pipeline steps. Manual report, script, and deploy operations use the DACPAC already available at the configured SQL project output path by default and do not rebuild it. Select `DacpacSource.Build` when a build is required, or include `publish-<resource>`/`deploy-<resource>` in the aggregate command; aggregate inclusion builds in `Release` configuration by default. `publish-<resource>` copies the resulting DACPAC to `<pipeline-output>/<resource>/<resource>.dacpac`, while the build step leaves a stable CI artifact at `<pipeline-output>/build/<resource>/<resource>.dacpac`.
+SQL project resources automatically register the DACPAC pipeline steps. `Source` alone decides where the DACPAC comes from; `IncludeInPublish` and `IncludeInDeploy` only add steps to the aggregate commands. For SQL project resources the default is `DacpacSource.Build`: publish, report, script, and deploy depend on `build-<resource>`, which builds in `Release` configuration by default. `publish-<resource>` copies the resulting DACPAC to `<pipeline-output>/<resource>/<resource>.dacpac`, while the build step leaves a stable CI artifact at `<pipeline-output>/build/<resource>/<resource>.dacpac`.
 
 The report, script, and deploy pipeline steps are opt-in operations and do not run as part of `aspire publish` unless configured. To include DACPAC export in the aggregate publish pipeline:
 
@@ -122,7 +122,7 @@ builder.AddSqlProject("schema", "../Database/Database.sqlproj", configuration: "
 
 `WithPipelineOptions` is optional. The pipeline always registers `publish-schema` as a manually invocable step; `aspire publish` includes it only with `IncludeInPublish`.
 
-To use a DACPAC that already exists at the project's configured output, no source option is required. To explicitly build during a manual operation, set `Source = DacpacSource.Build`. To consume an externally produced artifact, set `Source = DacpacSource.File` and provide the `<resource>-dacpac-path` parameter.
+To use the DACPAC that already exists at the project's configured output without rebuilding it, for example after reviewing a report, set `Source = DacpacSource.Existing`. To consume an externally produced artifact, set `Source = DacpacSource.File` and provide the `<resource>-dacpac-path` parameter.
 
 For split CI jobs, select the file source through pipeline configuration and provide an Aspire parameter containing the downloaded DACPAC path:
 
@@ -164,9 +164,9 @@ Pipeline operations use `dotnet dnx Microsoft.SqlPackage@170.3.93` by default. T
 
 `BlockOnPossibleDataLoss` defaults to `True` when a publish profile does not specify it. Set it explicitly in the publish profile only after reviewing `report-schema` and the generated deployment script.
 
-Pipeline mode accepts `WithDacDeployOptions(path)` publish profiles and preserves their deployment properties and SQLCMD variables. A `WithConfigureDacDeployOptions(...)` callback cannot be serialized for SqlPackage and is rejected by report, script, and deploy operations with a clear error. The callback remains supported for local DacFx deployment. When a local `SqlServerDatabaseResource` is referenced in pipeline mode, the integration registers a secret `<database-resource>-connection-string` parameter instead of attempting to resolve the container endpoint. Supply it through `Parameters__<database-resource>_connection_string` (with dashes represented by underscores).
+Pipeline mode accepts `WithDacDeployOptions(path)` publish profiles and preserves their deployment properties and SQLCMD variables. A `WithConfigureDacDeployOptions(...)` callback cannot be serialized for SqlPackage and is rejected by report, script, and deploy operations with a clear error. The callback remains supported for local DacFx deployment. When a local `SqlServerDatabaseResource` is referenced in pipeline mode and no explicit target parameter is configured, the integration registers a secret `<database-resource>-connection-string` parameter instead of attempting to resolve the container endpoint. Supply it through `Parameters__<database-resource>_connection_string` (with dashes represented by underscores).
 
-The DACPAC pipeline APIs are experimental and may change. See the `CTASPIREPIPELINES001` diagnostic when compiling against them.
+The DACPAC pipeline APIs are experimental and may change. To opt in, suppress the `CTASPIREPIPELINES001` diagnostic for the code that uses them.
 
 ## Support for existing SQL Server
 

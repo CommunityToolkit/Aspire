@@ -175,6 +175,9 @@ internal sealed class SqlProjectDacpacResolver(IHostEnvironment hostEnvironment)
         return Path.GetFullPath(projectPath, AppContext.BaseDirectory);
     }
 
+    // Pipeline steps ask the SDK CLI for the output path instead of loading Microsoft.Build in-process
+    // with a different Configuration: in-process evaluation failed to resolve hostfxr for polyglot
+    // AppHosts on Windows. Run mode keeps the in-process lookup in SqlProjectResource.GetDacpacPath.
     private static async Task<string> GetProjectDacpacPathAsync(
         string projectPath,
         string? configuration,

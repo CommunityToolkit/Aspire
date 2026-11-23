@@ -1,11 +1,12 @@
 #pragma warning disable ASPIREPIPELINES001 // Pipeline APIs are experimental
-#pragma warning disable ASPIREATS001 // Aspire export APIs are experimental
 
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Pipelines;
 using CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using NuGet.Versioning;
 using System.Diagnostics.CodeAnalysis;
 
 [assembly: Aspire.Hosting.AspireExport(typeof(Aspire.Hosting.DacpacSource))]
@@ -52,6 +53,10 @@ public sealed record DacpacPipelineOptions
     /// <summary>
     /// Gets the source used by DACPAC pipeline operations.
     /// </summary>
+    /// <remarks>
+    /// Defaults to <see cref="DacpacSource.Build"/> for SQL project resources, independently of
+    /// <see cref="IncludeInPublish"/> and <see cref="IncludeInDeploy"/>. Not supported for package resources.
+    /// </remarks>
     public DacpacSource? Source { get; init; }
 
     /// <summary>
@@ -109,12 +114,11 @@ public static class SqlProjectPipelineExtensions
         where TPackage : IPackageMetadata
         => InternalWithPipelineOptions(builder, options);
 
-    internal static IResourceBuilder<TResource> RegisterPipeline<TResource>(
+    // AddSqlProject calls this so the resource has pipeline steps even without WithPipelineOptions.
+    internal static IResourceBuilder<TResource> AddDefaultPipelineSteps<TResource>(
         IResourceBuilder<TResource> builder)
         where TResource : IResourceWithDacpac
-        => builder.ApplicationBuilder.ExecutionContext.IsRunMode
-            ? builder
-            : InternalWithPipelineOptions(builder, null);
+        => InternalWithPipelineOptions(builder, null);
 
     private static IResourceBuilder<TResource> InternalWithPipelineOptions<TResource>(
         IResourceBuilder<TResource> builder,
@@ -129,8 +133,12 @@ public static class SqlProjectPipelineExtensions
 
         var previous = builder.Resource.TryGetLastAnnotation<DacpacPipelineOptionsAnnotation>(out var annotation)
             ? annotation.Options
-            : DacpacPipelineEffectiveOptions.CreateDefault(builder.Resource);
-        var merged = DacpacPipelineConfiguration.Merge(builder, previous, options);
+            : DacpacPipelineEffectiveOptions.Default;
+        var merged = DacpacPipelineConfiguration.Merge(
+            builder.Resource,
+            builder.ApplicationBuilder.Configuration,
+            previous,
+            options);
 
         builder.WithAnnotation(
             new DacpacPipelineOptionsAnnotation(merged),
@@ -151,19 +159,24 @@ public static class SqlProjectPipelineExtensions
 
         if (!builder.Resource.HasAnnotationOfType<DacpacPipelineRegistrationAnnotation>())
         {
-            var registerGlobalConfiguration = !builder.ApplicationBuilder.Resources
+            // Steps are created per resource, while deploy ordering and local target parameters
+            // span all SQL resources: only the first SQL resource registers that shared callback.
+            var isFirstSqlResource = !builder.ApplicationBuilder.Resources
                 .OfType<IResourceWithDacpac>()
-                .Any(resource =>
-                    !ReferenceEquals(resource, builder.Resource)
-                    && resource.HasAnnotationOfType<DacpacPipelineRegistrationAnnotation>());
+                .Any(resource => resource.HasAnnotationOfType<DacpacPipelineRegistrationAnnotation>());
             builder.WithAnnotation(new DacpacPipelineRegistrationAnnotation());
-            if (registerGlobalConfiguration)
+            if (isFirstSqlResource)
             {
-                builder.WithPipelineConfiguration(SqlProjectPipelineSteps.ConfigureDeployDependencies);
+                builder.WithPipelineConfiguration(context =>
+                {
+                    ConfigureLocalTargetParameters(builder.ApplicationBuilder, context.Model);
+                    SqlProjectPipelineSteps.WireAggregateDeploySteps(context.Steps);
+                });
             }
 
             builder.WithAnnotation(new PipelineStepAnnotation(context =>
             {
+                // Read the options when the pipeline runs: WithPipelineOptions can follow AddSqlProject.
                 if (!builder.Resource.TryGetLastAnnotation<DacpacPipelineOptionsAnnotation>(out var current))
                 {
                     throw new DistributedApplicationException(
@@ -171,7 +184,6 @@ public static class SqlProjectPipelineExtensions
                 }
 
                 SqlProjectPipelineSteps.ValidateSecretTargetParameter(
-                    builder.Resource,
                     context.PipelineContext.Model,
                     current.Options.TargetConnectionStringParameterName);
                 return SqlProjectPipelineSteps.CreateSteps(builder.Resource, current.Options);
@@ -179,6 +191,31 @@ public static class SqlProjectPipelineExtensions
         }
 
         return builder;
+    }
+
+    private static void ConfigureLocalTargetParameters(IDistributedApplicationBuilder builder, DistributedApplicationModel model)
+    {
+        // Both fluent calls have run; register only the fallbacks in the final model.
+        foreach (var resource in model.Resources.OfType<IResourceWithDacpac>().ToArray())
+        {
+            if (!resource.TryGetLastAnnotation<DacpacPipelineOptionsAnnotation>(out var options)
+                || options.Options.TargetConnectionStringParameterName is not null
+                || !resource.TryGetLastAnnotation<DacpacTargetAnnotation>(out var target)
+                || target.Target is not SqlServerDatabaseResource
+                || target.PipelineConnectionStringParameter is not null)
+            {
+                continue;
+            }
+
+            var name = $"{target.Target.Name}-connection-string";
+            var parameter = SqlProjectPipelineSteps.FindSecretTargetParameter(model, name)
+                ?? builder.AddParameter(name, secret: true)
+                    .WithDescription($"Connection string used by DACPAC pipeline operations targeting '{target.Target.Name}'.")
+                    .Resource;
+
+            resource.Annotations.Remove(target);
+            resource.Annotations.Add(target with { PipelineConnectionStringParameter = parameter });
+        }
     }
 }
 
@@ -220,15 +257,14 @@ internal sealed record DacpacPipelineEffectiveOptions(
     string SqlPackageVersion,
     string? TargetConnectionStringParameterName)
 {
-    public static DacpacPipelineEffectiveOptions CreateDefault(IResourceWithDacpac resource)
-        => new(
-            IncludeInPublish: false,
-            IncludeInDeploy: false,
-            Source: null,
-            BuildConfiguration: "Release",
-            OutputDirectory: Path.Combine("artifacts", "dacpac"),
-            SqlPackageVersion: "170.3.93",
-            TargetConnectionStringParameterName: null);
+    public static DacpacPipelineEffectiveOptions Default { get; } = new(
+        IncludeInPublish: false,
+        IncludeInDeploy: false,
+        Source: null,
+        BuildConfiguration: "Release",
+        OutputDirectory: Path.Combine("artifacts", "dacpac"),
+        SqlPackageVersion: "170.3.93",
+        TargetConnectionStringParameterName: null);
 }
 
 /// <summary>
@@ -236,134 +272,68 @@ internal sealed record DacpacPipelineEffectiveOptions(
 /// </summary>
 internal static class DacpacPipelineConfiguration
 {
-    internal static DacpacPipelineEffectiveOptions Merge<TResource>(
-        IResourceBuilder<TResource> builder,
+    /// <summary>
+    /// Applies code options, then <c>DacpacPipeline:&lt;resource&gt;:*</c> configuration, over the previous options.
+    /// </summary>
+    /// <remarks>Configuration wins so CI can change the behavior without editing the AppHost.</remarks>
+    internal static DacpacPipelineEffectiveOptions Merge(
+        IResourceWithDacpac resource,
+        IConfiguration configuration,
         DacpacPipelineEffectiveOptions previous,
         DacpacPipelineOptions? options)
-        where TResource : IResourceWithDacpac
     {
-        var source = options?.Source ?? previous.Source;
-        var buildConfiguration = Normalize(options?.BuildConfiguration, previous.BuildConfiguration, "BuildConfiguration");
-        var outputDirectory = Normalize(options?.OutputDirectory, previous.OutputDirectory, "OutputDirectory");
-        var sqlPackageVersion = Normalize(options?.SqlPackageVersion, previous.SqlPackageVersion, "SqlPackageVersion");
-        var targetParameter = NormalizeOptional(
-            options?.TargetConnectionStringParameterName,
-            previous.TargetConnectionStringParameterName,
-            "TargetConnectionStringParameterName");
+        DacpacPipelineOptions? configured;
+        try
+        {
+            configured = configuration.GetSection($"DacpacPipeline:{resource.Name}").Get<DacpacPipelineOptions>();
+        }
+        catch (InvalidOperationException ex)
+        {
+            throw new DistributedApplicationException(
+                $"DACPAC pipeline configuration for resource '{resource.Name}' is invalid. {ex.Message}", ex);
+        }
 
-        var prefix = $"DacpacPipeline:{builder.Resource.Name}:";
-        source = GetEnum(builder.ApplicationBuilder.Configuration[prefix + nameof(DacpacPipelineOptions.Source)], source);
-        var includeInPublish = GetBoolean(
-            builder.ApplicationBuilder.Configuration[prefix + nameof(DacpacPipelineOptions.IncludeInPublish)],
-            options?.IncludeInPublish ?? previous.IncludeInPublish);
-        var includeInDeploy = GetBoolean(
-            builder.ApplicationBuilder.Configuration[prefix + nameof(DacpacPipelineOptions.IncludeInDeploy)],
-            options?.IncludeInDeploy ?? previous.IncludeInDeploy);
-        buildConfiguration = Normalize(
-            builder.ApplicationBuilder.Configuration[prefix + nameof(DacpacPipelineOptions.BuildConfiguration)],
-            buildConfiguration,
-            nameof(DacpacPipelineOptions.BuildConfiguration));
-        outputDirectory = Normalize(
-            builder.ApplicationBuilder.Configuration[prefix + nameof(DacpacPipelineOptions.OutputDirectory)],
-            outputDirectory,
-            nameof(DacpacPipelineOptions.OutputDirectory));
-        sqlPackageVersion = Normalize(
-            builder.ApplicationBuilder.Configuration[prefix + nameof(DacpacPipelineOptions.SqlPackageVersion)],
-            sqlPackageVersion,
-            nameof(DacpacPipelineOptions.SqlPackageVersion));
-        targetParameter = NormalizeOptional(
-            builder.ApplicationBuilder.Configuration[prefix + nameof(DacpacPipelineOptions.TargetConnectionStringParameterName)],
-            targetParameter,
-            nameof(DacpacPipelineOptions.TargetConnectionStringParameterName));
+        var merged = Apply(Apply(previous, options), configured);
+        if (SqlProjectPipelineSteps.IsPackageResource(resource))
+        {
+            SqlProjectPipelineSteps.RejectPackageSourceOverride(resource, merged.Source);
+        }
 
-        ValidateSource(builder.Resource, source);
+        if (merged.Source is { } source && !Enum.IsDefined(source))
+        {
+            throw new DistributedApplicationException($"DACPAC pipeline source '{source}' is invalid.");
+        }
 
-        return new(
-            includeInPublish,
-            includeInDeploy,
-            source,
-            buildConfiguration,
-            outputDirectory,
-            sqlPackageVersion,
-            targetParameter);
+        // dnx downloads and runs this package, so only an exact, pinned version is accepted.
+        if (!NuGetVersion.TryParse(merged.SqlPackageVersion, out var version))
+        {
+            throw new DistributedApplicationException(
+                $"DACPAC pipeline option 'SqlPackageVersion' must be an exact NuGet version, not '{merged.SqlPackageVersion}'.");
+        }
+
+        return merged with { SqlPackageVersion = version.ToNormalizedString() };
     }
 
-    private static void ValidateSource(IResourceWithDacpac resource, DacpacSource? source)
-    {
-        if (resource.TryGetLastAnnotation<SqlPackageRestoreAnnotation>(out _)
-            || resource.TryGetLastAnnotation<IPackageMetadata>(out _))
-        {
-            if (source is not null)
-            {
-                throw new DistributedApplicationException(
-                    $"DACPAC source overrides are not supported for package resource '{resource.Name}'.");
-            }
+    private static DacpacPipelineEffectiveOptions Apply(
+        DacpacPipelineEffectiveOptions current,
+        DacpacPipelineOptions? options)
+        => options is null
+            ? current
+            : new(
+                options.IncludeInPublish ?? current.IncludeInPublish,
+                options.IncludeInDeploy ?? current.IncludeInDeploy,
+                options.Source ?? current.Source,
+                RejectBlank(options.BuildConfiguration, nameof(options.BuildConfiguration)) ?? current.BuildConfiguration,
+                RejectBlank(options.OutputDirectory, nameof(options.OutputDirectory)) ?? current.OutputDirectory,
+                RejectBlank(options.SqlPackageVersion, nameof(options.SqlPackageVersion)) ?? current.SqlPackageVersion,
+                RejectBlank(options.TargetConnectionStringParameterName, nameof(options.TargetConnectionStringParameterName))
+                    ?? current.TargetConnectionStringParameterName);
 
-            return;
-        }
-
-    }
-
-    private static string Normalize(string? value, string fallback, string name)
-    {
-        if (value is null)
-        {
-            return fallback;
-        }
-
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            throw new DistributedApplicationException($"DACPAC pipeline option '{name}' cannot be empty.");
-        }
-
-        return value;
-    }
-
-    private static string? NormalizeOptional(string? value, string? fallback, string name)
-    {
-        if (value is null)
-        {
-            return fallback;
-        }
-
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            throw new DistributedApplicationException($"DACPAC pipeline option '{name}' cannot be empty.");
-        }
-
-        return value;
-    }
-
-    private static bool GetBoolean(string? value, bool fallback)
-    {
-        if (value is null)
-        {
-            return fallback;
-        }
-
-        if (!bool.TryParse(value, out var parsed))
-        {
-            throw new DistributedApplicationException($"DACPAC pipeline Boolean value '{value}' is invalid.");
-        }
-
-        return parsed;
-    }
-
-    private static DacpacSource? GetEnum(string? value, DacpacSource? fallback)
-    {
-        if (value is null)
-        {
-            return fallback;
-        }
-
-        if (!Enum.TryParse<DacpacSource>(value, ignoreCase: true, out var parsed)
-            || !Enum.IsDefined(parsed))
-        {
-            throw new DistributedApplicationException($"DACPAC pipeline source '{value}' is invalid.");
-        }
-
-        return parsed;
-    }
+    // Null keeps the current value; an explicitly blank value is a configuration mistake.
+    private static string? RejectBlank(string? value, string name)
+        => value is not null && string.IsNullOrWhiteSpace(value)
+            ? throw new DistributedApplicationException($"DACPAC pipeline option '{name}' cannot be empty.")
+            : value;
 }
 
 /// <summary>
@@ -371,17 +341,14 @@ internal static class DacpacPipelineConfiguration
 /// </summary>
 internal static class SqlProjectPipelineSteps
 {
-    internal static void ConfigureDeployDependencies(PipelineConfigurationContext context)
-        => ConfigureDeployDependencies(context.Steps);
-
-    internal static void ConfigureDeployDependencies(IReadOnlyList<PipelineStep> steps)
+    internal static void WireAggregateDeploySteps(IReadOnlyList<PipelineStep> steps)
     {
         var provisionSteps = steps
             .Where(step => step.Tags.Contains(WellKnownPipelineTags.ProvisionInfrastructure))
             .ToList();
         var deploySteps = steps
-            .Where(step => step.Name.StartsWith("deploy-", StringComparison.Ordinal)
-                && step.Resource is IResourceWithDacpac)
+            .Where(step => step.Resource is IResourceWithDacpac resource
+                && step.Name == $"deploy-{resource.Name}")
             .ToList();
         var aggregateRoots = deploySteps
             .Where(step =>
@@ -389,132 +356,76 @@ internal static class SqlProjectPipelineSteps
                 && resource.TryGetLastAnnotation<DacpacPipelineOptionsAnnotation>(out var options)
                 && options.Options.IncludeInDeploy)
             .ToList();
-        var closure = GetDeployClosure(aggregateRoots, deploySteps);
+        // Opted-in deployments pull in their SQL WaitFor prerequisites, even when those
+        // prerequisites are not themselves opted in. Manual deploy steps outside this graph stay independent.
+        var closure = new HashSet<PipelineStep>();
+        var pending = new Stack<PipelineStep>(aggregateRoots);
+        var deployByResource = deploySteps.ToDictionary(step => step.Resource!.Name, StringComparer.Ordinal);
 
-        foreach (var step in closure)
+        while (pending.TryPop(out var step))
         {
-            var resource = (IResourceWithDacpac)step.Resource!;
+            if (!closure.Add(step))
+            {
+                continue;
+            }
+
             foreach (var provisionStep in provisionSteps)
             {
                 DependOn(step, provisionStep.Name);
             }
-            ConfigureProjectDependencies(step, resource, steps);
-        }
 
-        foreach (var group in GetTargetGroups(closure))
-        {
-            var ordered = TopologicalOrder(group, closure);
-            for (var index = 1; index < ordered.Count; index++)
+            if (step.Resource!.TryGetAnnotationsOfType<WaitAnnotation>(out var waits))
             {
-                DependOn(ordered[index], ordered[index - 1].Name);
-            }
-        }
-    }
-
-    private static HashSet<PipelineStep> GetDeployClosure(
-        IEnumerable<PipelineStep> roots,
-        IReadOnlyList<PipelineStep> deploySteps)
-    {
-        var closure = new HashSet<PipelineStep>();
-        var pending = new Stack<PipelineStep>(roots);
-
-        while (pending.TryPop(out var step))
-        {
-            if (!closure.Add(step)
-                || step.Resource is not IResourceWithDacpac resource
-                || !resource.TryGetAnnotationsOfType<WaitAnnotation>(out var waits))
-            {
-                continue;
-            }
-
-            foreach (var dependency in waits
-                         .Select(wait => wait.Resource)
-                         .OfType<IResourceWithDacpac>())
-            {
-                var dependencyStep = deploySteps.FirstOrDefault(
-                    candidate => candidate.Name == $"deploy-{dependency.Name}");
-                if (dependencyStep is not null)
+                foreach (var wait in waits)
                 {
-                    pending.Push(dependencyStep);
+                    if (wait.Resource is IResourceWithDacpac
+                        && deployByResource.TryGetValue(wait.Resource.Name, out var prerequisite))
+                    {
+                        DependOn(step, prerequisite.Name);
+                        pending.Push(prerequisite);
+                    }
                 }
             }
         }
 
-        return closure;
-    }
-
-    private static void ConfigureProjectDependencies(
-        PipelineStep deploy,
-        IResourceWithDacpac resource,
-        IReadOnlyList<PipelineStep> steps)
-    {
-        if (!resource.TryGetAnnotationsOfType<WaitAnnotation>(out var waits))
+        // Order all targets together before adding serialization edges: two deployments on the
+        // same database may already be ordered indirectly through a deployment on another database.
+        foreach (var group in OrderDeploySteps(closure).GroupBy(GetTargetKey, StringComparer.Ordinal))
         {
-            return;
-        }
-
-        foreach (var wait in waits)
-        {
-            if (wait.Resource is not IResourceWithDacpac dependency)
+            PipelineStep? previous = null;
+            foreach (var current in group)
             {
-                continue;
-            }
-
-            var dependencyStep = steps.FirstOrDefault(
-                step => step.Name == $"deploy-{dependency.Name}");
-            if (dependencyStep is not null && dependencyStep != deploy)
-            {
-                DependOn(deploy, dependencyStep.Name);
+                if (previous is not null)
+                {
+                    DependOn(current, previous.Name);
+                }
+                previous = current;
             }
         }
     }
 
-    private static IEnumerable<IReadOnlyList<PipelineStep>> GetTargetGroups(
-        HashSet<PipelineStep> deploySteps)
+    private static List<PipelineStep> OrderDeploySteps(HashSet<PipelineStep> deploySteps)
     {
-        var ungrouped = deploySteps.ToList();
-        while (ungrouped.Count > 0)
-        {
-            var first = ungrouped[0];
-            var group = ungrouped
-                .Where(candidate => TargetsMatch(first, candidate))
-                .ToList();
-            foreach (var item in group)
-            {
-                ungrouped.Remove(item);
-            }
-
-            yield return group;
-        }
-    }
-
-    private static List<PipelineStep> TopologicalOrder(
-        IReadOnlyList<PipelineStep> group,
-        HashSet<PipelineStep> closure)
-    {
-        var groupNames = group.Select(step => step.Name).ToHashSet(StringComparer.Ordinal);
-        var dependencies = group.ToDictionary(
+        var names = deploySteps.Select(step => step.Name).ToHashSet(StringComparer.Ordinal);
+        var indegree = deploySteps.ToDictionary(
             step => step,
-            step => GetTransitiveDependencies(step, closure)
-                .Where(groupNames.Contains)
-                .ToHashSet(StringComparer.Ordinal));
-        var indegree = dependencies.ToDictionary(
-            pair => pair.Key,
-            pair => pair.Value.Count);
+            step => step.DependsOnSteps.Count(names.Contains));
+        var dependents = deploySteps
+            .SelectMany(step => step.DependsOnSteps.Where(names.Contains).Select(name => (name, step)))
+            .ToLookup(pair => pair.name, pair => pair.step, StringComparer.Ordinal);
 
         var ready = new SortedSet<PipelineStep>(
-            group.Where(step => indegree[step] == 0),
+            deploySteps.Where(step => indegree[step] == 0),
             Comparer<PipelineStep>.Create((left, right) =>
                 StringComparer.Ordinal.Compare(left.Name, right.Name)));
-        var ordered = new List<PipelineStep>(group.Count);
+        var ordered = new List<PipelineStep>(deploySteps.Count);
         while (ready.Count > 0)
         {
             var current = ready.Min!;
             ready.Remove(current);
             ordered.Add(current);
 
-            foreach (var dependent in group.Where(step =>
-                         dependencies[step].Contains(current.Name)))
+            foreach (var dependent in dependents[current.Name])
             {
                 indegree[dependent]--;
                 if (indegree[dependent] == 0)
@@ -524,41 +435,13 @@ internal static class SqlProjectPipelineSteps
             }
         }
 
-        if (ordered.Count != group.Count)
+        if (ordered.Count != deploySteps.Count)
         {
-            throw new DistributedApplicationException(
-                $"DACPAC deployment dependencies for target '{GetTargetKey(group[0])}' contain a cycle.");
+            throw new DistributedApplicationException("DACPAC deployment dependencies contain a cycle.");
         }
 
         return ordered;
     }
-
-    private static HashSet<string> GetTransitiveDependencies(
-        PipelineStep step,
-        HashSet<PipelineStep> steps)
-    {
-        var names = steps.ToDictionary(candidate => candidate.Name, StringComparer.Ordinal);
-        var dependencies = new HashSet<string>(StringComparer.Ordinal);
-        var pending = new Stack<string>(step.DependsOnSteps);
-        while (pending.TryPop(out var dependency))
-        {
-            if (!dependencies.Add(dependency)
-                || !names.TryGetValue(dependency, out var dependencyStep))
-            {
-                continue;
-            }
-
-            foreach (var nested in dependencyStep.DependsOnSteps)
-            {
-                pending.Push(nested);
-            }
-        }
-
-        return dependencies;
-    }
-
-    private static bool TargetsMatch(PipelineStep left, PipelineStep right)
-        => string.Equals(GetTargetKey(left), GetTargetKey(right), StringComparison.Ordinal);
 
     private static string GetTargetKey(PipelineStep step)
     {
@@ -665,15 +548,10 @@ internal static class SqlProjectPipelineSteps
         IResourceWithDacpac resource,
         DacpacPipelineEffectiveOptions options)
     {
-        if (resource.TryGetLastAnnotation<SqlPackageRestoreAnnotation>(out _)
-            || resource.TryGetLastAnnotation<IPackageMetadata>(out _))
+        if (IsPackageResource(resource))
         {
-            if (options.Source is not null)
-            {
-                throw new DistributedApplicationException(
-                    $"DACPAC source overrides are not supported for package resource '{resource.Name}'.");
-            }
-
+            // Checked again here because package annotations are added after AddSqlProject registers the defaults.
+            RejectPackageSourceOverride(resource, options.Source);
             return null;
         }
 
@@ -689,22 +567,25 @@ internal static class SqlProjectPipelineSteps
             return options.Source;
         }
 
+        // The include flags only choose the aggregate commands; whether to build comes from Source alone.
         return resource.TryGetLastAnnotation<IProjectMetadata>(out _)
-            ? options.IncludeInPublish || options.IncludeInDeploy
-                ? DacpacSource.Build
-                : DacpacSource.Existing
+            ? DacpacSource.Build
             : null;
     }
 
-    private static PipelineStep CreatePendingStep(IResourceWithDacpac resource, string name, string description)
-        => new()
+    // NuGet-backed resources always resolve their DACPAC from the package.
+    internal static bool IsPackageResource(IResourceWithDacpac resource)
+        => resource.TryGetLastAnnotation<SqlPackageRestoreAnnotation>(out _)
+            || resource.TryGetLastAnnotation<IPackageMetadata>(out _);
+
+    internal static void RejectPackageSourceOverride(IResourceWithDacpac resource, DacpacSource? source)
+    {
+        if (source is not null)
         {
-            Name = name,
-            Description = description,
-            Resource = resource,
-            Action = _ => throw new DistributedApplicationException(
-                $"DACPAC pipeline step '{name}' is registered but its action has not been implemented.")
-        };
+            throw new DistributedApplicationException(
+                $"DACPAC source overrides are not supported for package resource '{resource.Name}'.");
+        }
+    }
 
     private static PipelineStep CreateBuildStep(
         IResourceWithDacpac resource,
@@ -723,10 +604,7 @@ internal static class SqlProjectPipelineSteps
                     options.BuildConfiguration,
                     context.Logger,
                     context.CancellationToken);
-                await DacpacPipelineArtifacts.CopyAsync(
-                    dacpac.Path,
-                    GetBuildOutputPath(resource, outputService),
-                    context.CancellationToken);
+                DacpacPipelineArtifacts.Copy(dacpac.Path, GetBuildOutputPath(resource, outputService));
             }
         };
 
@@ -747,7 +625,7 @@ internal static class SqlProjectPipelineSteps
                     context,
                     GetBuildOutputPath(resource, outputService));
                 var outputPath = Path.Combine(outputService.GetOutputDirectory(), resource.Name, $"{resource.Name}.dacpac");
-                await DacpacPipelineArtifacts.CopyAsync(source, outputPath, context.CancellationToken);
+                DacpacPipelineArtifacts.Copy(source, outputPath);
             }
         };
 
@@ -820,23 +698,11 @@ internal static class SqlProjectPipelineSteps
     {
         if (!string.IsNullOrWhiteSpace(options.TargetConnectionStringParameterName))
         {
-            var parameter = model.Resources
-                .OfType<ParameterResource>()
-                .SingleOrDefault(candidate =>
-                    string.Equals(
-                        candidate.Name,
-                        options.TargetConnectionStringParameterName,
-                        StringComparison.Ordinal));
+            var parameter = FindSecretTargetParameter(model, options.TargetConnectionStringParameterName);
             if (parameter is null)
             {
                 throw new DistributedApplicationException(
                     $"DACPAC target parameter '{options.TargetConnectionStringParameterName}' for resource '{resource.Name}' was not found in the application model.");
-            }
-
-            if (!parameter.Secret)
-            {
-                throw new DistributedApplicationException(
-                    $"DACPAC target parameter '{parameter.Name}' for resource '{resource.Name}' must be a secret parameter. Create it with AddParameter(..., secret: true).");
             }
 
             return (parameter, null);
@@ -850,37 +716,30 @@ internal static class SqlProjectPipelineSteps
 
         if (target.PipelineConnectionStringParameter is not null)
         {
-            if (!target.PipelineConnectionStringParameter.Secret)
-            {
-                throw new DistributedApplicationException(
-                    $"DACPAC target parameter '{target.PipelineConnectionStringParameter.Name}' for resource '{resource.Name}' must be a secret parameter. Create it with AddParameter(..., secret: true).");
-            }
-
             return (target.PipelineConnectionStringParameter, target.TargetDatabaseName);
         }
 
         return (target.Target.ConnectionStringExpression, target.TargetDatabaseName);
     }
 
-    internal static void ValidateSecretTargetParameter(
-        IResourceWithDacpac resource,
-        DistributedApplicationModel model,
-        string? parameterName)
+    internal static void ValidateSecretTargetParameter(DistributedApplicationModel model, string? parameterName)
     {
-        if (string.IsNullOrWhiteSpace(parameterName))
+        if (parameterName is not null)
         {
-            return;
+            _ = FindSecretTargetParameter(model, parameterName);
         }
+    }
 
-        var parameter = model.Resources
-            .OfType<ParameterResource>()
-            .SingleOrDefault(candidate =>
-                string.Equals(candidate.Name, parameterName, StringComparison.Ordinal));
-        if (parameter is not null && !parameter.Secret)
+    internal static ParameterResource? FindSecretTargetParameter(DistributedApplicationModel model, string name)
+    {
+        var parameter = model.Resources.TryGetByName(name, out var resource) ? resource as ParameterResource : null;
+        if (parameter is { Secret: false })
         {
             throw new DistributedApplicationException(
-                $"DACPAC target parameter '{parameter.Name}' for resource '{resource.Name}' must be a secret parameter. Create it with AddParameter(..., secret: true).");
+                $"DACPAC target parameter '{name}' must be a secret parameter. Create it with AddParameter(..., secret: true).");
         }
+
+        return parameter;
     }
 
     internal static string? GetProfilePath(
@@ -910,128 +769,4 @@ internal static class SqlProjectPipelineSteps
         => Path.Combine(outputService.GetOutputDirectory(), "build", resource.Name, $"{resource.Name}.dacpac");
 }
 
-/// <summary>
-/// Resolves and copies DACPAC artifacts used by pipeline steps.
-/// </summary>
-internal static class DacpacPipelineArtifacts
-{
-    public static async Task<string> GetConsumerPathAsync(
-        IResourceWithDacpac resource,
-        DacpacPipelineEffectiveOptions options,
-        PipelineStepContext context,
-        string buildOutputPath)
-    {
-        if (options.Source == DacpacSource.Build)
-        {
-            ValidateFile(resource, buildOutputPath);
-            return buildOutputPath;
-        }
-
-        if (options.Source == DacpacSource.File)
-        {
-            if (!resource.TryGetLastAnnotation<DacpacPipelinePathParameterAnnotation>(out var parameter))
-            {
-                throw new DistributedApplicationException(
-                    $"DACPAC path parameter for resource '{resource.Name}' is unavailable.");
-            }
-
-            var value = await parameter.Parameter.GetValueAsync(context.CancellationToken);
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                throw new DistributedApplicationException(
-                    $"Parameter '{parameter.Parameter.Name}' does not specify a DACPAC path for resource '{resource.Name}'.");
-            }
-
-            var environment = context.Services.GetRequiredService<Microsoft.Extensions.Hosting.IHostEnvironment>();
-            var path = Path.IsPathRooted(value)
-                ? value
-                : Path.GetFullPath(value, environment.ContentRootPath);
-            ValidateFile(resource, path);
-            return path;
-        }
-
-        var resolver = context.Services.GetRequiredService<SqlProjectDacpacResolver>();
-        using var dacpac = options.Source == DacpacSource.Existing
-            ? await resolver.ResolveExistingAsync(resource, context.Logger, context.CancellationToken)
-            : await resolver.ResolveAsync(resource, context.Logger, context.CancellationToken);
-        if (!File.Exists(dacpac.Path))
-        {
-            throw new DistributedApplicationException(
-                $"DACPAC for resource '{resource.Name}' was not found at '{dacpac.Path}'.");
-        }
-
-        return dacpac.Path;
-    }
-
-    public static async Task CopyAsync(
-        string sourcePath,
-        string destinationPath,
-        CancellationToken cancellationToken)
-    {
-        var source = Path.GetFullPath(sourcePath);
-        var destination = Path.GetFullPath(destinationPath);
-        if (!File.Exists(source))
-        {
-            throw new DistributedApplicationException($"DACPAC '{source}' was not found.");
-        }
-
-        if (string.Equals(source, destination, GetPathComparison()))
-        {
-            return;
-        }
-
-        var destinationDirectory = Path.GetDirectoryName(destination)!;
-        Directory.CreateDirectory(destinationDirectory);
-        var temporaryPath = Path.Combine(
-            destinationDirectory,
-            $".{Path.GetFileName(destination)}.{Guid.NewGuid():N}.tmp");
-
-        try
-        {
-            await using (var input = new FileStream(
-                source,
-                FileMode.Open,
-                FileAccess.Read,
-                FileShare.Read,
-                bufferSize: 81920,
-                FileOptions.Asynchronous | FileOptions.SequentialScan))
-            await using (var output = new FileStream(
-                temporaryPath,
-                FileMode.CreateNew,
-                FileAccess.Write,
-                FileShare.None,
-                bufferSize: 81920,
-                FileOptions.Asynchronous | FileOptions.SequentialScan))
-            {
-                await input.CopyToAsync(output, cancellationToken);
-                await output.FlushAsync(cancellationToken);
-            }
-
-            File.Move(temporaryPath, destination, overwrite: true);
-        }
-        catch
-        {
-            if (File.Exists(temporaryPath))
-            {
-                File.Delete(temporaryPath);
-            }
-
-            throw;
-        }
-    }
-
-    private static void ValidateFile(IResourceWithDacpac resource, string path)
-    {
-        if (!File.Exists(path))
-        {
-            throw new DistributedApplicationException(
-                $"DACPAC for resource '{resource.Name}' was not found at '{path}'.");
-        }
-    }
-
-    private static StringComparison GetPathComparison()
-        => OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
-}
-
 #pragma warning restore ASPIREPIPELINES001
-#pragma warning restore ASPIREATS001
