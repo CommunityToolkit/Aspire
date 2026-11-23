@@ -1,0 +1,42 @@
+name: hosting-integration-authoring
+description: Reviews run-only migration setup and distinguishes wiring from startup dependencies.
+type: capability
+defaults:
+  executor: copilot-sdk
+  model: claude-haiku-5.5
+  timeout: 3m
+  runs: 1
+agent_environment:
+  skills:
+    - ../../.agents/skills/hosting-integration-authoring
+stimuli:
+  - name: local-one-shot-schema-migration
+    prompt: |
+      Use the hosting-integration-authoring skill to review a proposed AppHost graph.
+      A Postgres database backs an API. A dev-only, one-shot migration container must run
+      once the database is ready, then exit successfully before the API can start.
+      Production applies migrations elsewhere, so the helper must not be published.
+      The draft uses migrations.WithReference(database) and api.WaitFor(migrations),
+      and adds the migration container to the publish manifest.
+      Give a short architecture review with the corrected relationship calls in chat.
+      Do not edit files or run the application.
+    graders:
+      - type: completed
+      - type: skill-invocation
+        config:
+          required: [hosting-integration-authoring]
+      - type: output-matches
+        name: migration-waits-for-database-readiness
+        config:
+          pattern: '\bWithReference\s*\(\s*database\s*\)\s*\.\s*WaitFor\s*\(\s*database\s*\)|\bWaitFor\s*\(\s*database\s*\)\s*\.\s*WithReference\s*\(\s*database\s*\)|\bmigrations\s*\.\s*WaitFor\s*\(\s*database\s*\)'
+      - type: output-matches
+        name: api-waits-for-migration-completion
+        config:
+          pattern: '\bWaitForCompletion\s*\(\s*migrations\s*(?:[,)])'
+      - type: output-matches
+        name: migration-excluded-from-publish
+        config:
+          pattern: '\b(?:ExcludeFromManifest|IsRunMode)\b'
+      - type: diff-empty
+scoring:
+  threshold: 1

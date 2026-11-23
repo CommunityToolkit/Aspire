@@ -1,0 +1,9 @@
+paths:
+  skills: .agents/skills
+  evals: evals
+
+suites:
+  smoke:
+    description: Representative behavior checks for Aspire Community Toolkit skills
+    evals:
+      - evals/*/eval.yaml

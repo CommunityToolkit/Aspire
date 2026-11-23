@@ -49,6 +49,10 @@ Also, familiarise yourself with the [versioning](./docs/versioning.md) and [diag
 
 Each PR that builds successfully will have a preview package created. You can find the preview package in the [Azure Artifacts](https://pkgs.dev.azure.com/dotnet/CommunityToolkit/_packaging/CommunityToolkit-PullRequests/nuget/v3/index.json) feed and as artifacts attached to the build.
 
+### Evaluating agent skills
+
+If you change a skill under `.agents/skills/`, update its [GitHub Copilot Evals](./evals/README.md) cases when the expected behavior changes. The guide covers local validation and when CI runs the live suite.
+
 ## 💙 Thank You
 
 **Thank you so much for contributing to this amazing project. We hope you will continue to add value and find yourself as a highly reliable source to the Aspire Community Toolkit.**
