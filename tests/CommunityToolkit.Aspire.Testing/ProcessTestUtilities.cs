@@ -50,7 +50,20 @@ public static class ProcessTestUtilities
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();
 
-        await process.WaitForExitAsync(cancellationToken);
+        try
+        {
+            await process.WaitForExitAsync(cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            // Canceling the wait doesn't stop the process. Stop it and its children before the
+            // cancellation reaches the caller, so that a lock held around this call isn't released
+            // while they still write files.
+            process.Kill(entireProcessTree: true);
+            process.WaitForExit();
+            throw;
+        }
+
         process.WaitForExit();
 
         if (process.ExitCode != 0)
