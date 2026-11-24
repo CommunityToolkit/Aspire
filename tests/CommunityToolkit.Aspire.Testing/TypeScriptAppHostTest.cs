@@ -48,7 +48,8 @@ public static class TypeScriptAppHostTest
 
         string repoRoot = Path.GetFullPath(Path.Combine("..", "..", "..", "..", ".."));
         string scriptPath = Path.Combine(repoRoot, "eng", "testing", "validate-typescript-apphost.ps1");
-        string appHostPath = Path.Combine(repoRoot, "examples", exampleName, appHostProject, "apphost.mts");
+        string appHostDirectory = Path.Combine(repoRoot, "examples", exampleName, appHostProject);
+        string appHostPath = Path.Combine(appHostDirectory, "apphost.mts");
         string shell = OperatingSystem.IsWindows() ? "pwsh.exe" : "pwsh";
 
         List<string> arguments =
@@ -56,7 +57,8 @@ public static class TypeScriptAppHostTest
             "-NoLogo",
             "-NoProfile",
             "-File", scriptPath,
-            "-AppHostPath", appHostPath
+            "-AppHostPath", appHostPath,
+            "-SkipNpmInstall"
         ];
 
         if (resources.Count > 0)
@@ -89,6 +91,12 @@ public static class TypeScriptAppHostTest
             arguments.Add(string.Join(',', secrets.Select(kvp => $"{kvp.Key}={kvp.Value}")));
         }
 
+        // npm ci only writes to the AppHost directory, so it stays outside the lock.
+        string npm = OperatingSystem.IsWindows() ? "cmd.exe" : "npm";
+        string[] npmPrefix = OperatingSystem.IsWindows() ? ["/d", "/c", "npm"] : [];
+        await ProcessTestUtilities.RunProcessAsync(npm, [.. npmPrefix, "ci"], appHostDirectory, cancellationToken);
+
+        using IDisposable appHostLock = await PolyglotAppHostLock.AcquireAsync(cancellationToken);
         await ProcessTestUtilities.RunProcessAsync(shell, arguments, repoRoot, cancellationToken);
     }
 }

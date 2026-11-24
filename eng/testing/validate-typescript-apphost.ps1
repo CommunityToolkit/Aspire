@@ -13,7 +13,9 @@ param(
 
     [int]$WaitTimeoutSeconds = 180,
 
-    [string[]]$Secrets = @()
+    [string[]]$Secrets = @(),
+
+    [switch]$SkipNpmInstall
 )
 
 $ErrorActionPreference = "Stop"
@@ -237,7 +239,10 @@ foreach ($secret in $Secrets) {
 try {
     Push-Location $appHostDirectory
     try {
-        Invoke-ExternalCommand "npm" @("ci")
+        if (-not $SkipNpmInstall) {
+            Invoke-ExternalCommand "npm" @("ci")
+        }
+
         Invoke-ExternalCommand "aspire" @(
             "restore",
             "--apphost", $resolvedAppHostPath,
