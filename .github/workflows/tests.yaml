@@ -114,6 +114,14 @@ jobs:
         run: |
           dotnet build ${{ github.workspace }}/${{ env.TEST_PROJECT_PATH }} /bl --configuration ${{ env.DOTNET_CONFIGURATION }}
 
+      - name: Hide WSLc from the container runtime probe
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          # DCP probes WSLc next to Docker and Podman. Running wslc starts a WSL VM, which can freeze the hosted Windows runner.
+          $path = ($env:PATH -split ';' | Where-Object { $_ -and -not (Test-Path (Join-Path $_ 'wslc.exe')) }) -join ';'
+          "PATH=$path" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
       - name: Run tests
         id: run-tests
         run: >-
