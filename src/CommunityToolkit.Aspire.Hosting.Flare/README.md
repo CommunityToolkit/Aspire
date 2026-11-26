@@ -57,6 +57,28 @@ var flare = builder.AddFlare("flare", clickhouse, redis)
                    .WithIdentityDatabase(identity);
 ```
 
+### Cold storage
+
+`WithColdStorage(endpoint, accessKey, secretKey)` adds an S3-compatible bucket to Flare's ClickHouse server as a cold tier, so retention can move older telemetry off ClickHouse's local disk. It works with RustFS, MinIO, Amazon S3 or any other S3-compatible store. The endpoint is the bucket's path-style URL and must end with a slash. Nothing moves to the bucket until you set a cold-after age in Flare's retention settings.
+
+The bucket must exist before ClickHouse starts, because ClickHouse stops at startup if it can't reach a disk. For local development, the [RustFS integration](https://www.nuget.org/packages/CommunityToolkit.Aspire.Hosting.RustFs) can create the bucket, and ClickHouse can wait for it:
+
+```csharp
+var rustfs = builder.AddRustFs("rustfs").WithDataVolume();
+var bucket = rustfs.AddBucket("flare-cold");
+
+var clickhouse = builder.AddClickHouse("clickhouse").WaitFor(bucket);
+var redis = builder.AddRedis("redis");
+
+var flare = builder.AddFlare("flare", clickhouse, redis)
+                   .WithColdStorage(
+                       ReferenceExpression.Create($"{rustfs.Resource.PrimaryEndpoint}/flare-cold/"),
+                       builder.CreateResourceBuilder(rustfs.Resource.AccessKey),
+                       builder.CreateResourceBuilder(rustfs.Resource.SecretKey));
+```
+
+The ClickHouse disk configuration is added with `WithContainerFiles`, which the Kubernetes publisher doesn't support yet. Without the configuration ClickHouse runs normally, and Flare reports cold storage as unavailable.
+
 ### Other options
 
 | Method | Purpose |

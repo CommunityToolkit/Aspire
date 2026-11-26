@@ -54,6 +54,9 @@ public class FlareResource : ContainerResource, IResourceWithConnectionString
     // The ingest API key set by WithApiKey, so WithOtlpExporter can send it from the consuming resource.
     internal ParameterResource? IngestApiKey { get; set; }
 
+    // The ClickHouse server passed to AddFlare, so WithColdStorage can add its disk configuration there.
+    internal ClickHouseServerResource ClickHouse { get; set; } = default!;
+
     /// <summary>
     /// Gets the connection string expression for the ingest service: the OTLP/gRPC URL, for example
     /// <c>http://localhost:4317</c>.

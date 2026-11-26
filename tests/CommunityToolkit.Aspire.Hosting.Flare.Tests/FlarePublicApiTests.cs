@@ -99,6 +99,62 @@ public class FlarePublicApiTests
     }
 
     [Fact]
+    public void WithColdStorageShouldThrowWhenBuilderIsNull()
+    {
+        var appBuilder = TestDistributedApplicationBuilder.Create();
+        IResourceBuilder<FlareResource> builder = null!;
+
+        var action = () => builder.WithColdStorage(
+            ReferenceExpression.Create($"http://rustfs:9000/flare-cold/"),
+            appBuilder.AddParameter("access-key"),
+            appBuilder.AddParameter("secret-key"));
+
+        var exception = Assert.Throws<ArgumentNullException>(action);
+        Assert.Equal(nameof(builder), exception.ParamName);
+    }
+
+    [Fact]
+    public void WithColdStorageShouldThrowWhenEndpointIsNull()
+    {
+        var appBuilder = TestDistributedApplicationBuilder.Create();
+        var flare = appBuilder.AddFlare("flare", appBuilder.AddClickHouse("clickhouse"), appBuilder.AddRedis("redis"));
+        ReferenceExpression endpoint = null!;
+
+        var action = () => flare.WithColdStorage(endpoint, appBuilder.AddParameter("access-key"), appBuilder.AddParameter("secret-key"));
+
+        var exception = Assert.Throws<ArgumentNullException>(action);
+        Assert.Equal(nameof(endpoint), exception.ParamName);
+    }
+
+    [Fact]
+    public void WithColdStorageShouldThrowWhenAccessKeyIsNull()
+    {
+        var appBuilder = TestDistributedApplicationBuilder.Create();
+        var flare = appBuilder.AddFlare("flare", appBuilder.AddClickHouse("clickhouse"), appBuilder.AddRedis("redis"));
+        IResourceBuilder<ParameterResource> accessKey = null!;
+
+        var action = () => flare.WithColdStorage(
+            ReferenceExpression.Create($"http://rustfs:9000/flare-cold/"), accessKey, appBuilder.AddParameter("secret-key"));
+
+        var exception = Assert.Throws<ArgumentNullException>(action);
+        Assert.Equal(nameof(accessKey), exception.ParamName);
+    }
+
+    [Fact]
+    public void WithColdStorageShouldThrowWhenSecretKeyIsNull()
+    {
+        var appBuilder = TestDistributedApplicationBuilder.Create();
+        var flare = appBuilder.AddFlare("flare", appBuilder.AddClickHouse("clickhouse"), appBuilder.AddRedis("redis"));
+        IResourceBuilder<ParameterResource> secretKey = null!;
+
+        var action = () => flare.WithColdStorage(
+            ReferenceExpression.Create($"http://rustfs:9000/flare-cold/"), appBuilder.AddParameter("access-key"), secretKey);
+
+        var exception = Assert.Throws<ArgumentNullException>(action);
+        Assert.Equal(nameof(secretKey), exception.ParamName);
+    }
+
+    [Fact]
     public void WithIngestPortsShouldThrowWhenBuilderIsNull()
     {
         IResourceBuilder<FlareResource> builder = null!;

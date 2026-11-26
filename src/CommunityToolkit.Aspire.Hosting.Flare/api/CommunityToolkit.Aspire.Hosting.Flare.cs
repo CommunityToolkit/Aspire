@@ -17,6 +17,9 @@ namespace Aspire.Hosting
         public static ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> WithApiKey(this ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> builder, ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource> apiKey) { throw null; }
 
         [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> WithColdStorage(this ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> builder, ApplicationModel.ReferenceExpression endpoint, ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource> accessKey, ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource> secretKey) { throw null; }
+
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> WithDataVolume(this ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> builder, string? name = null) { throw null; }
 
         [AspireExport]

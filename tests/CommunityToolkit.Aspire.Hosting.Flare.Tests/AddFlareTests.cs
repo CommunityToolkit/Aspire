@@ -138,6 +138,63 @@ public class AddFlareTests
     }
 
     [Fact]
+    public async Task WithColdStoragePassesTheBucketToClickHouse()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var clickhouse = builder.AddClickHouse("clickhouse");
+        var accessKey = builder.AddParameter("cold-access-key", secret: true);
+        var secretKey = builder.AddParameter("cold-secret-key", secret: true);
+
+        builder.AddFlare("flare", clickhouse, builder.AddRedis("redis"))
+            .WithColdStorage(ReferenceExpression.Create($"http://rustfs:9000/flare-cold/"), accessKey, secretKey);
+
+        var config = await clickhouse.Resource.GetEnvironmentVariablesAsync(DistributedApplicationOperation.Publish);
+
+        Assert.Equal("http://rustfs:9000/flare-cold/", config["FLARE_COLD_ENDPOINT"]);
+        Assert.Equal("{cold-access-key.value}", config["FLARE_COLD_ACCESS_KEY"]);
+        Assert.Equal("{cold-secret-key.value}", config["FLARE_COLD_SECRET_KEY"]);
+    }
+
+    [Fact]
+    public async Task WithColdStorageAddsTheTieredPolicyToClickHouse()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var clickhouse = builder.AddClickHouse("clickhouse");
+
+        builder.AddFlare("flare", clickhouse, builder.AddRedis("redis"))
+            .WithColdStorage(
+                ReferenceExpression.Create($"http://rustfs:9000/flare-cold/"),
+                builder.AddParameter("cold-access-key", secret: true),
+                builder.AddParameter("cold-secret-key", secret: true));
+
+        var annotation = Assert.Single(clickhouse.Resource.Annotations.OfType<ContainerFileSystemCallbackAnnotation>());
+        Assert.Equal("/etc/clickhouse-server/config.d", annotation.DestinationPath);
+
+        var context = new ContainerFileSystemCallbackContext
+        {
+            Services = new ServiceCollection().BuildServiceProvider(),
+            Model = clickhouse.Resource,
+        };
+        var item = Assert.Single(await annotation.Callback(context, CancellationToken.None));
+        var file = Assert.IsType<ContainerFile>(item);
+
+        Assert.Equal("flare-cold-storage.xml", file.Name);
+        Assert.Contains("<flare_tiered>", file.Contents);
+        Assert.Contains("<endpoint from_env=\"FLARE_COLD_ENDPOINT\"/>", file.Contents);
+    }
+
+    [Fact]
+    public void WithoutColdStorageClickHouseIsUnchanged()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var clickhouse = builder.AddClickHouse("clickhouse");
+
+        builder.AddFlare("flare", clickhouse, builder.AddRedis("redis"));
+
+        Assert.Empty(clickhouse.Resource.Annotations.OfType<ContainerFileSystemCallbackAnnotation>());
+    }
+
+    [Fact]
     public void AddFlareParentsTheOtherResources()
     {
         using var builder = TestDistributedApplicationBuilder.Create();

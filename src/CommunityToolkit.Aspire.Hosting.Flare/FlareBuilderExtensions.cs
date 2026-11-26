@@ -79,6 +79,7 @@ public static class FlareBuilderExtensions
         var apiResource = new FlareApiResource($"{name}-api", flareResource);
         var alertWorkerResource = new FlareAlertWorkerResource($"{name}-alert-worker", flareResource);
         var dashboardResource = new FlareDashboardResource($"{name}-dashboard", flareResource);
+        flareResource.ClickHouse = clickhouse.Resource;
         flareResource.Api = apiResource;
         flareResource.AlertWorker = alertWorkerResource;
         flareResource.Dashboard = dashboardResource;
@@ -341,6 +342,70 @@ public static class FlareBuilderExtensions
         applicationBuilder.CreateResourceBuilder(resource.Api).WithImageTag(tag);
         applicationBuilder.CreateResourceBuilder(resource.AlertWorker).WithImageTag(tag);
         applicationBuilder.CreateResourceBuilder(resource.Dashboard).WithImageTag(tag);
+
+        return builder;
+    }
+
+    /// <summary>
+    /// Adds an S3-compatible bucket to Flare's ClickHouse server as a cold storage tier, so retention can move
+    /// older telemetry out of ClickHouse's local disk. Works with any S3-compatible store, such as RustFS,
+    /// MinIO or Amazon S3.
+    /// </summary>
+    /// <ats-summary>Adds an S3-compatible cold storage tier to Flare's ClickHouse server</ats-summary>
+    /// <param name="builder">The Flare resource builder.</param>
+    /// <param name="endpoint">
+    /// The bucket's URL in path style, ending with a slash, for example <c>http://rustfs:9000/flare-cold/</c>.
+    /// ClickHouse stores the cold data under this URL.
+    /// </param>
+    /// <param name="accessKey">The parameter holding the S3 access key ID.</param>
+    /// <param name="secretKey">The parameter holding the S3 secret access key.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <remarks>
+    /// <para>
+    /// This adds a configuration file to the ClickHouse server that defines an S3 disk and the
+    /// <c>flare_tiered</c> storage policy, and passes the endpoint and keys to it as environment variables.
+    /// Nothing moves to the bucket until retention is set with a cold-after age in Flare.
+    /// </para>
+    /// <para>
+    /// The bucket must exist before ClickHouse starts: ClickHouse checks every disk when it starts and stops
+    /// if one is unreachable. Create it ahead of time, or make the ClickHouse server wait for the resource that
+    /// creates it. The configuration file is added with <c>WithContainerFiles</c>, which the Kubernetes
+    /// publisher does not support yet.
+    /// </para>
+    /// <example>
+    /// Use a RustFS bucket for cold storage.
+    /// <code lang="csharp">
+    /// var rustfs = builder.AddRustFs("rustfs").WithDataVolume();
+    /// var bucket = rustfs.AddBucket("flare-cold");
+    ///
+    /// var clickhouse = builder.AddClickHouse("clickhouse").WaitFor(bucket);
+    /// var flare = builder.AddFlare("flare", clickhouse, redis)
+    ///     .WithColdStorage(
+    ///         ReferenceExpression.Create($"{rustfs.Resource.PrimaryEndpoint}/flare-cold/"),
+    ///         builder.CreateResourceBuilder(rustfs.Resource.AccessKey),
+    ///         builder.CreateResourceBuilder(rustfs.Resource.SecretKey));
+    /// </code>
+    /// </example>
+    /// </remarks>
+    [AspireExport]
+    public static IResourceBuilder<FlareResource> WithColdStorage(
+        this IResourceBuilder<FlareResource> builder,
+        ReferenceExpression endpoint,
+        IResourceBuilder<ParameterResource> accessKey,
+        IResourceBuilder<ParameterResource> secretKey)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(endpoint);
+        ArgumentNullException.ThrowIfNull(accessKey);
+        ArgumentNullException.ThrowIfNull(secretKey);
+
+        builder.ApplicationBuilder.CreateResourceBuilder(builder.Resource.ClickHouse)
+            .WithEnvironment("FLARE_COLD_ENDPOINT", endpoint)
+            .WithEnvironment("FLARE_COLD_ACCESS_KEY", accessKey)
+            .WithEnvironment("FLARE_COLD_SECRET_KEY", secretKey)
+            .WithContainerFiles(
+                FlareColdStorageConfig.Directory,
+                [new ContainerFile { Name = FlareColdStorageConfig.FileName, Contents = FlareColdStorageConfig.Contents }]);
 
         return builder;
     }
