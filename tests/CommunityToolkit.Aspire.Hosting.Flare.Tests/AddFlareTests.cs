@@ -105,6 +105,39 @@ public class AddFlareTests
     }
 
     [Fact]
+    public async Task WithIdentityDatabasePointsIngestAndApiAtPostgres()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var identity = builder.AddConnectionString("flare-identity");
+
+        var flare = CreateFlare(builder).WithIdentityDatabase(identity);
+
+        var ingestConfig = await flare.Resource.GetEnvironmentVariablesAsync(DistributedApplicationOperation.Publish);
+        var apiConfig = await flare.Resource.Api.GetEnvironmentVariablesAsync(DistributedApplicationOperation.Publish);
+        var workerConfig = await flare.Resource.AlertWorker.GetEnvironmentVariablesAsync(DistributedApplicationOperation.Publish);
+
+        foreach (var config in new[] { ingestConfig, apiConfig })
+        {
+            Assert.Equal("Postgres", config["Identity__Provider"]);
+            Assert.Equal("{flare-identity.connectionString}", config["Identity__ConnectionString"]);
+        }
+
+        Assert.False(workerConfig.ContainsKey("Identity__ConnectionString"));
+    }
+
+    [Fact]
+    public void WithIdentityDatabaseWaitsForTheDatabase()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var identity = builder.AddConnectionString("flare-identity");
+
+        var flare = CreateFlare(builder).WithIdentityDatabase(identity);
+
+        Assert.Contains(flare.Resource.Annotations.OfType<WaitAnnotation>(), wait => wait.Resource == identity.Resource);
+        Assert.Contains(flare.Resource.Api.Annotations.OfType<WaitAnnotation>(), wait => wait.Resource == identity.Resource);
+    }
+
+    [Fact]
     public void AddFlareParentsTheOtherResources()
     {
         using var builder = TestDistributedApplicationBuilder.Create();

@@ -74,6 +74,31 @@ public class FlarePublicApiTests
     }
 
     [Fact]
+    public void WithIdentityDatabaseShouldThrowWhenBuilderIsNull()
+    {
+        IResourceBuilder<FlareResource> builder = null!;
+        var database = TestDistributedApplicationBuilder.Create().AddConnectionString("flare-identity");
+
+        var action = () => builder.WithIdentityDatabase(database);
+
+        var exception = Assert.Throws<ArgumentNullException>(action);
+        Assert.Equal(nameof(builder), exception.ParamName);
+    }
+
+    [Fact]
+    public void WithIdentityDatabaseShouldThrowWhenDatabaseIsNull()
+    {
+        var builder = TestDistributedApplicationBuilder.Create();
+        var flare = builder.AddFlare("flare", builder.AddClickHouse("clickhouse"), builder.AddRedis("redis"));
+        IResourceBuilder<IResourceWithConnectionString> database = null!;
+
+        var action = () => flare.WithIdentityDatabase(database);
+
+        var exception = Assert.Throws<ArgumentNullException>(action);
+        Assert.Equal(nameof(database), exception.ParamName);
+    }
+
+    [Fact]
     public void WithIngestPortsShouldThrowWhenBuilderIsNull()
     {
         IResourceBuilder<FlareResource> builder = null!;

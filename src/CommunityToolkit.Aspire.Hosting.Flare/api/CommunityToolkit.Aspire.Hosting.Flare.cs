@@ -23,6 +23,9 @@ namespace Aspire.Hosting
         public static ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> WithFlareImageTag(this ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> builder, string tag) { throw null; }
 
         [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> WithIdentityDatabase(this ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> builder, ApplicationModel.IResourceBuilder<ApplicationModel.IResourceWithConnectionString> database) { throw null; }
+
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> WithIngestPorts(this ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> builder, int? grpcPort = null, int? httpPort = null) { throw null; }
 
         [AspireExportIgnore(Reason = "Generic receiver; the polyglot overload is withFlareOtlpExporter.")]

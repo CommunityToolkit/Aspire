@@ -46,6 +46,17 @@ A resource wired with `WithOtlpExporter(flare)` sends its telemetry to Flare **i
 
 ClickHouse and Redis keep their data in the volumes you configure on those resources. `WithDataVolume()` persists Flare's own identity database (dashboard users, sessions and ingest API keys) in a volume shared by the ingest service and the query API. Without it, both keep a private database that is lost when their containers are recreated.
 
+`WithIdentityDatabase(database)` keeps the identity database in PostgreSQL instead. The ingest service and the query API then share a database rather than a file, so they can run on different nodes. Use it when you publish to a Kubernetes cluster with more than one node, where a volume shared by two workloads usually can't be mounted on both. Any resource with an Npgsql connection string works:
+
+```csharp
+var identity = builder.AddPostgres("postgres")
+                      .WithDataVolume()
+                      .AddDatabase("flare-identity");
+
+var flare = builder.AddFlare("flare", clickhouse, redis)
+                   .WithIdentityDatabase(identity);
+```
+
 ### Other options
 
 | Method | Purpose |

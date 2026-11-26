@@ -177,6 +177,56 @@ public static class FlareBuilderExtensions
     }
 
     /// <summary>
+    /// Stores Flare's identity database (dashboard users, sessions and ingest API keys) in PostgreSQL instead of
+    /// a SQLite file. The ingest service and the query API both connect to <paramref name="database"/>, so they
+    /// no longer share a file and can run on different nodes, which a multi-node Kubernetes cluster needs.
+    /// </summary>
+    /// <ats-summary>Stores Flare's identity database in PostgreSQL</ats-summary>
+    /// <param name="builder">The Flare resource builder.</param>
+    /// <param name="database">
+    /// A PostgreSQL database, for example the result of <c>AddPostgres("postgres").AddDatabase("flare-identity")</c>.
+    /// Its connection string must be an Npgsql connection string. Flare creates its tables on startup.
+    /// </param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <remarks>
+    /// This replaces <see cref="WithDataVolume"/>; there is no reason to call both.
+    /// <example>
+    /// Keep the identity database in PostgreSQL.
+    /// <code lang="csharp">
+    /// var identity = builder.AddPostgres("postgres").AddDatabase("flare-identity");
+    ///
+    /// var flare = builder.AddFlare("flare", clickhouse, redis)
+    ///     .WithIdentityDatabase(identity);
+    /// </code>
+    /// </example>
+    /// </remarks>
+    [AspireExport]
+    public static IResourceBuilder<FlareResource> WithIdentityDatabase(
+        this IResourceBuilder<FlareResource> builder,
+        IResourceBuilder<IResourceWithConnectionString> database)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(database);
+
+        // The ingest service and the query API must resolve to the same identity database.
+        UsePostgresIdentity(builder, database);
+        UsePostgresIdentity(builder.ApplicationBuilder.CreateResourceBuilder(builder.Resource.Api), database);
+
+        return builder;
+    }
+
+    private static void UsePostgresIdentity<T>(
+        IResourceBuilder<T> container,
+        IResourceBuilder<IResourceWithConnectionString> database)
+        where T : ContainerResource
+    {
+        container
+            .WithEnvironment("Identity__Provider", "Postgres")
+            .WithEnvironment("Identity__ConnectionString", database)
+            .WaitFor(database);
+    }
+
+    /// <summary>
     /// Sets the host ports of the ingest service's OTLP endpoints. By default they are the conventional
     /// 4317 (gRPC) and 4318 (HTTP).
     /// </summary>
