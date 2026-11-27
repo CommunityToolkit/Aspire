@@ -23,6 +23,12 @@ namespace Aspire.Hosting
         public static ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> WithDataVolume(this ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> builder, string? name = null) { throw null; }
 
         [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> WithFlareImageRegistry(this ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> builder, string registry) { throw null; }
+
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> WithFlareImages(this ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> builder, string? ingest = null, string? api = null, string? alertWorker = null, string? dashboard = null) { throw null; }
+
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> WithFlareImageTag(this ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> builder, string tag) { throw null; }
 
         [AspireExport]
@@ -37,6 +43,9 @@ namespace Aspire.Hosting
 
         [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> WithPublicUrls(this ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> builder, ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource>? apiUrl = null, ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource>? dashboardUrl = null) { throw null; }
+
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> WithResourceGraph(this ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> builder) { throw null; }
     }
 }
 

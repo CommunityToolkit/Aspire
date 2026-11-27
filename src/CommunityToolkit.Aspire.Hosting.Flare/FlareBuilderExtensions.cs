@@ -9,7 +9,7 @@ namespace Aspire.Hosting;
 /// <summary>
 /// Provides extension methods for adding Flare resources to the application model.
 /// </summary>
-public static class FlareBuilderExtensions
+public static partial class FlareBuilderExtensions
 {
     private const int OtlpGrpcPort = 4317;
     private const int OtlpHttpPort = 4318;
@@ -80,6 +80,7 @@ public static class FlareBuilderExtensions
         var alertWorkerResource = new FlareAlertWorkerResource($"{name}-alert-worker", flareResource);
         var dashboardResource = new FlareDashboardResource($"{name}-dashboard", flareResource);
         flareResource.ClickHouse = clickhouse.Resource;
+        flareResource.Redis = redis.Resource;
         flareResource.Api = apiResource;
         flareResource.AlertWorker = alertWorkerResource;
         flareResource.Dashboard = dashboardResource;
@@ -344,6 +345,80 @@ public static class FlareBuilderExtensions
         applicationBuilder.CreateResourceBuilder(resource.Dashboard).WithImageTag(tag);
 
         return builder;
+    }
+
+    /// <summary>
+    /// Sets the registry the four Flare images are pulled from, for example a private mirror of Docker Hub.
+    /// </summary>
+    /// <param name="builder">The Flare resource builder.</param>
+    /// <param name="registry">The registry host, for example <c>registry.example.com</c>.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport]
+    public static IResourceBuilder<FlareResource> WithFlareImageRegistry(
+        this IResourceBuilder<FlareResource> builder,
+        string registry)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrEmpty(registry);
+
+        var resource = builder.Resource;
+        var applicationBuilder = builder.ApplicationBuilder;
+
+        builder.WithImageRegistry(registry);
+        applicationBuilder.CreateResourceBuilder(resource.Api).WithImageRegistry(registry);
+        applicationBuilder.CreateResourceBuilder(resource.AlertWorker).WithImageRegistry(registry);
+        applicationBuilder.CreateResourceBuilder(resource.Dashboard).WithImageRegistry(registry);
+
+        return builder;
+    }
+
+    /// <summary>
+    /// Replaces the image of one or more Flare containers, for example with a build of your own. The images keep
+    /// the shared tag (see <see cref="WithFlareImageTag"/>) and registry (see <see cref="WithFlareImageRegistry"/>).
+    /// </summary>
+    /// <param name="builder">The Flare resource builder.</param>
+    /// <param name="ingest">The image of the ingest service, or <see langword="null"/> to leave it unchanged.</param>
+    /// <param name="api">The image of the query API, or <see langword="null"/> to leave it unchanged.</param>
+    /// <param name="alertWorker">The image of the alert worker, or <see langword="null"/> to leave it unchanged.</param>
+    /// <param name="dashboard">The image of the dashboard, or <see langword="null"/> to leave it unchanged.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <remarks>
+    /// Pass image names without a tag or registry, for example <c>myorg/flare-api</c>.
+    /// </remarks>
+    [AspireExport]
+    public static IResourceBuilder<FlareResource> WithFlareImages(
+        this IResourceBuilder<FlareResource> builder,
+        string? ingest = null,
+        string? api = null,
+        string? alertWorker = null,
+        string? dashboard = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        var resource = builder.Resource;
+        var applicationBuilder = builder.ApplicationBuilder;
+
+        ReplaceImage(builder, ingest, nameof(ingest));
+        ReplaceImage(applicationBuilder.CreateResourceBuilder(resource.Api), api, nameof(api));
+        ReplaceImage(applicationBuilder.CreateResourceBuilder(resource.AlertWorker), alertWorker, nameof(alertWorker));
+        ReplaceImage(applicationBuilder.CreateResourceBuilder(resource.Dashboard), dashboard, nameof(dashboard));
+
+        return builder;
+    }
+
+    private static void ReplaceImage<T>(IResourceBuilder<T> container, string? image, string paramName)
+        where T : ContainerResource
+    {
+        if (image is null)
+        {
+            return;
+        }
+
+        ArgumentException.ThrowIfNullOrEmpty(image, paramName);
+
+        // Keep the tag set so far, so WithFlareImageTag works whichever order the calls come in.
+        var current = container.Resource.Annotations.OfType<ContainerImageAnnotation>().Last();
+        container.WithImage(image, current.Tag);
     }
 
     /// <summary>

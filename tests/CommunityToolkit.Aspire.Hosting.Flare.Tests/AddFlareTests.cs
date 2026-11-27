@@ -341,6 +341,55 @@ public class AddFlareTests
         }
     }
 
+    [Fact]
+    public void WithFlareImageRegistryAppliesToAllFourContainers()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+
+        var flare = CreateFlare(builder).WithFlareImageRegistry("registry.example.com");
+
+        foreach (var resource in new IResource[] { flare.Resource, flare.Resource.Api, flare.Resource.AlertWorker, flare.Resource.Dashboard })
+        {
+            Assert.Equal("registry.example.com", Assert.Single(resource.Annotations.OfType<ContainerImageAnnotation>()).Registry);
+        }
+    }
+
+    [Fact]
+    public void WithFlareImagesReplacesOnlyTheGivenImages()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+
+        var flare = CreateFlare(builder).WithFlareImages(api: "myorg/flare-api", dashboard: "myorg/flare-dashboard");
+
+        Assert.Equal("myorg/flare-api", Assert.Single(flare.Resource.Api.Annotations.OfType<ContainerImageAnnotation>()).Image);
+        Assert.Equal("myorg/flare-dashboard", Assert.Single(flare.Resource.Dashboard.Annotations.OfType<ContainerImageAnnotation>()).Image);
+        Assert.Equal("apardev/flare-ingest", Assert.Single(flare.Resource.Annotations.OfType<ContainerImageAnnotation>()).Image);
+        Assert.Equal("apardev/flare-alert-worker", Assert.Single(flare.Resource.AlertWorker.Annotations.OfType<ContainerImageAnnotation>()).Image);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void WithFlareImagesKeepsTheTagAndRegistry(bool imagesFirst)
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var flare = CreateFlare(builder);
+
+        if (imagesFirst)
+        {
+            flare.WithFlareImages(api: "myorg/flare-api").WithFlareImageTag("0.7").WithFlareImageRegistry("registry.example.com");
+        }
+        else
+        {
+            flare.WithFlareImageTag("0.7").WithFlareImageRegistry("registry.example.com").WithFlareImages(api: "myorg/flare-api");
+        }
+
+        var image = Assert.Single(flare.Resource.Api.Annotations.OfType<ContainerImageAnnotation>());
+        Assert.Equal("myorg/flare-api", image.Image);
+        Assert.Equal("0.7", image.Tag);
+        Assert.Equal("registry.example.com", image.Registry);
+    }
+
     [Theory]
     [InlineData(OtlpProtocol.Grpc, "grpc", "otlp-grpc")]
     [InlineData(OtlpProtocol.HttpProtobuf, "http/protobuf", "otlp-http")]

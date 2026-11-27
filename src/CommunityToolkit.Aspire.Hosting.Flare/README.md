@@ -79,6 +79,13 @@ var flare = builder.AddFlare("flare", clickhouse, redis)
 
 The ClickHouse disk configuration is added with `WithContainerFiles`, which the Kubernetes publisher doesn't support yet. Without the configuration ClickHouse runs normally, and Flare reports cold storage as unavailable.
 
+### Resources page
+
+`WithResourceGraph()` turns on the dashboard's Resources page, a live graph of the Flare containers, ClickHouse and Redis. It labels those containers and gives the query API read-only access to the container runtime:
+
+- Under `aspire run` and in Docker Compose output, it adds a `tecnativa/docker-socket-proxy` container with the Docker socket mounted read-only. The proxy only allows listing and inspecting containers, and the query API talks to the proxy rather than the socket. The proxy lists every container on the Docker host, so other Flare stacks running on the same host also appear in the graph.
+- When the app is published to a Kubernetes environment, the proxy is left out. The query API runs under its own service account instead, with a role that can only get, list and watch pods and services in its namespace.
+
 ### Other options
 
 | Method | Purpose |
@@ -87,6 +94,8 @@ The ClickHouse disk configuration is added with `WithContainerFiles`, which the 
 | `WithApiKey(parameter)` | Require an API key on the ingest service. OTLP clients send it as `Authorization: Bearer <key>` (for example `OTEL_EXPORTER_OTLP_HEADERS=Authorization=Bearer <key>`); resources wired with `WithOtlpExporter(flare)` send it automatically. |
 | `WithPublicUrls(apiUrl, dashboardUrl)` | Set the URLs a browser uses once the stack is published and no longer reachable on localhost. `dashboardUrl` is also the API's allowed CORS origin, so pass an origin only (`https://flare.example.com`, no path or trailing slash). |
 | `WithFlareImageTag(tag)` | Change the image tag of all four containers. |
+| `WithFlareImageRegistry(registry)` | Pull all four images from another registry, such as a private mirror. |
+| `WithFlareImages(ingest, api, alertWorker, dashboard)` | Replace the image of any of the four containers, for example with your own build. The images keep the shared tag and registry. |
 
 ## Connection Properties
 

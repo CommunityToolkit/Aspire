@@ -57,6 +57,9 @@ public class FlareResource : ContainerResource, IResourceWithConnectionString
     // The ClickHouse server passed to AddFlare, so WithColdStorage can add its disk configuration there.
     internal ClickHouseServerResource ClickHouse { get; set; } = default!;
 
+    // The Redis instance passed to AddFlare, so WithResourceGraph can label it.
+    internal RedisResource Redis { get; set; } = default!;
+
     /// <summary>
     /// Gets the connection string expression for the ingest service: the OTLP/gRPC URL, for example
     /// <c>http://localhost:4317</c>.

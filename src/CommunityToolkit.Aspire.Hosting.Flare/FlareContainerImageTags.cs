@@ -14,4 +14,8 @@ internal static class FlareContainerImageTags
     public const string ApiImage = "apardev/flare-api";
     public const string AlertWorkerImage = "apardev/flare-alert-worker";
     public const string DashboardImage = "apardev/flare-dashboard";
+
+    // The read-only Docker socket proxy WithResourceGraph adds.
+    public const string DockerProxyImage = "tecnativa/docker-socket-proxy";
+    public const string DockerProxyTag = "3.4";
 }

@@ -191,6 +191,52 @@ public class FlarePublicApiTests
     }
 
     [Fact]
+    public void WithFlareImageRegistryShouldThrowWhenBuilderIsNull()
+    {
+        IResourceBuilder<FlareResource> builder = null!;
+
+        var action = () => builder.WithFlareImageRegistry("registry.example.com");
+
+        var exception = Assert.Throws<ArgumentNullException>(action);
+        Assert.Equal(nameof(builder), exception.ParamName);
+    }
+
+    [Fact]
+    public void WithFlareImageRegistryShouldThrowWhenRegistryIsEmpty()
+    {
+        var builder = TestDistributedApplicationBuilder.Create();
+        var flare = builder.AddFlare("flare", builder.AddClickHouse("clickhouse"), builder.AddRedis("redis"));
+
+        var action = () => flare.WithFlareImageRegistry("");
+
+        var exception = Assert.Throws<ArgumentException>(action);
+        Assert.Equal("registry", exception.ParamName);
+    }
+
+    [Fact]
+    public void WithFlareImagesShouldThrowWhenBuilderIsNull()
+    {
+        IResourceBuilder<FlareResource> builder = null!;
+
+        var action = () => builder.WithFlareImages(api: "myorg/flare-api");
+
+        var exception = Assert.Throws<ArgumentNullException>(action);
+        Assert.Equal(nameof(builder), exception.ParamName);
+    }
+
+    [Fact]
+    public void WithFlareImagesShouldThrowWhenAnImageIsEmpty()
+    {
+        var builder = TestDistributedApplicationBuilder.Create();
+        var flare = builder.AddFlare("flare", builder.AddClickHouse("clickhouse"), builder.AddRedis("redis"));
+
+        var action = () => flare.WithFlareImages(api: "");
+
+        var exception = Assert.Throws<ArgumentException>(action);
+        Assert.Equal("api", exception.ParamName);
+    }
+
+    [Fact]
     public void WithOtlpExporterShouldThrowWhenFlareIsNull()
     {
         var builder = TestDistributedApplicationBuilder.Create();
