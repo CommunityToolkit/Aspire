@@ -1,5 +1,3 @@
-#pragma warning disable ASPIREPIPELINES001 // Pipeline APIs are experimental
-
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Pipelines;
@@ -97,5 +95,3 @@ internal static class DacpacPipelineArtifacts
     private static StringComparison GetPathComparison()
         => OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
 }
-
-#pragma warning restore ASPIREPIPELINES001

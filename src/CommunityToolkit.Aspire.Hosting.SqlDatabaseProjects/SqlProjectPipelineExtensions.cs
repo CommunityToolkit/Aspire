@@ -1,5 +1,3 @@
-#pragma warning disable ASPIREPIPELINES001 // Pipeline APIs are experimental
-
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Pipelines;
 using CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects;
@@ -775,5 +773,3 @@ internal static class SqlProjectPipelineSteps
         IPipelineOutputService outputService)
         => Path.Combine(outputService.GetOutputDirectory(), "build", resource.Name, $"{resource.Name}.dacpac");
 }
-
-#pragma warning restore ASPIREPIPELINES001

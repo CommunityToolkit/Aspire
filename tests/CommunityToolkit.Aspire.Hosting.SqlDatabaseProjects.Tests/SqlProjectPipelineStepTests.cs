@@ -1,4 +1,3 @@
-#pragma warning disable ASPIREPIPELINES001 // Pipeline APIs are experimental
 #pragma warning disable CTASPIREPIPELINES001
 
 using Aspire.Hosting;
@@ -1231,4 +1230,3 @@ public class SqlProjectPipelineStepTests
 }
 
 #pragma warning restore CTASPIREPIPELINES001
-#pragma warning restore ASPIREPIPELINES001
