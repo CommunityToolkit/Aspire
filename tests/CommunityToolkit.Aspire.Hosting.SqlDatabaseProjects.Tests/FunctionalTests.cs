@@ -10,7 +10,6 @@ using Microsoft.SqlServer.Dac;
 
 namespace CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.Tests;
 
-#pragma warning disable ASPIREPIPELINES001
 #pragma warning disable CTASPIREPIPELINES001
 
 [RequiresDocker]
