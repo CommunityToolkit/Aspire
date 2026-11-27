@@ -1,3 +1,5 @@
+#pragma warning disable CTASPIREPIPELINES001
+
 var builder = DistributedApplication.CreateBuilder(args);
 
 var server = builder.AddSqlServer("sql");
@@ -15,7 +17,12 @@ var sdkProject = builder.AddSqlProject<Projects.SdkProject>("sdk-project")
 
 var otherProject = builder.AddSqlProject<Projects.SdkProject>("other-sdk-project")
        .WithReference(otherDatabase)
-       .WaitForCompletion(sdkProject);
+       .WaitForCompletion(sdkProject)
+       .WithPipelineOptions(new()
+       {
+           IncludeInPublish = true,
+           IncludeInDeploy = true
+       });
 
 builder.AddSqlPackage<Packages.ErikEJ_Dacpac_Chinook>("chinook")
        .WithReference(chinookDatabase);
@@ -36,3 +43,5 @@ builder.AddSqlProject("microsoft-build-sql-project", "../MicrosoftBuildSqlProjec
        .WithReference(database);
 
 builder.Build().Run();
+
+#pragma warning restore CTASPIREPIPELINES001
