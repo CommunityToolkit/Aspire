@@ -92,7 +92,7 @@ The ClickHouse disk configuration is added with `WithContainerFiles`, which the 
 | --- | --- |
 | `WithIngestPorts(grpcPort, httpPort)` | Change the host ports of the OTLP endpoints. |
 | `WithApiKey(parameter)` | Require an API key on the ingest service. OTLP clients send it as `Authorization: Bearer <key>` (for example `OTEL_EXPORTER_OTLP_HEADERS=Authorization=Bearer <key>`); resources wired with `WithOtlpExporter(flare)` send it automatically. |
-| `WithPublicUrls(apiUrl, dashboardUrl)` | Set the URLs a browser uses once the stack is published and no longer reachable on localhost. `dashboardUrl` is also the API's allowed CORS origin, so pass an origin only (`https://flare.example.com`, no path or trailing slash). |
+| `WithPublicUrls(apiUrl, dashboardUrl)` | Set the URLs a browser uses once the stack is published and no longer reachable on localhost. `dashboardUrl` is also the API's allowed CORS origin. |
 | `WithFlareImageTag(tag)` | Change the image tag of all four containers. |
 | `WithFlareImageRegistry(registry)` | Pull all four images from another registry, such as a private mirror. |
 | `WithFlareImages(ingest, api, alertWorker, dashboard)` | Replace the image of any of the four containers, for example with your own build. The images keep the shared tag and registry. |

@@ -24,7 +24,7 @@ func main() {
 	})
 	flare.WithDataVolume().
 		WithIngestPorts(&aspire.WithIngestPortsOptions{GrpcPort: aspire.IntPtr(4317), HttpPort: aspire.IntPtr(4318)}).
-		WithFlareImageTag("0.6").
+		WithFlareImageTag("0.7").
 		WithPublicUrls(&aspire.WithPublicUrlsOptions{DashboardUrl: &dashboardURL}).
 		WithApiKey(ingestKey)
 	check(flare.OtlpGrpcEndpoint().Err())

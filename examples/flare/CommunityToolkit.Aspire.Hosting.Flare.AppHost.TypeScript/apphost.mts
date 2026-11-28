@@ -18,7 +18,7 @@ const flare = await builder.addFlare("flare", clickhouse, redis, { dashboardPort
 
 await flare.withDataVolume();
 await flare.withIngestPorts({ grpcPort: 4317, httpPort: 4318 });
-await flare.withFlareImageTag("0.6");
+await flare.withFlareImageTag("0.7");
 await flare.withPublicUrls({ dashboardUrl });
 
 // withApiKey: OTLP clients must send the key as "Authorization: Bearer <key>";

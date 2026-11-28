@@ -290,8 +290,7 @@ public static partial class FlareBuilderExtensions
     /// <param name="apiUrl">The parameter holding the public URL of the query API, or <see langword="null"/> to leave it unchanged.</param>
     /// <param name="dashboardUrl">
     /// The parameter holding the public URL of the dashboard, or <see langword="null"/> to leave it unchanged.
-    /// The query API uses this value verbatim as its allowed CORS origin, so it must be an origin only:
-    /// <c>scheme://host[:port]</c>, with no path and no trailing slash (for example <c>https://flare.example.com</c>).
+    /// The query API also uses this value as its allowed CORS origin.
     /// </param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     [AspireExport]
