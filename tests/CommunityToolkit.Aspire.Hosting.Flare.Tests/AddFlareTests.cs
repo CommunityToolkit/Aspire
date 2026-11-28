@@ -105,6 +105,96 @@ public class AddFlareTests
     }
 
     [Fact]
+    public async Task WithIdentityDatabasePointsIngestAndApiAtPostgres()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var identity = builder.AddConnectionString("flare-identity");
+
+        var flare = CreateFlare(builder).WithIdentityDatabase(identity);
+
+        var ingestConfig = await flare.Resource.GetEnvironmentVariablesAsync(DistributedApplicationOperation.Publish);
+        var apiConfig = await flare.Resource.Api.GetEnvironmentVariablesAsync(DistributedApplicationOperation.Publish);
+        var workerConfig = await flare.Resource.AlertWorker.GetEnvironmentVariablesAsync(DistributedApplicationOperation.Publish);
+
+        foreach (var config in new[] { ingestConfig, apiConfig })
+        {
+            Assert.Equal("Postgres", config["Identity__Provider"]);
+            Assert.Equal("{flare-identity.connectionString}", config["Identity__ConnectionString"]);
+        }
+
+        Assert.False(workerConfig.ContainsKey("Identity__ConnectionString"));
+    }
+
+    [Fact]
+    public void WithIdentityDatabaseWaitsForTheDatabase()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var identity = builder.AddConnectionString("flare-identity");
+
+        var flare = CreateFlare(builder).WithIdentityDatabase(identity);
+
+        Assert.Contains(flare.Resource.Annotations.OfType<WaitAnnotation>(), wait => wait.Resource == identity.Resource);
+        Assert.Contains(flare.Resource.Api.Annotations.OfType<WaitAnnotation>(), wait => wait.Resource == identity.Resource);
+    }
+
+    [Fact]
+    public async Task WithColdStoragePassesTheBucketToClickHouse()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var clickhouse = builder.AddClickHouse("clickhouse");
+        var accessKey = builder.AddParameter("cold-access-key", secret: true);
+        var secretKey = builder.AddParameter("cold-secret-key", secret: true);
+
+        builder.AddFlare("flare", clickhouse, builder.AddRedis("redis"))
+            .WithColdStorage(ReferenceExpression.Create($"http://rustfs:9000/flare-cold/"), accessKey, secretKey);
+
+        var config = await clickhouse.Resource.GetEnvironmentVariablesAsync(DistributedApplicationOperation.Publish);
+
+        Assert.Equal("http://rustfs:9000/flare-cold/", config["FLARE_COLD_ENDPOINT"]);
+        Assert.Equal("{cold-access-key.value}", config["FLARE_COLD_ACCESS_KEY"]);
+        Assert.Equal("{cold-secret-key.value}", config["FLARE_COLD_SECRET_KEY"]);
+    }
+
+    [Fact]
+    public async Task WithColdStorageAddsTheTieredPolicyToClickHouse()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var clickhouse = builder.AddClickHouse("clickhouse");
+
+        builder.AddFlare("flare", clickhouse, builder.AddRedis("redis"))
+            .WithColdStorage(
+                ReferenceExpression.Create($"http://rustfs:9000/flare-cold/"),
+                builder.AddParameter("cold-access-key", secret: true),
+                builder.AddParameter("cold-secret-key", secret: true));
+
+        var annotation = Assert.Single(clickhouse.Resource.Annotations.OfType<ContainerFileSystemCallbackAnnotation>());
+        Assert.Equal("/etc/clickhouse-server/config.d", annotation.DestinationPath);
+
+        var context = new ContainerFileSystemCallbackContext
+        {
+            Services = new ServiceCollection().BuildServiceProvider(),
+            Model = clickhouse.Resource,
+        };
+        var item = Assert.Single(await annotation.Callback(context, CancellationToken.None));
+        var file = Assert.IsType<ContainerFile>(item);
+
+        Assert.Equal("flare-cold-storage.xml", file.Name);
+        Assert.Contains("<flare_tiered>", file.Contents);
+        Assert.Contains("<endpoint from_env=\"FLARE_COLD_ENDPOINT\"/>", file.Contents);
+    }
+
+    [Fact]
+    public void WithoutColdStorageClickHouseIsUnchanged()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var clickhouse = builder.AddClickHouse("clickhouse");
+
+        builder.AddFlare("flare", clickhouse, builder.AddRedis("redis"));
+
+        Assert.Empty(clickhouse.Resource.Annotations.OfType<ContainerFileSystemCallbackAnnotation>());
+    }
+
+    [Fact]
     public void AddFlareParentsTheOtherResources()
     {
         using var builder = TestDistributedApplicationBuilder.Create();
@@ -249,6 +339,55 @@ public class AddFlareTests
         {
             Assert.Equal("0.7", Assert.Single(resource.Annotations.OfType<ContainerImageAnnotation>()).Tag);
         }
+    }
+
+    [Fact]
+    public void WithFlareImageRegistryAppliesToAllFourContainers()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+
+        var flare = CreateFlare(builder).WithFlareImageRegistry("registry.example.com");
+
+        foreach (var resource in new IResource[] { flare.Resource, flare.Resource.Api, flare.Resource.AlertWorker, flare.Resource.Dashboard })
+        {
+            Assert.Equal("registry.example.com", Assert.Single(resource.Annotations.OfType<ContainerImageAnnotation>()).Registry);
+        }
+    }
+
+    [Fact]
+    public void WithFlareImagesReplacesOnlyTheGivenImages()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+
+        var flare = CreateFlare(builder).WithFlareImages(api: "myorg/flare-api", dashboard: "myorg/flare-dashboard");
+
+        Assert.Equal("myorg/flare-api", Assert.Single(flare.Resource.Api.Annotations.OfType<ContainerImageAnnotation>()).Image);
+        Assert.Equal("myorg/flare-dashboard", Assert.Single(flare.Resource.Dashboard.Annotations.OfType<ContainerImageAnnotation>()).Image);
+        Assert.Equal("apardev/flare-ingest", Assert.Single(flare.Resource.Annotations.OfType<ContainerImageAnnotation>()).Image);
+        Assert.Equal("apardev/flare-alert-worker", Assert.Single(flare.Resource.AlertWorker.Annotations.OfType<ContainerImageAnnotation>()).Image);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void WithFlareImagesKeepsTheTagAndRegistry(bool imagesFirst)
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var flare = CreateFlare(builder);
+
+        if (imagesFirst)
+        {
+            flare.WithFlareImages(api: "myorg/flare-api").WithFlareImageTag("0.7").WithFlareImageRegistry("registry.example.com");
+        }
+        else
+        {
+            flare.WithFlareImageTag("0.7").WithFlareImageRegistry("registry.example.com").WithFlareImages(api: "myorg/flare-api");
+        }
+
+        var image = Assert.Single(flare.Resource.Api.Annotations.OfType<ContainerImageAnnotation>());
+        Assert.Equal("myorg/flare-api", image.Image);
+        Assert.Equal("0.7", image.Tag);
+        Assert.Equal("registry.example.com", image.Registry);
     }
 
     [Theory]

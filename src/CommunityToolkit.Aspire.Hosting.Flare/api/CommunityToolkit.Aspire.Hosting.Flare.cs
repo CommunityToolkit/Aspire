@@ -17,10 +17,22 @@ namespace Aspire.Hosting
         public static ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> WithApiKey(this ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> builder, ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource> apiKey) { throw null; }
 
         [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> WithColdStorage(this ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> builder, ApplicationModel.ReferenceExpression endpoint, ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource> accessKey, ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource> secretKey) { throw null; }
+
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> WithDataVolume(this ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> builder, string? name = null) { throw null; }
 
         [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> WithFlareImageRegistry(this ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> builder, string registry) { throw null; }
+
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> WithFlareImages(this ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> builder, string? ingest = null, string? api = null, string? alertWorker = null, string? dashboard = null) { throw null; }
+
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> WithFlareImageTag(this ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> builder, string tag) { throw null; }
+
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> WithIdentityDatabase(this ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> builder, ApplicationModel.IResourceBuilder<ApplicationModel.IResourceWithConnectionString> database) { throw null; }
 
         [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> WithIngestPorts(this ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> builder, int? grpcPort = null, int? httpPort = null) { throw null; }
@@ -31,6 +43,9 @@ namespace Aspire.Hosting
 
         [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> WithPublicUrls(this ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> builder, ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource>? apiUrl = null, ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource>? dashboardUrl = null) { throw null; }
+
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> WithResourceGraph(this ApplicationModel.IResourceBuilder<ApplicationModel.FlareResource> builder) { throw null; }
     }
 }
 

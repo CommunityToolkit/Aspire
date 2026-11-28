@@ -8,10 +8,14 @@ internal static class FlareContainerImageTags
     public const string Registry = "docker.io";
 
     // All four Flare images are released in lockstep, so they share one tag.
-    public const string Tag = "0.6";
+    public const string Tag = "0.7";
 
     public const string IngestImage = "apardev/flare-ingest";
     public const string ApiImage = "apardev/flare-api";
     public const string AlertWorkerImage = "apardev/flare-alert-worker";
     public const string DashboardImage = "apardev/flare-dashboard";
+
+    // The read-only Docker socket proxy WithResourceGraph adds.
+    public const string DockerProxyImage = "tecnativa/docker-socket-proxy";
+    public const string DockerProxyTag = "3.4";
 }

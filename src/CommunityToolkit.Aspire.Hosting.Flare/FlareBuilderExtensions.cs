@@ -9,7 +9,7 @@ namespace Aspire.Hosting;
 /// <summary>
 /// Provides extension methods for adding Flare resources to the application model.
 /// </summary>
-public static class FlareBuilderExtensions
+public static partial class FlareBuilderExtensions
 {
     private const int OtlpGrpcPort = 4317;
     private const int OtlpHttpPort = 4318;
@@ -79,6 +79,8 @@ public static class FlareBuilderExtensions
         var apiResource = new FlareApiResource($"{name}-api", flareResource);
         var alertWorkerResource = new FlareAlertWorkerResource($"{name}-alert-worker", flareResource);
         var dashboardResource = new FlareDashboardResource($"{name}-dashboard", flareResource);
+        flareResource.ClickHouse = clickhouse.Resource;
+        flareResource.Redis = redis.Resource;
         flareResource.Api = apiResource;
         flareResource.AlertWorker = alertWorkerResource;
         flareResource.Dashboard = dashboardResource;
@@ -177,6 +179,56 @@ public static class FlareBuilderExtensions
     }
 
     /// <summary>
+    /// Stores Flare's identity database (dashboard users, sessions and ingest API keys) in PostgreSQL instead of
+    /// a SQLite file. The ingest service and the query API both connect to <paramref name="database"/>, so they
+    /// no longer share a file and can run on different nodes, which a multi-node Kubernetes cluster needs.
+    /// </summary>
+    /// <ats-summary>Stores Flare's identity database in PostgreSQL</ats-summary>
+    /// <param name="builder">The Flare resource builder.</param>
+    /// <param name="database">
+    /// A PostgreSQL database, for example the result of <c>AddPostgres("postgres").AddDatabase("flare-identity")</c>.
+    /// Its connection string must be an Npgsql connection string. Flare creates its tables on startup.
+    /// </param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <remarks>
+    /// This replaces <see cref="WithDataVolume"/>; there is no reason to call both.
+    /// <example>
+    /// Keep the identity database in PostgreSQL.
+    /// <code lang="csharp">
+    /// var identity = builder.AddPostgres("postgres").AddDatabase("flare-identity");
+    ///
+    /// var flare = builder.AddFlare("flare", clickhouse, redis)
+    ///     .WithIdentityDatabase(identity);
+    /// </code>
+    /// </example>
+    /// </remarks>
+    [AspireExport]
+    public static IResourceBuilder<FlareResource> WithIdentityDatabase(
+        this IResourceBuilder<FlareResource> builder,
+        IResourceBuilder<IResourceWithConnectionString> database)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(database);
+
+        // The ingest service and the query API must resolve to the same identity database.
+        UsePostgresIdentity(builder, database);
+        UsePostgresIdentity(builder.ApplicationBuilder.CreateResourceBuilder(builder.Resource.Api), database);
+
+        return builder;
+    }
+
+    private static void UsePostgresIdentity<T>(
+        IResourceBuilder<T> container,
+        IResourceBuilder<IResourceWithConnectionString> database)
+        where T : ContainerResource
+    {
+        container
+            .WithEnvironment("Identity__Provider", "Postgres")
+            .WithEnvironment("Identity__ConnectionString", database)
+            .WaitFor(database);
+    }
+
+    /// <summary>
     /// Sets the host ports of the ingest service's OTLP endpoints. By default they are the conventional
     /// 4317 (gRPC) and 4318 (HTTP).
     /// </summary>
@@ -238,8 +290,7 @@ public static class FlareBuilderExtensions
     /// <param name="apiUrl">The parameter holding the public URL of the query API, or <see langword="null"/> to leave it unchanged.</param>
     /// <param name="dashboardUrl">
     /// The parameter holding the public URL of the dashboard, or <see langword="null"/> to leave it unchanged.
-    /// The query API uses this value verbatim as its allowed CORS origin, so it must be an origin only:
-    /// <c>scheme://host[:port]</c>, with no path and no trailing slash (for example <c>https://flare.example.com</c>).
+    /// The query API also uses this value as its allowed CORS origin.
     /// </param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     [AspireExport]
@@ -291,6 +342,144 @@ public static class FlareBuilderExtensions
         applicationBuilder.CreateResourceBuilder(resource.Api).WithImageTag(tag);
         applicationBuilder.CreateResourceBuilder(resource.AlertWorker).WithImageTag(tag);
         applicationBuilder.CreateResourceBuilder(resource.Dashboard).WithImageTag(tag);
+
+        return builder;
+    }
+
+    /// <summary>
+    /// Sets the registry the four Flare images are pulled from, for example a private mirror of Docker Hub.
+    /// </summary>
+    /// <param name="builder">The Flare resource builder.</param>
+    /// <param name="registry">The registry host, for example <c>registry.example.com</c>.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport]
+    public static IResourceBuilder<FlareResource> WithFlareImageRegistry(
+        this IResourceBuilder<FlareResource> builder,
+        string registry)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrEmpty(registry);
+
+        var resource = builder.Resource;
+        var applicationBuilder = builder.ApplicationBuilder;
+
+        builder.WithImageRegistry(registry);
+        applicationBuilder.CreateResourceBuilder(resource.Api).WithImageRegistry(registry);
+        applicationBuilder.CreateResourceBuilder(resource.AlertWorker).WithImageRegistry(registry);
+        applicationBuilder.CreateResourceBuilder(resource.Dashboard).WithImageRegistry(registry);
+
+        return builder;
+    }
+
+    /// <summary>
+    /// Replaces the image of one or more Flare containers, for example with a build of your own. The images keep
+    /// the shared tag (see <see cref="WithFlareImageTag"/>) and registry (see <see cref="WithFlareImageRegistry"/>).
+    /// </summary>
+    /// <param name="builder">The Flare resource builder.</param>
+    /// <param name="ingest">The image of the ingest service, or <see langword="null"/> to leave it unchanged.</param>
+    /// <param name="api">The image of the query API, or <see langword="null"/> to leave it unchanged.</param>
+    /// <param name="alertWorker">The image of the alert worker, or <see langword="null"/> to leave it unchanged.</param>
+    /// <param name="dashboard">The image of the dashboard, or <see langword="null"/> to leave it unchanged.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <remarks>
+    /// Pass image names without a tag or registry, for example <c>myorg/flare-api</c>.
+    /// </remarks>
+    [AspireExport]
+    public static IResourceBuilder<FlareResource> WithFlareImages(
+        this IResourceBuilder<FlareResource> builder,
+        string? ingest = null,
+        string? api = null,
+        string? alertWorker = null,
+        string? dashboard = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        var resource = builder.Resource;
+        var applicationBuilder = builder.ApplicationBuilder;
+
+        ReplaceImage(builder, ingest, nameof(ingest));
+        ReplaceImage(applicationBuilder.CreateResourceBuilder(resource.Api), api, nameof(api));
+        ReplaceImage(applicationBuilder.CreateResourceBuilder(resource.AlertWorker), alertWorker, nameof(alertWorker));
+        ReplaceImage(applicationBuilder.CreateResourceBuilder(resource.Dashboard), dashboard, nameof(dashboard));
+
+        return builder;
+    }
+
+    private static void ReplaceImage<T>(IResourceBuilder<T> container, string? image, string paramName)
+        where T : ContainerResource
+    {
+        if (image is null)
+        {
+            return;
+        }
+
+        ArgumentException.ThrowIfNullOrEmpty(image, paramName);
+
+        // Keep the tag set so far, so WithFlareImageTag works whichever order the calls come in.
+        var current = container.Resource.Annotations.OfType<ContainerImageAnnotation>().Last();
+        container.WithImage(image, current.Tag);
+    }
+
+    /// <summary>
+    /// Adds an S3-compatible bucket to Flare's ClickHouse server as a cold storage tier, so retention can move
+    /// older telemetry out of ClickHouse's local disk. Works with any S3-compatible store, such as RustFS,
+    /// MinIO or Amazon S3.
+    /// </summary>
+    /// <ats-summary>Adds an S3-compatible cold storage tier to Flare's ClickHouse server</ats-summary>
+    /// <param name="builder">The Flare resource builder.</param>
+    /// <param name="endpoint">
+    /// The bucket's URL in path style, ending with a slash, for example <c>http://rustfs:9000/flare-cold/</c>.
+    /// ClickHouse stores the cold data under this URL.
+    /// </param>
+    /// <param name="accessKey">The parameter holding the S3 access key ID.</param>
+    /// <param name="secretKey">The parameter holding the S3 secret access key.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <remarks>
+    /// <para>
+    /// This adds a configuration file to the ClickHouse server that defines an S3 disk and the
+    /// <c>flare_tiered</c> storage policy, and passes the endpoint and keys to it as environment variables.
+    /// Nothing moves to the bucket until retention is set with a cold-after age in Flare.
+    /// </para>
+    /// <para>
+    /// The bucket must exist before ClickHouse starts: ClickHouse checks every disk when it starts and stops
+    /// if one is unreachable. Create it ahead of time, or make the ClickHouse server wait for the resource that
+    /// creates it. The configuration file is added with <c>WithContainerFiles</c>, which the Kubernetes
+    /// publisher does not support yet.
+    /// </para>
+    /// <example>
+    /// Use a RustFS bucket for cold storage.
+    /// <code lang="csharp">
+    /// var rustfs = builder.AddRustFs("rustfs").WithDataVolume();
+    /// var bucket = rustfs.AddBucket("flare-cold");
+    ///
+    /// var clickhouse = builder.AddClickHouse("clickhouse").WaitFor(bucket);
+    /// var flare = builder.AddFlare("flare", clickhouse, redis)
+    ///     .WithColdStorage(
+    ///         ReferenceExpression.Create($"{rustfs.Resource.PrimaryEndpoint}/flare-cold/"),
+    ///         builder.CreateResourceBuilder(rustfs.Resource.AccessKey),
+    ///         builder.CreateResourceBuilder(rustfs.Resource.SecretKey));
+    /// </code>
+    /// </example>
+    /// </remarks>
+    [AspireExport]
+    public static IResourceBuilder<FlareResource> WithColdStorage(
+        this IResourceBuilder<FlareResource> builder,
+        ReferenceExpression endpoint,
+        IResourceBuilder<ParameterResource> accessKey,
+        IResourceBuilder<ParameterResource> secretKey)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(endpoint);
+        ArgumentNullException.ThrowIfNull(accessKey);
+        ArgumentNullException.ThrowIfNull(secretKey);
+
+        builder.ApplicationBuilder.CreateResourceBuilder(builder.Resource.ClickHouse)
+            .WithEnvironment("FLARE_COLD_ENDPOINT", endpoint)
+            .WithEnvironment("FLARE_COLD_ACCESS_KEY", accessKey)
+            .WithEnvironment("FLARE_COLD_SECRET_KEY", secretKey)
+            .WithContainerFiles(
+                FlareColdStorageConfig.Directory,
+                [new ContainerFile { Name = FlareColdStorageConfig.FileName, Contents = FlareColdStorageConfig.Contents }]);
 
         return builder;
     }

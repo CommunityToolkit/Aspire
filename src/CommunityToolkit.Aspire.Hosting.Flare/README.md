@@ -46,14 +46,56 @@ A resource wired with `WithOtlpExporter(flare)` sends its telemetry to Flare **i
 
 ClickHouse and Redis keep their data in the volumes you configure on those resources. `WithDataVolume()` persists Flare's own identity database (dashboard users, sessions and ingest API keys) in a volume shared by the ingest service and the query API. Without it, both keep a private database that is lost when their containers are recreated.
 
+`WithIdentityDatabase(database)` keeps the identity database in PostgreSQL instead. The ingest service and the query API then share a database rather than a file, so they can run on different nodes. Use it when you publish to a Kubernetes cluster with more than one node, where a volume shared by two workloads usually can't be mounted on both. Any resource with an Npgsql connection string works:
+
+```csharp
+var identity = builder.AddPostgres("postgres")
+                      .WithDataVolume()
+                      .AddDatabase("flare-identity");
+
+var flare = builder.AddFlare("flare", clickhouse, redis)
+                   .WithIdentityDatabase(identity);
+```
+
+### Cold storage
+
+`WithColdStorage(endpoint, accessKey, secretKey)` adds an S3-compatible bucket to Flare's ClickHouse server as a cold tier, so retention can move older telemetry off ClickHouse's local disk. It works with RustFS, MinIO, Amazon S3 or any other S3-compatible store. The endpoint is the bucket's path-style URL and must end with a slash. Nothing moves to the bucket until you set a cold-after age in Flare's retention settings.
+
+The bucket must exist before ClickHouse starts, because ClickHouse stops at startup if it can't reach a disk. For local development, the [RustFS integration](https://www.nuget.org/packages/CommunityToolkit.Aspire.Hosting.RustFs) can create the bucket, and ClickHouse can wait for it:
+
+```csharp
+var rustfs = builder.AddRustFs("rustfs").WithDataVolume();
+var bucket = rustfs.AddBucket("flare-cold");
+
+var clickhouse = builder.AddClickHouse("clickhouse").WaitFor(bucket);
+var redis = builder.AddRedis("redis");
+
+var flare = builder.AddFlare("flare", clickhouse, redis)
+                   .WithColdStorage(
+                       ReferenceExpression.Create($"{rustfs.Resource.PrimaryEndpoint}/flare-cold/"),
+                       builder.CreateResourceBuilder(rustfs.Resource.AccessKey),
+                       builder.CreateResourceBuilder(rustfs.Resource.SecretKey));
+```
+
+The ClickHouse disk configuration is added with `WithContainerFiles`, which the Kubernetes publisher doesn't support yet. Without the configuration ClickHouse runs normally, and Flare reports cold storage as unavailable.
+
+### Resources page
+
+`WithResourceGraph()` turns on the dashboard's Resources page, a live graph of the Flare containers, ClickHouse and Redis. It labels those containers and gives the query API read-only access to the container runtime:
+
+- Under `aspire run` and in Docker Compose output, it adds a `tecnativa/docker-socket-proxy` container with the Docker socket mounted read-only. The proxy only allows listing and inspecting containers, and the query API talks to the proxy rather than the socket. The proxy lists every container on the Docker host, so other Flare stacks running on the same host also appear in the graph.
+- When the app is published to a Kubernetes environment, the proxy is left out. The query API runs under its own service account instead, with a role that can only get, list and watch pods and services in its namespace.
+
 ### Other options
 
 | Method | Purpose |
 | --- | --- |
 | `WithIngestPorts(grpcPort, httpPort)` | Change the host ports of the OTLP endpoints. |
 | `WithApiKey(parameter)` | Require an API key on the ingest service. OTLP clients send it as `Authorization: Bearer <key>` (for example `OTEL_EXPORTER_OTLP_HEADERS=Authorization=Bearer <key>`); resources wired with `WithOtlpExporter(flare)` send it automatically. |
-| `WithPublicUrls(apiUrl, dashboardUrl)` | Set the URLs a browser uses once the stack is published and no longer reachable on localhost. `dashboardUrl` is also the API's allowed CORS origin, so pass an origin only (`https://flare.example.com`, no path or trailing slash). |
+| `WithPublicUrls(apiUrl, dashboardUrl)` | Set the URLs a browser uses once the stack is published and no longer reachable on localhost. `dashboardUrl` is also the API's allowed CORS origin. |
 | `WithFlareImageTag(tag)` | Change the image tag of all four containers. |
+| `WithFlareImageRegistry(registry)` | Pull all four images from another registry, such as a private mirror. |
+| `WithFlareImages(ingest, api, alertWorker, dashboard)` | Replace the image of any of the four containers, for example with your own build. The images keep the shared tag and registry. |
 
 ## Connection Properties
 
